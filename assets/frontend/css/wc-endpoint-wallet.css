@@ -1,0 +1,11 @@
+.wc-wallet-add-balance-form .wc-wallet-input-holder{
+    width: 100%;
+}
+.wc-wallet-add-balance-form .wc-wallet-input-holder input.wc-wallet-input{
+    width: 100%;
+}
+.wc-wallet-add-balance-form .wc-wallet-submit-holder{
+    float: right;
+    margin-top: 10px;
+}
+    
