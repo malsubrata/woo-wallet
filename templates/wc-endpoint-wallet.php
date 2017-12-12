@@ -2,7 +2,7 @@
 /**
  * The Template for displaying wallet recharge form
  *
- * This template can be overridden by copying it to yourtheme/wc-wallet-payment/wc-endpoint-wallet.php.
+ * This template can be overridden by copying it to yourtheme/wc-wallet/wc-endpoint-wallet.php.
  *
  * HOWEVER, on occasion we will need to update template files and you
  * (the theme developer) will need to copy the new files to your theme to

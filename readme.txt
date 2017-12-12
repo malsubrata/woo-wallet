@@ -1,12 +1,12 @@
 === WooCommerce Wallet - credit, cashback, refund system ===
-Contributors: subratamal
+Contributors: subratamal, bappa1995
 Tags: woo wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
 WC requires at least: 3.0
 WC tested up to: 3.2.5
-Stable tag: 1.0.2
+Stable tag: 1.0.0
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -15,10 +15,10 @@ A powerful, extendable WooCommerce wallet system which support payment, partial 
 
 == Description ==
 
-WooCommerce Wallet plugin allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can do refund to customer wallet.
+WooCommerce Wallet plugin allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
 = Use case of WooCommerce Wallet plugin =
-With this extension, the customers won't have to fill in the payment details every time. They can simply log in and pay for products using the wallet money. The customers will also get the advantage for earning cashback using the wallet money. The admin can do refund to the wallet. 
+With this extension, the customers won't have to fill in the payment details every time. They can simply log in and pay for products using the wallet money. The customers will also get the advantage for earning cashback using the wallet money. The admin can process refund to the customer wallet. 
 
 = Features of WooCommerce Wallet plugin =
 - Wallet system works just like any other payment method.
@@ -26,6 +26,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - The customers can use various payment methods to add money.
 - The admin can process refund using the wallet money.
 - Customers will earn cashback according to cart price or product.
+- Customers can made partial payment.
 - Set cashback amount calculation using fixed or percent method.
 - From the backend, the admin can view the transaction history.
 - Customers receive notification emails for every wallet transaction.
@@ -75,15 +76,15 @@ This plugin is compatible with the latest version of WooCommerce.
 
 = Where can I get support or talk to other users? =
 
-If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet-payment).
+If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet).
 
 = Where can I report bugs or contribute to the project? =
 
-Bugs can be reported either in our support forum or preferably on the [GitHub repository](https://github.com/malsubrata/woo-wallet-payment/issues).
+Bugs can be reported either in our support forum or preferably on the [GitHub repository](https://github.com/malsubrata/woo-wallet/issues).
 
 = This plugin is awesome! Can I contribute? =
 
-Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/woo-wallet-payment) :)
+Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/woo-wallet) :)
 
 == Screenshots ==
 
@@ -97,15 +98,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
-= 1.0.2 - 2017-12-04 =
-* Added - Cashback reward program
-
-= 1.0.1 - 2017-11-27 =
-* Added - language file
-
-= 1.0.0 - 2017-11-22 =
+= 1.0.0 - 2017-12-12 =
 * Initial release
 
 == Upgrade Notice ==
 
-= 1.0.2 =
+= 1.0.0 =

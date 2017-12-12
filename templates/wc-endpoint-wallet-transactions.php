@@ -2,7 +2,7 @@
 /**
  * The Template for displaying transaction history
  *
- * This template can be overridden by copying it to yourtheme/wc-wallet-payment/wc-endpoint-wallet-transactions.php.
+ * This template can be overridden by copying it to yourtheme/wc-wallet/wc-endpoint-wallet-transactions.php.
  *
  * HOWEVER, on occasion we will need to update template files and you
  * (the theme developer) will need to copy the new files to your theme to
@@ -22,11 +22,11 @@ $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()
 <table id="wc-wallet-transaction-details">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Credit</th>
-            <th>Debit</th>
-            <th>Details</th>
-            <th>Date</th>
+            <th><?php _e('ID', 'woo-wallet'); ?></th>
+            <th><?php _e('Credit', 'woo-wallet'); ?></th>
+            <th><?php _e('Debit', 'woo-wallet'); ?></th>
+            <th><?php _e('Details', 'woo-wallet'); ?></th>
+            <th><?php _e('Date', 'woo-wallet'); ?></th>
         </tr>
     </thead>
     <tbody>

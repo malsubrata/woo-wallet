@@ -2,7 +2,7 @@
 
 /*
  * Plugin Name: WooCommerce Wallet
- * Plugin URI: https://wordpress.org/plugins/wc-wallet-payment/
+ * Plugin URI: https://wordpress.org/plugins/wc-wallet/
  * Description: Take wallet payments on your store or process refund, cashback to user wallet.
  * Author: Subrata Mal
  * Author URI: https://profiles.wordpress.org/subratamal

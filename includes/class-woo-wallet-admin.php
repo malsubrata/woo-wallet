@@ -208,7 +208,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function woocommerce_product_write_panel_tabs() {
             ?>
             <li class="wallet_tab">
-                <a href="#wallet_data_tabs"> &nbsp;<?php _e('Wallet', 'woo-wallet'); ?></a>
+                <a href="#wallet_data_tabs"> &nbsp;<?php _e('Cashback', 'woo-wallet'); ?></a>
             </li>
             <?php
         }

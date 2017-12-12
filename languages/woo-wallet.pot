@@ -1,11 +1,11 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-10 16:53+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2017-12-12 10:25+0000\n"
+"PO-Revision-Date: 2017-12-12 10:25+0000\n"
+"Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
 "Language: \n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION\n"
@@ -14,58 +14,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco - https://localise.biz/"
 
-#: templates/wc-endpoint-wallet.php:22
-msgid "Add balance"
-msgstr ""
-
-#: templates/wc-endpoint-wallet.php:23
-msgid "View Transactions "
-msgstr ""
-
-#: templates/wc-endpoint-wallet.php:31
-msgid "Enter amount"
-msgstr ""
-
-#: templates/wc-endpoint-wallet.php:35
-msgid "Add"
-msgstr ""
-
-#: includes/class-woo-wallet-frontend.php:56
+#: includes/class-woo-wallet-frontend.php:57
 msgid "My Wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:57
+#: includes/class-woo-wallet-frontend.php:58
 msgid "Account details"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:58
+#: includes/class-woo-wallet-frontend.php:59
 msgid "Logout"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:145
+#: includes/class-woo-wallet-frontend.php:146
 msgid ""
 "You can not add another product while you cart contains with wallet recharge "
 "product."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:174
+#: includes/class-woo-wallet-frontend.php:175
 #, php-format
 msgid "If you place this order then %s will be credited to your wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:202
 #: includes/class-woo-wallet-frontend.php:203
+#: includes/class-woo-wallet-frontend.php:204
 msgid "Pay by wallet"
 msgstr ""
 
-#: includes/class-woo-wallet.php:210
-msgid ""
-"WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
-"org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
+#: includes/class-woo-wallet-frontend.php:225
+msgid "Via wallet:"
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:29
-msgid "Wallet payments"
+msgid "Wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:30
@@ -167,7 +149,7 @@ msgid "Please enter amount"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:211
-msgid "Wallet"
+msgid "Cashback"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:227
@@ -216,6 +198,12 @@ msgstr ""
 msgid "Refund not credited to customer"
 msgstr ""
 
+#: includes/class-woo-wallet.php:210
+msgid ""
+"WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
+"org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
+msgstr ""
+
 #: includes/class-woo-wallet-settings.php:47
 #: includes/class-woo-wallet-settings.php:47
 msgid "Settings"
@@ -226,6 +214,7 @@ msgid "General"
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:78
+#: templates/wc-endpoint-wallet-transactions.php:26
 msgid "Credit"
 msgstr ""
 
@@ -316,43 +305,49 @@ msgstr ""
 msgid "Allow this gatway for recharge wallet"
 msgstr ""
 
-#: templates/emails/user-new-transaction.php:25
-#: templates/emails/user-new-transaction.php:28
-msgid "Thank you for using your wallet. "
+#: templates/wc-endpoint-wallet.php:22
+msgid "Add balance"
 msgstr ""
 
-#: templates/emails/user-new-transaction.php:25
-msgid " has been credited to your wallet."
+#: templates/wc-endpoint-wallet.php:23
+msgid "View Transactions "
 msgstr ""
 
-#: templates/emails/user-new-transaction.php:28
-msgid " has been debited from your wallet."
+#: templates/wc-endpoint-wallet.php:31
+msgid "Enter amount"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-transaction-details.php:20
+#: templates/wc-endpoint-wallet.php:35
+msgid "Add"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:25
 #: includes/admin/class-woo-wallet-balance-details.php:20
+#: includes/admin/class-woo-wallet-transaction-details.php:20
 msgid "ID"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-transaction-details.php:21
-#: includes/admin/class-woo-wallet-balance-details.php:22
-msgid "Name"
+#: templates/wc-endpoint-wallet-transactions.php:27
+msgid "Debit"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-transaction-details.php:22
-msgid "Type"
-msgstr ""
-
+#: templates/wc-endpoint-wallet-transactions.php:28
 #: includes/admin/class-woo-wallet-transaction-details.php:24
 msgid "Details"
 msgstr ""
 
+#: templates/wc-endpoint-wallet-transactions.php:29
 #: includes/admin/class-woo-wallet-transaction-details.php:25
 msgid "Date"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:21
 msgid "Username"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:22
+#: includes/admin/class-woo-wallet-transaction-details.php:21
+msgid "Name"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:23
@@ -365,6 +360,10 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:25
 msgid "Actions"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-transaction-details.php:22
+msgid "Type"
 msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:15
@@ -403,16 +402,31 @@ msgstr ""
 msgid "Choose which format of email to send."
 msgstr ""
 
+#: templates/emails/user-new-transaction.php:25
+#: templates/emails/user-new-transaction.php:28
+msgid "Thank you for using your wallet. "
+msgstr ""
+
+#: templates/emails/user-new-transaction.php:25
+msgid " has been credited to your wallet."
+msgstr ""
+
+#: templates/emails/user-new-transaction.php:28
+msgid " has been debited from your wallet."
+msgstr ""
+
 #. Name of the plugin
 msgid "WooCommerce Wallet"
 msgstr ""
 
 #. Description of the plugin
-msgid "Take wallet payments on your store or process refund to user wallet."
+msgid ""
+"Take wallet payments on your store or process refund, cashback to user "
+"wallet."
 msgstr ""
 
 #. URI of the plugin
-msgid "https://wordpress.org/plugins/wc-wallet-payment/"
+msgid "https://wordpress.org/plugins/wc-wallet/"
 msgstr ""
 
 #. Author of the plugin

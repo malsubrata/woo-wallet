@@ -75,7 +75,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
          * @return void
          */
         public function wallet_credit_purchase($order_id) {
-            $wallet_product = wc_get_product(get_option('_wc_wallet_recharge_product'));
+            $wallet_product = get_wallet_rechargeable_product();
             $charge_amount = 0;
             if (get_post_meta($order_id, '_wc_wallet_purchase_credited', true) || !$wallet_product) {
                 return;

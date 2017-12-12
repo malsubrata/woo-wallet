@@ -25,6 +25,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             add_action('woocommerce_checkout_order_processed', array($this, 'woocommerce_checkout_order_processed'), 30, 3);
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));
+            add_action('woocommerce_get_order_item_totals', array($this, 'woocommerce_get_order_item_totals'), 10, 2);
         }
 
         /**
@@ -209,7 +210,22 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             </script>
             <?php
         }
-
+        /**
+         * Add wallet withdrawal amount to thank you page
+         * @param array $total_rows
+         * @param Object $order
+         * @return array
+         */
+        public function woocommerce_get_order_item_totals($total_rows, $order){
+            if(!get_post_meta($order->get_id(), '_via_wallet_payment', true)){
+                return $total_rows;
+            }
+            $order_total = $total_rows['order_total'];
+            unset($total_rows['order_total']);
+            $total_rows['via_wallet'] = array('label' => __('Via wallet:', 'woo-wallet'), 'value' => wc_price(get_post_meta($order->get_id(), '_via_wallet_payment', true), array( 'currency' => $order->get_currency() )));
+            $total_rows['order_total'] = $order_total;
+            return $total_rows;
+        }
     }
 
 }

@@ -26,7 +26,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
      */
     protected function setup_properties() {
         $this->id = 'wallet';
-        $this->method_title = __('Wallet payments', 'woo-wallet');
+        $this->method_title = __('Wallet', 'woo-wallet');
         $this->method_description = __('Have your customers pay with wallet.', 'woo-wallet');
         $this->has_fields = false;
     }
