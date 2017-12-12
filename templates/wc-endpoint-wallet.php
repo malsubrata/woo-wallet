@@ -18,11 +18,12 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
+<!--<div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
     <a class="woocommerce-Button button wc-wallet-add-balance" href="javascript:void(0)"><?php _e('Add balance', 'woo-wallet'); ?></a>
-    <a class="woocommerce-Button button wc-wallet-wiew-transactions" href="<?php echo esc_url( wc_get_account_endpoint_url( 'woo-wallet-transactions' ) ); ?>"><?php _e('View Transactions ', 'woo-wallet'); ?></a>
-    <?php _e('Current wallet balance ');
-    echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id()); ?>
+    <a class="woocommerce-Button button wc-wallet-wiew-transactions" href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet-transactions')); ?>"><?php _e('View Transactions ', 'woo-wallet'); ?></a>
+<?php _e('Current wallet balance ');
+echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
+?>
 </div>
 <form method="POST" action="<?php echo wc_get_cart_url(); ?>" class="wc-wallet-add-balance-form">
 
@@ -34,13 +35,60 @@ if (!defined('ABSPATH')) {
     <p class="wc-wallet-submit-holder">
         <input type="submit" class="button" name="wc_add_to_wallet" value="<?php _e('Add', 'woo-wallet') ?>">
     </p>
-</form>
+</form>-->
 
 <script type="text/javascript">
-    jQuery(document).ready(function (){
-        jQuery('.wc-wallet-add-balance-form').hide();
-        jQuery('.wc-wallet-add-balance').on('click', function (){
-            jQuery('.wc-wallet-add-balance-form').slideDown();
-        });
-    });
+//    jQuery(document).ready(function (){
+//        jQuery('.wc-wallet-add-balance-form').hide();
+//        jQuery('.wc-wallet-add-balance').on('click', function (){
+//            jQuery('.wc-wallet-add-balance-form').slideDown();
+//        });
+//    });
 </script>
+
+<style type="text/css">
+    .woo-wallet-my-wallet-container{
+        max-width: 100%;
+    }
+    .woo-wallet-my-wallet-container .woo-wallet-sidebar{
+        width: 30%;
+        float: left;
+        background: #f2f2f2;
+        min-height: 100px;
+    }
+    .woo-wallet-my-wallet-container .woo-wallet-content{
+        width: 70%;
+        float: left;
+        min-height: 100px;
+        border: 1px solid #f2f2f2;
+    }
+    .woo-wallet-sidebar ul{
+        margin: 0 auto;
+    }
+    .woo-wallet-sidebar ul li{
+        list-style: none;
+        margin: 10px 35px 10px 35px;
+        text-align: center;
+        min-height: 100px;
+        border: 1px solid #31C3FF;
+        padding-top: calc(100% - 160px);
+    }
+    .woo-wallet-sidebar ul li span{
+        vertical-align: middle;
+    }
+    .woo-wallet-sidebar ul li p{
+        margin: 0 auto;
+        line-height: 1em;
+    }
+</style>
+
+<div class="woo-wallet-my-wallet-container">
+    <div class="woo-wallet-sidebar">
+        <ul>
+            <li><span class="dashicons dashicons-plus-alt"></span><p>Wallet topup</p></li>
+            <li><span class="dashicons dashicons-list-view"></span><p>View Transactions</p></li>
+            <li><span class="dashicons dashicons-upload"></span><p>Withdrawal</p></li>
+        </ul>
+    </div>
+    <div class="woo-wallet-content"></div>
+</div>
