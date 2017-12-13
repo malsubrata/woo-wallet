@@ -126,7 +126,7 @@ if (!function_exists('get_wallet_transactions')) {
      * @param mixed $output
      * @return db rows
      */
-    function get_wallet_transactions($args = array(), $output = OBJECT) {
+    function get_wallet_transactions($args = array(), $limit = '', $output = OBJECT) {
         global $wpdb;
         $query = '';
         if (!empty($args)) {
@@ -142,7 +142,10 @@ if (!function_exists('get_wallet_transactions')) {
                     }, $args, array_keys($args)
             ));
         }
-        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC", $output);
+        if($limit){
+            $limit = " LIMIT 0, {$limit}";
+        }
+        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC" . $limit, $output);
     }
 
 }

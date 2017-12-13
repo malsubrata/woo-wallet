@@ -16,12 +16,14 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
+$transactions = get_wallet_transactions(array(), 10);
 ?>
 
 <!--<div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
     <a class="woocommerce-Button button wc-wallet-add-balance" href="javascript:void(0)"><?php _e('Add balance', 'woo-wallet'); ?></a>
     <a class="woocommerce-Button button wc-wallet-wiew-transactions" href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet-transactions')); ?>"><?php _e('View Transactions ', 'woo-wallet'); ?></a>
-<?php _e('Current wallet balance ');
+<?php
+_e('Current wallet balance ');
 echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
 ?>
 </div>
@@ -49,29 +51,35 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
 <style type="text/css">
     .woo-wallet-my-wallet-container{
         max-width: 100%;
+        overflow: hidden;
+        border: 1px solid #f2f2f2;
+        display: flex;
+    }
+    .woo-wallet-my-wallet-container p{
+        margin: 0 auto;
     }
     .woo-wallet-my-wallet-container .woo-wallet-sidebar{
         width: 30%;
         float: left;
         background: #f2f2f2;
         min-height: 100px;
+        padding-top: 20px;
     }
     .woo-wallet-my-wallet-container .woo-wallet-content{
         width: 70%;
         float: left;
         min-height: 100px;
-        border: 1px solid #f2f2f2;
+        padding: 20px;
     }
     .woo-wallet-sidebar ul{
         margin: 0 auto;
     }
     .woo-wallet-sidebar ul li{
         list-style: none;
-        margin: 10px 35px 10px 35px;
+        margin: 10px 50px 10px 50px;
         text-align: center;
-        min-height: 100px;
         border: 1px solid #31C3FF;
-        padding-top: calc(100% - 160px);
+        padding: 25px;
     }
     .woo-wallet-sidebar ul li span{
         vertical-align: middle;
@@ -80,15 +88,70 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
         margin: 0 auto;
         line-height: 1em;
     }
+    .woo-wallet-sidebar-heading{
+        padding-left: 50px
+    }
+    .woo-wallet-content-h3{
+        float: left;
+        margin: 0 0 15px;
+        line-height: 1em;
+    }
+    .woo-wallet-price{
+        float: right;
+        margin: 0 0 15px;
+    }
+    .woo-wallet-content-heading{
+        overflow: hidden;
+    }
+    .woo-wallet-transactions-items{
+        margin: 0 auto;
+    }
+    .woo-wallet-transactions-items li {
+        overflow: hidden;
+        padding-bottom: 15px
+    }
+    .woo-wallet-transactions-items li div:first-child{
+        float: left;
+    }
+    .woo-wallet-transactions-items li div:last-child{
+        float: right;
+    }
+    .woo-wallet-transaction-type-credit{
+        color: green;
+    }
+    .woo-wallet-transaction-type-debit{
+        color: red;
+    }
 </style>
 
 <div class="woo-wallet-my-wallet-container">
     <div class="woo-wallet-sidebar">
+        <h3 class="woo-wallet-sidebar-heading">My Wallet</h3>
         <ul>
             <li><span class="dashicons dashicons-plus-alt"></span><p>Wallet topup</p></li>
             <li><span class="dashicons dashicons-list-view"></span><p>View Transactions</p></li>
             <li><span class="dashicons dashicons-upload"></span><p>Withdrawal</p></li>
         </ul>
     </div>
-    <div class="woo-wallet-content"></div>
+    <div class="woo-wallet-content">
+        <div class="woo-wallet-content-heading">
+            <h3 class="woo-wallet-content-h3">Balance</h3>
+            <p class="woo-wallet-price"><?php echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id()); ?></p>
+        </div>
+        <div style="clear: both"></div>
+        <hr/>
+        <ul class="woo-wallet-transactions-items">
+            <?php if (!empty($transactions)) : ?>
+                <?php foreach ($transactions as $transaction) : ?> 
+                    <li>
+                        <div>
+                            <p><?php echo $transaction->details; ?></p>
+                            <small><?php echo wc_string_to_datetime($transaction->date)->date(wc_date_format()); ?></small>
+                        </div>
+                        <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?>"><?php echo wc_price($transaction->amount); ?></div>
+                    </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </ul>
+    </div>
 </div>
