@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()));
 ?>
 <p>Current balance : <?php echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id()); ?></p>
-<table id="wc-wallet-transaction-details">
+<table id="wc-wallet-transaction-details" class="table">
     <thead>
         <tr>
             <th><?php _e('ID', 'woo-wallet'); ?></th>

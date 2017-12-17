@@ -76,10 +76,21 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
     }
     .woo-wallet-sidebar ul li{
         list-style: none;
-        margin: 10px 50px 10px 50px;
+        margin: 20px;
+    }
+    .woo-wallet-sidebar ul li.card{
+        background: #fff;
+        border-radius: 2px;
         text-align: center;
-        border: 1px solid #31C3FF;
-        padding: 25px;
+        position: relative;
+        max-width: 100%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        padding: 20px;
+        cursor: pointer;
+    }
+    .woo-wallet-sidebar ul li.card:hover{
+        box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
     }
     .woo-wallet-sidebar ul li span{
         vertical-align: middle;
@@ -89,7 +100,7 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
         line-height: 1em;
     }
     .woo-wallet-sidebar-heading{
-        padding-left: 50px
+        text-align: center;
     }
     .woo-wallet-content-h3{
         float: left;
@@ -119,6 +130,16 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
     .woo-wallet-transaction-type-credit{
         color: green;
     }
+    .woo-wallet-transaction-type-credit:before{
+        content: "\f132";
+        font-size: 10px;
+        margin-top: 7px;
+    }
+    .woo-wallet-transaction-type-debit:before{
+        content: "\f460";
+        font-size: 10px;
+        margin-top: 7px;
+    }
     .woo-wallet-transaction-type-debit{
         color: red;
     }
@@ -128,9 +149,8 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
     <div class="woo-wallet-sidebar">
         <h3 class="woo-wallet-sidebar-heading">My Wallet</h3>
         <ul>
-            <li><span class="dashicons dashicons-plus-alt"></span><p>Wallet topup</p></li>
-            <li><span class="dashicons dashicons-list-view"></span><p>View Transactions</p></li>
-            <li><span class="dashicons dashicons-upload"></span><p>Withdrawal</p></li>
+            <li class="card"><span class="dashicons dashicons-plus-alt"></span><p>Wallet topup</p></li>
+            <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet-transactions')); ?>"><span class="dashicons dashicons-list-view"></span><p>Transactions</p></a></li>
         </ul>
     </div>
     <div class="woo-wallet-content">
@@ -148,7 +168,7 @@ echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
                             <p><?php echo $transaction->details; ?></p>
                             <small><?php echo wc_string_to_datetime($transaction->date)->date(wc_date_format()); ?></small>
                         </div>
-                        <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?>"><?php echo wc_price($transaction->amount); ?></div>
+                        <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?> dashicons-before"><?php echo wc_price($transaction->amount); ?></div>
                     </li>
                 <?php endforeach; ?>
             <?php endif; ?>
