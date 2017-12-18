@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-18 18:00+0000\n"
+"POT-Creation-Date: 2017-12-18 18:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
@@ -13,6 +13,19 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco - https://localise.biz/"
+
+#: templates/wc-endpoint-wallet.php:24
+#: includes/class-woo-wallet-frontend.php:57
+msgid "My Wallet"
+msgstr ""
+
+#: templates/wc-endpoint-wallet.php:26
+msgid "Wallet topup"
+msgstr ""
+
+#: templates/wc-endpoint-wallet.php:27
+msgid "Transactions"
+msgstr ""
 
 #: templates/wc-endpoint-wallet.php:40
 msgid "Enter amount"
@@ -49,10 +62,6 @@ msgstr ""
 #: templates/wc-endpoint-wallet-transactions.php:29
 #: includes/admin/class-woo-wallet-transaction-details.php:25
 msgid "Date"
-msgstr ""
-
-#: includes/class-woo-wallet-frontend.php:57
-msgid "My Wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:58
