@@ -23,7 +23,7 @@ global $wp;
     <div class="woo-wallet-sidebar">
         <h3 class="woo-wallet-sidebar-heading"><?php _e('My Wallet','woo-wallet'); ?></h3>
         <ul>
-            <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet')); ?>/add/"><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
+            <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet')); ?>add/"><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
             <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url('woo-wallet-transactions')); ?>"><span class="dashicons dashicons-list-view"></span><p><?php _e('Transactions', 'woo-wallet'); ?></p></a></li>
         </ul>
     </div>

@@ -39,6 +39,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
             wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             if (is_account_page()) {
+                wp_enqueue_style('dashicons');
                 wp_enqueue_style('jquery-datatables-style');
                 wp_enqueue_style('woo-endpoint-wallet-style');
                 wp_enqueue_script('jquery-datatables-script');
