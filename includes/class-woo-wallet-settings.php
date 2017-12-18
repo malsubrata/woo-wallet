@@ -184,8 +184,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function get_rechargeable_product_title() {
             $product_title = '';
-            $wallet_product_id = get_option('_wc_wallet_recharge_product');
-            $wallet_product = wc_get_product($wallet_product_id);
+            $wallet_product = get_wallet_rechargeable_product();
             if ($wallet_product) {
                 $product_title = $wallet_product->get_title();
             }
@@ -198,8 +197,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          * @return boolean | int 
          */
         public function set_rechargeable_product_title($title) {
-            $wallet_product_id = get_option('_wc_wallet_recharge_product');
-            $wallet_product = wc_get_product($wallet_product_id);
+            $wallet_product = get_wallet_rechargeable_product();
             if ($wallet_product) {
                 $wallet_product->set_name($title);
                 return $wallet_product->save();

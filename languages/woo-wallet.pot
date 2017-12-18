@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-12 10:25+0000\n"
-"PO-Revision-Date: 2017-12-12 10:25+0000\n"
+"POT-Creation-Date: 2017-12-18 18:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
 "Language: \n"
@@ -13,6 +13,43 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco - https://localise.biz/"
+
+#: templates/wc-endpoint-wallet.php:40
+msgid "Enter amount"
+msgstr ""
+
+#: templates/wc-endpoint-wallet.php:42
+msgid "Add"
+msgstr ""
+
+#: templates/wc-endpoint-wallet.php:64
+msgid "No transactions found"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:25
+#: includes/admin/class-woo-wallet-transaction-details.php:20
+#: includes/admin/class-woo-wallet-balance-details.php:20
+msgid "ID"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:26
+#: includes/class-woo-wallet-settings.php:78
+msgid "Credit"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:27
+msgid "Debit"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:28
+#: includes/admin/class-woo-wallet-transaction-details.php:24
+msgid "Details"
+msgstr ""
+
+#: templates/wc-endpoint-wallet-transactions.php:29
+#: includes/admin/class-woo-wallet-transaction-details.php:25
+msgid "Date"
+msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:57
 msgid "My Wallet"
@@ -28,8 +65,8 @@ msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:146
 msgid ""
-"You can not add another product while you cart contains with wallet recharge "
-"product."
+"You can not add another product while your cart contains with wallet "
+"recharge product."
 msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:175
@@ -44,6 +81,12 @@ msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:225
 msgid "Via wallet:"
+msgstr ""
+
+#: includes/class-woo-wallet.php:211
+msgid ""
+"WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
+"org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:29
@@ -198,12 +241,6 @@ msgstr ""
 msgid "Refund not credited to customer"
 msgstr ""
 
-#: includes/class-woo-wallet.php:210
-msgid ""
-"WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
-"org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
-msgstr ""
-
 #: includes/class-woo-wallet-settings.php:47
 #: includes/class-woo-wallet-settings.php:47
 msgid "Settings"
@@ -211,11 +248,6 @@ msgstr ""
 
 #: includes/class-woo-wallet-settings.php:74
 msgid "General"
-msgstr ""
-
-#: includes/class-woo-wallet-settings.php:78
-#: templates/wc-endpoint-wallet-transactions.php:26
-msgid "Credit"
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:98
@@ -292,62 +324,43 @@ msgstr ""
 msgid "Enter wallet charge amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:230
-#: includes/class-woo-wallet-settings.php:255
+#: includes/class-woo-wallet-settings.php:228
+#: includes/class-woo-wallet-settings.php:253
 msgid "(no title)"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:235
+#: includes/class-woo-wallet-settings.php:233
 msgid "Enter gateway charge amount for "
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:260
+#: includes/class-woo-wallet-settings.php:258
 msgid "Allow this gatway for recharge wallet"
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:22
-msgid "Add balance"
+#: templates/emails/user-new-transaction.php:25
+#: templates/emails/user-new-transaction.php:28
+msgid "Thank you for using your wallet. "
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:23
-msgid "View Transactions "
+#: templates/emails/user-new-transaction.php:25
+msgid " has been credited to your wallet."
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:31
-msgid "Enter amount"
+#: templates/emails/user-new-transaction.php:28
+msgid " has been debited from your wallet."
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:35
-msgid "Add"
+#: includes/admin/class-woo-wallet-transaction-details.php:21
+#: includes/admin/class-woo-wallet-balance-details.php:22
+msgid "Name"
 msgstr ""
 
-#: templates/wc-endpoint-wallet-transactions.php:25
-#: includes/admin/class-woo-wallet-balance-details.php:20
-#: includes/admin/class-woo-wallet-transaction-details.php:20
-msgid "ID"
-msgstr ""
-
-#: templates/wc-endpoint-wallet-transactions.php:27
-msgid "Debit"
-msgstr ""
-
-#: templates/wc-endpoint-wallet-transactions.php:28
-#: includes/admin/class-woo-wallet-transaction-details.php:24
-msgid "Details"
-msgstr ""
-
-#: templates/wc-endpoint-wallet-transactions.php:29
-#: includes/admin/class-woo-wallet-transaction-details.php:25
-msgid "Date"
+#: includes/admin/class-woo-wallet-transaction-details.php:22
+msgid "Type"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:21
 msgid "Username"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-balance-details.php:22
-#: includes/admin/class-woo-wallet-transaction-details.php:21
-msgid "Name"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:23
@@ -360,10 +373,6 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:25
 msgid "Actions"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-transaction-details.php:22
-msgid "Type"
 msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:15
@@ -400,19 +409,6 @@ msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:143
 msgid "Choose which format of email to send."
-msgstr ""
-
-#: templates/emails/user-new-transaction.php:25
-#: templates/emails/user-new-transaction.php:28
-msgid "Thank you for using your wallet. "
-msgstr ""
-
-#: templates/emails/user-new-transaction.php:25
-msgid " has been credited to your wallet."
-msgstr ""
-
-#: templates/emails/user-new-transaction.php:28
-msgid " has been debited from your wallet."
 msgstr ""
 
 #. Name of the plugin

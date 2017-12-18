@@ -33,11 +33,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function wc_wallet_payment_styles() {
             $wp_scripts = wp_scripts();
-            wp_register_style('woo-wallet-payment-jquery-ui', 'http://ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
+            wp_register_style('woo-wallet-payment-jquery-ui', '//ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
             wp_register_style('jquery-datatables-style', '//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css');
-            wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet.css', array(), '1.0.0');
+            wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet.css', array(), WOO_WALLET_PLUGIN_VERSION);
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
-            wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions.js', array('jquery', 'jquery-datatables-script'), '1.0.0');
+            wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             if (is_account_page()) {
                 wp_enqueue_style('jquery-datatables-style');
                 wp_enqueue_style('woo-endpoint-wallet-style');
@@ -78,8 +78,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * Add to cart rechargeable produt
          */
         public function wc_wallet_add_wallet_recharge_product() {
-            if (isset($_POST['wc_add_to_wallet'])) {
-                if (isset($_POST['wc_wallet_balance_to_add']) && !empty($_POST['wc_wallet_balance_to_add'])) {
+            if (isset($_POST['woo_add_to_wallet'])) {
+                if (isset($_POST['woo_wallet_balance_to_add']) && !empty($_POST['woo_wallet_balance_to_add'])) {
                     add_filter('woocommerce_add_cart_item_data', array($this, 'add_wc_wallet_product_price_to_cart_item_data'), 10, 2);
                     $product = get_wallet_rechargeable_product();
                     if ($product) {
@@ -98,8 +98,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function add_wc_wallet_product_price_to_cart_item_data($cart_item_data, $product_id) {
             $product = wc_get_product($product_id);
-            if (isset($_POST['wc_wallet_balance_to_add']) && $product) {
-                $recharge_amount = round($_POST['wc_wallet_balance_to_add'], 2);
+            if (isset($_POST['woo_wallet_balance_to_add']) && $product) {
+                $recharge_amount = round($_POST['woo_wallet_balance_to_add'], 2);
                 $cart_item_data['recharge_amount'] = $recharge_amount;
             }
             return $cart_item_data;
