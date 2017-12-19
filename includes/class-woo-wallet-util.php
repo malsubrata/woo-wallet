@@ -39,6 +39,23 @@ if (!function_exists('is_wallet_rechargeable_cart')) {
 
 }
 
+if (!function_exists('get_wallet_rechargeable_orders')) {
+
+    function get_wallet_rechargeable_orders() {
+        $args = array(
+            'posts_per_page' => -1,
+            'meta_key' => '_wc_wallet_purchase_credited',
+            'meta_value' => true,
+            'post_type' => 'shop_order',
+            'post_status' => array( 'completed', 'processing', 'on-hold' ),
+            'suppress_filters' => true
+        );
+        $orders = get_posts( $args );
+        return wp_list_pluck($orders, 'ID');
+    }
+
+}
+
 if (!function_exists('get_wallet_rechargeable_product')) {
 
     /**
@@ -142,7 +159,7 @@ if (!function_exists('get_wallet_transactions')) {
                     }, $args, array_keys($args)
             ));
         }
-        if($limit){
+        if ($limit) {
             $limit = " LIMIT 0, {$limit}";
         }
         return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC" . $limit, $output);
@@ -154,7 +171,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
 
     function get_wallet_cashback_amount($order_id = 0) {
         $cashback_amount = 0;
-        if($order_id){
+        if ($order_id) {
             return get_post_meta($order_id, '_wallet_cashback', true) ? get_post_meta($order_id, '_wallet_cashback', true) : 0;
         }
         if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on')) {
@@ -195,8 +212,9 @@ if (!function_exists('get_wallet_cashback_amount')) {
 
 }
 
-if(!function_exists('is_full_payment_through_wallet')){
-    function is_full_payment_through_wallet(){
+if (!function_exists('is_full_payment_through_wallet')) {
+
+    function is_full_payment_through_wallet() {
         $is_valid_payment_through_wallet = true;
         $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
         if ($current_wallet_balance < wc()->cart->get_total('') || is_wallet_rechargeable_cart()) {
@@ -204,5 +222,6 @@ if(!function_exists('is_full_payment_through_wallet')){
         }
         return apply_filters('is_valid_payment_through_wallet', $is_valid_payment_through_wallet);
     }
+
 }
     

@@ -17,6 +17,7 @@ final class WooWallet {
     public $settings_api = null;
     /* wallet object */
     public $wallet = null;
+
     /**
      * Main instance
      * @return class object
@@ -27,6 +28,7 @@ final class WooWallet {
         }
         return self::$_instance;
     }
+
     /**
      * Class constructor
      */
@@ -40,6 +42,7 @@ final class WooWallet {
             add_action('admin_notices', array($this, 'admin_notices'), 15);
         }
     }
+
     /**
      * Constants define
      */
@@ -48,6 +51,7 @@ final class WooWallet {
         $this->define('WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE));
         $this->define('WOO_WALLET_PLUGIN_VERSION', '1.0.1');
     }
+
     /**
      * 
      * @param string $name
@@ -58,6 +62,7 @@ final class WooWallet {
             define($name, $value);
         }
     }
+
     /**
      * Check request
      * @param string $type
@@ -75,6 +80,7 @@ final class WooWallet {
                 return (!is_admin() || defined('DOING_AJAX') ) && !defined('DOING_CRON');
         }
     }
+
     /**
      * load plugin files
      */
@@ -96,6 +102,7 @@ final class WooWallet {
             include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-ajax.php' );
         }
     }
+
     /**
      * Plugin url
      * @return string path
@@ -103,6 +110,7 @@ final class WooWallet {
     public function plugin_url() {
         return untrailingslashit(plugins_url('/', WOO_WALLET_PLUGIN_FILE));
     }
+
     /**
      * Plugin init
      */
@@ -111,6 +119,7 @@ final class WooWallet {
         add_action('init', array($this, 'init'), 10);
         do_action('woo_wallet_init');
     }
+
     /**
      * Plugin init
      */
@@ -121,13 +130,15 @@ final class WooWallet {
         add_filter('woocommerce_payment_gateways', array($this, 'load_gateway'));
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_credit_purchase'));
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_credit_purchase'));
-        
+
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_partial_payment'), 10);
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_partial_payment'), 10);
-        
+
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_cashback'), 12);
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_cashback'), 12);
-        
+
+        add_filter('woocommerce_reports_get_order_report_query', array($this, 'woocommerce_reports_get_order_report_query'));
+
         add_rewrite_endpoint('woo-wallet', EP_PAGES);
         add_rewrite_endpoint('woo-wallet-transactions', EP_PAGES);
         if (!get_option('_wallet_enpoint_added')) {
@@ -135,6 +146,7 @@ final class WooWallet {
             update_option('_wallet_enpoint_added', true);
         }
     }
+
     /**
      * Text Domain loader
      */
@@ -146,6 +158,7 @@ final class WooWallet {
         load_textdomain('woo-wallet', WP_LANG_DIR . '/wc-wallet/wc-wallet-' . $locale . '.mo');
         load_plugin_textdomain('woo-wallet', false, plugin_basename(dirname(WOO_WALLET_PLUGIN_FILE)) . '/languages');
     }
+
     /**
      * WooCommerce wallet payment gateway loader
      * @param array $load_gateways
@@ -155,6 +168,7 @@ final class WooWallet {
         $load_gateways[] = 'Woo_Gateway_Wallet_payment';
         return $load_gateways;
     }
+
     /**
      * WooCommerce email loader
      * @param array $emails
@@ -164,6 +178,21 @@ final class WooWallet {
         $emails['Woo_Wallet_Email_New_Transaction'] = include WOO_WALLET_ABSPATH . 'includes/emails/class-woo-wallet-email-new-transaction.php';
         return $emails;
     }
+
+    /**
+     * Exclude rechargable orders from admin report
+     * @param array $query
+     * @return array
+     */
+    public function woocommerce_reports_get_order_report_query($query) {
+        $rechargable_orders = get_wallet_rechargeable_orders();
+        if (!empty($rechargable_orders)) {
+            $exclude_orders = implode(', ', $rechargable_orders);
+            $query['where'] .= " AND posts.ID NOT IN ({$exclude_orders})";
+        }
+        return $query;
+    }
+
     /**
      * Load template
      * @param string $template_name
@@ -178,6 +207,7 @@ final class WooWallet {
         $located = $this->locate_template($template_name, $template_path, $default_path);
         include ($located);
     }
+
     /**
      * Locate template file
      * @param string $template_name
@@ -203,6 +233,7 @@ final class WooWallet {
         }
         return $template;
     }
+
     /**
      * Display admin notice
      */
