@@ -217,7 +217,7 @@ if (!function_exists('is_full_payment_through_wallet')) {
     function is_full_payment_through_wallet() {
         $is_valid_payment_through_wallet = true;
         $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
-        if ($current_wallet_balance < wc()->cart->get_total('') || is_wallet_rechargeable_cart()) {
+        if (wc()->cart && ($current_wallet_balance < wc()->cart->get_total('') || is_wallet_rechargeable_cart())) {
             $is_valid_payment_through_wallet = false;
         }
         return apply_filters('is_valid_payment_through_wallet', $is_valid_payment_through_wallet);

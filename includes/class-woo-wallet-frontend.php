@@ -193,10 +193,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         }
 
         public function woocommerce_review_order_after_order_total() {
-            if (is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0) {
+            if (is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0 || (isset(wc()->cart->recurring_carts) && !empty(wc()->cart->recurring_carts))) {
                 return;
             }
             $rest_amount = wc()->cart->get_total('') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
+            wp_enqueue_style('dashicons');
             wp_enqueue_style('woo-wallet-payment-jquery-ui');
             wp_enqueue_script('jquery-ui-tooltip');
             ?>

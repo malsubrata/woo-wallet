@@ -5,11 +5,22 @@ if (!defined('ABSPATH')) {
 }
 
 class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
+
     /**
      * Class constructor
      */
     public function __construct() {
         $this->setup_properties();
+        $this->supports = array(
+            'products',
+            'subscriptions',
+            'subscription_cancellation',
+            'subscription_suspension',
+            'subscription_reactivation',
+            'subscription_amount_changes',
+            'subscription_date_changes',
+            'subscription_payment_method_change'
+        );
         // Load the settings
         $this->init_form_fields();
         $this->init_settings();
@@ -19,6 +30,8 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
         $this->instructions = $this->get_option('instructions');
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        /* support for woocommerce subscription plugin */
+        add_action( 'woocommerce_scheduled_subscription_payment_' . $this->id, array( $this, 'scheduled_subscription_payment' ), 10, 2 );
     }
 
     /**
@@ -66,6 +79,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             )
         );
     }
+
     /**
      * Is gateway available
      * @return boolean
@@ -73,6 +87,16 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
     public function is_available() {
         return is_full_payment_through_wallet();
     }
+
+    /**
+     * Is $order_id a subscription?
+     * @param  int  $order_id
+     * @return boolean
+     */
+    protected function is_subscription($order_id) {
+        return ( function_exists('wcs_order_contains_subscription') && ( wcs_order_contains_subscription($order_id) || wcs_is_subscription($order_id) || wcs_order_contains_renewal($order_id) ) );
+    }
+
     /**
      * Process wallet payment
      * @param int $order_id
@@ -95,6 +119,24 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             'result' => 'success',
             'redirect' => $this->get_return_url($order),
         );
+    }
+    /**
+     * Process renewal payment for subscription order
+     * @param int $amount_to_charge
+     * @param WC_Order $order
+     * @return void
+     */
+    public function scheduled_subscription_payment($amount_to_charge, $order){
+        if(get_post_meta($order->get_id(), '_wallet_scheduled_subscription_payment_processed', true)){
+            return;
+        }
+        $wallet_response = woo_wallet()->wallet->debit($order->get_customer_id(), $amount_to_charge, __('For order payment #' . $order->get_id()));
+        if($wallet_response){
+            $order->payment_complete();
+        } else{
+            $order->add_order_note(__('Insufficient funds in customer wallet', 'woo-wallet'));
+        }
+        update_post_meta($order->get_id(), '_wallet_scheduled_subscription_payment_processed', true);
     }
 
 }

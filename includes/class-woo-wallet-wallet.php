@@ -142,7 +142,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $amount = 0;
             }
             $balance = $this->get_wallet_balance($this->user_id, '');
-            if ($type == 'debit' && $balance <= 0) {
+            if ($type == 'debit' && ($balance <= 0 || $amount > $balance)) {
                 return false;
             }
             if ($type == 'credit') {
