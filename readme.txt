@@ -6,7 +6,7 @@ Requires at least: 4.4
 Tested up to: 4.9.1
 WC requires at least: 3.0
 WC tested up to: 3.2.5
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -32,6 +32,8 @@ With this extension, the customers won't have to fill in the payment details eve
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
 - Supports multiple languages translations.
+- Supports WooCommerce Subscriptions.
+- Supports WC Marketplace.
 
 = Workflow of WooCommerce Wallet plugin =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
@@ -97,6 +99,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 7. WooCommerce refund
 
 == Changelog ==
+
+= 1.0.3 =
+* Added: Support for WooCommerce Subscriptions plugin.
+* Added: Support for WC Marketplace plugin.
+* Added: Current wallet balance display in checkout page.
+* Fixed: User balance display in admin back-end.
+* Updated: Language file.
+
 = 1.0.2 =
 * Fixed: Admin report
 
@@ -110,4 +120,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.2 =
+= 1.0.3 =
