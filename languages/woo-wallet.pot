@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-25 13:20+0000\n"
+"POT-Creation-Date: 2017-12-26 10:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
@@ -92,13 +92,15 @@ msgstr ""
 msgid "Via wallet:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:242
+#: includes/class-woo-wallet.php:250
 msgid ""
 "WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
 "org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:42
+#: includes/vendor/wc-merketplace/class-woo-wallet-wcmp.php:17
+#: includes/vendor/wc-merketplace/class-woo-wallet-wcmp.php:22
 msgid "Wallet"
 msgstr ""
 
@@ -422,6 +424,14 @@ msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:143
 msgid "Choose which format of email to send."
+msgstr ""
+
+#: includes/vendor/wc-merketplace/class-woo-wallet-wcmp-gateway.php:28
+msgid "New transaction has been initiated"
+msgstr ""
+
+#: includes/vendor/wc-merketplace/class-woo-wallet-wcmp-gateway.php:41
+msgid "Invalid payment method"
 msgstr ""
 
 #. Name of the plugin

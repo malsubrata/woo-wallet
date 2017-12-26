@@ -116,7 +116,7 @@ final class WooWallet {
      */
     private function init_hooks() {
         register_activation_hook(WOO_WALLET_PLUGIN_FILE, array('Woo_Wallet_Install', 'install'));
-        add_action('init', array($this, 'init'), 10);
+        add_action('init', array($this, 'init'), 5);
         do_action('woo_wallet_init');
     }
 
@@ -126,6 +126,7 @@ final class WooWallet {
     public function init() {
         $this->load_plugin_textdomain();
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payment-method.php' );
+        $this->add_marketplace_support();
         add_filter('woocommerce_email_classes', array($this, 'woocommerce_email_classes'));
         add_filter('woocommerce_payment_gateways', array($this, 'load_gateway'));
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_credit_purchase'));
@@ -191,6 +192,13 @@ final class WooWallet {
             $query['where'] .= " AND posts.ID NOT IN ({$exclude_orders})";
         }
         return $query;
+    }
+    
+    public function add_marketplace_support(){
+        if (class_exists('WCMp')) {
+            include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp-gateway.php' );
+            include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp.php' );
+        }
     }
 
     /**
