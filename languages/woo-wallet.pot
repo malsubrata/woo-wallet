@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-26 10:10+0000\n"
+"POT-Creation-Date: 2017-12-26 18:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
@@ -151,11 +151,16 @@ msgstr ""
 msgid "Instructions that will be added to the thank you page."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:109
+#: includes/class-woo-wallet-payment-method.php:93
+#, php-format
+msgid " | Current Balance: <strong>%s</strong>"
+msgstr ""
+
+#: includes/class-woo-wallet-payment-method.php:114
 msgid "Payment via wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:137
+#: includes/class-woo-wallet-payment-method.php:142
 msgid "Insufficient funds in customer wallet"
 msgstr ""
 
