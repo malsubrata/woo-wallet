@@ -92,7 +92,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function add_balance_to_user_wallet() {
             $user_id = filter_input(INPUT_GET, 'user_id');
             $current_wallet_balance = 0;
-            if ($user_id == NULL) {
+            if ($user_id != NULL && !empty($user_id)) {
                 $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance($user_id, '');
             }
             ?>
@@ -178,7 +178,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 $user_id = filter_input(INPUT_POST, 'user_id');
                 $amount = filter_input(INPUT_POST, 'balance_amount');
                 $description = filter_input(INPUT_POST, 'payment_description');
-                if ($user_id != NULL && $amount != NULL) {
+                if ($user_id != NULL && !empty($user_id) && $amount != NULL && !empty($amount)) {
                     $amount = number_format($amount, 2, '.', '');
                     $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description);
                 } else {
