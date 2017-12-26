@@ -100,14 +100,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
-= 1.0.3 =
+= 1.0.3 - 2017-12-27 =
 * Added: Support for WooCommerce Subscriptions plugin.
 * Added: Support for WC Marketplace plugin.
 * Added: Current wallet balance display in checkout page.
 * Fixed: User balance display in admin back-end.
 * Updated: Language file.
 
-= 1.0.2 =
+= 1.0.2 - 2017-12-14 =
 * Fixed: Admin report
 
 = 1.0.1 - 2017-12-18 =
