@@ -103,8 +103,9 @@ class Woo_Wallet_Install {
             $product->set_reviews_allowed(false);
             $product->set_catalog_visibility('hidden');
             $product->save();
+            update_option('_woo_wallet_recharge_product', $product_id);
         }
-        update_option('_woo_wallet_recharge_product', $product_id);
+        
     }
 
 }
