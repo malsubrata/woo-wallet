@@ -17,6 +17,8 @@ A powerful, extendable WooCommerce wallet system which support payment, partial 
 
 WooCommerce Wallet plugin allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
+[youtube https://www.youtube.com/watch?v=WBCBfdGe6OI]
+
 = Use case of WooCommerce Wallet plugin =
 With this extension, the customers won't have to fill in the payment details every time. They can simply log in and pay for products using the wallet money. The customers will also get the advantage for earning cashback using the wallet money. The admin can process refund to the customer wallet. 
 
