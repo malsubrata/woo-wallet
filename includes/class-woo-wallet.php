@@ -116,6 +116,7 @@ final class WooWallet {
      */
     private function init_hooks() {
         register_activation_hook(WOO_WALLET_PLUGIN_FILE, array('Woo_Wallet_Install', 'install'));
+        add_filter('plugin_action_links_' . plugin_basename(WOO_WALLET_PLUGIN_FILE), array($this, 'plugin_action_links'));
         add_action('init', array($this, 'init'), 5);
         do_action('woo_wallet_init');
     }
@@ -146,6 +147,14 @@ final class WooWallet {
             flush_rewrite_rules();
             update_option('_wallet_enpoint_added', true);
         }
+    }
+
+    public function plugin_action_links($links) {
+        $action_links = array(
+            'settings' => '<a href="' . admin_url('admin.php?page=woo-wallet-settings') . '" aria-label="' . esc_attr__('View Wallet settings', 'woo-wallet') . '">' . esc_html__('Settings', 'woo-wallet') . '</a>',
+        );
+
+        return array_merge($action_links, $links);
     }
 
     /**
@@ -193,8 +202,8 @@ final class WooWallet {
         }
         return $query;
     }
-    
-    public function add_marketplace_support(){
+
+    public function add_marketplace_support() {
         if (class_exists('WCMp')) {
             include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp-gateway.php' );
             include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp.php' );

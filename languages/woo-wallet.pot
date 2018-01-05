@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-26 18:17+0000\n"
+"POT-Creation-Date: 2018-01-05 17:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
@@ -15,7 +15,7 @@ msgstr ""
 "X-Generator: Loco - https://localise.biz/"
 
 #: templates/wc-endpoint-wallet.php:24
-#: includes/class-woo-wallet-frontend.php:58
+#: includes/class-woo-wallet-frontend.php:81
 msgid "My Wallet"
 msgstr ""
 
@@ -64,35 +64,48 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:59
+#: includes/class-woo-wallet-frontend.php:44
+msgid "Current wallet balance"
+msgstr ""
+
+#: includes/class-woo-wallet-frontend.php:82
 msgid "Account details"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:60
+#: includes/class-woo-wallet-frontend.php:83
 msgid "Logout"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:147
+#: includes/class-woo-wallet-frontend.php:170
 msgid ""
 "You can not add another product while your cart contains with wallet "
 "recharge product."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:176
+#: includes/class-woo-wallet-frontend.php:199
 #, php-format
 msgid "If you place this order then %s will be credited to your wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:205
-#: includes/class-woo-wallet-frontend.php:206
+#: includes/class-woo-wallet-frontend.php:228
+#: includes/class-woo-wallet-frontend.php:229
 msgid "Pay by wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:227
+#: includes/class-woo-wallet-frontend.php:251
 msgid "Via wallet:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:250
+#: includes/class-woo-wallet.php:154
+msgid "View Wallet settings"
+msgstr ""
+
+#: includes/class-woo-wallet.php:154 includes/class-woo-wallet-settings.php:47
+#: includes/class-woo-wallet-settings.php:47
+msgid "Settings"
+msgstr ""
+
+#: includes/class-woo-wallet.php:259
 msgid ""
 "WooCommerce wallet payment plugin requires <a href=\"http://wordpress."
 "org/extend/plugins/woocommerce/\">WooCommerce</a> plugins to be active!"
@@ -259,11 +272,6 @@ msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:72
 msgid "Refund not credited to customer"
-msgstr ""
-
-#: includes/class-woo-wallet-settings.php:47
-#: includes/class-woo-wallet-settings.php:47
-msgid "Settings"
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:74
