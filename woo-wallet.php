@@ -6,11 +6,11 @@
  * Description: Take wallet payments on your store or process refund, cashback to user wallet.
  * Author: Subrata Mal
  * Author URI: https://profiles.wordpress.org/subratamal
- * Version: 1.0.3
+ * Version: 1.0.4
  * Requires at least: 4.4
  * Tested up to: 4.9.1
  * WC requires at least: 2.5
- * WC tested up to: 3.2.5
+ * WC tested up to: 3.2.6
  * Text Domain: woo-wallet
  * Domain Path: /languages/
  *

@@ -9,7 +9,7 @@ final class WooWallet {
     /**
      * The single instance of the class.
      *
-     * @var wc_wallet_payment
+     * @var WooWallet
      * @since 1.0.0
      */
     protected static $_instance = null;
@@ -49,7 +49,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define('WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/');
         $this->define('WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE));
-        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.0.3');
+        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.0.4');
     }
 
     /**
