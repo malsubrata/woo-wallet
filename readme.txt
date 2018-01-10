@@ -6,7 +6,7 @@ Requires at least: 4.4
 Tested up to: 4.9.1
 WC requires at least: 3.0
 WC tested up to: 3.2.6
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -102,6 +102,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.0.5 - 2018-01-11 =
+* Added: Auto deduct wallet balance for partial payment option.
+* Added: Tax options for rechargeable product.
+* Added: Search option in users wallet details page.
+* Added: Screen option in users wallet details page.
+* Added: Template file for mini wallet and partial payment.
+* Updated: Language file.
+
 = 1.0.4 - 2018-01-05 =
 * Added: Wallet nav menu to wordpress primary menu.
 * Added: Plugin settings link in WP plugin list page.
@@ -127,4 +135,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.4 =
+= 1.0.5 =

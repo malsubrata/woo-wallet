@@ -7,7 +7,7 @@ jQuery(function ($) {
                 $('.refund-actions .button.tips.disabled').remove();
             }
             if (!woo_wallet_admin_order_param.is_rechargeable_order) {
-                $('.refund-actions .do-manual-refund').before('<button type="button" class="button button-primary do-wallet-refund">Refund <span class="wc-order-refund-amount">' + woo_wallet_admin_order_param.default_price + '</span> via Wallet payments</button>');
+                $('.refund-actions .do-manual-refund').before('<button type="button" class="button button-primary do-wallet-refund">Refund <span class="wc-order-refund-amount">' + woo_wallet_admin_order_param.default_price + '</span> via wallet</button>');
                 $('#woocommerce-order-items').on('click', '.refund-actions .do-wallet-refund', this.do_wallet_refund);
             }
         },

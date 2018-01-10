@@ -99,6 +99,12 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('Enter wallet rechargeable product title', 'woo-wallet'),
                         'type' => 'text',
                         'default' => $this->get_rechargeable_product_title()
+                    )), $this->get_wc_tax_options(), array(
+                    array(
+                        'name' => 'is_auto_deduct_for_partial_payment',
+                        'label' => __('Auto deduct wallet balance for partial payment', 'woo-wallet'),
+                        'desc' => __('If a purchase requires more balance than you have in your wallet, then if checked the wallet balance will be deduct first and the rest of the amount will need to be paid.', 'woo-wallet'),
+                        'type' => 'checkbox',
                     )), $this->get_wc_payment_allowed_gateways()
                 ),
                 '_wallet_settings_credit' => array_merge(array(
@@ -192,20 +198,6 @@ if (!class_exists('Woo_Wallet_Settings')):
         }
 
         /**
-         * Set rechargeable product title
-         * @param string $title
-         * @return boolean | int 
-         */
-        public function set_rechargeable_product_title($title) {
-            $wallet_product = get_wallet_rechargeable_product();
-            if ($wallet_product) {
-                $wallet_product->set_name($title);
-                return $wallet_product->save();
-            }
-            return false;
-        }
-
-        /**
          * display plugin settings page
          */
         public function plugin_page() {
@@ -266,6 +258,36 @@ if (!class_exists('Woo_Wallet_Settings')):
         }
 
         /**
+         * allowed payment gateways
+         * @param string $context
+         * @return array
+         */
+        public function get_wc_tax_options($context = 'field') {
+            $tax_options = array();
+            if (wc_tax_enabled()) {
+                $tax_options[] = array(
+                    'name' => '_tax_status',
+                    'label' => __('Rechargeable Product Tax status', 'woo-wallet'),
+                    'desc' => __('Define whether or not the rechargeable Product is taxable.', 'woo-wallet'),
+                    'type' => 'select',
+                    'options' => array(
+                        'none' => _x('None', 'Tax status', 'woo-wallet'),
+                        'taxable' => __('Taxable', 'woo-wallet'),
+                    )
+                );
+                $tax_options[] = array(
+                    'name' => '_tax_class',
+                    'label' => __('Rechargeable Product Tax class', 'woo-wallet'),
+                    'desc' => __('Define whether or not the rechargeable Product is taxable.', 'woo-wallet'),
+                    'type' => 'select',
+                    'options' => wc_get_product_tax_class_options(),
+                    'desc' => __('Choose a tax class for rechargeable product. Tax classes are used to apply different tax rates specific to certain types of product.', 'woo-wallet'),
+                );
+            }
+            return $tax_options;
+        }
+
+        /**
          * Callback fuction of all option after save
          * @param array $old_value
          * @param array $value
@@ -278,6 +300,42 @@ if (!class_exists('Woo_Wallet_Settings')):
             if ($old_value['product_title'] != $value['product_title']) {
                 $this->set_rechargeable_product_title($value['product_title']);
             }
+
+            /**
+             * Save tax status
+             */
+            if ($old_value['_tax_status'] != $value['_tax_status'] || $old_value['_tax_class'] != $value['_tax_class']) {
+                $this->set_rechargeable_tax_status($value['_tax_status'], $value['_tax_class']);
+            }
+        }
+
+        /**
+         * Set rechargeable product title
+         * @param string $title
+         * @return boolean | int 
+         */
+        public function set_rechargeable_product_title($title) {
+            $wallet_product = get_wallet_rechargeable_product();
+            if ($wallet_product) {
+                $wallet_product->set_name($title);
+                return $wallet_product->save();
+            }
+            return false;
+        }
+
+        /**
+         * Set rechargeable tax status
+         * @param string $_tax_status, $_tax_class
+         * @return boolean | int 
+         */
+        public function set_rechargeable_tax_status($_tax_status, $_tax_class) {
+            $wallet_product = get_wallet_rechargeable_product();
+            if ($wallet_product) {
+                $wallet_product->set_tax_status($_tax_status);
+                $wallet_product->set_tax_class($_tax_class);
+                return $wallet_product->save();
+            }
+            return false;
         }
 
     }

@@ -36,19 +36,14 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function add_wallet_nav_menu($menu, $args) {
             // Check if add a new item to a menu assigned to Primary Navigation Menu location
-            if ('primary' !== $args->theme_location || apply_filters('woo_wallet_hide_nav_menu', false)) {
+            if (apply_filters('woo_wallet_hide_nav_menu', false)) {
                 return $menu;
             }
 
             ob_start();
-            $title = __('Current wallet balance', 'woo-wallet');
-            $menu_item = '<li class="right"><a class="woo-wallet-menu-contents" href="' . esc_url(wc_get_account_endpoint_url('woo-wallet')) . '" title="' . $title . '">';
-            $menu_item .= '<img style="width:16px;height:16px;float:left;margin:4px;" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/PjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDMzNC44NzcgMzM0Ljg3NyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMzM0Ljg3NyAzMzQuODc3OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGc+PHBhdGggZD0iTTMzMy4xOTYsMTU1Ljk5OWgtMTYuMDY3VjgyLjA5YzAtMTcuNzE5LTE0LjQxNS0zMi4xMzQtMzIuMTM0LTMyLjEzNGgtMjEuNzYxTDI0MC45NjUsOS45MTdDMjM3LjU3MSwzLjc5OCwyMzEuMTEyLDAsMjI0LjEwNywwYy0zLjI2NSwwLTYuNTA0LDAuODQyLTkuMzY0LDIuNDI5bC04NS40NjQsNDcuNTI2SDMzLjgxNWMtMTcuNzE5LDAtMzIuMTM0LDE0LjQxNS0zMi4xMzQsMzIuMTM0djIyMC42NTNjMCwxNy43MTksMTQuNDE1LDMyLjEzNCwzMi4xMzQsMzIuMTM0aDI1MS4xOGMxNy43MTksMCwzMi4xMzQtMTQuNDE1LDMyLjEzNC0zMi4xMzR2LTY0LjgwMmgxNi4wNjdWMTU1Ljk5OXogTTI4NC45OTUsNjIuODA5YzkuODk3LDAsMTcuOTgyLDcuNTE5LDE5LjA2OCwxNy4xNGgtMjQuMTUybC05LjUyNS0xNy4xNEgyODQuOTk1eiBNMjIwLjk5NiwxMy42NjNjMy4wMTQtMS42OSw3LjA3LTAuNTA4LDguNzM0LDIuNDk0bDM1LjQ3Niw2My43ODZIMTAxLjc5OEwyMjAuOTk2LDEzLjY2M3ogTTMwNC4yNzUsMzAyLjc0MmMwLDEwLjYzLTguNjUxLDE5LjI4MS0xOS4yODEsMTkuMjgxSDMzLjgxNWMtMTAuNjMsMC0xOS4yODEtOC42NTEtMTkuMjgxLTE5LjI4MVY4Mi4wOWMwLTEwLjYzLDguNjUxLTE5LjI4MSwxOS4yODEtMTkuMjgxaDcyLjM1M0w3NS4zNDUsNzkuOTVIMzcuODMyYy0zLjU1NCwwLTYuNDI3LDIuODc5LTYuNDI3LDYuNDI3czIuODczLDYuNDI3LDYuNDI3LDYuNDI3aDE0LjM5NmgyMzQuODNoMTcuMjE3djYzLjIwMWgtNDYuOTk5Yy0yMS44MjYsMC0zOS41ODksMTcuNzY0LTM5LjU4OSwzOS41ODl2Mi43NjRjMCwyMS44MjYsMTcuNzY0LDM5LjU4OSwzOS41ODksMzkuNTg5aDQ2Ljk5OVYzMDIuNzQyeiBNMzIwLjM0MiwyMjUuMDg3aC0zLjIxM2gtNTkuODUzYy0xNC43NDMsMC0yNi43MzYtMTEuOTkyLTI2LjczNi0yNi43MzZ2LTIuNzY0YzAtMTQuNzQzLDExLjk5Mi0yNi43MzYsMjYuNzM2LTI2LjczNmg1OS44NTNoMy4yMTNWMjI1LjA4N3ogTTI3Ni45NjEsMTk3LjQ5N2MwLDcuODQxLTYuMzUsMTQuMTktMTQuMTksMTQuMTljLTcuODQxLDAtMTQuMTktNi4zNS0xNC4xOS0xNC4xOXM2LjM1LTE0LjE5LDE0LjE5LTE0LjE5QzI3MC42MTIsMTgzLjMwNiwyNzYuOTYxLDE4OS42NjIsMjc2Ljk2MSwxOTcuNDk3eiIvPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48L3N2Zz4=" /> ';
-            $menu_item .= woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
-            $menu_item .= '</a></li>';
-            echo $menu_item;
-            $social = ob_get_clean();
-            return $menu . $social;
+            woo_wallet()->get_template('mini-wallet.php');
+            $mini_wallet = ob_get_clean();
+            return $menu . $mini_wallet;
         }
 
         /**
@@ -144,7 +139,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $is_purchasable;
         }
-
+        /**
+         * Set topup product price at run time
+         * @param OBJECT $cart
+         * @return NULL
+         */
         public function wc_wallet_payment_set_recharge_product_price($cart) {
             $product = get_wallet_rechargeable_product();
             if (!$product) {
@@ -191,7 +190,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $_available_gateways;
         }
-
+        /**
+         * Cashback notice
+         */
         public function woocommerce_before_cart_table() {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_cart()) :
                 ?>
@@ -206,7 +207,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
             }
-            if (!is_full_payment_through_wallet() && isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) {
+            if (!is_full_payment_through_wallet() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general'))) {
                 $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
                 update_post_meta($order_id, '_original_order_amount', $order->get_total(''));
                 $order->set_total($order->get_total('') - $current_wallet_balance);
@@ -214,26 +215,18 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 $order->save();
             }
         }
-
+        /**
+         * Function that display partial payment option
+         * @return NULL
+         */
         public function woocommerce_review_order_after_order_total() {
             if (is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0 || (isset(wc()->cart->recurring_carts) && !empty(wc()->cart->recurring_carts))) {
                 return;
             }
-            $rest_amount = wc()->cart->get_total('') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
             wp_enqueue_style('dashicons');
             wp_enqueue_style('woo-wallet-payment-jquery-ui');
             wp_enqueue_script('jquery-ui-tooltip');
-            ?>
-            <tr class="wallet-pay-partial">
-                <th><?php _e('Pay by wallet', 'woo-wallet'); ?> <span id="partial_wallet_payment_tooltip" style="vertical-align: middle;" title="<?php echo sprintf('If checked %s%0.2f will be debited from your wallet and %s%0.2f will be paid throught other payment method', get_woocommerce_currency_symbol(), woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), ''), get_woocommerce_currency_symbol(), $rest_amount); ?>" class="dashicons dashicons-info"></span></th>
-                <td data-title="<?php esc_attr_e('Pay by wallet', 'woo-wallet'); ?>"><input type="checkbox" style="vertical-align: middle;" name="partial_pay_through_wallet" class="partial_pay_through_wallet" /></td>
-            </tr>
-            <script type="text/javascript">
-                jQuery(function ($) {
-                    $('#partial_wallet_payment_tooltip').tooltip();
-                });
-            </script>
-            <?php
+            woo_wallet()->get_template('woo-wallet-partial-payment.php');
         }
 
         /**

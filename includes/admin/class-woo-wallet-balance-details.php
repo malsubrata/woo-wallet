@@ -37,7 +37,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         $sortable = $this->get_sortable_columns();
         $data = $this->table_data();
         usort($data, array(&$this, 'sort_data'));
-        $perPage = 10;
+        $perPage = $this->get_items_per_page('users_per_page', 15);
         $currentPage = $this->get_pagenum();
         $totalItems = count($data);
         $this->set_pagination_args(array(
@@ -64,7 +64,11 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
      * @return Array
      */
     public function get_sortable_columns() {
-        return array('username' => array('username', false));
+        $sortable_columns = array(
+            'username' => array('username', false),
+            'balance' => array('balance', false),
+        );
+        return apply_filters('woo_wallet_balance_details_sortable_columns', $sortable_columns);
     }
 
     /**
@@ -89,7 +93,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'orderby' => 'login',
             'order' => 'ASC',
             'offset' => '',
-            'search' => '',
+            'search' => isset($_POST['s']) ? $_POST['s'] : '',
             'number' => '',
             'count_total' => false,
             'fields' => 'all',

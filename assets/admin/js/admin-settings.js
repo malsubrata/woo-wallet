@@ -3,6 +3,13 @@
 jQuery(function ($) {
     var settings = {
         init: function () {
+            $('#_wallet_settings_general-_tax_status').on('change', function (){
+                if($(this).val() == 'taxable'){
+                    $('._tax_class').show();
+                } else{
+                    $('._tax_class').hide();
+                }
+            }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_gateway_charge').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('.gateway_charge_type').show();

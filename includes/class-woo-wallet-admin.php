@@ -76,8 +76,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function wallet_page() {
             ?>
             <div class="wrap">
-                <h2><?php _e('User wallet details', 'woo-wallet'); ?></h2>
-                <form id="posts-filter" method="get">
+                <h2><?php _e('Users wallet details', 'woo-wallet'); ?></h2>
+                <form id="posts-filter" method="post">
+                    <?php $this->balance_details_table->search_box(__('Search Users', 'woo-wallet'), 'search_id'); ?>
                     <?php $this->balance_details_table->display(); ?>
                 </form>
                 <div id="ajax-response"></div>
@@ -163,11 +164,18 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * Wallet details page initialization
          */
         public function add_woo_wallet_details() {
+            $option = 'per_page';
+            $args = array(
+                'label' => 'Number of items per page:',
+                'default' => 15,
+                'option' => 'users_per_page'
+            );
+            add_screen_option($option, $args);
             include_once( WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-balance-details.php' );
             $this->balance_details_table = new Woo_Wallet_Balance_Details();
             $this->balance_details_table->prepare_items();
         }
-
+        
         /**
          * Handel admin add wallet balance
          */
@@ -256,7 +264,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
         public function add_wallet_partial_payment_amount($order_id) {
             $order = wc_get_order($order_id);
-            if(!get_post_meta($order_id, '_via_wallet_payment', true)){
+            if (!get_post_meta($order_id, '_via_wallet_payment', true)) {
                 return;
             }
             ?>
@@ -264,7 +272,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 <td class="label"><?php _e('Via wallet', 'woo-wallet'); ?>:</td>
                 <td width="1%"></td>
                 <td class="via-wallet">
-                    <?php echo '-'.wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array( 'currency' => $order->get_currency() )); ?>
+                    <?php echo '-' . wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
                 </td>
             </tr>
             <?php
