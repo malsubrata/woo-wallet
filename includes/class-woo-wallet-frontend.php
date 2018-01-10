@@ -36,7 +36,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function add_wallet_nav_menu($menu, $args) {
             // Check if add a new item to a menu assigned to Primary Navigation Menu location
-            if (apply_filters('woo_wallet_hide_nav_menu', false)) {
+            if (apply_filters('woo_wallet_hide_nav_menu', false, $menu, $args)) {
                 return $menu;
             }
 
