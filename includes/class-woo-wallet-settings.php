@@ -271,8 +271,8 @@ if (!class_exists('Woo_Wallet_Settings')):
                     'desc' => __('Define whether or not the rechargeable Product is taxable.', 'woo-wallet'),
                     'type' => 'select',
                     'options' => array(
-                        'none' => _x('None', 'Tax status', 'woo-wallet'),
                         'taxable' => __('Taxable', 'woo-wallet'),
+                        'none' => _x('None', 'Tax status', 'woo-wallet'),
                     )
                 );
                 $tax_options[] = array(
