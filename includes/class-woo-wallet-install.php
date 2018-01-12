@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 class Woo_Wallet_Install {
+
     /**
      * Plugin install
      * @return void
@@ -14,10 +15,11 @@ class Woo_Wallet_Install {
             return;
         }
         self::create_tables();
-        if(!get_option('_woo_wallet_recharge_product') || !wc_get_product(get_option('_woo_wallet_recharge_product'))){
+        if (!get_option('_woo_wallet_recharge_product') || !wc_get_product(get_option('_woo_wallet_recharge_product'))) {
             self::create_product();
         }
     }
+
     /**
      * plugins table creation
      * @global object $wpdb
@@ -29,6 +31,7 @@ class Woo_Wallet_Install {
 
         dbDelta(self::get_schema());
     }
+
     /**
      * Plugin table schema
      * @global object $wpdb
@@ -63,6 +66,7 @@ class Woo_Wallet_Install {
         ) $collate;";
         return $tables;
     }
+
     /**
      * create rechargeable product
      */
@@ -100,12 +104,14 @@ class Woo_Wallet_Install {
             update_post_meta($product_id, '_manage_stock', 'no');
             update_post_meta($product_id, '_backorders', 'no');
             update_post_meta($product_id, '_stock', '');
-            $product->set_reviews_allowed(false);
-            $product->set_catalog_visibility('hidden');
-            $product->save();
+            if (version_compare(WC_VERSION, '3.0', '>=')) {
+                $product->set_reviews_allowed(false);
+                $product->set_catalog_visibility('hidden');
+                $product->save();
+            }
+
             update_option('_woo_wallet_recharge_product', $product_id);
         }
-        
     }
 
 }

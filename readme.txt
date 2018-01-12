@@ -50,7 +50,7 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 * MySQL version 5.0 or greater (MySQL 5.6 or greater is recommended)
 * Some payment gateways require fsockopen support (for IPN access)
 * WordPress 4.4+
-* WooCommerce 2.6+
+* WooCommerce 3.0+
 
 = Automatic installation =
 
@@ -77,6 +77,10 @@ Yes, this plugin works fine with WordPress 4.9, It is also compatible for older 
 = Up to which version of WooCommerce this plugin compatible with? =
 
 This plugin is compatible with the latest version of WooCommerce.
+
+= Can I remove wallet item from menu =
+
+Yes, just copy `add_filter( 'woo_wallet_hide_nav_menu', '__return_true' );` to you theme function.php file.
 
 = Where can I get support or talk to other users? =
 
