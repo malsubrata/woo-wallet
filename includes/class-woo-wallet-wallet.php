@@ -107,13 +107,21 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             if (get_post_meta($order_id, '_wc_wallet_cashback_credited', true)) {
                 return;
             }
+            /* General Cashback */
             if (get_wallet_cashback_amount($order->get_id())) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_wallet_cashback_amount($order->get_id()), __('Wallet credit through cashback #' . $order->get_id(), 'woo-wallet'));
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
-                    update_post_meta($order_id, '_wc_wallet_cashback_credited', true);
                 }
             }
+            /* Coupon Cashback */
+            if(get_post_meta($order->get_id(), '_coupon_cashback_amount', true)){
+                $transaction_id = $this->credit($order->get_customer_id(), get_post_meta($order->get_id(), '_coupon_cashback_amount', true), __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
+                if ($transaction_id) {
+                    update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
+                }
+            }
+            update_post_meta($order_id, '_wc_wallet_cashback_credited', true);
         }
 
         public function wallet_partial_payment($order_id) {

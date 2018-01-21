@@ -174,7 +174,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
         if ($order_id) {
             return get_post_meta($order_id, '_wallet_cashback', true) ? get_post_meta($order_id, '_wallet_cashback', true) : 0;
         }
-        if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on')) {
+        if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit')) {
             $cashback_rule = woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart');
             $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
             $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
@@ -206,7 +206,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
                     $cashback_amount += $global_cashbak_amount;
                 }
             }
-            return apply_filters('wcwp_cashback_amount', $cashback_amount);
+            return apply_filters('woo_wallet_cashback_amount', $cashback_amount, $order_id);
         }
     }
 

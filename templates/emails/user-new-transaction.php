@@ -2,7 +2,7 @@
 /**
  * Customer wallet transaction email
  *
- * This template can be overridden by copying it to yourtheme/wc-wallet/user-new-transaction.php.
+ * This template can be overridden by copying it to yourtheme/woocommerce/emails/user-new-transaction.php.
  *
  * HOWEVER, on occasion we will need to update template files and you
  * (the theme developer) will need to copy the new files to your theme to
@@ -22,10 +22,10 @@ if (!defined('ABSPATH')) {
 do_action('woocommerce_email_header', $email_heading, $email);
 ?>
 <?php if ($type == 'credit') { ?>
-    <p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been credited to your wallet.', 'woo-wallet'); ?></p>
+<p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been credited to your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is '); ?><?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
 <?php } ?>
 <?php if ($type == 'debit') { ?>
-    <p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been debited from your wallet.', 'woo-wallet'); ?></p>
+    <p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been debited from your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is '); ?><?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
 <?php } ?>
 <?php
 /**

@@ -76,6 +76,7 @@
 }
 .woo-wallet-transactions-items li div:first-child{
     float: left;
+    max-width: 80%;
 }
 .woo-wallet-transactions-items li div:last-child{
     float: right;

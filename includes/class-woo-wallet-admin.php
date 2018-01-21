@@ -21,6 +21,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 add_action('save_post_product', array($this, 'save_post_product'));
             }
             add_action('woocommerce_admin_order_totals_after_tax', array($this, 'add_wallet_partial_payment_amount'), 10, 1);
+
+            add_action('woocommerce_coupon_options', array($this, 'add_coupon_option_for_cashback'));
+            add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
         }
 
         /**
@@ -175,7 +178,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $this->balance_details_table = new Woo_Wallet_Balance_Details();
             $this->balance_details_table->prepare_items();
         }
-        
+
         /**
          * Handel admin add wallet balance
          */
@@ -261,7 +264,11 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 update_post_meta($post_ID, '_cashback_amount', $_POST['wcwp_cashback_amount']);
             }
         }
-
+        /**
+         * Display partial payment amount in order page
+         * @param type $order_id
+         * @return type
+         */
         public function add_wallet_partial_payment_amount($order_id) {
             $order = wc_get_order($order_id);
             if (!get_post_meta($order_id, '_via_wallet_payment', true)) {
@@ -277,7 +284,26 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </tr>
             <?php
         }
-
+        /**
+         * Add setting to convert coupon to cashback.
+         * @since 1.0.6
+         */
+        public function add_coupon_option_for_cashback() {
+            woocommerce_wp_checkbox(array(
+                'id' => '_is_coupon_cashback',
+                'label' => __('Apply as cashback', 'woo-wallet'),
+                'description' => __('Check this box if the coupon should apply as cashback.', 'woo-wallet'),
+            ));
+        }
+        /**
+         * Save coupon data
+         * @param int $post_id
+         * @since 1.0.6
+         */
+        public function save_coupon_data($post_id){
+            $_is_coupon_cashback = isset( $_POST['_is_coupon_cashback'] ) ? 'yes' : 'no';
+            update_post_meta($post_id, '_is_coupon_cashback', $_is_coupon_cashback);
+        }
     }
 
 }

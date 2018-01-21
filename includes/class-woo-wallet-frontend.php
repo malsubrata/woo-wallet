@@ -27,7 +27,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_checkout_order_processed', array($this, 'woocommerce_checkout_order_processed'), 30, 3);
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));
             add_action('woocommerce_get_order_item_totals', array($this, 'woocommerce_get_order_item_totals'), 10, 2);
+            add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
+            add_action('woocommerce_shop_loop_item_title', array($this, 'display_cashback'), 15);
+            add_action('woocommerce_before_single_product_summary', array($this, 'display_cashback'), 15);
         }
+
         /**
          * Add a new item to a menu
          * @param string $menu
@@ -36,7 +40,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function add_wallet_nav_menu($menu, $args) {
             // Check if add a new item to a menu assigned to Primary Navigation Menu location
-            if (apply_filters('woo_wallet_hide_nav_menu', false, $menu, $args)) {
+            if (apply_filters('woo_wallet_hide_nav_menu', false, $menu, $args) || in_array($args->theme_location, apply_filters('woo_wallet_exclude_nav_menu_location', array(), $menu, $args))) {
                 return $menu;
             }
 
@@ -54,6 +58,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_register_style('woo-wallet-payment-jquery-ui', '//ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
             wp_register_style('jquery-datatables-style', '//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css');
             wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo-wallet-frontend-style', woo_wallet()->plugin_url() . '/assets/frontend/css/woo-wallet-frontend.css', array(), WOO_WALLET_PLUGIN_VERSION);
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
             wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             if (is_account_page()) {
@@ -63,6 +68,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('wc-endpoint-wallet-transactions');
             }
+            wp_enqueue_style('woo-wallet-frontend-style');
         }
 
         /**
@@ -139,6 +145,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $is_purchasable;
         }
+
         /**
          * Set topup product price at run time
          * @param OBJECT $cart
@@ -190,6 +197,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $_available_gateways;
         }
+
         /**
          * Cashback notice
          */
@@ -215,6 +223,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 $order->save();
             }
         }
+
         /**
          * Function that display partial payment option
          * @return NULL
@@ -244,6 +253,63 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $total_rows['via_wallet'] = array('label' => __('Via wallet:', 'woo-wallet'), 'value' => wc_price(get_post_meta($order->get_id(), '_via_wallet_payment', true), array('currency' => $order->get_currency())));
             $total_rows['order_total'] = $order_total;
             return $total_rows;
+        }
+
+        /**
+         * Convert coupon to cashback.
+         * @param array $item
+         * @param string $code
+         * @param Object $coupon
+         * @param Object $order
+         * @since 1.0.6
+         */
+        public function convert_coupon_to_cashbak_if($item, $code, $coupon, $order) {
+            $coupon_id = $coupon->get_id();
+            $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
+            if ('yes' === $_is_coupon_cashback) {
+                $discount_total = $order->get_discount_total('edit');
+                $order->set_discount_total(0);
+                $order_id = $order->save();
+                update_post_meta($order_id, '_coupon_cashback_amount', $discount_total);
+            }
+        }
+        /**
+         * Display cashback amount in product
+         * @global type $post
+         */
+        public function display_cashback() {
+            global $post;
+            $product = wc_get_product($post->ID);
+            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit') && apply_filters('is_display_cashback_on_product', true) && apply_filters('is_product_cashback_enable', true, $post->ID)) {
+                if ('product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
+                    $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
+                    $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
+                    $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
+                    $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
+                    $cashback_amount = 0;
+                    $cashback_type = 'percent';
+                    if ($product_wise_cashback_type && $product_wise_cashback_amount) {
+                        if ('percent' === $product_wise_cashback_type) {
+                            $cashback_amount = $product_wise_cashback_amount;
+                        } else {
+                            $cashback_amount = $product_wise_cashback_amount;
+                            $cashback_type = 'fixed';
+                        }
+                    } else {
+                        if ('percent' === $global_cashbak_type) {
+                            $cashback_amount = $global_cashbak_amount;
+                        } else {
+                            $cashback_amount = $global_cashbak_amount;
+                            $cashback_type = 'fixed';
+                        }
+                    }
+                    if ('percent' === $cashback_type) {
+                        echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
+                    } else {
+                        echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                    }
+                }
+            }
         }
 
     }

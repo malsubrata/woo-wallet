@@ -1,6 +1,6 @@
 === WooCommerce Wallet - credit, cashback, refund system ===
 Contributors: subratamal, bappa1995
-Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet
+Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9.1
