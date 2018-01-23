@@ -208,6 +208,9 @@ final class WooWallet {
             include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp-gateway.php' );
             include_once( WOO_WALLET_ABSPATH . 'includes/vendor/wc-merketplace/class-woo-wallet-wcmp.php' );
         }
+        if(class_exists('WeDevs_Dokan')){
+            include_once( WOO_WALLET_ABSPATH . 'includes/vendor/dokan/class-woo-wallet-dokan.php' );
+        }
     }
 
     /**
