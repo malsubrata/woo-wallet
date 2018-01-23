@@ -3,10 +3,10 @@ Contributors: subratamal, bappa1995
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 4.9.1
+Tested up to: 4.9.2
 WC requires at least: 3.0
 WC tested up to: 3.2.6
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -33,9 +33,11 @@ With this extension, the customers won't have to fill in the payment details eve
 - From the backend, the admin can view the transaction history.
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
+- Convert WooCommerce coupon into cashback.
 - Supports multiple languages translations.
 - Supports WooCommerce Subscriptions.
 - Supports WC Marketplace.
+- Supports Dokan Multivendor Marketplace.
 
 = Workflow of WooCommerce Wallet plugin =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
@@ -105,6 +107,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 7. WooCommerce refund
 
 == Changelog ==
+
+= 1.0.6 - 2018-01-24 = 
+* Added: Now admin can convert WooCommerce coupon to cashback.
+* Added: Display cashback amount on WooCommerce products.
+* Added: Remaining balance display in email template.
+* Added: Dokan Multivendor Marketplace support.
+* Updated: Improve wallet menu item.
+* Updated: Language file.
 
 = 1.0.5 - 2018-01-11 =
 * Added: Auto deduct wallet balance for partial payment option.

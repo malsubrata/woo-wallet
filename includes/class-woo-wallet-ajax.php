@@ -11,6 +11,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
          */
         public function __construct() {
             add_action('wp_ajax_wc_wallet_payment_order_refund', array($this, 'wc_wallet_payment_order_refund'));
+            add_action('wp_ajax_woocommerce_wallet_rated', array($this, 'woocommerce_wallet_rated'));
         }
         /**
          * Process refund through wallet
@@ -89,7 +90,11 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 wp_send_json_error(array('error' => $ex->getMessage()));
             }
         }
-
+        
+        public function woocommerce_wallet_rated(){
+            update_option('woocommerce_wallet_admin_footer_text_rated', true);
+            die;
+        }
     }
 
 }

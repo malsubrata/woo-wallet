@@ -24,6 +24,8 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
             add_action('woocommerce_coupon_options', array($this, 'add_coupon_option_for_cashback'));
             add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
+
+            add_filter('admin_footer_text', array($this, 'admin_footer_text'), 1);
         }
 
         /**
@@ -264,6 +266,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 update_post_meta($post_ID, '_cashback_amount', $_POST['wcwp_cashback_amount']);
             }
         }
+
         /**
          * Display partial payment amount in order page
          * @param type $order_id
@@ -284,6 +287,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </tr>
             <?php
         }
+
         /**
          * Add setting to convert coupon to cashback.
          * @since 1.0.6
@@ -295,15 +299,41 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 'description' => __('Check this box if the coupon should apply as cashback.', 'woo-wallet'),
             ));
         }
+
         /**
          * Save coupon data
          * @param int $post_id
          * @since 1.0.6
          */
-        public function save_coupon_data($post_id){
-            $_is_coupon_cashback = isset( $_POST['_is_coupon_cashback'] ) ? 'yes' : 'no';
+        public function save_coupon_data($post_id) {
+            $_is_coupon_cashback = isset($_POST['_is_coupon_cashback']) ? 'yes' : 'no';
             update_post_meta($post_id, '_is_coupon_cashback', $_is_coupon_cashback);
         }
+
+        public function admin_footer_text($footer_text) {
+            if (!current_user_can('manage_woocommerce')) {
+                return $footer_text;
+            }
+            $current_screen = get_current_screen();
+            $woo_wallet_pages = array('toplevel_page_woo-wallet', 'admin_page_woo-wallet-add', 'admin_page_woo-wallet-transactions', 'woowallet_page_woo-wallet-settings');
+            if (isset($current_screen->id) && in_array($current_screen->id, $woo_wallet_pages)) {
+                if (!get_option('woocommerce_wallet_admin_footer_text_rated')) {
+                    $footer_text = sprintf(
+                            __('If you like %1$s please leave us a %2$s rating. A huge thanks in advance!', 'woo-wallet'), sprintf('<strong>%s</strong>', esc_html__('WooCommerce Wallet', 'woo-wallet')), '<a href="https://wordpress.org/support/plugin/woo-wallet/reviews?rate=5#new-post" target="_blank" class="wc-rating-link" data-rated="' . esc_attr__('Thanks :)', 'woo-wallet') . '">&#9733;&#9733;&#9733;&#9733;&#9733;</a>'
+                    );
+                    wc_enqueue_js("
+					jQuery( 'a.wc-rating-link' ).click( function() {
+						jQuery.post( '" . WC()->ajax_url() . "', { action: 'woocommerce_wallet_rated' } );
+						jQuery( this ).parent().text( jQuery( this ).data( 'rated' ) );
+					});
+				");
+                } else {
+                    $footer_text = __('Thank you using WooCommerce Wallet.', 'woo-wallet');
+                }
+            }
+            return $footer_text;
+        }
+
     }
 
 }
