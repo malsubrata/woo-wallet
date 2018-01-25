@@ -104,7 +104,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             ?>
             <div class="wrap">
                 <?php settings_errors(); ?>
-                <h2><?php _e('Add Balance', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+                <h2><?php _e('Adjust Balance', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
                 <p>
                     <?php
                     _e('Current wallet balance: ', 'woo-wallet');
@@ -118,7 +118,17 @@ if (!class_exists('Woo_Wallet_Admin')) {
                                 <th scope="row"><label for="balance_amount"><?php _e('Amount', 'woo-wallet'); ?></label></th>
                                 <td>
                                     <input type="number" step="0.01" name="balance_amount" class="regular-text" />
-                                    <p class="description"><?php _e('Enter Amount to add', 'woo-wallet'); ?></p>
+                                    <p class="description"><?php _e('Enter Amount', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="payment_type"><?php _e('Type', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <select class="regular-text" name="payment_type" id="payment_type">
+                                        <option value="credit"><?php _e('Credit', 'woo-wallet'); ?></option>
+                                        <option value="debit"><?php _e('Debit', 'woo-wallet'); ?></option>
+                                    </select>
+                                    <p class="description"><?php _e('Select payment type', 'woo-wallet'); ?></p>
                                 </td>
                             </tr>
                             <tr>
@@ -132,7 +142,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     </table>
                     <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
                     <?php wp_nonce_field('wc-wallet-admin-add-balance', 'wc-wallet-admin-add-balance'); ?>
-                    <?php submit_button(__('Add Balance', 'woo-wallet')); ?>
+                    <?php submit_button(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -190,14 +200,22 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 $message = '';
                 $user_id = filter_input(INPUT_POST, 'user_id');
                 $amount = filter_input(INPUT_POST, 'balance_amount');
+                $payment_type = filter_input(INPUT_POST, 'payment_type');
                 $description = filter_input(INPUT_POST, 'payment_description');
                 if ($user_id != NULL && !empty($user_id) && $amount != NULL && !empty($amount)) {
                     $amount = number_format($amount, 2, '.', '');
-                    $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description);
+                    if ('credit' === $payment_type) {
+                        $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description);
+                    } else if ('debit' === $payment_type) {
+                        $transaction_id = woo_wallet()->wallet->debit($user_id, $amount, $description);
+                    }
+                    if (!$transaction_id) {
+                        $message = __('An error occurred please try again', 'woo-wallet');
+                    }
                 } else {
                     $message = __('Please enter amount', 'woo-wallet');
                 }
-                if (is_null($transaction_id)) {
+                if (!$transaction_id) {
                     add_settings_error('', '102', $message);
                 } else {
                     wp_safe_redirect(add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')));
