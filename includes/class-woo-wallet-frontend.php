@@ -273,6 +273,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 update_post_meta($order_id, '_coupon_cashback_amount', $discount_total);
             }
         }
+
         /**
          * Display cashback amount in product
          * @global type $post
@@ -303,10 +304,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                             $cashback_type = 'fixed';
                         }
                     }
-                    if ('percent' === $cashback_type) {
-                        echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
-                    } else {
-                        echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                    if ($cashback_amount) {
+                        if ('percent' === $cashback_type) {
+                            echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
+                        } else {
+                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                        }
                     }
                 }
             }
