@@ -215,7 +215,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function get_wc_payment_gateways($context = 'field') {
             $gateways = array();
-            foreach (WC()->payment_gateways->payment_gateways() as $gateway) {
+            foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
                 if ('yes' === $gateway->enabled && $gateway->id != 'wallet') {
                     $method_title = $gateway->get_title() ? $gateway->get_title() : __('(no title)', 'woo-wallet');
                     if ($context == 'field') {
@@ -240,7 +240,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function get_wc_payment_allowed_gateways($context = 'field') {
             $gateways = array();
-            foreach (WC()->payment_gateways->payment_gateways() as $gateway) {
+            foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
                 if ('yes' === $gateway->enabled && $gateway->id != 'wallet') {
                     $method_title = $gateway->get_title() ? $gateway->get_title() : __('(no title)', 'woo-wallet');
                     if ($context == 'field') {
