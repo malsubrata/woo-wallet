@@ -18,7 +18,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function __construct($settings_api) {
             $this->settings_api = $settings_api;
-            
+            add_action('admin_init', array($this, 'plugin_settings_page_init'));
             add_action('admin_menu', array($this, 'admin_menu'), 60);
             add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
         }
@@ -27,8 +27,7 @@ if (!class_exists('Woo_Wallet_Settings')):
          * wc wallet menu
          */
         public function admin_menu() {
-            $hook = add_submenu_page('woo-wallet', __('Settings', 'woo-wallet'), __('Settings', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-settings', array($this, 'plugin_page'));
-            add_action("load-$hook", array($this, 'plugin_settings_page_init'));
+            add_submenu_page('woo-wallet', __('Settings', 'woo-wallet'), __('Settings', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-settings', array($this, 'plugin_page'));
         }
 
         /**
