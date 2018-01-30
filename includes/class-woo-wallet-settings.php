@@ -1,9 +1,9 @@
 <?php
 
 /**
- * WC Qr codes settings
+ * Woo Wallet settings
  *
- * @author Bappa Mal
+ * @author Subrata Mal
  */
 if (!class_exists('Woo_Wallet_Settings')):
 
@@ -18,16 +18,23 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function __construct($settings_api) {
             $this->settings_api = $settings_api;
-
-            add_action('admin_init', array($this, 'admin_init'));
+            
             add_action('admin_menu', array($this, 'admin_menu'), 60);
             add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+        }
+        
+        /**
+         * wc wallet menu
+         */
+        public function admin_menu() {
+            $hook = add_submenu_page('woo-wallet', __('Settings', 'woo-wallet'), __('Settings', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-settings', array($this, 'plugin_page'));
+            add_action("load-$hook", array($this, 'plugin_settings_page_init'));
         }
 
         /**
          * admin init 
          */
-        public function admin_init() {
+        public function plugin_settings_page_init() {
             //set the settings
             $this->settings_api->set_sections($this->get_settings_sections());
             foreach ($this->get_settings_sections() as $section) {
@@ -40,13 +47,7 @@ if (!class_exists('Woo_Wallet_Settings')):
             $this->settings_api->admin_init();
         }
 
-        /**
-         * wc wallet menu
-         */
-        public function admin_menu() {
-            add_submenu_page('woo-wallet', __('Settings', 'woo-wallet'), __('Settings', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-settings', array($this, 'plugin_page'));
-        }
-
+        
         /**
          * Enqueue scripts and styles
          */
