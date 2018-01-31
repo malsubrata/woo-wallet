@@ -43,6 +43,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (apply_filters('woo_wallet_hide_nav_menu', false, $menu, $args) || in_array($args->theme_location, apply_filters('woo_wallet_exclude_nav_menu_location', array(), $menu, $args))) {
                 return $menu;
             }
+            
+            if('off' === woo_wallet()->settings_api->get_option($args->theme_location, '_wallet_settings_general', 'off')){
+                return $menu;
+            }
 
             ob_start();
             woo_wallet()->get_template('mini-wallet.php');
