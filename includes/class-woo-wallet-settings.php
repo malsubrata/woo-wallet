@@ -136,6 +136,12 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'type' => 'number',
                     ),
                     array(
+                        'name' => 'max_cashback_amount',
+                        'label' => __('Maximum Cashback Amount', 'woo-wallet'),
+                        'desc' => __('Enter maximum cashback amount', 'woo-wallet'),
+                        'type' => 'number',
+                    ),
+                    array(
                         'name' => 'is_enable_gateway_charge',
                         'label' => __('Payment gateway charge', 'woo-wallet'),
                         'desc' => __('Charge customer when they add balance to there wallet?', 'woo-wallet'),

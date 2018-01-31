@@ -25,9 +25,16 @@ jQuery(function ($) {
             }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function(){
                 if ($(this).is(':checked')) {
-                    $('.cashback_rule, .cashback_type, .cashback_amount').show();
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount').show();
                 } else{
-                    $('.cashback_rule, .cashback_type, .cashback_amount').hide();
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount').hide();
+                }
+            }).change();
+            $('#_wallet_settings_credit-cashback_type').on('change', function (){
+                if($(this).val() === 'percent'){
+                    $('.max_cashback_amount').show();
+                } else{
+                    $('.max_cashback_amount').hide();
                 }
             }).change();
         }
