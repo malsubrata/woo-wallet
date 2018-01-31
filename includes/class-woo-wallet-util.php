@@ -47,10 +47,10 @@ if (!function_exists('get_wallet_rechargeable_orders')) {
             'meta_key' => '_wc_wallet_purchase_credited',
             'meta_value' => true,
             'post_type' => 'shop_order',
-            'post_status' => array( 'completed', 'processing', 'on-hold' ),
+            'post_status' => array('completed', 'processing', 'on-hold'),
             'suppress_filters' => true
         );
-        $orders = get_posts( $args );
+        $orders = get_posts($args);
         return wp_list_pluck($orders, 'ID');
     }
 
@@ -178,21 +178,33 @@ if (!function_exists('get_wallet_cashback_amount')) {
             $cashback_rule = woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart');
             $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
             $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
+            $max_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('max_cashback_amount', '_wallet_settings_credit', 0));
             if ('product' === $cashback_rule) {
                 if (sizeof(wc()->cart->get_cart()) > 0) {
                     foreach (wc()->cart->get_cart() as $key => $cart_item) {
                         $product = wc_get_product($cart_item['product_id']);
+                        $qty = $cart_item['quantity'];
                         $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
                         $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
                         if ($product_wise_cashback_type && $product_wise_cashback_amount) {
                             if ('percent' === $product_wise_cashback_type) {
-                                $cashback_amount += $product->get_price() * ($product_wise_cashback_amount / 100);
+                                $product_wise_percent_cashback_amount = $product->get_price() * $qty * ($product_wise_cashback_amount / 100);
+                                if ($max_cashbak_amount && $product_wise_percent_cashback_amount > $max_cashbak_amount) {
+                                    $cashback_amount += $max_cashbak_amount;
+                                } else{
+                                    $cashback_amount += $product_wise_percent_cashback_amount;
+                                }
                             } else {
                                 $cashback_amount += $product_wise_cashback_amount;
                             }
                         } else {
                             if ('percent' === $global_cashbak_type) {
-                                $cashback_amount += $product->get_price() * ($global_cashbak_amount / 100);
+                                $product_wise_percent_cashback_amount = $product->get_price() * $qty * ($global_cashbak_amount / 100);
+                                if ($max_cashbak_amount && $product_wise_percent_cashback_amount > $max_cashbak_amount) {
+                                    $cashback_amount += $max_cashbak_amount;
+                                } else{
+                                    $cashback_amount += $product_wise_percent_cashback_amount;
+                                }
                             } else {
                                 $cashback_amount += $global_cashbak_amount;
                             }
@@ -201,7 +213,12 @@ if (!function_exists('get_wallet_cashback_amount')) {
                 }
             } else {
                 if ('percent' === $global_cashbak_type) {
-                    $cashback_amount += wc()->cart->get_subtotal() * ($global_cashbak_amount / 100);
+                    $percent_cashback_amount = wc()->cart->get_subtotal() * ($global_cashbak_amount / 100);
+                    if ($max_cashbak_amount && $percent_cashback_amount > $max_cashbak_amount) {
+                        $cashback_amount += $max_cashbak_amount;
+                    } else {
+                        $cashback_amount += $percent_cashback_amount;
+                    }
                 } else {
                     $cashback_amount += $global_cashbak_amount;
                 }
