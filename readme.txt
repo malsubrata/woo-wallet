@@ -5,8 +5,8 @@ Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9.2
 WC requires at least: 3.0
-WC tested up to: 3.2.6
-Stable tag: 1.0.6
+WC tested up to: 3.3.0
+Stable tag: 1.0.7
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -108,6 +108,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.0.7 - 2018-01-31 =
+* Added: Setting for where to display mini wallet in menu.
+* Added: Max cash-back amount option for administrator user.
+* Added: Debit option for administrator user.
+* Updated: Improve wallet menu item.
+* Updated: Language file.
+
 = 1.0.6 - 2018-01-24 = 
 * Added: Now admin can convert WooCommerce coupon to cashback.
 * Added: Display cashback amount on WooCommerce products.
@@ -149,4 +156,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.5 =
+= 1.0.7 =
