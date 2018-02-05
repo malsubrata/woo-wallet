@@ -141,8 +141,8 @@ final class WooWallet {
 
         add_filter('woocommerce_reports_get_order_report_query', array($this, 'woocommerce_reports_get_order_report_query'));
 
-        add_rewrite_endpoint('woo-wallet', EP_PAGES);
-        add_rewrite_endpoint('woo-wallet-transactions', EP_PAGES);
+        add_rewrite_endpoint(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), EP_PAGES);
+        add_rewrite_endpoint(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'), EP_PAGES);
         if (!get_option('_wallet_enpoint_added')) {
             flush_rewrite_rules();
             update_option('_wallet_enpoint_added', true);

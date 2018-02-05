@@ -11,6 +11,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function __construct() {
             add_filter('wp_nav_menu_items', array($this, 'add_wallet_nav_menu'), 100, 2);
+            add_filter('woocommerce_get_query_vars', array($this, 'add_woocommerce_query_vars'));
+            add_filter('woocommerce_endpoint_woo-wallet_title', array($this, 'woocommerce_endpoint_title'), 10, 2);
+            add_filter('woocommerce_endpoint_woo-wallet-transactions_title', array($this, 'woocommerce_endpoint_title'), 10, 2);
             add_filter('woocommerce_account_menu_items', array($this, 'wc_wallet_menu_items'), 10, 1);
             add_action('woocommerce_account_woo-wallet_endpoint', array($this, 'wc_wallet_endpoint_content'));
             add_action('woocommerce_account_woo-wallet-transactions_endpoint', array($this, 'wc_wallet_transactions_endpoint_content'));
@@ -43,8 +46,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (apply_filters('woo_wallet_hide_nav_menu', false, $menu, $args) || in_array($args->theme_location, apply_filters('woo_wallet_exclude_nav_menu_location', array(), $menu, $args))) {
                 return $menu;
             }
-            
-            if('off' === woo_wallet()->settings_api->get_option($args->theme_location, '_wallet_settings_general', 'off')){
+
+            if ('off' === woo_wallet()->settings_api->get_option($args->theme_location, '_wallet_settings_general', 'off')) {
                 return $menu;
             }
 
@@ -52,6 +55,33 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             woo_wallet()->get_template('mini-wallet.php');
             $mini_wallet = ob_get_clean();
             return $menu . $mini_wallet;
+        }
+        /**
+         * Add WooCommerce query vars.
+         * @param type $query_vars
+         * @return type
+         */
+        public function add_woocommerce_query_vars($query_vars) {
+            $query_vars['woo-wallet'] = get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet');
+            $query_vars['woo-wallet-transactions'] = get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions');
+            return $query_vars;
+        }
+        /**
+         * Change WooCommerce endpoint title for wallet pages.
+         */
+        public function woocommerce_endpoint_title($title, $endpoint) {
+            switch ($endpoint) {
+                case 'woo-wallet' :
+                    $title = __('My Wallet', 'woo-wallet');
+                    break;
+                case 'woo-wallet-transactions' :
+                    $title = __('Wallet Transactions', 'woo-wallet');
+                    break;
+                default :
+                    $title = '';
+                    break;
+            }
+            return $title;
         }
 
         /**
@@ -83,7 +113,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function wc_wallet_menu_items($items) {
             unset($items['edit-account']);
             unset($items['customer-logout']);
-            $items['woo-wallet'] = __('My Wallet', 'woo-wallet');
+            $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
             $items['edit-account'] = __('Account details', 'woo-wallet');
             $items['customer-logout'] = __('Logout', 'woo-wallet');
             return $items;

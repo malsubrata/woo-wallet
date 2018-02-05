@@ -26,6 +26,8 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
 
             add_filter('admin_footer_text', array($this, 'admin_footer_text'), 1);
+
+            add_filter('woocommerce_account_settings', array($this, 'add_woocommerce_account_endpoint_settings'));
         }
 
         /**
@@ -327,7 +329,11 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $_is_coupon_cashback = isset($_POST['_is_coupon_cashback']) ? 'yes' : 'no';
             update_post_meta($post_id, '_is_coupon_cashback', $_is_coupon_cashback);
         }
-
+        /**
+         * Add review link
+         * @param string $footer_text
+         * @return string
+         */
         public function admin_footer_text($footer_text) {
             if (!current_user_can('manage_woocommerce')) {
                 return $footer_text;
@@ -350,6 +356,40 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 }
             }
             return $footer_text;
+        }
+        /**
+         * Wallet endpoins settings
+         * @param array $settings
+         * @return array
+         */
+        public function add_woocommerce_account_endpoint_settings($settings) {
+            $walletendpoint_settings = array(
+                array(
+                    'title' => __('Wallet endpoints', 'woocommerce'), 
+                    'type' => 'title', 
+                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woocommerce'), 
+                    'id' => 'wallet_endpoint_options'
+                    ),
+                array(
+                    'title' => __('My Wallet', 'woocommerce'),
+                    'desc' => __('Endpoint for the "My account &rarr; My Wallet" page.', 'woocommerce'),
+                    'id' => 'woocommerce_woo_wallet_endpoint',
+                    'type' => 'text',
+                    'default' => 'woo-wallet',
+                    'desc_tip' => true,
+                ),
+                array(
+                    'title' => __('Wallet Transactions', 'woocommerce'),
+                    'desc' => __('Endpoint for the "My account &rarr; View wallet transactions" page.', 'woocommerce'),
+                    'id' => 'woocommerce_woo_wallet_transactions_endpoint',
+                    'type' => 'text',
+                    'default' => 'woo-wallet-transactions',
+                    'desc_tip' => true,
+                ),
+                array('type' => 'sectionend', 'id' => 'wallet_endpoint_options'),
+            );
+            $settings = array_merge($settings, $walletendpoint_settings);
+            return $settings;
         }
 
     }
