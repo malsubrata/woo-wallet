@@ -97,6 +97,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
                 update_post_meta($order_id, '_wc_wallet_purchase_gateway_charge', $charge_amount);
             }
+            $recharge_amount = apply_filters('woo_wallet_credit_purchase_amount', $recharge_amount, $order_id);
             $transaction_id = $this->credit($order->get_customer_id(), $recharge_amount, __('Wallet credit through purchase #' . $order->get_id(), 'woo-wallet'));
             if ($transaction_id) {
                 update_post_meta($order_id, '_wc_wallet_purchase_credited', true);
