@@ -3,8 +3,20 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
+/**
+ * Woo_Wallet_Install Class
+ */
 class Woo_Wallet_Install {
+
+    private static $db_updates = array(
+        '1.0.8' => array(
+            'woo_wallet_update_108_db_column'
+        )
+    );
+    
+    public function __construct() {
+        self::update();
+    }
 
     /**
      * Plugin install
@@ -51,6 +63,7 @@ class Woo_Wallet_Install {
             type varchar(200) NOT NULL,
             amount DECIMAL(10,2) NOT NULL,
             balance DECIMAL(10,2) NOT NULL,
+            currency varchar(20) NOT NULL,
             details longtext NULL,
             PRIMARY KEY  (transaction_id),
             KEY user_id (user_id)
@@ -114,4 +127,41 @@ class Woo_Wallet_Install {
         }
     }
 
+    /**
+     * Get list of DB update callbacks.
+     *
+     * @since  1.0.8
+     * @return array
+     */
+    public static function get_db_update_callbacks() {
+        return self::$db_updates;
+    }
+    
+    /**
+     * Update plugin
+     */
+    private static function update() {
+        $current_db_version = get_option('woo_wallet_db_version');
+        foreach (self::get_db_update_callbacks() as $version => $update_callbacks) {
+            if (version_compare($current_db_version, $version, '<')) {
+                foreach ($update_callbacks as $update_callback) {
+                    call_user_func($update_callback);
+                }
+            }
+        }
+        self::update_db_version();
+    }
+
+    /**
+     * Update DB version to current.
+     *
+     * @param string|null $version New WooCommerce DB version or null.
+     */
+    public static function update_db_version($version = null) {
+        delete_option('woo_wallet_db_version');
+        add_option('woo_wallet_db_version', is_null($version) ? WOO_WALLET_PLUGIN_VERSION : $version );
+    }
+
 }
+
+new Woo_Wallet_Install();

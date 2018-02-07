@@ -49,7 +49,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define('WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/');
         $this->define('WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE));
-        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.0.7');
+        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.0.8');
     }
 
     /**
@@ -86,6 +86,7 @@ final class WooWallet {
      */
     public function includes() {
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-util.php' );
+        include_once( WOO_WALLET_ABSPATH . 'includes/woo-wallet-update-functions.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-install.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings-api.php' );
         $this->settings_api = new Woo_Wallet_Settings_API();

@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 if (!class_exists('Woo_Wallet_Wallet')) {
 
@@ -158,7 +161,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             } else if ($type == 'debit') {
                 $balance -= $amount;
             }
-            if ($wpdb->insert("{$wpdb->prefix}woo_wallet_transactions", array('user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'details' => $details), array('%d', '%s', '%f', '%f', '%s'))) {
+            if ($wpdb->insert("{$wpdb->prefix}woo_wallet_transactions", array('user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details), array('%d', '%s', '%f', '%f', '%s', '%s'))) {
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
                 $email_admin->trigger($this->user_id, $amount, $type, $details);
                 $transaction_id = $wpdb->insert_id;
