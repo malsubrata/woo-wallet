@@ -8,9 +8,10 @@
  * Author URI: https://profiles.wordpress.org/subratamal
  * Version: 1.0.8
  * Requires at least: 4.4
- * Tested up to: 4.9.2
+ * Tested up to: 4.9.4
  * WC requires at least: 3.0
- * WC tested up to: 3.3.0
+ * WC tested up to: 3.3.1
+ * 
  * Text Domain: woo-wallet
  * Domain Path: /languages/
  *

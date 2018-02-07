@@ -365,22 +365,22 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function add_woocommerce_account_endpoint_settings($settings) {
             $walletendpoint_settings = array(
                 array(
-                    'title' => __('Wallet endpoints', 'woocommerce'), 
+                    'title' => __('Wallet endpoints', 'woo-wallet'), 
                     'type' => 'title', 
-                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woocommerce'), 
+                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woo-wallet'), 
                     'id' => 'wallet_endpoint_options'
                     ),
                 array(
-                    'title' => __('My Wallet', 'woocommerce'),
-                    'desc' => __('Endpoint for the "My account &rarr; My Wallet" page.', 'woocommerce'),
+                    'title' => __('My Wallet', 'woo-wallet'),
+                    'desc' => __('Endpoint for the "My account &rarr; My Wallet" page.', 'woo-wallet'),
                     'id' => 'woocommerce_woo_wallet_endpoint',
                     'type' => 'text',
                     'default' => 'woo-wallet',
                     'desc_tip' => true,
                 ),
                 array(
-                    'title' => __('Wallet Transactions', 'woocommerce'),
-                    'desc' => __('Endpoint for the "My account &rarr; View wallet transactions" page.', 'woocommerce'),
+                    'title' => __('Wallet Transactions', 'woo-wallet'),
+                    'desc' => __('Endpoint for the "My account &rarr; View wallet transactions" page.', 'woo-wallet'),
                     'id' => 'woocommerce_woo_wallet_transactions_endpoint',
                     'type' => 'text',
                     'default' => 'woo-wallet-transactions',

@@ -85,7 +85,7 @@ final class WooWallet {
      * load plugin files
      */
     public function includes() {
-        include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-util.php' );
+        include_once( WOO_WALLET_ABSPATH . 'includes/woo-wallet-util.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/woo-wallet-update-functions.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-install.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings-api.php' );

@@ -59,12 +59,12 @@ class Woo_Wallet_Install {
         $tables = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}woo_wallet_transactions (
             transaction_id BIGINT UNSIGNED NOT NULL auto_increment,
             user_id BIGINT UNSIGNED NOT NULL DEFAULT '0',
-            date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             type varchar(200) NOT NULL,
             amount DECIMAL(10,2) NOT NULL,
             balance DECIMAL(10,2) NOT NULL,
             currency varchar(20) NOT NULL,
             details longtext NULL,
+            date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (transaction_id),
             KEY user_id (user_id)
         ) $collate;

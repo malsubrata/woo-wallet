@@ -3,9 +3,9 @@ Contributors: subratamal, bappa1995
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 4.9.2
+Tested up to: 4.9.4
 WC requires at least: 3.0
-WC tested up to: 3.3.0
+WC tested up to: 3.3.1
 Stable tag: 1.0.8
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
@@ -108,6 +108,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.0.8 -2018-02-08 =
+* Added: Now admin can set wallet endpoints page url.
+* Added: Currency column to database table.
+* Dev: Added `woo_wallet_credit_purchase_amount` filter for modify credit purchase amount.
+* Updated: Language file.
+
 = 1.0.7 - 2018-01-31 =
 * Added: Setting for where to display mini wallet in menu.
 * Added: Max cash-back amount option for administrator user.
@@ -156,4 +162,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.7 =
+= 1.0.8 =
