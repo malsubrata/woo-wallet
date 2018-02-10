@@ -130,6 +130,12 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'size' => 'regular-text'
                     ),
                     array(
+                        'name' => 'min_cart_amount',
+                        'label' => __('Minimum Cart Amount', 'woo-wallet'),
+                        'desc' => __('Enter applicable minimum cart amount for cashback', 'woo-wallet'),
+                        'type' => 'number',
+                    ),
+                    array(
                         'name' => 'cashback_amount',
                         'label' => __('Cashback Amount', 'woo-wallet'),
                         'desc' => __('Enter cashback amount', 'woo-wallet'),

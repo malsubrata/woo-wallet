@@ -3,10 +3,10 @@
 jQuery(function ($) {
     var settings = {
         init: function () {
-            $('#_wallet_settings_general-_tax_status').on('change', function (){
-                if($(this).val() == 'taxable'){
+            $('#_wallet_settings_general-_tax_status').on('change', function () {
+                if ($(this).val() == 'taxable') {
                     $('._tax_class').show();
-                } else{
+                } else {
                     $('._tax_class').hide();
                 }
             }).change();
@@ -23,25 +23,30 @@ jQuery(function ($) {
                     });
                 }
             }).change();
-            $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function(){
+            $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount').show();
-                } else{
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount').hide();
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount, .allow_min_cashback, .min_cart_amount').show();
+                } else {
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount, .allow_min_cashback, .min_cart_amount').hide();
                 }
             }).change();
-            $('#_wallet_settings_credit-cashback_type').on('change', function (){
-                if($(this).val() === 'percent'){
+            $('#_wallet_settings_credit-cashback_type').on('change', function () {
+                if ($(this).val() === 'percent') {
                     $('.max_cashback_amount').show();
-                } else{
+                } else {
                     $('.max_cashback_amount').hide();
                 }
             }).change();
-            $('#_wallet_settings_credit-cashback_rule').on('change', function(){
-                if($(this).val() === 'product_cat'){
+            $('#_wallet_settings_credit-cashback_rule').on('change', function () {
+                if ($(this).val() === 'product_cat') {
                     $('.allow_min_cashback').show();
-                } else{
+                } else {
                     $('.allow_min_cashback').hide();
+                }
+                if ($(this).val() === 'cart') {
+                    $('.min_cart_amount').show();
+                } else {
+                    $('.min_cart_amount').hide();
                 }
             }).change();
         }

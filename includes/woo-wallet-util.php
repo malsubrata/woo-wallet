@@ -259,15 +259,17 @@ if (!function_exists('get_wallet_cashback_amount')) {
                     }
                 }
             } else {
-                if ('percent' === $global_cashbak_type) {
-                    $percent_cashback_amount = wc()->cart->get_subtotal() * ($global_cashbak_amount / 100);
-                    if ($max_cashbak_amount && $percent_cashback_amount > $max_cashbak_amount) {
-                        $cashback_amount += $max_cashbak_amount;
+                if (woo_wallet()->settings_api->get_option('min_cart_amount', '_wallet_settings_credit', 10) != 0 && WC()->cart->get_subtotal('edit') >= woo_wallet()->settings_api->get_option('min_cart_amount', '_wallet_settings_credit', 0)) {
+                    if ('percent' === $global_cashbak_type) {
+                        $percent_cashback_amount = wc()->cart->get_subtotal() * ($global_cashbak_amount / 100);
+                        if ($max_cashbak_amount && $percent_cashback_amount > $max_cashbak_amount) {
+                            $cashback_amount += $max_cashbak_amount;
+                        } else {
+                            $cashback_amount += $percent_cashback_amount;
+                        }
                     } else {
-                        $cashback_amount += $percent_cashback_amount;
+                        $cashback_amount += $global_cashbak_amount;
                     }
-                } else {
-                    $cashback_amount += $global_cashbak_amount;
                 }
             }
             return apply_filters('woo_wallet_cashback_amount', $cashback_amount, $order_id);

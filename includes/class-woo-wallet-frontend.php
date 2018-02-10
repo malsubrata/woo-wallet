@@ -33,6 +33,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
             add_action('woocommerce_shop_loop_item_title', array($this, 'display_cashback'), 15);
             add_action('woocommerce_before_single_product_summary', array($this, 'display_cashback'), 15);
+
+            add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);
+            add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
+            add_filter('woocommerce_cart_totals_order_total_html', array($this, 'woocommerce_cart_totals_order_total_html'));
         }
 
         /**
@@ -47,7 +51,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 return $menu;
             }
 
-            if ('off' === woo_wallet()->settings_api->get_option($args->theme_location, '_wallet_settings_general', 'off')) {
+            if ('off' === woo_wallet()->settings_api->get_option($args->theme_location, '_wallet_settings_general', 'off') || !is_user_logged_in()) {
                 return $menu;
             }
 
@@ -356,11 +360,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                         foreach ($term_ids as $term_id) {
                             $category_wise_cashback_type = get_woocommerce_term_meta($term_id, '_woo_cashback_type', true);
                             $category_wise_cashback_amount = get_woocommerce_term_meta($term_id, '_woo_cashback_amount', true);
-                            if($category_wise_cashback_type && $category_wise_cashback_amount){
-                                if('percent' === $category_wise_cashback_type){
+                            if ($category_wise_cashback_type && $category_wise_cashback_amount) {
+                                if ('percent' === $category_wise_cashback_type) {
                                     $cashback_subtotal = $product->get_price() * ($category_wise_cashback_amount / 100);
-                                    $category_wise_cashback_amounts[] = array('cashback_subtotal' => $cashback_subtotal,'amount' => $category_wise_cashback_amount, 'type' => $category_wise_cashback_type);
-                                } else{
+                                    $category_wise_cashback_amounts[] = array('cashback_subtotal' => $cashback_subtotal, 'amount' => $category_wise_cashback_amount, 'type' => $category_wise_cashback_type);
+                                } else {
                                     $category_wise_cashback_amounts[] = array('cashback_subtotal' => $category_wise_cashback_amount, 'amount' => $category_wise_cashback_amount, 'type' => $category_wise_cashback_type);
                                 }
                             }
@@ -387,6 +391,75 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     }
                 }
             }
+        }
+
+        /**
+         * 
+         * @param string $msg
+         * @param int $msg_code
+         * @param Object $coupon
+         * @return string
+         */
+        public function update_woocommerce_coupon_message_as_cashback($msg, $msg_code, $coupon) {
+            $coupon_id = $coupon->get_id();
+            $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
+            if ('yes' === $_is_coupon_cashback && 200 === $msg_code) {
+                $msg = __('Coupon code applied successfully as cashback.', 'woo-wallet');
+            }
+            return $msg;
+        }
+
+        /**
+         * Change coupon label in cart and checkout page
+         * @param string $label
+         * @param Object $coupon
+         * @return string
+         */
+        public function change_coupon_label($label, $coupon) {
+            $coupon_id = $coupon->get_id();
+            $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
+            if ('yes' === $_is_coupon_cashback) {
+                $label = sprintf(esc_html__('Cashback: %s', 'woo-wallet'), $coupon->get_code());
+            }
+            return $label;
+        }
+        
+        /**
+         * Modify order total html
+         * @param string $value
+         * @return string
+         */
+        public function woocommerce_cart_totals_order_total_html($value) {
+            $value = '';
+            $total = WC()->cart->get_total('edit');
+            foreach (WC()->cart->get_applied_coupons() as $code) {
+                $coupon = new WC_Coupon($code);
+                $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
+                if ('yes' === $_is_coupon_cashback) {
+                    $total += WC()->cart->get_coupon_discount_amount($code);
+                }
+            }
+            $value = '<strong>' . wc_price($total) . '</strong> ';
+            // If prices are tax inclusive, show taxes here.
+            if (wc_tax_enabled() && WC()->cart->display_prices_including_tax()) {
+                $tax_string_array = array();
+                $cart_tax_totals = WC()->cart->get_tax_totals();
+
+                if (get_option('woocommerce_tax_total_display') == 'itemized') {
+                    foreach ($cart_tax_totals as $code => $tax) {
+                        $tax_string_array[] = sprintf('%s %s', $tax->formatted_amount, $tax->label);
+                    }
+                } elseif (!empty($cart_tax_totals)) {
+                    $tax_string_array[] = sprintf('%s %s', wc_price(WC()->cart->get_taxes_total(true, true)), WC()->countries->tax_or_vat());
+                }
+
+                if (!empty($tax_string_array)) {
+                    $taxable_address = WC()->customer->get_taxable_address();
+                    $estimated_text = WC()->customer->is_customer_outside_base() && !WC()->customer->has_calculated_shipping() ? sprintf(' ' . __('estimated for %s', 'woocommerce'), WC()->countries->estimated_for_prefix($taxable_address[0]) . WC()->countries->countries[$taxable_address[0]]) : '';
+                    $value .= '<small class="includes_tax">' . sprintf(__('(includes %s)', 'woocommerce'), implode(', ', $tax_string_array) . $estimated_text) . '</small>';
+                }
+            }
+            return $value;
         }
 
     }

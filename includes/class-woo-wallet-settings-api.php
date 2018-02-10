@@ -205,7 +205,7 @@ class Woo_Wallet_Settings_API {
         $max         = empty( $args['max'] ) ? '' : ' max="' . $args['max'] . '"';
         $step        = empty( $args['max'] ) ? '' : ' step="' . $args['step'] . '"';
 
-        $html        = sprintf( '<input type="%1$s" class="%2$s-number" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step );
+        $html        = sprintf( '<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step );
         $html       .= $this->get_field_description( $args );
 
         echo $html;
@@ -283,7 +283,7 @@ class Woo_Wallet_Settings_API {
     function callback_select( $args ) {
 
         $value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
-        $size  = isset( $args['size'] ) && !is_null( $args['size'] ) ? $args['size'] : 'regular';
+        $size  = isset( $args['size'] ) && !is_null( $args['size'] ) ? $args['size'] : 'regular-text';
         $html  = sprintf( '<select class="%1$s" name="%2$s[%3$s]" id="%2$s-%3$s">', $size, $args['section'], $args['id'] );
 
         foreach ( $args['options'] as $key => $label ) {
@@ -466,7 +466,7 @@ class Woo_Wallet_Settings_API {
 
         $options = get_option( $section );
 
-        if ( isset( $options[$option] ) ) {
+        if ( isset( $options[$option] ) && !empty($options[$option]) ) {
             return $options[$option];
         }
 

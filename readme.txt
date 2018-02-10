@@ -6,7 +6,7 @@ Requires at least: 4.4
 Tested up to: 4.9.4
 WC requires at least: 3.0
 WC tested up to: 3.3.1
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -27,7 +27,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - Set wallet system payment method title for the front-end.
 - The customers can use various payment methods to add money.
 - The admin can process refund using the wallet money.
-- Customers will earn cashback according to cart price or product.
+- Customers will earn cashback according to cart price, product or product category wise.
 - Customers can made partial payment.
 - Set cashback amount calculation using fixed or percent method.
 - From the backend, the admin can view the transaction history.
@@ -108,6 +108,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.0.9 - 2018-02-10 =
+* Added: Product category wise cashback.
+* Added: Minimum cart amount setting to apply cart wise cashback.
+* Updated: Hide mini wallet menu item if user not logged in.
+* Tweak: Display cashback instead of coupon if coupon is applicable as cashback.
+* Updated: Language file.
+
 = 1.0.8 -2018-02-08 =
 * Added: Now admin can set wallet endpoints page url.
 * Added: Currency column to database table.
@@ -162,4 +169,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.8 =
+= 1.0.9 =
