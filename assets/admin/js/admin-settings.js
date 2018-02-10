@@ -37,6 +37,13 @@ jQuery(function ($) {
                     $('.max_cashback_amount').hide();
                 }
             }).change();
+            $('#_wallet_settings_credit-cashback_rule').on('change', function(){
+                if($(this).val() === 'product_cat'){
+                    $('.allow_min_cashback').show();
+                } else{
+                    $('.allow_min_cashback').hide();
+                }
+            }).change();
         }
     };
     settings.init();

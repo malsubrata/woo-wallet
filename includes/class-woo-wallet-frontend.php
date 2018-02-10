@@ -56,6 +56,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $mini_wallet = ob_get_clean();
             return $menu . $mini_wallet;
         }
+
         /**
          * Add WooCommerce query vars.
          * @param type $query_vars
@@ -66,6 +67,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $query_vars['woo-wallet-transactions'] = get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions');
             return $query_vars;
         }
+
         /**
          * Change WooCommerce endpoint title for wallet pages.
          */
@@ -315,10 +317,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function display_cashback() {
             global $post;
             $product = wc_get_product($post->ID);
-            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit') && apply_filters('is_display_cashback_on_product', true) && apply_filters('is_product_cashback_enable', true, $post->ID)) {
+            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit') && $product->get_price('edit') && apply_filters('is_display_cashback_on_product', true) && apply_filters('is_product_cashback_enable', true, $post->ID)) {
+                $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
+                $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
                 if ('product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
-                    $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
-                    $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
                     $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
                     $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
                     $cashback_amount = 0;
@@ -330,6 +332,44 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                             $cashback_amount = $product_wise_cashback_amount;
                             $cashback_type = 'fixed';
                         }
+                    } else {
+                        if ('percent' === $global_cashbak_type) {
+                            $cashback_amount = $global_cashbak_amount;
+                        } else {
+                            $cashback_amount = $global_cashbak_amount;
+                            $cashback_type = 'fixed';
+                        }
+                    }
+                    if ($cashback_amount) {
+                        if ('percent' === $cashback_type) {
+                            echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
+                        } else {
+                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                        }
+                    }
+                } else if ('product_cat' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
+                    $term_ids = $product->get_category_ids('edit');
+                    $category_wise_cashback_amounts = array();
+                    $cashback_amount = 0;
+                    $cashback_type = 'percent';
+                    if (!empty($term_ids)) {
+                        foreach ($term_ids as $term_id) {
+                            $category_wise_cashback_type = get_woocommerce_term_meta($term_id, '_woo_cashback_type', true);
+                            $category_wise_cashback_amount = get_woocommerce_term_meta($term_id, '_woo_cashback_amount', true);
+                            if($category_wise_cashback_type && $category_wise_cashback_amount){
+                                if('percent' === $category_wise_cashback_type){
+                                    $cashback_subtotal = $product->get_price() * ($category_wise_cashback_amount / 100);
+                                    $category_wise_cashback_amounts[] = array('cashback_subtotal' => $cashback_subtotal,'amount' => $category_wise_cashback_amount, 'type' => $category_wise_cashback_type);
+                                } else{
+                                    $category_wise_cashback_amounts[] = array('cashback_subtotal' => $category_wise_cashback_amount, 'amount' => $category_wise_cashback_amount, 'type' => $category_wise_cashback_type);
+                                }
+                            }
+                        }
+                    }
+                    if (!empty($category_wise_cashback_amounts)) {
+                        $category_wise_cashback = ('on' === woo_wallet()->settings_api->get_option('allow_min_cashback', '_wallet_settings_credit', 'on')) ? min($category_wise_cashback_amounts) : max($category_wise_cashback_amounts);
+                        $cashback_amount = $category_wise_cashback['amount'];
+                        $cashback_type = $category_wise_cashback['type'];
                     } else {
                         if ('percent' === $global_cashbak_type) {
                             $cashback_amount = $global_cashbak_amount;

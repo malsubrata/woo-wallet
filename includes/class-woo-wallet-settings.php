@@ -118,7 +118,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Cashback Rule', 'woo-wallet'),
                         'desc' => __('Select Cashback Rule cart or product wise', 'woo-wallet'),
                         'type' => 'select',
-                        'options' => array('cart' => __('Cart wise', 'woo-wallet'), 'product' => __('Product wise', 'woo-wallet')),
+                        'options' => array('cart' => __('Cart wise', 'woo-wallet'), 'product' => __('Product wise', 'woo-wallet'), 'product_cat' => __('Product category wise', 'woo-wallet')),
                         'size' => 'regular-text'
                     ),
                     array(
@@ -140,6 +140,13 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Maximum Cashback Amount', 'woo-wallet'),
                         'desc' => __('Enter maximum cashback amount', 'woo-wallet'),
                         'type' => 'number',
+                    ),
+                    array(
+                        'name' => 'allow_min_cashback',
+                        'label' => __('Allow Minimum cashback', 'woo-wallet'),
+                        'desc' => __('If checked minimum cashback amount will be applied on product category cashback calculation.', 'woo-wallet'),
+                        'type' => 'checkbox',
+                        'default' => 'on'
                     ),
                     array(
                         'name' => 'is_enable_gateway_charge',

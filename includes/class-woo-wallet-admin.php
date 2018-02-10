@@ -28,6 +28,12 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_filter('admin_footer_text', array($this, 'admin_footer_text'), 1);
 
             add_filter('woocommerce_account_settings', array($this, 'add_woocommerce_account_endpoint_settings'));
+            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product_cat' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
+                add_action('product_cat_add_form_fields', array($this, 'add_product_cat_cashback_field'));
+                add_action('product_cat_edit_form_fields', array($this, 'edit_product_cat_cashback_field'));
+                add_action('created_term', array($this, 'save_product_cashback_field'), 10, 3);
+                add_action('edit_term', array($this, 'save_product_cashback_field'), 10, 3);
+            }
         }
 
         /**
@@ -329,6 +335,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $_is_coupon_cashback = isset($_POST['_is_coupon_cashback']) ? 'yes' : 'no';
             update_post_meta($post_id, '_is_coupon_cashback', $_is_coupon_cashback);
         }
+
         /**
          * Add review link
          * @param string $footer_text
@@ -357,6 +364,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             }
             return $footer_text;
         }
+
         /**
          * Wallet endpoins settings
          * @param array $settings
@@ -365,11 +373,11 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function add_woocommerce_account_endpoint_settings($settings) {
             $walletendpoint_settings = array(
                 array(
-                    'title' => __('Wallet endpoints', 'woo-wallet'), 
-                    'type' => 'title', 
-                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woo-wallet'), 
+                    'title' => __('Wallet endpoints', 'woo-wallet'),
+                    'type' => 'title',
+                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woo-wallet'),
                     'id' => 'wallet_endpoint_options'
-                    ),
+                ),
                 array(
                     'title' => __('My Wallet', 'woo-wallet'),
                     'desc' => __('Endpoint for the "My account &rarr; My Wallet" page.', 'woo-wallet'),
@@ -390,6 +398,53 @@ if (!class_exists('Woo_Wallet_Admin')) {
             );
             $settings = array_merge($settings, $walletendpoint_settings);
             return $settings;
+        }
+
+        public function add_product_cat_cashback_field() {
+            ?>
+            <div class="form-field term-display-type-wrap">
+                <label for="woo_product_cat_cashback_type"><?php _e('Cashback type', 'woo-wallet'); ?></label>
+                <select name="woo_product_cat_cashback_type" id="woo_product_cat_cashback_type">
+                    <option value="percent"><?php _e('Percentage', 'woo-wallet'); ?></option>
+                    <option value="fixed"><?php _e('Fixed', 'woo-wallet'); ?></option>
+                </select>
+            </div>
+            <div class="form-field term-display-type-wrap">
+                <label for="woo_product_cat_cashback_amount"><?php _e('Cashback Amount', 'woo-wallet'); ?></label>
+                <input type="number" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="" placeholder="">
+            </div>
+            <?php
+        }
+
+        public function edit_product_cat_cashback_field($term) {
+            $cashback_type = get_woocommerce_term_meta($term->term_id, '_woo_cashback_type', true);
+            $cashback_amount = get_woocommerce_term_meta($term->term_id, '_woo_cashback_amount', true);
+            ?>
+            <tr class="form-field">
+                <th scope="row" valign="top"><?php _e('Cashback type', 'woo-wallet'); ?></th>
+                <td>
+                    <select name="woo_product_cat_cashback_type" id="woo_product_cat_cashback_type">
+                        <option value="percent" <?php selected($cashback_type, 'percent'); ?>><?php _e('Percentage', 'woo-wallet'); ?></option>
+                        <option value="fixed" <?php selected($cashback_type, 'fixed'); ?>><?php _e('Fixed', 'woo-wallet'); ?></option>
+                    </select>
+                </td>
+            </tr>
+            <tr class="form-field">
+                <th scope="row" valign="top"><?php _e('Cashback Amount', 'woo-wallet'); ?></th>
+                <td><input type="number" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="<?php echo $cashback_amount; ?>" placeholder=""></td>
+            </tr>
+            <?php
+        }
+
+        public function save_product_cashback_field($term_id, $tt_id = '', $taxonomy = '') {
+            if ('product_cat' === $taxonomy) {
+                if (isset($_POST['woo_product_cat_cashback_type'])) {
+                    update_woocommerce_term_meta($term_id, '_woo_cashback_type', esc_attr($_POST['woo_product_cat_cashback_type']));
+                }
+                if (isset($_POST['woo_product_cat_cashback_amount'])) {
+                    update_woocommerce_term_meta($term_id, '_woo_cashback_amount', sanitize_text_field($_POST['woo_product_cat_cashback_amount']));
+                }
+            }
         }
 
     }

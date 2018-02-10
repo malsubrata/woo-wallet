@@ -1,6 +1,7 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+
+if (!defined('ABSPATH')) {
+    exit;
 }
 
 if (!class_exists('Woo_Wallet_Wallet')) {
@@ -119,7 +120,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
             }
             /* Coupon Cashback */
-            if(get_post_meta($order->get_id(), '_coupon_cashback_amount', true)){
+            if (get_post_meta($order->get_id(), '_coupon_cashback_amount', true)) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_post_meta($order->get_id(), '_coupon_cashback_amount', true), __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
@@ -154,7 +155,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $amount = 0;
             }
             $balance = $this->get_wallet_balance($this->user_id, '');
-            if ($type == 'debit' && ($balance <= 0 || $amount > $balance)) {
+            if ($type == 'debit' && apply_filters('woo_wallet_allow_negative_transaction', ($balance <= 0 || $amount > $balance), $amount, $balance)) {
                 return false;
             }
             if ($type == 'credit') {
