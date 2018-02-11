@@ -155,7 +155,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $amount = 0;
             }
             $balance = $this->get_wallet_balance($this->user_id, '');
-            if ($type == 'debit' && apply_filters('woo_wallet_allow_negative_transaction', ($balance <= 0 || $amount > $balance), $amount, $balance)) {
+            if ($type == 'debit' && apply_filters('woo_wallet_disallow_negative_transaction', ($balance <= 0 || $amount > $balance), $amount, $balance)) {
                 return false;
             }
             if ($type == 'credit') {
