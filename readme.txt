@@ -111,7 +111,7 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 = 1.0.9 - 2018-02-10 =
 * Added: Product category wise cashback.
 * Added: Minimum cart amount setting to apply cart wise cashback.
-* Updated: Hide mini wallet menu item if user not logged in.
+* Tweak: Hide mini wallet menu item if user not logged in.
 * Tweak: Display cashback instead of coupon if coupon is applicable as cashback.
 * Updated: Language file.
 

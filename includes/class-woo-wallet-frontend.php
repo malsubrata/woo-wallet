@@ -441,7 +441,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             $value = '<strong>' . wc_price($total) . '</strong> ';
             // If prices are tax inclusive, show taxes here.
-            if (wc_tax_enabled() && WC()->cart->display_prices_including_tax()) {
+            if (wc_tax_enabled() && WC()->cart->tax_display_cart == 'incl') {
                 $tax_string_array = array();
                 $cart_tax_totals = WC()->cart->get_tax_totals();
 
