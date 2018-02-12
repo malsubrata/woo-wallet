@@ -13,7 +13,7 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
         public function __construct() {
             $this->id = 'new_wallet_transaction';
             $this->title = __('New wallet transaction', 'woo-wallet');
-            $this->description = __('New wallet transaction emails are sent to user when a wallet transaction received.', 'wc-wallet-paynemt');
+            $this->description = __('New wallet transaction emails are sent to user when a wallet transaction received.', 'woo-wallet');
             $this->template_html = 'emails/user-new-transaction.php';
             $this->template_plain = 'emails/plain/user-new-transaction.php';
             $this->template_base = WOO_WALLET_ABSPATH . 'templates/';
@@ -33,7 +33,7 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @return string
          */
         public function get_default_subject() {
-            return __('Your {site_title} wallet transaction from {transaction_date}', 'wc-wallet-paynemt');
+            return __('Your {site_title} wallet transaction from {transaction_date}', 'woo-wallet');
         }
 
         /**

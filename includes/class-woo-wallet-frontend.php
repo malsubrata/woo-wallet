@@ -245,7 +245,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_cart()) :
                 ?>
                 <div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
-                    <?php echo sprintf(__('If you place this order then %s will be credited to your wallet', 'woo-wallet'), wc_price(get_wallet_cashback_amount())); ?>
+                    <?php echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('If you place this order then %s will be credited to your wallet', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount()); ?>
                 </div>
                 <?php
             endif;

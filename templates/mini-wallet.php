@@ -3,7 +3,7 @@
 /**
  * The Template for mini wallet
  *
- * This template can be overridden by copying it to yourtheme/wc-wallet/mini-wallet.php.
+ * This template can be overridden by copying it to yourtheme/woo-wallet/mini-wallet.php.
  *
  * HOWEVER, on occasion we will need to update template files and you
  * (the theme developer) will need to copy the new files to your theme to

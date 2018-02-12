@@ -166,7 +166,7 @@ final class WooWallet {
         $locale = apply_filters('plugin_locale', $locale, 'woo-wallet');
 
         unload_textdomain('woo-wallet');
-        load_textdomain('woo-wallet', WP_LANG_DIR . '/wc-wallet/wc-wallet-' . $locale . '.mo');
+        load_textdomain('woo-wallet', WP_LANG_DIR . '/woo-wallet/woo-wallet-' . $locale . '.mo');
         load_plugin_textdomain('woo-wallet', false, plugin_basename(dirname(WOO_WALLET_PLUGIN_FILE)) . '/languages');
     }
 

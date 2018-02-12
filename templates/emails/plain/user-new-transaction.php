@@ -2,7 +2,7 @@
 /**
  * Customer wallet transaction email
  *
- * This template can be overridden by copying it to yourtheme/woocommerce/emails/user-new-transaction.php.
+ * This template can be overridden by copying it to yourtheme/woocommerce/emails/plain/user-new-transaction.php.
  *
  * HOWEVER, on occasion we will need to update template files and you
  * (the theme developer) will need to copy the new files to your theme to
