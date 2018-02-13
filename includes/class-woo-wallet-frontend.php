@@ -308,9 +308,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
             if ('yes' === $_is_coupon_cashback) {
                 $discount_total = $order->get_discount_total('edit');
-                $order->set_discount_total(0);
+                $coupon_amount = WC()->cart->get_coupon_discount_amount($code);
+                $discount_total -= $coupon_amount;
+                $order->set_discount_total($discount_total);
                 $order_id = $order->save();
-                update_post_meta($order_id, '_coupon_cashback_amount', $discount_total);
+                $_coupon_cashback_amount = floatval(get_post_meta($order_id, '_coupon_cashback_amount', true));
+                update_post_meta($order_id, '_coupon_cashback_amount', ($_coupon_cashback_amount + $coupon_amount));
             }
         }
 
