@@ -109,6 +109,10 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
      */
     public function process_payment($order_id) {
         $order = wc_get_order($order_id);
+        if($order->get_total('edit') > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')){
+            wc_add_notice( __('Payment error: ', 'woo-wallet') . sprintf(__('Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet'), wc_price($order->get_total('edit') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'))), 'error' );
+            return;
+        }
         $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('For order payment #' . $order->get_id()));
         // Mark as processing or on-hold
         $order->update_status(apply_filters('woocommerce_wallet_process_payment_order_status', !$wallet_response ? 'on-hold' : 'processing', $order), __('Payment via wallet.', 'woo-wallet'));
