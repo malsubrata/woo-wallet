@@ -11,6 +11,9 @@ class Woo_Wallet_Install {
     private static $db_updates = array(
         '1.0.8' => array(
             'woo_wallet_update_108_db_column'
+        ),
+        '1.1.0' => array(
+            'woo_wallet_update_110_db_column'
         )
     );
     
@@ -56,9 +59,10 @@ class Woo_Wallet_Install {
         if ($wpdb->has_cap('collation')) {
             $collate = $wpdb->get_charset_collate();
         }
-        $tables = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}woo_wallet_transactions (
+        $tables = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_transactions (
             transaction_id BIGINT UNSIGNED NOT NULL auto_increment,
-            user_id BIGINT UNSIGNED NOT NULL DEFAULT '0',
+            blog_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
+            user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             type varchar(200) NOT NULL,
             amount DECIMAL(10,2) NOT NULL,
             balance DECIMAL(10,2) NOT NULL,
@@ -68,7 +72,7 @@ class Woo_Wallet_Install {
             PRIMARY KEY  (transaction_id),
             KEY user_id (user_id)
         ) $collate;
-        CREATE TABLE {$wpdb->prefix}woo_wallet_transaction_meta (
+        CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,
             transaction_id BIGINT UNSIGNED NOT NULL,
             meta_key varchar(255) default NULL,

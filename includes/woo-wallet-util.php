@@ -87,7 +87,7 @@ if (!function_exists('set_wallet_transaction_meta')) {
         $meta_key = wp_unslash($meta_key);
         $meta_value = wp_unslash($meta_value);
         $meta_value = maybe_serialize($meta_value);
-        return $wpdb->insert("{$wpdb->prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
+        return $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
     }
 
 }
@@ -104,13 +104,13 @@ if (!function_exists('update_wallet_transaction_meta')) {
      */
     function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value) {
         global $wpdb;
-        if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key)))) {
+        if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key)))) {
             return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value);
         } else {
             $meta_key = wp_unslash($meta_key);
             $meta_value = wp_unslash($meta_value);
             $meta_value = maybe_serialize($meta_value);
-            return $wpdb->update("{$wpdb->prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
+            return $wpdb->update("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
         }
     }
 
@@ -128,7 +128,7 @@ if (!function_exists('get_wallet_transaction_meta')) {
      */
     function get_wallet_transaction_meta($transaction_id, $meta_key, $single = true) {
         global $wpdb;
-        $resualt = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key));
+        $resualt = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key));
         if (!is_null($resualt)) {
             return maybe_unserialize($resualt);
         } else {
@@ -152,7 +152,7 @@ if (!function_exists('get_wallet_transactions')) {
         $query = '';
         if (!empty($args)) {
             foreach ($args as $key => $arg) {
-                if (!$wpdb->get_var("SHOW COLUMNS FROM `{$wpdb->prefix}woo_wallet_transactions` LIKE '{$key}';")) {
+                if (!$wpdb->get_var("SHOW COLUMNS FROM `{$wpdb->base_prefix}woo_wallet_transactions` LIKE '{$key}';")) {
                     unset($args[$key]);
                 }
             }
@@ -166,7 +166,7 @@ if (!function_exists('get_wallet_transactions')) {
         if ($limit) {
             $limit = " LIMIT 0, {$limit}";
         }
-        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC" . $limit, $output);
+        return $wpdb->get_results("SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC" . $limit, $output);
     }
 
 }

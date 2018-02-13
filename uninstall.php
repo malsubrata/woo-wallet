@@ -25,8 +25,8 @@ delete_option('_woo_wallet_recharge_product');
  */
 if (defined('WALLET_REMOVE_ALL_DATA') && true === WALLET_REMOVE_ALL_DATA) {
     // Tables.
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}woo_wallet_transactions");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}woo_wallet_transaction_meta");
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transactions");
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transaction_meta");
 
     // Delete options.
     $wpdb->query("DELETE FROM $wpdb->options WHERE option_name LIKE '_wallet\_%';");
