@@ -152,6 +152,9 @@ class Woo_Wallet_Install {
      */
     private static function update() {
         $current_db_version = get_option('woo_wallet_db_version');
+        if(version_compare(WOO_WALLET_PLUGIN_VERSION, $current_db_version, '=')){
+            return;
+        }
         foreach (self::get_db_update_callbacks() as $version => $update_callbacks) {
             if (version_compare($current_db_version, $version, '<')) {
                 foreach ($update_callbacks as $update_callback) {
