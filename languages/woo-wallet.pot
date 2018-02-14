@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-10 18:03+0000\n"
+"POT-Creation-Date: 2018-02-14 17:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal <m.subrata1991@gmail.com>\n"
 "Language-Team: \n"
@@ -72,9 +72,23 @@ msgstr ""
 msgid "Current wallet balance"
 msgstr ""
 
+#: templates/woo-wallet-partial-payment.php:23
+#, php-format
+msgid ""
+"%s%0.2f will be debited from your wallet and %s%0.2f will be paid through "
+"other payment method"
+msgstr ""
+
 #: templates/woo-wallet-partial-payment.php:28
 #: templates/woo-wallet-partial-payment.php:29
 msgid "Pay by wallet"
+msgstr ""
+
+#: templates/woo-wallet-partial-payment.php:28
+#, php-format
+msgid ""
+"If checked %s%0.2f will be debited from your wallet and %s%0.2f will be paid "
+"through other payment method"
 msgstr ""
 
 #: includes/class-woo-wallet-frontend.php:84
@@ -105,22 +119,22 @@ msgstr ""
 msgid "Via wallet:"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:349
-#: includes/class-woo-wallet-frontend.php:387
+#: includes/class-woo-wallet-frontend.php:352
+#: includes/class-woo-wallet-frontend.php:390
 #: includes/class-woo-wallet-admin.php:250
 msgid "Cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:351
-#: includes/class-woo-wallet-frontend.php:389
+#: includes/class-woo-wallet-frontend.php:354
+#: includes/class-woo-wallet-frontend.php:392
 msgid " Cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:407
+#: includes/class-woo-wallet-frontend.php:410
 msgid "Coupon code applied successfully as cashback."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:422
+#: includes/class-woo-wallet-frontend.php:425
 #, php-format
 msgid "Cashback: %s"
 msgstr ""
@@ -199,11 +213,21 @@ msgstr ""
 msgid " | Current Balance: <strong>%s</strong>"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:114
+#: includes/class-woo-wallet-payment-method.php:113
+msgid "Payment error: "
+msgstr ""
+
+#: includes/class-woo-wallet-payment-method.php:113
+#, php-format
+msgid ""
+"Your wallet balance is low. Please add %s to proceed with this transaction."
+msgstr ""
+
+#: includes/class-woo-wallet-payment-method.php:118
 msgid "Payment via wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:142
+#: includes/class-woo-wallet-payment-method.php:146
 msgid "Insufficient funds in customer wallet"
 msgstr ""
 
@@ -572,6 +596,16 @@ msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:15
 msgid "New wallet transaction"
+msgstr ""
+
+#: includes/emails/class-woo-wallet-email-new-transaction.php:16
+msgid ""
+"New wallet transaction emails are sent to user when a wallet transaction "
+"received."
+msgstr ""
+
+#: includes/emails/class-woo-wallet-email-new-transaction.php:36
+msgid "Your {site_title} wallet transaction from {transaction_date}"
 msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:46

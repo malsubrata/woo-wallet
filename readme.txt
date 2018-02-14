@@ -34,6 +34,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
 - Convert WooCommerce coupon into cashback.
+- Support WordPress Multisite Network
 - Supports multiple languages translations.
 - Supports WooCommerce Subscriptions.
 - Supports WC Marketplace.
@@ -74,11 +75,15 @@ If on the off-chance you do encounter issues with the wallet endpoints pages aft
 
 = Does this plugin work with newest WP version and also older versions? =
 
-Yes, this plugin works fine with WordPress 4.9, It is also compatible for older WordPress versions upto 4.2.
+Yes, this plugin works fine with WordPress 4.9, It is also compatible for older WordPress versions upto 4.4.
 
 = Up to which version of WooCommerce this plugin compatible with? =
 
 This plugin is compatible with the latest version of WooCommerce.
+
+= Will WooCommerce Wallet work with WordPress multisite network? =
+
+Yes, WooCommerce Wallet plugin is fully compatible in Wordpress multisite.
 
 = Can I remove wallet item from menu =
 
@@ -107,6 +112,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 7. WooCommerce refund
 
 == Changelog ==
+
+= 1.1.0 - 2018-02-15 =
+* Added: Support for WordPress Multisite Network.
+* Tweak: Apply coupon as cashback logic.
+* Dev: Added filter `woo_wallet_cashback_notice_text` to modify cashback notice.
+* Updated: Language file.
 
 = 1.0.9 - 2018-02-10 =
 * Added: Product category wise cashback.
@@ -169,4 +180,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.0.9 =
+= 1.1.0 =
