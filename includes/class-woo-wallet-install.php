@@ -30,9 +30,7 @@ class Woo_Wallet_Install {
             return;
         }
         self::create_tables();
-        if (!get_option('_woo_wallet_recharge_product') || !wc_get_product(get_option('_woo_wallet_recharge_product'))) {
-            self::create_product();
-        }
+        self::cteate_product_if_not_exist();
     }
 
     /**
@@ -82,6 +80,14 @@ class Woo_Wallet_Install {
             KEY meta_key (meta_key(32))
         ) $collate;";
         return $tables;
+    }
+    /**
+     * Create rechargeable product if not exist
+     */
+    public static function cteate_product_if_not_exist(){
+        if (!wc_get_product(get_option('_woo_wallet_recharge_product'))) {
+            self::create_product();
+        }
     }
 
     /**

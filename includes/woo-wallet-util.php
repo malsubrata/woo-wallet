@@ -67,6 +67,7 @@ if (!function_exists('get_wallet_rechargeable_product')) {
      * @return WC_Product object
      */
     function get_wallet_rechargeable_product() {
+        Woo_Wallet_Install::cteate_product_if_not_exist();
         return wc_get_product(get_option('_woo_wallet_recharge_product'));
     }
 
