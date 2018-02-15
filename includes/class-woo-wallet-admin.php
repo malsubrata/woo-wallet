@@ -56,12 +56,13 @@ if (!class_exists('Woo_Wallet_Admin')) {
             global $post;
             $screen = get_current_screen();
             $screen_id = $screen ? $screen->id : '';
+            $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
             // register styles
-            wp_register_style('woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/assets/admin/css/balance-details.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/assets/admin/css/balance-details' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
 
             // Register scripts
-            wp_register_script('woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/admin/js/admin-product.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
-            wp_register_script('woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/admin/js/admin-order.js', array('jquery', 'wc-admin-order-meta-boxes'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/admin/js/admin-product' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/admin/js/admin-order' . $suffix . '.js', array('jquery', 'wc-admin-order-meta-boxes'), WOO_WALLET_PLUGIN_VERSION);
 
             if (in_array($screen_id, array('product', 'edit-product'))) {
                 wp_enqueue_script('woo_wallet_admin_product');

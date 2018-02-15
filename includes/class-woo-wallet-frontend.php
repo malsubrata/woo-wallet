@@ -96,12 +96,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function wc_wallet_payment_styles() {
             $wp_scripts = wp_scripts();
+            $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
             wp_register_style('woo-wallet-payment-jquery-ui', '//ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
             wp_register_style('jquery-datatables-style', '//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css');
-            wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet.css', array(), WOO_WALLET_PLUGIN_VERSION);
-            wp_register_style('woo-wallet-frontend-style', woo_wallet()->plugin_url() . '/assets/frontend/css/woo-wallet-frontend.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo-wallet-frontend-style', woo_wallet()->plugin_url() . '/assets/frontend/css/woo-wallet-frontend' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
-            wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             if (is_account_page()) {
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('jquery-datatables-style');
@@ -485,6 +486,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             call_user_func($function, $atts);
             return ob_get_clean();
         }
+
         /**
          * Wallet shortcode callback
          * @param array $atts
@@ -493,6 +495,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public static function woo_wallet_shortcode_callback($atts) {
             return self::shortcode_wrapper(array('Woo_Wallet_Frontend', 'woo_wallet_shortcode_output'), $atts);
         }
+
         /**
          * Wallet shortcode output
          * @param array $atts

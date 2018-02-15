@@ -52,7 +52,8 @@ if (!class_exists('Woo_Wallet_Settings')):
         public function admin_enqueue_scripts() {
             $screen = get_current_screen();
             $screen_id = $screen ? $screen->id : '';
-            wp_register_script('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/admin/js/admin-settings.js', array('jquery'), '1.0.0');
+            $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
+            wp_register_script('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/admin/js/admin-settings' . $suffix . '.js', array('jquery'), '1.0.0');
             if (in_array($screen_id, array('woowallet_page_woo-wallet-settings'))) {
                 wp_enqueue_script('woo-wallet-admin-settings');
                 $localize_param = array(
@@ -304,6 +305,7 @@ if (!class_exists('Woo_Wallet_Settings')):
             }
             return $tax_options;
         }
+
         /**
          * get all registered nav menu locations settings
          * @return array
