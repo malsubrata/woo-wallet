@@ -37,6 +37,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);
             add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
             add_filter('woocommerce_cart_totals_order_total_html', array($this, 'woocommerce_cart_totals_order_total_html'));
+            add_shortcode('woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback');
         }
 
         /**
@@ -251,6 +252,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             endif;
         }
 
+        /**
+         * Handel cashback and partial payment on order processed hook
+         * @param int $order_id
+         * @param array $posted_data
+         * @param Object $order
+         */
         public function woocommerce_checkout_order_processed($order_id, $posted_data, $order) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
@@ -426,7 +433,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $label;
         }
-        
+
         /**
          * Modify order total html
          * @param string $value
@@ -463,6 +470,44 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
             }
             return $value;
+        }
+
+        /**
+         * Shortcode Wrapper.
+         *
+         * @param string[] $function Callback function.
+         * @param array    $atts     Attributes. Default to empty array.
+         *
+         * @return string
+         */
+        public static function shortcode_wrapper($function, $atts = array()) {
+            ob_start();
+            call_user_func($function, $atts);
+            return ob_get_clean();
+        }
+        /**
+         * Wallet shortcode callback
+         * @param array $atts
+         * @return string
+         */
+        public static function woo_wallet_shortcode_callback($atts) {
+            return self::shortcode_wrapper(array('Woo_Wallet_Frontend', 'woo_wallet_shortcode_output'), $atts);
+        }
+        /**
+         * Wallet shortcode output
+         * @param array $atts
+         */
+        public static function woo_wallet_shortcode_output($atts) {
+            wp_enqueue_style('dashicons');
+            wp_enqueue_style('jquery-datatables-style');
+            wp_enqueue_style('woo-endpoint-wallet-style');
+            wp_enqueue_script('jquery-datatables-script');
+            wp_enqueue_script('wc-endpoint-wallet-transactions');
+            if (isset($_GET['wallet_action']) && 'view_transactions' === $_GET['wallet_action']) {
+                woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+            } else {
+                woo_wallet()->get_template('wc-endpoint-wallet.php');
+            }
         }
 
     }

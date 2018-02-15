@@ -21,10 +21,10 @@ global $wp;
 
 <div class="woo-wallet-my-wallet-container">
     <div class="woo-wallet-sidebar">
-        <h3 class="woo-wallet-sidebar-heading"><?php _e('My Wallet','woo-wallet'); ?></h3>
+        <h3 class="woo-wallet-sidebar-heading"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) : get_permalink(); ?>"><?php _e('My Wallet', 'woo-wallet'); ?></a></h3>
         <ul>
-            <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))); ?>add/"><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
-            <li class="card"><a href="<?php echo esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'))); ?>"><span class="dashicons dashicons-list-view"></span><p><?php _e('Transactions', 'woo-wallet'); ?></p></a></li>
+            <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')) . 'add/') : '?wallet_action=add'; ?>" ><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
+            <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'))) : '?wallet_action=view_transactions'; ?>"><span class="dashicons dashicons-list-view"></span><p><?php _e('Transactions', 'woo-wallet'); ?></p></a></li>
         </ul>
     </div>
     <div class="woo-wallet-content">
@@ -34,7 +34,7 @@ global $wp;
         </div>
         <div style="clear: both"></div>
         <hr/>
-        <?php if ('add' === $wp->query_vars['woo-wallet']) { ?>
+        <?php if ((isset($wp->query_vars['woo-wallet']) && 'add' === $wp->query_vars['woo-wallet']) || (isset($_GET['wallet_action']) && 'add' === $_GET['wallet_action'])) { ?>
             <form method="post" action="<?php echo wc_get_checkout_url(); ?>">
                 <div class="woo-wallet-add-amount">
                     <label for="woo_wallet_balance_to_add"><?php _e('Enter amount', 'woo-wallet'); ?></label>
@@ -59,11 +59,11 @@ global $wp;
                         </li>
                     <?php endforeach; ?>
                 </ul>
-                    <?php
-                } else {
-                    _e('No transactions found', 'woo-wallet');
-                }
-                ?>
-            <?php } ?>
+                <?php
+            } else {
+                _e('No transactions found', 'woo-wallet');
+            }
+            ?>
+        <?php } ?>
     </div>
 </div>
