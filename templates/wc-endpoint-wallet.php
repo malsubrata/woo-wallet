@@ -29,7 +29,7 @@ global $wp;
     </div>
     <div class="woo-wallet-content">
         <div class="woo-wallet-content-heading">
-            <h3 class="woo-wallet-content-h3">Balance</h3>
+            <h3 class="woo-wallet-content-h3"><?php _e('Balance', 'woo-wallet'); ?></h3>
             <p class="woo-wallet-price"><?php echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id()); ?></p>
         </div>
         <div style="clear: both"></div>

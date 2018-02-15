@@ -75,7 +75,11 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     'order_id' => $post->ID,
                     'payment_method' => $order->get_payment_method(''),
                     'default_price' => wc_price(0),
-                    'is_rechargeable_order' => is_wallet_rechargeable_order($order)
+                    'is_rechargeable_order' => is_wallet_rechargeable_order($order),
+                    'i18n' => array(
+                        'refund' => __('Refund', 'woo-wallet'),
+                        'via_wallet' => __('Via wallet', 'woo-wallet')
+                    )
                 );
                 wp_localize_script('woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer);
             }
