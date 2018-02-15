@@ -120,7 +120,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
             }
             /* Coupon Cashback */
-            if (get_post_meta($order->get_id(), '_coupon_cashback_amount', true)) {
+            if (apply_filters('woo_wallet_coupon_cashback_amount', get_post_meta($order->get_id(), '_coupon_cashback_amount', true), $order)) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_post_meta($order->get_id(), '_coupon_cashback_amount', true), __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
