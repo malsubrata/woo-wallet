@@ -20,18 +20,22 @@ $rest_amount = wc()->cart->get_total('') - woo_wallet()->wallet->get_wallet_bala
 if ('on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) {
     ?>
     <tr class="wallet-pay-partial">
-        <th colspan="2"><label><?php echo sprintf(__('%s%0.2f will be debited from your wallet and %s%0.2f will be paid through other payment method', 'woo-wallet'), get_woocommerce_currency_symbol(), woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), ''), get_woocommerce_currency_symbol(), $rest_amount); ?></label></th>
+        <th colspan="2"><label><?php echo sprintf(__('%s will be debited from your wallet and %s will be paid through other payment method', 'woo-wallet'), woo_wallet()->wallet->get_wallet_balance(get_current_user_id()), wc_price($rest_amount)); ?></label></th>
     </tr>
 
 <?php } else{ ?>
     <tr class="wallet-pay-partial">
-        <th><?php _e('Pay by wallet', 'woo-wallet'); ?> <span id="partial_wallet_payment_tooltip" style="vertical-align: middle;" title="<?php echo sprintf(__('If checked %s%0.2f will be debited from your wallet and %s%0.2f will be paid through other payment method', 'woo-wallet'), get_woocommerce_currency_symbol(), woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), ''), get_woocommerce_currency_symbol(), $rest_amount); ?>" class="dashicons dashicons-info"></span></th>
+        <th><?php _e('Pay by wallet', 'woo-wallet'); ?> <span id="partial_wallet_payment_tooltip" style="vertical-align: middle;" title="<?php echo esc_html(sprintf(__('If checked %s will be debited from your wallet and %s will be paid through other payment method', 'woo-wallet'), woo_wallet()->wallet->get_wallet_balance(get_current_user_id()), wc_price($rest_amount))); ?>" class="dashicons dashicons-info"></span></th>
         <td data-title="<?php esc_attr_e('Pay by wallet', 'woo-wallet'); ?>"><input type="checkbox" style="vertical-align: middle;" name="partial_pay_through_wallet" class="partial_pay_through_wallet" /></td>
     </tr>
 
     <script type="text/javascript">
         jQuery(function ($) {
-            $('#partial_wallet_payment_tooltip').tooltip();
+            $('#partial_wallet_payment_tooltip').tooltip({
+                content: function () {
+                    return $(this).prop('title');
+                }
+            });
         });
     </script>
 <?php } ?>
