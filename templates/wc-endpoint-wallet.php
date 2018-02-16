@@ -35,10 +35,11 @@ global $wp;
         <div style="clear: both"></div>
         <hr/>
         <?php if ((isset($wp->query_vars['woo-wallet']) && 'add' === $wp->query_vars['woo-wallet']) || (isset($_GET['wallet_action']) && 'add' === $_GET['wallet_action'])) { ?>
-            <form method="post" action="<?php echo wc_get_checkout_url(); ?>">
+            <form method="post" action="">
                 <div class="woo-wallet-add-amount">
                     <label for="woo_wallet_balance_to_add"><?php _e('Enter amount', 'woo-wallet'); ?></label>
                     <input type="number" step="0.01" name="woo_wallet_balance_to_add" id="woo_wallet_balance_to_add" class="woo-wallet-balance-to-add" required="" />
+                    <?php wp_nonce_field( 'woo_wallet_topup', 'woo_wallet_topup' ); ?>
                     <input type="submit" name="woo_add_to_wallet" class="woo-add-to-wallet" value="<?php _e('Add', 'woo-wallet'); ?>" />
                 </div>
             </form>

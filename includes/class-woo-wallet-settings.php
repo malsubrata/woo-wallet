@@ -99,7 +99,19 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('Enter wallet rechargeable product title', 'woo-wallet'),
                         'type' => 'text',
                         'default' => $this->get_rechargeable_product_title()
-                    )), $this->get_wc_tax_options(), $this->wp_menu_locations(), array(
+                    )), $this->get_wc_tax_options(), array(
+                    array(
+                        'name' => 'min_topup_amount',
+                        'label' => __('Minimum Topup Amount', 'woo-wallet'),
+                        'desc' => __('The minimum amount needed for wallet top up.', 'woo-wallet'),
+                        'type' => 'number',
+                    ),
+                    array(
+                        'name' => 'max_topup_amount',
+                        'label' => __('Maximum Topup Amount', 'woo-wallet'),
+                        'desc' => __('The maximum amount needed for wallet top up', 'woo-wallet'),
+                        'type' => 'number',
+                    )), $this->wp_menu_locations(), array(
                     array(
                         'name' => 'is_auto_deduct_for_partial_payment',
                         'label' => __('Auto deduct wallet balance for partial payment', 'woo-wallet'),

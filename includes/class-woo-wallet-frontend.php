@@ -147,14 +147,53 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function wc_wallet_add_wallet_recharge_product() {
             if (isset($_POST['woo_add_to_wallet'])) {
                 if (isset($_POST['woo_wallet_balance_to_add']) && !empty($_POST['woo_wallet_balance_to_add'])) {
-                    add_filter('woocommerce_add_cart_item_data', array($this, 'add_wc_wallet_product_price_to_cart_item_data'), 10, 2);
-                    $product = get_wallet_rechargeable_product();
-                    if ($product) {
-                        wc()->cart->empty_cart();
-                        wc()->cart->add_to_cart($product->get_id());
+                    $is_valid = $this->is_valid_wallet_recharge_amount($_POST['woo_wallet_balance_to_add']);
+                    if ($is_valid['is_valid']) {
+                        add_filter('woocommerce_add_cart_item_data', array($this, 'add_wc_wallet_product_price_to_cart_item_data'), 10, 2);
+                        $product = get_wallet_rechargeable_product();
+                        if ($product) {
+                            wc()->cart->empty_cart();
+                            wc()->cart->add_to_cart($product->get_id());
+                            wp_safe_redirect(wc_get_checkout_url());
+                            exit();
+                        }
+                    } else {
+                        wc_add_notice($is_valid['message'], 'error');
                     }
                 }
             }
+        }
+
+        public function is_valid_wallet_recharge_amount($amount = 0) {
+            $response = array('is_valid' => true);
+            $min_topup_amount = woo_wallet()->settings_api->get_option('min_topup_amount', '_wallet_settings_general', 0);
+            $max_topup_amount = woo_wallet()->settings_api->get_option('max_topup_amount', '_wallet_settings_general', 0);
+            if (isset($_POST['woo_wallet_topup']) && wp_verify_nonce($_POST['woo_wallet_topup'], 'woo_wallet_topup')) {
+                if ($min_topup_amount && $amount < $min_topup_amount) {
+                    $response = array(
+                        'is_valid' => false,
+                        'message' => sprintf(__('The minimum amount needed for wallet top up is %s', 'woo-wallet'), wc_price($min_topup_amount))
+                    );
+                }
+                if ($max_topup_amount && $amount > $max_topup_amount) {
+                    $response = array(
+                        'is_valid' => false,
+                        'message' => sprintf(__('Wallet top up amount should be less than %s', 'woo-wallet'), wc_price($max_topup_amount))
+                    );
+                }
+                if ($min_topup_amount && $max_topup_amount && ($amount < $min_topup_amount || $amount > $max_topup_amount)) {
+                    $response = array(
+                        'is_valid' => false,
+                        'message' => sprintf(__('Wallet top up amount should be between %s and %s', 'woo-wallet'), wc_price($min_topup_amount), wc_price($max_topup_amount))
+                    );
+                }
+            } else {
+                $response = array(
+                    'is_valid' => false,
+                    'message' => __('Cheatin&#8217; huh?', 'woo-wallet')
+                );
+            }
+            return apply_filters('woo_wallet_is_valid_wallet_recharge_amount', $response, $amount);
         }
 
         /**
