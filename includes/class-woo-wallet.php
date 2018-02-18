@@ -13,9 +13,15 @@ final class WooWallet {
      * @since 1.0.0
      */
     protected static $_instance = null;
-    /* settings api object */
+    /**
+     * Setting API instance
+     * @var Woo_Wallet_Settings_API 
+     */
     public $settings_api = null;
-    /* wallet object */
+    /**
+     * wallet instance
+     * @var Woo_Wallet_Wallet 
+     */
     public $wallet = null;
 
     /**
@@ -85,8 +91,8 @@ final class WooWallet {
      * load plugin files
      */
     public function includes() {
-        include_once( WOO_WALLET_ABSPATH . 'includes/woo-wallet-util.php' );
-        include_once( WOO_WALLET_ABSPATH . 'includes/woo-wallet-update-functions.php' );
+        include_once( WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-util.php' );
+        include_once( WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-update-functions.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-install.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings-api.php' );
         $this->settings_api = new Woo_Wallet_Settings_API();

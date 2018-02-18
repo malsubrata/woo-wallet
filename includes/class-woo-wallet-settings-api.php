@@ -23,7 +23,9 @@ class Woo_Wallet_Settings_API {
      * @var array
      */
     protected $settings_fields = array();
-
+    /**
+     * Class constructor
+     */
     public function __construct() {
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
     }
