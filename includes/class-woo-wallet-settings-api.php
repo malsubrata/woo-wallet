@@ -1,11 +1,11 @@
 <?php
 
 /**
- * WC qr codes settings api helper class
+ * WooCommerce wallet settings API helper class
  *
- * @version 1.0.2
+ * @version 1.0.0
  *
- * @author Bappa Mal
+ * @author Subrata Mal
  */
 if ( !class_exists( 'Woo_Wallet_Settings_API' ) ):
 class Woo_Wallet_Settings_API {
