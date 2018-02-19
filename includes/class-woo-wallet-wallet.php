@@ -42,9 +42,9 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             global $wpdb;
             $this->set_user_id($user_id);
             $this->wallet_balance = 0;
-            $resualt = $wpdb->get_row("SELECT balance FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
+            $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
             if ($resualt) {
-                $this->wallet_balance = number_format($resualt->balance, 2, '.', '');
+                $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', $resualt->balance, $resualt->currency), 2, '.', '');
             }
             return 'view' === $context ? wc_price($this->wallet_balance) : number_format($this->wallet_balance, 2, '.', '');
         }
@@ -163,7 +163,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             } else if ($type == 'debit') {
                 $balance -= $amount;
             }
-            if ($wpdb->insert("{$wpdb->base_prefix}woo_wallet_transactions", array('blog_id' => $GLOBALS['blog_id'], 'user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details), array('%d','%d', '%s', '%f', '%f', '%s', '%s'))) {
+            if ($wpdb->insert("{$wpdb->base_prefix}woo_wallet_transactions", array('blog_id' => $GLOBALS['blog_id'], 'user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details), array('%d', '%d', '%s', '%f', '%f', '%s', '%s'))) {
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
                 $email_admin->trigger($this->user_id, $amount, $type, $details);
                 $transaction_id = $wpdb->insert_id;

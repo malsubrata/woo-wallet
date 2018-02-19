@@ -55,7 +55,7 @@ global $wp;
                             </div>
                             <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?>"><?php
                                 echo $transaction->type == 'credit' ? '+' : '-';
-                                echo wc_price($transaction->amount);
+                                echo wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency));
                                 ?></div>
                         </li>
                     <?php endforeach; ?>
