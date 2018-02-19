@@ -33,8 +33,8 @@ $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()
         <?php foreach ($transactions as $key => $transaction) : ?>
         <tr>
             <td><?php echo $transaction->transaction_id; ?></td>
-            <td><?php echo $transaction->type == 'credit' ? apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency) : ' - '; ?></td>
-            <td><?php echo $transaction->type == 'debit' ? apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency) : ' - '; ?></td>
+            <td><?php echo $transaction->type == 'credit' ? wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)) : ' - '; ?></td>
+            <td><?php echo $transaction->type == 'debit' ? wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)) : ' - '; ?></td>
             <td><?php echo $transaction->details; ?></td>
             <td><?php echo wc_string_to_datetime($transaction->date)->date(wc_date_format()); ?></td>
         </tr>
