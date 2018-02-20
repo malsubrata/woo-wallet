@@ -60,7 +60,7 @@
     margin: 0 0 15px;
     line-height: 1em;
 }
-.woo-wallet-price{
+.woo-wallet-content .woo-wallet-price{
     float: right;
     margin: 0 0 15px;
 }
@@ -82,10 +82,10 @@
     float: right;
 }
 .woo-wallet-transaction-type-credit{
-    color: #76E4FD;
+    color: #197F36;
 }
 .woo-wallet-transaction-type-debit{
-    color: #FECC5B;
+    color: #BF0003;
 }
 .woo-wallet-balance-to-add{
     width: 100%;

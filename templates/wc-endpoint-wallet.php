@@ -39,12 +39,12 @@ global $wp;
                 <div class="woo-wallet-add-amount">
                     <label for="woo_wallet_balance_to_add"><?php _e('Enter amount', 'woo-wallet'); ?></label>
                     <input type="number" step="0.01" name="woo_wallet_balance_to_add" id="woo_wallet_balance_to_add" class="woo-wallet-balance-to-add" required="" />
-                    <?php wp_nonce_field( 'woo_wallet_topup', 'woo_wallet_topup' ); ?>
+                    <?php wp_nonce_field('woo_wallet_topup', 'woo_wallet_topup'); ?>
                     <input type="submit" name="woo_add_to_wallet" class="woo-add-to-wallet" value="<?php _e('Add', 'woo-wallet'); ?>" />
                 </div>
             </form>
         <?php } else { ?>
-            <?php $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()), 10); ?>
+            <?php $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()), apply_filters('woo_wallet_transactions_count', 10)); ?>
             <?php if (!empty($transactions)) { ?>
                 <ul class="woo-wallet-transactions-items">
                     <?php foreach ($transactions as $transaction) : ?> 

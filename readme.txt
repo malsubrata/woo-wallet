@@ -6,7 +6,7 @@ Requires at least: 4.4
 Tested up to: 4.9.4
 WC requires at least: 3.0
 WC tested up to: 3.3.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -33,6 +33,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - From the backend, the admin can view the transaction history.
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
+- Shortcode `woo_wallet` which will display user wallet page.
 - Convert WooCommerce coupon into cashback.
 - Support WordPress Multisite Network
 - Supports multiple languages translations.
@@ -113,6 +114,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.1.1 -2018-02-21 =
+* Added: Minified CSS & JS files.
+* Added: Min Max wallet top up amount restriction.
+* Added: Shortcode `woo-wallet`.
+* Updated: Missing translation strings.
+* Dev: Added filter `woo_wallet_amount`, `woo_wallet_coupon_cashback_amount`, `woo_wallet_transactions_count`.
+* Updated: Language file.
+
 = 1.1.0 - 2018-02-15 =
 * Added: Support for WordPress Multisite Network.
 * Tweak: Apply coupon as cashback logic.
@@ -180,4 +189,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.1.0 =
+= 1.1.1 =
