@@ -154,7 +154,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                         if ($product) {
                             wc()->cart->empty_cart();
                             wc()->cart->add_to_cart($product->get_id());
-                            wp_safe_redirect(wc_get_checkout_url());
+                            $redirect_url = apply_filters('woo_wallet_redirect_to_checkout_after_added_amount', true) ? wc_get_checkout_url() : wc_get_cart_url();
+                            wp_safe_redirect($redirect_url);
                             exit();
                         }
                     } else {
