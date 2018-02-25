@@ -295,4 +295,18 @@ if (!function_exists('is_full_payment_through_wallet')) {
     }
 
 }
+
+if (!function_exists('get_all_wallet_users')) {
+
+    function get_all_wallet_users($exclude_me = true) {
+        $args = array(
+            'blog_id' => $GLOBALS['blog_id'],
+            'exclude' => $exclude_me ? array(get_current_user_id()) : array(),
+            'orderby' => 'login',
+            'order' => 'ASC'
+        );
+        return get_users($args);
+    }
+
+}
     

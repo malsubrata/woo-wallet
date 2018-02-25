@@ -105,10 +105,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_register_style('woo-wallet-frontend-style', woo_wallet()->plugin_url() . '/assets/frontend/css/woo-wallet-frontend' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
             wp_register_script('wc-endpoint-wallet-transactions', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet-transactions' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
+            wp_localize_script('wc-endpoint-wallet-transactions', 'wallet_param', array('ajax_url' => admin_url('admin-ajax.php')));
             if (is_account_page()) {
                 wp_enqueue_style('dashicons');
+                wp_enqueue_style('select2');
                 wp_enqueue_style('jquery-datatables-style');
                 wp_enqueue_style('woo-endpoint-wallet-style');
+                wp_enqueue_script('selectWoo');
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('wc-endpoint-wallet-transactions');
             }

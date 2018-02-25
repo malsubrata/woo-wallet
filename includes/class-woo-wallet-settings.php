@@ -117,6 +117,13 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Auto deduct wallet balance for partial payment', 'woo-wallet'),
                         'desc' => __('If a purchase requires more balance than you have in your wallet, then if checked the wallet balance will be deduct first and the rest of the amount will need to be paid.', 'woo-wallet'),
                         'type' => 'checkbox',
+                    ),
+                    array(
+                        'name' => 'is_enable_wallet_transfer',
+                        'label' => __('Allow Wallet Transfer', 'woo-wallet'),
+                        'desc' => __('If checked user will be able to transfer fund to another user.', 'woo-wallet'),
+                        'type' => 'checkbox',
+                        'default' => 'on'
                     )), $this->get_wc_payment_allowed_gateways()
                 ),
                 '_wallet_settings_credit' => array_merge(array(
