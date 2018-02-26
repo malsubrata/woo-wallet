@@ -48,23 +48,26 @@ global $wp;
             </form>
         <?php } else if ('on' === woo_wallet()->settings_api->get_option('is_enable_wallet_transfer', '_wallet_settings_general', 'on') && ((isset($wp->query_vars['woo-wallet']) && 'transfer' === $wp->query_vars['woo-wallet']) || (isset($_GET['wallet_action']) && 'transfer' === $_GET['wallet_action']))) { ?> 
             <form method="post" action="">
-                <div class="woo-wallet-field-container">
+                <p class="woo-wallet-field-container form-row form-row-wide">
                     <label for="woo_wallet_transfer_user_id"><?php _e('Select whom to transfer', 'woo-wallet'); ?></label>
-                    <select name="woo_wallet_transfer_user_id" class="woo-wallet-select2" style="width: 100%;">
+                    <select name="woo_wallet_transfer_user_id" class="woo-wallet-select2" required="">
                         <?php foreach (get_all_wallet_users() as $user) : ?>
                             <option value="<?php echo $user->ID; ?>"><?php echo $user->display_name; ?></option>
                         <?php endforeach; ?>
                     </select>
-                </div>
-                <div class="woo-wallet-field-container">
+                </p>
+                <p class="woo-wallet-field-container form-row form-row-wide">
                     <label for="woo_wallet_transfer_amount"><?php _e('Amount', 'woo-wallet'); ?></label>
-                    <input type="number" step="0.01" name="woo_wallet_transfer_amount" style="width: 100%;" />
-                </div>
-                <div class="woo-wallet-field-container">
+                    <input type="number" step="0.01" name="woo_wallet_transfer_amount" required=""/>
+                </p>
+                <p class="woo-wallet-field-container form-row form-row-wide">
                     <label for="woo_wallet_transfer_note"><?php _e('What\'s this for', 'woo-wallet'); ?></label>
-                    <textarea name="woo_wallet_transfer_note"></textarea>
-                </div>
-                <input type="submit" name="woo_wallet_transfer_fund" value="<?php _e('Proceed to transfer', 'woo-wallet'); ?>" />
+                    <textarea name="woo_wallet_transfer_note" required=""></textarea>
+                </p>
+                <p class="woo-wallet-field-container form-row">
+                    <?php wp_nonce_field('woo_wallet_transfer', 'woo_wallet_transfer'); ?>
+                    <input type="submit" class="button" name="woo_wallet_transfer_fund" value="<?php _e('Proceed to transfer', 'woo-wallet'); ?>" />
+                </p>
             </form>
         <?php } else { ?>
             <?php $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()), apply_filters('woo_wallet_transactions_count', 10)); ?>
