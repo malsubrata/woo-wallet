@@ -66,7 +66,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
             if (in_array($screen_id, array('product', 'edit-product'))) {
                 wp_enqueue_script('woo_wallet_admin_product');
-                wp_localize_script('woo_wallet_admin_product', 'woo_wallet_admin_product_param', array('product_id' => get_wallet_rechargeable_product()->get_id()));
+                wp_localize_script('woo_wallet_admin_product', 'woo_wallet_admin_product_param', array('product_id' => get_wallet_rechargeable_product()->get_id(), 'is_hidden' => apply_filters('woo_wallet_hide_rechargeable_product', true)));
             }
             if (in_array($screen_id, array('shop_order'))) {
                 $order = wc_get_order($post->ID);

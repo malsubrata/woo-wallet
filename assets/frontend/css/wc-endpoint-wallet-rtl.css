@@ -109,3 +109,9 @@
         display: block;
     }
 }
+p.woo-wallet-field-container {
+    margin-bottom: 11px;
+}
+.woo-wallet-select2{
+    width: 100%;
+}

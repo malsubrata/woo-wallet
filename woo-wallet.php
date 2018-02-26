@@ -6,7 +6,7 @@
  * Description: Take wallet payments on your store or process refund, cashback to user wallet.
  * Author: Subrata Mal
  * Author URI: https://profiles.wordpress.org/subratamal
- * Version: 1.1.1
+ * Version: 1.1.2
  * Requires at least: 4.4
  * Tested up to: 4.9.4
  * WC requires at least: 3.0

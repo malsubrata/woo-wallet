@@ -6,7 +6,7 @@ Requires at least: 4.4
 Tested up to: 4.9.4
 WC requires at least: 3.0
 WC tested up to: 3.3.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -33,6 +33,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - From the backend, the admin can view the transaction history.
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
+- Users can transfer wallet amount to other user.
 - Shortcode `woo_wallet` which will display user wallet page.
 - Convert WooCommerce coupon into cashback.
 - Support WordPress Multisite Network
@@ -86,10 +87,6 @@ This plugin is compatible with the latest version of WooCommerce.
 
 Yes, WooCommerce Wallet plugin is fully compatible in Wordpress multisite.
 
-= Can I remove wallet item from menu =
-
-Yes, just copy `add_filter( 'woo_wallet_hide_nav_menu', '__return_true' );` to you theme function.php file.
-
 = Where can I get support or talk to other users? =
 
 If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet).
@@ -104,17 +101,25 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Screenshots ==
 
-1. Add wallet balance
-2. View transaction details
-3. Admin view transaction details
-4. Admin add wallet balance
-5. All user balnce details
-6. WooCommerce wallet payment gateway
-7. WooCommerce refund
+1. User wallet page.
+2. Transfer wallet balance.
+3. View transaction details.
+4. All user balance details.
+5. Admin view transaction details.
+6. Admin adjust wallet balance.
+7. WooCommerce wallet payment gateway.
+8. WooCommerce refund.
 
 == Changelog ==
 
-= 1.1.1 -2018-02-21 =
+= 1.1.2 - 2018-02-26 =
+* Added: RTL support.
+* Added: Wallet amount transfer option.
+* Fixed: Security issue.
+* Dev: Added filter `woo_wallet_current_balance`, `woo_wallet_redirect_to_checkout_after_added_amount`, `woo_wallet_hide_rechargeable_product`.
+* Updated: Language file.
+
+= 1.1.1 - 2018-02-21 =
 * Added: Minified CSS & JS files.
 * Added: Min Max wallet top up amount restriction.
 * Added: Shortcode `woo-wallet`.
@@ -189,4 +194,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.1.1 =
+= 1.1.2 =

@@ -285,7 +285,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                         $gateways[] = array(
                             'name' => $gateway->id,
                             'label' => $method_title,
-                            'desc' => __('Allow this gatway for recharge wallet', 'woo-wallet'),
+                            'desc' => __('Allow this gateway for recharge wallet', 'woo-wallet'),
                             'type' => 'checkbox',
                             'default' => 'on'
                         );
