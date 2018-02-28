@@ -174,7 +174,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             /**
              * Process wallet transfer.
              */
-            if (isset($_POST['woo_wallet_transfer_fund']) && 'on' === woo_wallet()->settings_api->get_option('is_enable_wallet_transfer', '_wallet_settings_general', 'on')) {
+            if (isset($_POST['woo_wallet_transfer_fund']) && apply_filters('woo_wallet_is_enable_transfer', 'on' === woo_wallet()->settings_api->get_option('is_enable_wallet_transfer', '_wallet_settings_general', 'on'))) {
                 $response = $this->do_wallet_transfer();
                 if (!$response['is_valid']) {
                     wc_add_notice($response['message'], 'error');
