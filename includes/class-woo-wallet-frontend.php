@@ -183,6 +183,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
             }
         }
+
         /**
          * Check wallet recharge amount.
          * @param float $amount
@@ -219,6 +220,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return apply_filters('woo_wallet_is_valid_wallet_recharge_amount', $response, $amount);
         }
+
         /**
          * Do transfer wallet amount.
          * @return array
@@ -401,9 +403,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (!get_post_meta($order->get_id(), '_via_wallet_payment', true)) {
                 return $total_rows;
             }
+            $via_other_gateway = get_post_meta($order->get_id(), '_original_order_amount', true) - get_post_meta($order->get_id(), '_via_wallet_payment', true);
             $order_total = $total_rows['order_total'];
             unset($total_rows['order_total']);
             $total_rows['via_wallet'] = array('label' => __('Via wallet:', 'woo-wallet'), 'value' => wc_price(get_post_meta($order->get_id(), '_via_wallet_payment', true), array('currency' => $order->get_currency())));
+            $total_rows['via_other_gateway'] = array('label' => sprintf(__('Via %s:', 'woo-wallet'), $order->get_payment_method_title()), 'value' => wc_price($via_other_gateway, array('currency' => $order->get_currency())));
             $total_rows['order_total'] = $order_total;
             return $total_rows;
         }
@@ -606,17 +610,23 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param array $atts
          */
         public static function woo_wallet_shortcode_output($atts) {
-            wp_enqueue_style('dashicons');
-            wp_enqueue_style('select2');
-            wp_enqueue_style('jquery-datatables-style');
-            wp_enqueue_style('woo-endpoint-wallet-style');
-            wp_enqueue_script('jquery-datatables-script');
-            wp_enqueue_script('selectWoo');
-            wp_enqueue_script('wc-endpoint-wallet');
-            if (isset($_GET['wallet_action']) && 'view_transactions' === $_GET['wallet_action']) {
-                woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+            if (!is_user_logged_in()) {
+                echo '<div class="woocommerce">';
+                wc_get_template('myaccount/form-login.php');
+                echo '</div>';
             } else {
-                woo_wallet()->get_template('wc-endpoint-wallet.php');
+                wp_enqueue_style('dashicons');
+                wp_enqueue_style('select2');
+                wp_enqueue_style('jquery-datatables-style');
+                wp_enqueue_style('woo-endpoint-wallet-style');
+                wp_enqueue_script('jquery-datatables-script');
+                wp_enqueue_script('selectWoo');
+                wp_enqueue_script('wc-endpoint-wallet');
+                if (isset($_GET['wallet_action']) && 'view_transactions' === $_GET['wallet_action']) {
+                    woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+                } else {
+                    woo_wallet()->get_template('wc-endpoint-wallet.php');
+                }
             }
         }
 
