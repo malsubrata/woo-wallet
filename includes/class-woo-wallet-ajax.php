@@ -6,19 +6,22 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Ajax')) {
 
     class Woo_Wallet_Ajax {
+
         /**
          * Class constructor
          */
         public function __construct() {
-            add_action('wp_ajax_wc_wallet_payment_order_refund', array($this, 'wc_wallet_payment_order_refund'));
+            add_action('wp_ajax_wc_wallet_payment_order_refund', array($this, 'woo_wallet_payment_order_refund'));
             add_action('wp_ajax_woocommerce_wallet_rated', array($this, 'woocommerce_wallet_rated'));
+            add_action('wp_ajax_woo-wallet-user-search', array($this, 'woo_wallet_user_search'));
         }
+
         /**
          * Process refund through wallet
          * @throws exception
          * @throws Exception
          */
-        public function wc_wallet_payment_order_refund() {
+        public function woo_wallet_payment_order_refund() {
             ob_start();
             check_ajax_referer('order-item', 'security');
             if (!current_user_can('edit_shop_orders')) {
@@ -69,7 +72,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 ));
                 if (!is_wp_error($refund)) {
                     $wallet_credit = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Wallet refund #' . $order->get_id(), 'woo-wallet'));
-                    if(!$wallet_credit){
+                    if (!$wallet_credit) {
                         throw new Exception(__('Refund not credited to customer', 'woo-wallet'));
                     }
                 }
@@ -90,11 +93,43 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 wp_send_json_error(array('error' => $ex->getMessage()));
             }
         }
-        
-        public function woocommerce_wallet_rated(){
+        /**
+         * Mark wallet rated.
+         */
+        public function woocommerce_wallet_rated() {
             update_option('woocommerce_wallet_admin_footer_text_rated', true);
             die;
         }
+        /**
+         * Search users
+         */
+        public function woo_wallet_user_search() {
+            $return = array();
+            
+            if (isset($_REQUEST['site_id'])) {
+                $id = absint($_REQUEST['site_id']);
+            } else {
+                $id = get_current_blog_id();
+            }
+
+            $users = get_users(array(
+                'blog_id' => $id,
+                'search' => '*' . $_REQUEST['term'] . '*',
+                'exclude' => array(get_current_user_id()),
+                'search_columns' => array('user_login', 'user_nicename', 'user_email'),
+                    ));
+
+            foreach ($users as $user) {
+                $return[] = array(
+                    /* translators: 1: user_login, 2: user_email */
+                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result'), $user->user_login, $user->user_email),
+                    'value' => $user->ID,
+                );
+            }
+
+            wp_send_json($return);
+        }
+
     }
 
 }

@@ -50,11 +50,7 @@ global $wp;
             <form method="post" action="">
                 <p class="woo-wallet-field-container form-row form-row-wide">
                     <label for="woo_wallet_transfer_user_id"><?php _e('Select whom to transfer', 'woo-wallet'); ?></label>
-                    <select name="woo_wallet_transfer_user_id" class="woo-wallet-select2" required="">
-                        <?php foreach (get_all_wallet_users() as $user) : ?>
-                            <option value="<?php echo $user->ID; ?>"><?php echo $user->display_name . ' ('.$user->user_email.')'; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <select name="woo_wallet_transfer_user_id" class="woo-wallet-select2" required=""></select>
                 </p>
                 <p class="woo-wallet-field-container form-row form-row-wide">
                     <label for="woo_wallet_transfer_amount"><?php _e('Amount', 'woo-wallet'); ?></label>
