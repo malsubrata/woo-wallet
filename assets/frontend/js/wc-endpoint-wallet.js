@@ -7,7 +7,7 @@ jQuery(function ($) {
                 order: [[0, "desc"]]
             }
     );
-    $('.woo-wallet-select2').select2({
+    $('.woo-wallet-select2').selectWoo({
         minimumInputLength: 3,
         ajax: {
             url: wallet_param.ajax_url,
