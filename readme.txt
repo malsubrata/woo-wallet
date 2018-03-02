@@ -4,8 +4,6 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9.4
-WC requires at least: 3.0
-WC tested up to: 3.3.3
 Stable tag: 1.1.2
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
@@ -85,11 +83,11 @@ This plugin is compatible with the latest version of WooCommerce.
 
 = Will WooCommerce Wallet work with WordPress multisite network? =
 
-Yes, WooCommerce Wallet plugin is fully compatible in Wordpress multisite.
+Yes, WooCommerce Wallet plugin is fully compatible with Wordpress multisite.
 
 = Where can I get support or talk to other users? =
 
-If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet).
+If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at m.subrata1991@gmail.com.
 
 = Where can I report bugs or contribute to the project? =
 

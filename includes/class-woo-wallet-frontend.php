@@ -14,15 +14,15 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('woocommerce_get_query_vars', array($this, 'add_woocommerce_query_vars'));
             add_filter('woocommerce_endpoint_woo-wallet_title', array($this, 'woocommerce_endpoint_title'), 10, 2);
             add_filter('woocommerce_endpoint_woo-wallet-transactions_title', array($this, 'woocommerce_endpoint_title'), 10, 2);
-            add_filter('woocommerce_account_menu_items', array($this, 'wc_wallet_menu_items'), 10, 1);
-            add_action('woocommerce_account_woo-wallet_endpoint', array($this, 'wc_wallet_endpoint_content'));
-            add_action('woocommerce_account_woo-wallet-transactions_endpoint', array($this, 'wc_wallet_transactions_endpoint_content'));
+            add_filter('woocommerce_account_menu_items', array($this, 'woo_wallet_menu_items'), 10, 1);
+            add_action('woocommerce_account_woo-wallet_endpoint', array($this, 'woo_wallet_endpoint_content'));
+            add_action('woocommerce_account_woo-wallet-transactions_endpoint', array($this, 'woo_wallet_transactions_endpoint_content'));
 
-            add_filter('woocommerce_is_purchasable', array($this, 'make_wc_wallet_recharge_product_purchasable'), 10, 2);
-            add_action('wp_loaded', array($this, 'wc_wallet_frontend_loaded'), 20);
-            add_action('woocommerce_before_calculate_totals', array($this, 'wc_wallet_payment_set_recharge_product_price'));
+            add_filter('woocommerce_is_purchasable', array($this, 'make_woo_wallet_recharge_product_purchasable'), 10, 2);
+            add_action('wp_loaded', array($this, 'woo_wallet_frontend_loaded'), 20);
+            add_action('woocommerce_before_calculate_totals', array($this, 'woo_wallet_set_recharge_product_price'));
             add_filter('woocommerce_add_to_cart_validation', array($this, 'restrict_other_from_add_to_cart'), 20);
-            add_action('wp_enqueue_scripts', array(&$this, 'wc_wallet_payment_styles'));
+            add_action('wp_enqueue_scripts', array(&$this, 'woo_wallet_styles'));
             add_filter('woocommerce_available_payment_gateways', array($this, 'woocommerce_available_payment_gateways'), 30);
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on')) {
                 add_action('woocommerce_before_cart_table', array($this, 'woocommerce_before_cart_table'));
@@ -94,7 +94,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         /**
          * Register and enqueue frontend styles and scripts
          */
-        public function wc_wallet_payment_styles() {
+        public function woo_wallet_styles() {
             $wp_scripts = wp_scripts();
             $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
             wp_register_style('woo-wallet-payment-jquery-ui', '//ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
@@ -123,7 +123,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param array $items
          * @return array
          */
-        public function wc_wallet_menu_items($items) {
+        public function woo_wallet_menu_items($items) {
             unset($items['edit-account']);
             unset($items['customer-logout']);
             $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
@@ -135,21 +135,21 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         /**
          * WooCommerce endpoint contents for wallet 
          */
-        public function wc_wallet_endpoint_content() {
+        public function woo_wallet_endpoint_content() {
             woo_wallet()->get_template('wc-endpoint-wallet.php');
         }
 
         /**
          * WooCommerce endpoint contents for transaction details
          */
-        public function wc_wallet_transactions_endpoint_content() {
+        public function woo_wallet_transactions_endpoint_content() {
             woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
         }
 
         /**
          * Do wallet frontend load functions.
          */
-        public function wc_wallet_frontend_loaded() {
+        public function woo_wallet_frontend_loaded() {
             /**
              * Process wallet recharge.
              */
@@ -157,7 +157,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 if (isset($_POST['woo_wallet_balance_to_add']) && !empty($_POST['woo_wallet_balance_to_add'])) {
                     $is_valid = $this->is_valid_wallet_recharge_amount($_POST['woo_wallet_balance_to_add']);
                     if ($is_valid['is_valid']) {
-                        add_filter('woocommerce_add_cart_item_data', array($this, 'add_wc_wallet_product_price_to_cart_item_data'), 10, 2);
+                        add_filter('woocommerce_add_cart_item_data', array($this, 'add_woo_wallet_product_price_to_cart_item_data'), 10, 2);
                         $product = get_wallet_rechargeable_product();
                         if ($product) {
                             wc()->cart->empty_cart();
@@ -270,7 +270,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param int $product_id
          * @return array
          */
-        public function add_wc_wallet_product_price_to_cart_item_data($cart_item_data, $product_id) {
+        public function add_woo_wallet_product_price_to_cart_item_data($cart_item_data, $product_id) {
             $product = wc_get_product($product_id);
             if (isset($_POST['woo_wallet_balance_to_add']) && $product) {
                 $recharge_amount = round($_POST['woo_wallet_balance_to_add'], 2);
@@ -285,7 +285,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param WC_Product object $product
          * @return boolean
          */
-        public function make_wc_wallet_recharge_product_purchasable($is_purchasable, $product) {
+        public function make_woo_wallet_recharge_product_purchasable($is_purchasable, $product) {
             $wallet_product = get_wallet_rechargeable_product();
             if ($wallet_product) {
                 if ($wallet_product->get_id() == $product->get_id()) {
@@ -300,7 +300,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param OBJECT $cart
          * @return NULL
          */
-        public function wc_wallet_payment_set_recharge_product_price($cart) {
+        public function woo_wallet_set_recharge_product_price($cart) {
             $product = get_wallet_rechargeable_product();
             if (!$product) {
                 return;

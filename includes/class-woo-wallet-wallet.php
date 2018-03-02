@@ -13,7 +13,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
         /* user wallet balance */
         public $wallet_balance = 0;
         /* Wallet balance meta key */
-        public $meta_key = '_wc_wallet_balance';
+        public $meta_key = '_woo_wallet_balance';
 
         /*
          * Class constructor
@@ -167,7 +167,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
                 $email_admin->trigger($this->user_id, $amount, $type, $details);
                 $transaction_id = $wpdb->insert_id;
-                do_action('wc_wallet_payment_transaction_recorded', $transaction_id, $amount, $type);
+                do_action('woo_wallet_transaction_recorded', $transaction_id, $amount, $type);
                 return $transaction_id;
             }
             return false;

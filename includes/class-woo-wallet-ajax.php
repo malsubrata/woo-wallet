@@ -11,7 +11,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
          * Class constructor
          */
         public function __construct() {
-            add_action('wp_ajax_wc_wallet_payment_order_refund', array($this, 'woo_wallet_payment_order_refund'));
+            add_action('wp_ajax_woo_wallet_order_refund', array($this, 'woo_wallet_order_refund'));
             add_action('wp_ajax_woocommerce_wallet_rated', array($this, 'woocommerce_wallet_rated'));
             add_action('wp_ajax_woo-wallet-user-search', array($this, 'woo_wallet_user_search'));
         }
@@ -21,7 +21,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
          * @throws exception
          * @throws Exception
          */
-        public function woo_wallet_payment_order_refund() {
+        public function woo_wallet_order_refund() {
             ob_start();
             check_ajax_referer('order-item', 'security');
             if (!current_user_can('edit_shop_orders')) {

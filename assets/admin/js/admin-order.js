@@ -1,7 +1,7 @@
-/* global woo_wallet_admin_order_param, wc_meta_boxes_order_items, woocommerce_admin_meta_boxes */
+/* global woo_wallet_admin_order_param, wc_meta_boxes_order_items, woocommerce_admin_meta_boxes, accounting, woocommerce_admin */
 
 jQuery(function ($) {
-    var wc_wallet_payment_order_items = {
+    var woo_wallet_order_items = {
         init: function () {
             if (woo_wallet_admin_order_param.payment_method === 'wallet') {
                 $('.refund-actions .button.tips.disabled').remove();
@@ -12,7 +12,7 @@ jQuery(function ($) {
             }
         },
         do_wallet_refund: function () {
-            wc_wallet_payment_order_items.block();
+            woo_wallet_order_items.block();
             if (window.confirm(woocommerce_admin_meta_boxes.i18n_do_refund)) {
                 var refund_amount = $('input#refund_amount').val();
                 var refund_reason = $('input#refund_reason').val();
@@ -46,7 +46,7 @@ jQuery(function ($) {
                     }
                 });
                 var data = {
-                    action: 'wc_wallet_payment_order_refund',
+                    action: 'woo_wallet_order_refund',
                     order_id: woocommerce_admin_meta_boxes.post_id,
                     refund_amount: refund_amount,
                     refund_reason: refund_reason,
@@ -59,7 +59,7 @@ jQuery(function ($) {
                 };
                 $.post(woocommerce_admin_meta_boxes.ajax_url, data, function (response) {
                     if (true === response.success) {
-                        wc_wallet_payment_order_items.reload_items();
+                        woo_wallet_order_items.reload_items();
 
                         if ('fully_refunded' === response.data.status) {
                             // Redirect to same page for show the refunded status
@@ -67,11 +67,11 @@ jQuery(function ($) {
                         }
                     } else {
                         window.alert(response.data.error);
-                        wc_wallet_payment_order_items.unblock();
+                        woo_wallet_order_items.unblock();
                     }
                 });
             } else {
-                wc_wallet_payment_order_items.unblock();
+                woo_wallet_order_items.unblock();
             }
         },
         block: function () {
@@ -93,7 +93,7 @@ jQuery(function ($) {
                 security: woocommerce_admin_meta_boxes.order_item_nonce
             };
 
-            wc_wallet_payment_order_items.block();
+            woo_wallet_order_items.block();
 
             $.ajax({
                 url: woocommerce_admin_meta_boxes.ajax_url,
@@ -102,9 +102,9 @@ jQuery(function ($) {
                 success: function (response) {
                     $('#woocommerce-order-items').find('.inside').empty();
                     $('#woocommerce-order-items').find('.inside').append(response);
-                    wc_wallet_payment_order_items.init_tiptip();
-                    wc_wallet_payment_order_items.unblock();
-                    wc_wallet_payment_order_items.init();
+                    woo_wallet_order_items.init_tiptip();
+                    woo_wallet_order_items.unblock();
+                    woo_wallet_order_items.init();
                 }
             });
         },
@@ -119,5 +119,5 @@ jQuery(function ($) {
             });
         }
     };
-    wc_wallet_payment_order_items.init();
+    woo_wallet_order_items.init();
 });

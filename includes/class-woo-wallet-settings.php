@@ -53,8 +53,15 @@ if (!class_exists('Woo_Wallet_Settings')):
             $screen = get_current_screen();
             $screen_id = $screen ? $screen->id : '';
             $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
-            wp_register_script('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/admin/js/admin-settings' . $suffix . '.js', array('jquery'), '1.0.0');
+            wp_register_style('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/admin/css/admin-settings' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/admin/js/admin-settings' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
             if (in_array($screen_id, array('woowallet_page_woo-wallet-settings'))) {
+                wp_enqueue_style('dashicons');
+                wp_enqueue_style('wp-color-picker');
+                wp_enqueue_style('woo-wallet-admin-settings');
+                wp_enqueue_media();
+                wp_enqueue_script('wp-color-picker');
+                wp_enqueue_script('jquery');
                 wp_enqueue_script('woo-wallet-admin-settings');
                 $localize_param = array(
                     'gateways' => $this->get_wc_payment_gateways('id')
@@ -71,18 +78,20 @@ if (!class_exists('Woo_Wallet_Settings')):
             $sections = array(
                 array(
                     'id' => '_wallet_settings_general',
-                    'title' => __('General', 'woo-wallet')
+                    'title' => __('General', 'woo-wallet'),
+                    'icon' => 'dashicons-admin-generic',
                 ),
                 array(
                     'id' => '_wallet_settings_credit',
-                    'title' => __('Credit', 'woo-wallet')
+                    'title' => __('Credit Options', 'woo-wallet'),
+                    'icon' => 'dashicons-money'
                 ),
 //                array(
 //                    'id' => '_wallet_settings_withdrawal',
 //                    'title' => __('Withdrawal', 'woo-wallet')
 //                )
             );
-            return apply_filters('wc_wallet_payment_settings_sections', $sections);
+            return apply_filters('woo_wallet_settings_sections', $sections);
         }
 
         /**
@@ -219,7 +228,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                     )
                 )
             );
-            return apply_filters('wc_wallet_payment_settings_filds', $settings_fields);
+            return apply_filters('woo_wallet_settings_filds', $settings_fields);
         }
 
         /**
@@ -240,9 +249,12 @@ if (!class_exists('Woo_Wallet_Settings')):
          */
         public function plugin_page() {
             echo '<div class="wrap">';
+            echo '<h2 style="margin-bottom: 15px;">' . __('Settings', 'woo-wallet') . '</h2>';
             settings_errors();
+            echo '<div class="wallet-settings-wrap">';
             $this->settings_api->show_navigation();
             $this->settings_api->show_forms();
+            echo '</div>';
             echo '</div>';
         }
 

@@ -3,6 +3,71 @@
 jQuery(function ($) {
     var settings = {
         init: function () {
+            //Initiate Color Picker
+            $('.wp-color-picker-field').wpColorPicker();
+
+            // Switches option sections
+            $('.group').hide();
+            var activewwtab = '';
+            if (typeof (localStorage) != 'undefined') {
+                activewwtab = localStorage.getItem("activewwtab");
+            }
+            if (activewwtab != '' && $(activewwtab).length) {
+                $(activewwtab).fadeIn();
+            } else {
+                $('.group:first').fadeIn();
+            }
+            $('.group .collapsed').each(function () {
+                $(this).find('input:checked').parent().parent().parent().nextAll().each(
+                        function () {
+                            if ($(this).hasClass('last')) {
+                                $(this).removeClass('hidden');
+                                return false;
+                            }
+                            $(this).filter('.hidden').removeClass('hidden');
+                        });
+            });
+
+            if (activewwtab != '' && $(activewwtab + '-tab').length) {
+                $(activewwtab + '-tab').addClass('nav-tab-active');
+            } else {
+                $('.nav-tab-wrapper a:first').addClass('nav-tab-active');
+            }
+            $('.nav-tab-wrapper a').click(function (evt) {
+                $('.nav-tab-wrapper a').removeClass('nav-tab-active');
+                $(this).addClass('nav-tab-active').blur();
+                var clicked_group = $(this).attr('href');
+                if (typeof (localStorage) != 'undefined') {
+                    localStorage.setItem("activewwtab", $(this).attr('href'));
+                }
+                $('.group').hide();
+                $(clicked_group).fadeIn();
+                evt.preventDefault();
+            });
+
+            $('.wpsa-browse').on('click', function (event) {
+                event.preventDefault();
+
+                var self = $(this);
+
+                // Create the media frame.
+                var file_frame = wp.media.frames.file_frame = wp.media({
+                    title: self.data('uploader_title'),
+                    button: {
+                        text: self.data('uploader_button_text'),
+                    },
+                    multiple: false
+                });
+
+                file_frame.on('select', function () {
+                    attachment = file_frame.state().get('selection').first().toJSON();
+                    self.prev('.wpsa-url').val(attachment.url).change();
+                });
+
+                // Finally, open the modal
+                file_frame.open();
+            });
+
             $('#_wallet_settings_general-_tax_status').on('change', function () {
                 if ($(this).val() == 'taxable') {
                     $('._tax_class').show();
@@ -25,25 +90,27 @@ jQuery(function ($) {
             }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount, .allow_min_cashback, .min_cart_amount').show();
+                    $('.cashback_rule, .cashback_type, .cashback_amount').show();
+                    $('#_wallet_settings_credit-cashback_type, #_wallet_settings_credit-cashback_rule').trigger('change');
                 } else {
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .max_cashback_amount, .allow_min_cashback, .min_cart_amount').hide();
+                    $('.cashback_rule, .cashback_type, .cashback_amount').hide();
+                    $('#_wallet_settings_credit-cashback_type, #_wallet_settings_credit-cashback_rule').trigger('change');
                 }
             }).change();
             $('#_wallet_settings_credit-cashback_type').on('change', function () {
-                if ($(this).val() === 'percent') {
+                if ($(this).val() === 'percent' && $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').is(':checked')) {
                     $('.max_cashback_amount').show();
                 } else {
                     $('.max_cashback_amount').hide();
                 }
             }).change();
             $('#_wallet_settings_credit-cashback_rule').on('change', function () {
-                if ($(this).val() === 'product_cat') {
+                if ($(this).val() === 'product_cat' && $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').is(':checked')) {
                     $('.allow_min_cashback').show();
                 } else {
                     $('.allow_min_cashback').hide();
                 }
-                if ($(this).val() === 'cart') {
+                if ($(this).val() === 'cart' && $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').is(':checked')) {
                     $('.min_cart_amount').show();
                 } else {
                     $('.min_cart_amount').hide();
