@@ -4,7 +4,7 @@ jQuery(function ($) {
     $('#wc-wallet-transaction-details').DataTable(
             {
                 searching: false,
-                order: [[0, "desc"]]
+                order: [[0, 'desc']]
             }
     );
     $('.woo-wallet-select2').selectWoo({
@@ -12,7 +12,7 @@ jQuery(function ($) {
         ajax: {
             url: wallet_param.ajax_url,
             dataType: 'json',
-            type: "POST",
+            type: 'POST',
             quietMillis: 50,
             data: function (term) {
                 return {

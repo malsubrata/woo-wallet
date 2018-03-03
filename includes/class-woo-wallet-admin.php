@@ -13,7 +13,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * Class constructor
          */
         public function __construct() {
-            add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 15);
+            add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 10);
             add_action('admin_menu', array($this, 'admin_menu'), 50);
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
                 add_action('woocommerce_product_write_panel_tabs', array($this, 'woocommerce_product_write_panel_tabs'));
@@ -58,11 +58,11 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $screen_id = $screen ? $screen->id : '';
             $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
             // register styles
-            wp_register_style('woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/assets/admin/css/balance-details' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/assets/css/admin.css', array(), WOO_WALLET_PLUGIN_VERSION);
 
             // Register scripts
-            wp_register_script('woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/admin/js/admin-product' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
-            wp_register_script('woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/admin/js/admin-order' . $suffix . '.js', array('jquery', 'wc-admin-order-meta-boxes'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/js/admin/admin-product' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/js/admin/admin-order' . $suffix . '.js', array('jquery', 'wc-admin-order-meta-boxes'), WOO_WALLET_PLUGIN_VERSION);
 
             if (in_array($screen_id, array('product', 'edit-product'))) {
                 wp_enqueue_script('woo_wallet_admin_product');

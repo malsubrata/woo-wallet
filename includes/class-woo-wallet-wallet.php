@@ -91,7 +91,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             $recharge_amount = $order->get_total('');
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_gateway_charge', '_wallet_settings_credit', 'off')) {
                 $charge_amount = woo_wallet()->settings_api->get_option($order->get_payment_method(), '_wallet_settings_credit', 0);
-                if ('percent' === woo_wallet()->settings_api->get_option('is_enable_gateway_charge', '_wallet_settings_credit', 'percent')) {
+                if ('percent' === woo_wallet()->settings_api->get_option('gateway_charge_type', '_wallet_settings_credit', 'percent')) {
                     $recharge_amount -= $recharge_amount * ($charge_amount / 100);
                 } else {
                     $recharge_amount -= $charge_amount;

@@ -9,10 +9,10 @@ jQuery(function ($) {
             // Switches option sections
             $('.group').hide();
             var activewwtab = '';
-            if (typeof (localStorage) != 'undefined') {
-                activewwtab = localStorage.getItem("activewwtab");
+            if (typeof (localStorage) !== undefined) {
+                activewwtab = localStorage.getItem('activewwtab');
             }
-            if (activewwtab != '' && $(activewwtab).length) {
+            if (activewwtab !== '' && $(activewwtab).length) {
                 $(activewwtab).fadeIn();
             } else {
                 $('.group:first').fadeIn();
@@ -28,7 +28,7 @@ jQuery(function ($) {
                         });
             });
 
-            if (activewwtab != '' && $(activewwtab + '-tab').length) {
+            if (activewwtab !== '' && $(activewwtab + '-tab').length) {
                 $(activewwtab + '-tab').addClass('nav-tab-active');
             } else {
                 $('.nav-tab-wrapper a:first').addClass('nav-tab-active');
@@ -37,8 +37,8 @@ jQuery(function ($) {
                 $('.nav-tab-wrapper a').removeClass('nav-tab-active');
                 $(this).addClass('nav-tab-active').blur();
                 var clicked_group = $(this).attr('href');
-                if (typeof (localStorage) != 'undefined') {
-                    localStorage.setItem("activewwtab", $(this).attr('href'));
+                if (typeof (localStorage) !== undefined) {
+                    localStorage.setItem('activewwtab', $(this).attr('href'));
                 }
                 $('.group').hide();
                 $(clicked_group).fadeIn();
@@ -54,13 +54,13 @@ jQuery(function ($) {
                 var file_frame = wp.media.frames.file_frame = wp.media({
                     title: self.data('uploader_title'),
                     button: {
-                        text: self.data('uploader_button_text'),
+                        text: self.data('uploader_button_text')
                     },
                     multiple: false
                 });
 
                 file_frame.on('select', function () {
-                    attachment = file_frame.state().get('selection').first().toJSON();
+                    var attachment = file_frame.state().get('selection').first().toJSON();
                     self.prev('.wpsa-url').val(attachment.url).change();
                 });
 
@@ -69,7 +69,7 @@ jQuery(function ($) {
             });
 
             $('#_wallet_settings_general-_tax_status').on('change', function () {
-                if ($(this).val() == 'taxable') {
+                if ($(this).val() === 'taxable') {
                     $('._tax_class').show();
                 } else {
                     $('._tax_class').hide();

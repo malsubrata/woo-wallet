@@ -1,0 +1,44 @@
+{
+  "name": "woo-wallet",
+  "title": "WooCommerce Wallet",
+  "version": "1.1.2",
+  "description": "A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "build": "grunt",
+    "build-watch": "grunt watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://malsubrata@github.com/malsubrata/woo-wallet.git"
+  },
+  "keywords": [
+    "woocommerce-wallet",
+    "wallet",
+    "wordpress-plugin"
+  ],
+  "author": "Subrata Mal",
+  "license": "GPL-3.0+",
+  "bugs": {
+    "url": "https://github.com/malsubrata/woo-wallet/issues"
+  },
+  "homepage": "https://github.com/malsubrata/woo-wallet#readme",
+  "devDependencies": {
+    "autoprefixer": "^8.1.0",
+    "grunt": "^1.0.2",
+    "grunt-checktextdomain": "^1.0.1",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-cssmin": "^2.2.1",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-uglify": "^3.3.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-phpcs": "^0.4.0",
+    "grunt-postcss": "^0.9.0",
+    "grunt-rtlcss": "^2.0.1",
+    "grunt-sass": "^2.1.0",
+    "grunt-shell": "^2.1.0",
+    "grunt-stylelint": "^0.9.0",
+    "grunt-wp-i18n": "^1.0.2"
+  }
+}

@@ -131,7 +131,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             case 'balance':
                 return $item[$column_name];
             case 'actions':
-                return '<p><a href="'. add_query_arg(array('page' => 'woo-wallet-add', 'user_id' => $item['id']), admin_url('admin.php')).'" class="button tips add"></a> <a class="button tips view" href="'. add_query_arg(array('page' => 'woo-wallet-transactions', 'user_id' => $item['id']), admin_url('admin.php')).'"></a></p>';
+                return '<p><a href="'. add_query_arg(array('page' => 'woo-wallet-add', 'user_id' => $item['id']), admin_url('admin.php')).'" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="'. add_query_arg(array('page' => 'woo-wallet-transactions', 'user_id' => $item['id']), admin_url('admin.php')).'"></a></p>';
             default:
                 return print_r($item, true);
         }

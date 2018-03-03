@@ -1,0 +1,72 @@
+.wallet-settings-wrap {
+    display: flex;
+    border: 1px solid #c8d7e1;
+    h2.nav-tab-wrapper {
+        flex: 1;
+        border-bottom: none;
+        padding: 0;
+        background: #f1f1f1;
+        border-right: 1px solid #c8d7e1;
+        a {
+            float: none;
+            display: block;
+            margin: 0;
+            border: none;
+            padding: 13px 13px;
+            background: #f1f1f1;
+            font-weight: 500;
+            border-bottom: 1px solid #c8d7e1;
+        }
+        a.nav-tab-active {
+            background: #fff !important;
+            border-right: 1px solid #c8d7e1;
+            width: 99%;
+            color: #2e4453;
+            .dashicons {
+                &:before {
+                    color: #008EC2;
+                }
+            }
+        }
+    }
+    .metabox-holder {
+        flex: 3;
+        padding-left: 3%;
+        padding-right: 10px;
+        background: #fff;
+    }
+}
+.column-actions {
+    .wallet-manage {
+        &::after {
+            font-family: Dashicons;
+            font-weight: 400;
+            text-transform: none;
+            -webkit-font-smoothing: antialiased;
+            text-indent: 0px;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            content: "\f111";
+            margin: 0px;
+        }
+    }
+    .wallet-view {
+        &::after {
+            font-family: Dashicons;
+            font-weight: 400;
+            text-transform: none;
+            -webkit-font-smoothing: antialiased;
+            text-indent: 0px;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            content: "\f177";
+            margin: 0px;
+        }
+    }
+}

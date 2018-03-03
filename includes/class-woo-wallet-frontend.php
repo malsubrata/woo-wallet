@@ -99,23 +99,21 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
             wp_register_style('woo-wallet-payment-jquery-ui', '//ajax.googleapis.com/ajax/libs/jqueryui/' . $wp_scripts->registered['jquery-ui-core']->ver . '/themes/smoothness/jquery-ui.css', false, $wp_scripts->registered['jquery-ui-core']->ver, false);
             wp_register_style('jquery-datatables-style', '//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css');
-            wp_register_style('woo-endpoint-wallet-style', woo_wallet()->plugin_url() . '/assets/frontend/css/wc-endpoint-wallet' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_style('woo-wallet-style', woo_wallet()->plugin_url() . '/assets/css/frontend.css', array(), WOO_WALLET_PLUGIN_VERSION);
             // Add RTL support
-            wp_style_add_data('woo-endpoint-wallet-style', 'rtl', 'replace');
-            wp_register_style('woo-wallet-frontend-style', woo_wallet()->plugin_url() . '/assets/frontend/css/woo-wallet-frontend' . $suffix . '.css', array(), WOO_WALLET_PLUGIN_VERSION);
+            wp_style_add_data('woo-wallet-style', 'rtl', 'replace');
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
-            wp_register_script('wc-endpoint-wallet', woo_wallet()->plugin_url() . '/assets/frontend/js/wc-endpoint-wallet' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
+            wp_register_script('wc-endpoint-wallet', woo_wallet()->plugin_url() . '/assets/js/frontend/wc-endpoint-wallet' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             wp_localize_script('wc-endpoint-wallet', 'wallet_param', array('ajax_url' => admin_url('admin-ajax.php')));
+            wp_enqueue_style('woo-wallet-style');
             if (is_account_page()) {
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('select2');
                 wp_enqueue_style('jquery-datatables-style');
-                wp_enqueue_style('woo-endpoint-wallet-style');
                 wp_enqueue_script('selectWoo');
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('wc-endpoint-wallet');
             }
-            wp_enqueue_style('woo-wallet-frontend-style');
         }
 
         /**
@@ -354,7 +352,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_cart()) :
                 ?>
                 <div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
-                    <?php echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('If you place this order then %s will be credited to your wallet', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount()); ?>
+                    <?php
+                    if (is_user_logged_in()) {
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('If you place this order then %s will be credited to your wallet.', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
+                    } else {
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
+                    }
+                    ?>
                 </div>
                 <?php
             endif;
@@ -367,7 +371,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param Object $order
          */
         public function woocommerce_checkout_order_processed($order_id, $posted_data, $order) {
-            if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
+            if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id)) && is_user_logged_in()) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
             }
             if (!is_full_payment_through_wallet() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
@@ -384,7 +388,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return NULL
          */
         public function woocommerce_review_order_after_order_total() {
-            if (is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0 || (isset(wc()->cart->recurring_carts) && !empty(wc()->cart->recurring_carts))) {
+            if (!is_user_logged_in() || is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0 || (isset(wc()->cart->recurring_carts) && !empty(wc()->cart->recurring_carts))) {
                 return;
             }
             wp_enqueue_style('dashicons');
@@ -618,7 +622,6 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('select2');
                 wp_enqueue_style('jquery-datatables-style');
-                wp_enqueue_style('woo-endpoint-wallet-style');
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('selectWoo');
                 wp_enqueue_script('wc-endpoint-wallet');

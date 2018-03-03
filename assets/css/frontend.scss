@@ -1,0 +1,139 @@
+.woo-wallet-my-wallet-container {
+    max-width: 100%;
+    overflow: hidden;
+    border: 1px solid #f2f2f2;
+    display: flex;
+    p {
+        margin: 0 auto;
+    }
+    .woo-wallet-sidebar {
+        width: 30%;
+        float: left;
+        background: #f2f2f2;
+        min-height: 100px;
+        padding-top: 20px;
+    }
+    .woo-wallet-content {
+        width: 70%;
+        float: left;
+        min-height: 100px;
+        padding: 20px;
+    }
+}
+.woo-wallet-sidebar {
+    ul {
+        margin: 0 auto;
+        li {
+            list-style: none;
+            margin: 20px;
+            span {
+                vertical-align: middle;
+            }
+            p {
+                margin: 0 auto;
+                line-height: 1em;
+            }
+        }
+        li.card {
+            background: #fff;
+            border-radius: 2px;
+            text-align: center;
+            position: relative;
+            max-width: 100%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            cursor: pointer;
+            a {
+                padding: 20px;
+                display: inline-block;
+                width: 100%;
+            }
+            &:hover {
+                box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            }
+        }
+    }
+}
+.woo-wallet-sidebar-heading {
+    text-align: center;
+}
+.woo-wallet-content-h3 {
+    float: left;
+    margin: 0 0 15px;
+    line-height: 1em;
+}
+.woo-wallet-content {
+    .woo-wallet-price {
+        float: right;
+        margin: 0 0 15px;
+    }
+}
+.woo-wallet-content-heading {
+    overflow: hidden;
+}
+.woo-wallet-transactions-items {
+    margin: 0 auto;
+    li {
+        overflow: hidden;
+        padding-bottom: 15px;
+        div {
+            &:first-child {
+                float: left;
+                max-width: 80%;
+            }
+            &:last-child {
+                float: right;
+            }
+        }
+    }
+}
+.woo-wallet-transaction-type-credit {
+    color: #197F36;
+}
+.woo-wallet-transaction-type-debit {
+    color: #BF0003;
+}
+.woo-wallet-balance-to-add {
+    width: 100%;
+}
+.woo-add-to-wallet {
+    float: right;
+    margin-top: 10px;
+}
+.woo-wallet-view-more {
+    float: right;
+    span {
+        vertical-align: middle;
+    }
+}
+p.woo-wallet-field-container {
+    margin-bottom: 11px;
+}
+.woo-wallet-select2 {
+    width: 100%;
+}
+@media (max-width: 600px) {
+    .woo-wallet-my-wallet-container {
+        .woo-wallet-sidebar {
+            width: 100%;
+        }
+        .woo-wallet-content {
+            width: 100%;
+        }
+        display: block;
+    }
+}
+
+/* for display cashback in shop page */
+.on-woo-wallet-cashback{
+    border-color: #6d6d6d;
+    border: 1px solid;
+    color: #43454b;
+    padding: .202em .6180469716em;
+    font-size: .875em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 1em;
+    border-radius: 3px;
+}
