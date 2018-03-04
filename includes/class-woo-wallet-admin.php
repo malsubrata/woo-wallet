@@ -20,7 +20,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 add_action('woocommerce_product_data_panels', array($this, 'woocommerce_product_data_panels'));
                 add_action('save_post_product', array($this, 'save_post_product'));
             }
-            add_action('woocommerce_admin_order_totals_after_tax', array($this, 'add_wallet_partial_payment_amount'), 10, 1);
+            add_action('woocommerce_admin_order_totals_after_tax', array($this, 'add_wallet_payment_amount'), 10, 1);
 
             add_action('woocommerce_coupon_options', array($this, 'add_coupon_option_for_cashback'));
             add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
@@ -73,12 +73,12 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 wp_enqueue_script('woo_wallet_admin_order');
                 $order_localizer = array(
                     'order_id' => $post->ID,
-                    'payment_method' => $order->get_payment_method(''),
+                    'payment_method' => $order->get_payment_method('edit'),
                     'default_price' => wc_price(0),
-                    'is_rechargeable_order' => is_wallet_rechargeable_order($order),
+                    'is_refundable' => apply_filters('woo_wallet_is_order_refundable', (!is_wallet_rechargeable_order($order)) && $order->get_customer_id('edit'), $order),
                     'i18n' => array(
                         'refund' => __('Refund', 'woo-wallet'),
-                        'via_wallet' => __('Via wallet', 'woo-wallet')
+                        'via_wallet' => __('to customer wallet', 'woo-wallet')
                     )
                 );
                 wp_localize_script('woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer);
@@ -299,32 +299,42 @@ if (!class_exists('Woo_Wallet_Admin')) {
         }
 
         /**
-         * Display partial payment amount in order page
+         * Display partial payment and cashback amount in order page
          * @param type $order_id
          * @return type
          */
-        public function add_wallet_partial_payment_amount($order_id) {
+        public function add_wallet_payment_amount($order_id) {
             $order = wc_get_order($order_id);
-            if (!get_post_meta($order_id, '_via_wallet_payment', true)) {
-                return;
+            if(get_post_meta($order_id, '_coupon_cashback_amount', true)){
+                ?>
+                <tr>
+                    <td class="label"><?php _e('Cashback', 'woo-wallet'); ?>:</td>
+                    <td width="1%"></td>
+                    <td class="via-wallet">
+                        <?php echo wc_price(get_post_meta($order_id, '_coupon_cashback_amount', true), array('currency' => $order->get_currency())); ?>
+                    </td>
+                </tr>
+                <?php
             }
-            $via_other_gateway = get_post_meta($order->get_id(), '_original_order_amount', true) - get_post_meta($order->get_id(), '_via_wallet_payment', true);
-            ?>
-            <tr>
-                <td class="label"><?php _e('Via wallet', 'woo-wallet'); ?>:</td>
-                <td width="1%"></td>
-                <td class="via-wallet">
-                    <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
-                </td>
-            </tr>
-            <tr>
-                <td class="label"><?php printf(__('Via %s', 'woo-wallet'), $order->get_payment_method_title()); ?>:</td>
-                <td width="1%"></td>
-                <td class="via-wallet">
-                    <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
-                </td>
-            </tr>
-            <?php
+            if (get_post_meta($order_id, '_via_wallet_payment', true)) {
+                $via_other_gateway = get_post_meta($order->get_id(), '_original_order_amount', true) - get_post_meta($order->get_id(), '_via_wallet_payment', true);
+                ?>
+                <tr>
+                    <td class="label"><?php _e('Via wallet', 'woo-wallet'); ?>:</td>
+                    <td width="1%"></td>
+                    <td class="via-wallet">
+                        <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label"><?php printf(__('Via %s', 'woo-wallet'), $order->get_payment_method_title()); ?>:</td>
+                    <td width="1%"></td>
+                    <td class="via-wallet">
+                        <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
+                    </td>
+                </tr>
+                <?php
+            }
         }
 
         /**

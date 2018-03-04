@@ -174,6 +174,7 @@ module.exports = function (grunt) {
             files: {
                 src: [
                     '**/*.php', // Include all files
+                    '!node_modules/**', // Exclude node_module
                     '!tmp/**'                 // Exclude tmp/
                 ],
                 expand: true
@@ -211,7 +212,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
-    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-watch');
 
     // Register tasks
@@ -231,8 +231,7 @@ module.exports = function (grunt) {
         'sass',
         'rtlcss',
         'postcss',
-        'cssmin',
-        'concat'
+        'cssmin'
     ]);
 
     // Only an alias to 'default' task.

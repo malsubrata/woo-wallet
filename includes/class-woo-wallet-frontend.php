@@ -36,7 +36,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
 
             add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);
             add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
-            add_filter('woocommerce_cart_totals_order_total_html', array($this, 'woocommerce_cart_totals_order_total_html'));
+            add_filter('woocommerce_cart_get_total', array($this, 'woocommerce_cart_get_total'));
             add_shortcode('woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback');
         }
 
@@ -374,7 +374,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id)) && is_user_logged_in()) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
             }
-            if (!is_full_payment_through_wallet() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
+            if (!is_full_payment_through_wallet() && is_user_logged_in() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
                 $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit');
                 update_post_meta($order_id, '_original_order_amount', $order->get_total(''));
                 $order->set_total($order->get_total('') - $current_wallet_balance);
@@ -427,7 +427,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function convert_coupon_to_cashbak_if($item, $code, $coupon, $order) {
             $coupon_id = $coupon->get_id();
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
-            if ('yes' === $_is_coupon_cashback) {
+            if ('yes' === $_is_coupon_cashback && is_user_logged_in()) {
                 $discount_total = $order->get_discount_total('edit');
                 $coupon_amount = WC()->cart->get_coupon_discount_amount($code);
                 $discount_total -= $coupon_amount;
@@ -527,7 +527,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function update_woocommerce_coupon_message_as_cashback($msg, $msg_code, $coupon) {
             $coupon_id = $coupon->get_id();
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
-            if ('yes' === $_is_coupon_cashback && 200 === $msg_code) {
+            if (is_user_logged_in() && 'yes' === $_is_coupon_cashback && 200 === $msg_code) {
                 $msg = __('Coupon code applied successfully as cashback.', 'woo-wallet');
             }
             return $msg;
@@ -542,48 +542,27 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function change_coupon_label($label, $coupon) {
             $coupon_id = $coupon->get_id();
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
-            if ('yes' === $_is_coupon_cashback) {
+            if (is_user_logged_in() && 'yes' === $_is_coupon_cashback) {
                 $label = sprintf(esc_html__('Cashback: %s', 'woo-wallet'), $coupon->get_code());
             }
             return $label;
         }
-
         /**
-         * Modify order total html
-         * @param string $value
-         * @return string
+         * Update WC Cart get_total if cashback coupon applied.
+         * @param float $total
+         * @return float
          */
-        public function woocommerce_cart_totals_order_total_html($value) {
-            $value = '';
-            $total = WC()->cart->get_total('edit');
-            foreach (WC()->cart->get_applied_coupons() as $code) {
-                $coupon = new WC_Coupon($code);
-                $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
-                if ('yes' === $_is_coupon_cashback) {
-                    $total += WC()->cart->get_coupon_discount_amount($code);
-                }
-            }
-            $value = '<strong>' . wc_price($total) . '</strong> ';
-            // If prices are tax inclusive, show taxes here.
-            if (wc_tax_enabled() && WC()->cart->tax_display_cart == 'incl') {
-                $tax_string_array = array();
-                $cart_tax_totals = WC()->cart->get_tax_totals();
-
-                if (get_option('woocommerce_tax_total_display') == 'itemized') {
-                    foreach ($cart_tax_totals as $code => $tax) {
-                        $tax_string_array[] = sprintf('%s %s', $tax->formatted_amount, $tax->label);
+        public function woocommerce_cart_get_total($total){
+            if (is_user_logged_in()) {
+                foreach (WC()->cart->get_applied_coupons() as $code) {
+                    $coupon = new WC_Coupon($code);
+                    $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
+                    if ('yes' === $_is_coupon_cashback) {
+                        $total += WC()->cart->get_coupon_discount_amount($code);
                     }
-                } elseif (!empty($cart_tax_totals)) {
-                    $tax_string_array[] = sprintf('%s %s', wc_price(WC()->cart->get_taxes_total(true, true)), WC()->countries->tax_or_vat());
-                }
-
-                if (!empty($tax_string_array)) {
-                    $taxable_address = WC()->customer->get_taxable_address();
-                    $estimated_text = WC()->customer->is_customer_outside_base() && !WC()->customer->has_calculated_shipping() ? sprintf(' ' . __('estimated for %s', 'woocommerce'), WC()->countries->estimated_for_prefix($taxable_address[0]) . WC()->countries->countries[$taxable_address[0]]) : '';
-                    $value .= '<small class="includes_tax">' . sprintf(__('(includes %s)', 'woocommerce'), implode(', ', $tax_string_array) . $estimated_text) . '</small>';
                 }
             }
-            return $value;
+            return $total;
         }
 
         /**

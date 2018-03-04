@@ -9,7 +9,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
     class Woo_Wallet_Wallet {
         /* WordPress user id */
 
-        public $user_id = null;
+        public $user_id = 0;
         /* user wallet balance */
         public $wallet_balance = 0;
         /* Wallet balance meta key */
@@ -42,9 +42,11 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             global $wpdb;
             $this->set_user_id($user_id);
             $this->wallet_balance = 0;
-            $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
-            if ($resualt) {
-                $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id), $resualt->currency), 2, '.', '');
+            if ($this->user_id) {
+                $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
+                if ($resualt) {
+                    $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id), $resualt->currency), 2, '.', '');
+                }
             }
             return 'view' === $context ? wc_price($this->wallet_balance) : number_format($this->wallet_balance, 2, '.', '');
         }
@@ -88,7 +90,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             if (!is_wallet_rechargeable_order($order)) {
                 return;
             }
-            $recharge_amount = $order->get_total('');
+            $recharge_amount = apply_filters('woo_wallet_credit_purchase_amount', $order->get_subtotal('edit'), $order_id);
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_gateway_charge', '_wallet_settings_credit', 'off')) {
                 $charge_amount = woo_wallet()->settings_api->get_option($order->get_payment_method(), '_wallet_settings_credit', 0);
                 if ('percent' === woo_wallet()->settings_api->get_option('gateway_charge_type', '_wallet_settings_credit', 'percent')) {
@@ -98,7 +100,6 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
                 update_post_meta($order_id, '_wc_wallet_purchase_gateway_charge', $charge_amount);
             }
-            $recharge_amount = apply_filters('woo_wallet_credit_purchase_amount', $recharge_amount, $order_id);
             $transaction_id = $this->credit($order->get_customer_id(), $recharge_amount, __('Wallet credit through purchase #' . $order->get_id(), 'woo-wallet'));
             if ($transaction_id) {
                 update_post_meta($order_id, '_wc_wallet_purchase_credited', true);

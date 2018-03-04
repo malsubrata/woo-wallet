@@ -122,7 +122,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             foreach ($users as $user) {
                 $return[] = array(
                     /* translators: 1: user_login, 2: user_email */
-                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result'), $user->user_login, $user->user_email),
+                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
                     'value' => $user->ID,
                 );
             }

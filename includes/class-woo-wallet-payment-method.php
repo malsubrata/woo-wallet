@@ -85,7 +85,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
      * @return boolean
      */
     public function is_available() {
-        return apply_filters('woo_wallet_payment_is_available', is_full_payment_through_wallet() && is_user_logged_in());
+        return apply_filters('woo_wallet_payment_is_available', (is_full_payment_through_wallet() && is_user_logged_in()));
     }
     
     public function get_icon() {
@@ -113,7 +113,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             wc_add_notice( __('Payment error: ', 'woo-wallet') . sprintf(__('Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet'), wc_price($order->get_total('edit') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'))), 'error' );
             return;
         }
-        $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('For order payment #' . $order->get_id()));
+        $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('For order payment #', 'woo-wallet') . $order->get_id());
         // Mark as processing or on-hold
         $order->update_status(apply_filters('woocommerce_wallet_process_payment_order_status', !$wallet_response ? 'on-hold' : 'processing', $order), __('Payment via wallet.', 'woo-wallet'));
 
@@ -139,7 +139,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
         if(get_post_meta($order->get_id(), '_wallet_scheduled_subscription_payment_processed', true)){
             return;
         }
-        $wallet_response = woo_wallet()->wallet->debit($order->get_customer_id(), $amount_to_charge, __('For order payment #' . $order->get_id()));
+        $wallet_response = woo_wallet()->wallet->debit($order->get_customer_id(), $amount_to_charge, __('For order payment #', 'woo-wallet') . $order->get_id());
         if($wallet_response){
             $order->payment_complete();
         } else{
