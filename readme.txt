@@ -110,6 +110,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.2.4 - 2018-xx-xx =
+
+
 = 1.2.3 - 2018-03-05 =
 * Feature - Improved user search drop-down in transfer wallet amount page.
 * Fix - Payment gateway charge percent issue.
@@ -118,87 +121,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 * Tweak - Improved look and feel of admin settings page.
 * Dev - Added filter `woo_wallet_is_enable_transfer`, `woo_wallet_payment_is_available`
 * Updated - Language file.
- 
-= 1.1.2 - 2018-02-26 =
-* Added - RTL support.
-* Added - Wallet amount transfer option.
-* Fix - Security issue.
-* Dev - Added filter `woo_wallet_current_balance`, `woo_wallet_redirect_to_checkout_after_added_amount`, `woo_wallet_hide_rechargeable_product`.
-* Updated - Language file.
 
-= 1.1.1 - 2018-02-21 =
-* Added - Minified CSS & JS files.
-* Added - Min Max wallet top up amount restriction.
-* Added - Shortcode `woo-wallet`.
-* Updated - Missing translation strings.
-* Dev - Added filter `woo_wallet_amount`, `woo_wallet_coupon_cashback_amount`, `woo_wallet_transactions_count`.
-* Updated - Language file.
-
-= 1.1.0 - 2018-02-15 =
-* Added - Support for WordPress Multisite Network.
-* Tweak - Apply coupon as cashback logic.
-* Dev - Added filter `woo_wallet_cashback_notice_text` to modify cashback notice.
-* Updated - Language file.
-
-= 1.0.9 - 2018-02-10 =
-* Added - Product category wise cashback.
-* Added - Minimum cart amount setting to apply cart wise cashback.
-* Tweak - Hide mini wallet menu item if user not logged in.
-* Tweak - Display cashback instead of coupon if coupon is applicable as cashback.
-* Updated - Language file.
-
-= 1.0.8 -2018-02-08 =
-* Added - Now admin can set wallet endpoints page url.
-* Added - Currency column to database table.
-* Dev - Added `woo_wallet_credit_purchase_amount` filter for modify credit purchase amount.
-* Updated - Language file.
-
-= 1.0.7 - 2018-01-31 =
-* Added - Setting for where to display mini wallet in menu.
-* Added - Max cash-back amount option for administrator user.
-* Added - Debit option for administrator user.
-* Updated - Improve wallet menu item.
-* Updated - Language file.
-
-= 1.0.6 - 2018-01-24 = 
-* Added - Now admin can convert WooCommerce coupon to cashback.
-* Added - Display cashback amount on WooCommerce products.
-* Added - Remaining balance display in email template.
-* Added - Dokan Multivendor Marketplace support.
-* Updated - Improve wallet menu item.
-* Updated - Language file.
-
-= 1.0.5 - 2018-01-11 =
-* Added - Auto deduct wallet balance for partial payment option.
-* Added - Tax options for rechargeable product.
-* Added - Search option in users wallet details page.
-* Added - Screen option in users wallet details page.
-* Added - Template file for mini wallet and partial payment.
-* Updated - Language file.
-
-= 1.0.4 - 2018-01-05 =
-* Added - Wallet nav menu to wordpress primary menu.
-* Added - Plugin settings link in WP plugin list page.
-* Updated - Language file.
-
-= 1.0.3 - 2017-12-27 =
-* Added - Support for WooCommerce Subscriptions plugin.
-* Added - Support for WC Marketplace plugin.
-* Added - Current wallet balance display in checkout page.
-* Fixed - User balance display in admin back-end.
-* Updated - Language file.
-
-= 1.0.2 - 2017-12-14 =
-* Fix - Admin report
-
-= 1.0.1 - 2017-12-18 =
-* Added - New wallet user interface.
-* Added - Un-install file.
-* Updated - Language file.
-
-= 1.0.0 - 2017-12-12 =
-* Initial release
+[See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.1.3 =
+= 1.2 =
