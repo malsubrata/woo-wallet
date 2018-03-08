@@ -440,12 +440,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
 
         /**
          * Display cashback amount in product
-         * @global type $post
+         * 
+         * @return void
          */
         public function display_cashback() {
-            global $post;
-            $product = wc_get_product($post->ID);
-            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit') && $product->get_price('edit') && apply_filters('is_display_cashback_on_product', true) && apply_filters('is_product_cashback_enable', true, $post->ID)) {
+            $product = wc_get_product(get_the_ID());
+            if ($product && 'on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit') && $product->get_price('edit') && apply_filters('is_display_cashback_on_product', true) && apply_filters('is_product_cashback_enable', true, $product->get_id())) {
                 $global_cashbak_type = woo_wallet()->settings_api->get_option('cashback_type', '_wallet_settings_credit', 'percent');
                 $global_cashbak_amount = floatval(woo_wallet()->settings_api->get_option('cashback_amount', '_wallet_settings_credit', 0));
                 if ('product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {

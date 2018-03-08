@@ -100,7 +100,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
                 update_post_meta($order_id, '_wc_wallet_purchase_gateway_charge', $charge_amount);
             }
-            $transaction_id = $this->credit($order->get_customer_id(), $recharge_amount, __('Wallet credit through purchase #' . $order->get_id(), 'woo-wallet'));
+            $transaction_id = $this->credit($order->get_customer_id(), $recharge_amount, __('Wallet credit through purchase #', 'woo-wallet') . $order->get_id());
             if ($transaction_id) {
                 update_post_meta($order_id, '_wc_wallet_purchase_credited', true);
                 update_post_meta($order_id, '_wallet_payment_transaction_id', $transaction_id);
@@ -115,7 +115,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             }
             /* General Cashback */
             if (get_wallet_cashback_amount($order->get_id())) {
-                $transaction_id = $this->credit($order->get_customer_id(), get_wallet_cashback_amount($order->get_id()), __('Wallet credit through cashback #' . $order->get_id(), 'woo-wallet'));
+                $transaction_id = $this->credit($order->get_customer_id(), get_wallet_cashback_amount($order->get_id()), __('Wallet credit through cashback #', 'woo-wallet') . $order->get_id());
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
                 }
@@ -133,7 +133,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
         public function wallet_partial_payment($order_id) {
             $order = wc_get_order($order_id);
             if (get_post_meta($order_id, '_via_wallet_payment', true) && !get_post_meta($order_id, '_partial_pay_through_wallet_compleate', true)) {
-                $transaction_id = $this->debit($order->get_customer_id(), get_post_meta($order_id, '_via_wallet_payment', true), __('For order payment #' . $order->get_id(), 'woo-wallet'));
+                $transaction_id = $this->debit($order->get_customer_id(), get_post_meta($order_id, '_via_wallet_payment', true), __('For order payment #', 'woo-wallet') . $order->get_id());
                 $order->add_order_note(sprintf('%s paid through wallet', wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
                 $order->set_total(floatval(get_post_meta($order_id, '_original_order_amount', true)));
                 $order->save();
