@@ -26,6 +26,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('woocommerce_available_payment_gateways', array($this, 'woocommerce_available_payment_gateways'), 30);
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on')) {
                 add_action('woocommerce_before_cart_table', array($this, 'woocommerce_before_cart_table'));
+                add_action('woocommerce_before_checkout_form', array($this, 'woocommerce_before_cart_table'));
             }
             add_action('woocommerce_checkout_order_processed', array($this, 'woocommerce_checkout_order_processed'), 30, 3);
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));

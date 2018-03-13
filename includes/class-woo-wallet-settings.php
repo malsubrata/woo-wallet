@@ -84,11 +84,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                     'id' => '_wallet_settings_credit',
                     'title' => __('Credit Options', 'woo-wallet'),
                     'icon' => 'dashicons-money'
-                ),
-//                array(
-//                    'id' => '_wallet_settings_withdrawal',
-//                    'title' => __('Withdrawal', 'woo-wallet')
-//                )
+                )
             );
             return apply_filters('woo_wallet_settings_sections', $sections);
         }
@@ -196,35 +192,6 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'options' => array('percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')),
                         'size' => 'regular-text'
                     )), $this->get_wc_payment_gateways(), array()
-                ),
-                '_wallet_settings_withdrawal' => array(
-                    array(
-                        'name' => 'is_enable_withdrawal',
-                        'label' => __('Enable Withdrawal', 'woo-wallet'),
-                        'desc' => __('Is user withdrawal there wallet balance', 'woo-wallet'),
-                        'type' => 'checkbox',
-                        'default' => 'on'
-                    ),
-                    array(
-                        'name' => 'is_withdrawal_chargeable',
-                        'label' => __('Enable Withdrawal charge', 'woo-wallet'),
-                        'desc' => __('Enable Withdrawal charge', 'woo-wallet'),
-                        'type' => 'checkbox'
-                    ),
-                    array(
-                        'name' => 'withdrawal_charge_type',
-                        'label' => __('Charge type', 'woo-wallet'),
-                        'desc' => __('Select withdrawal charge type percentage or fixed', 'woo-wallet'),
-                        'type' => 'select',
-                        'options' => array('percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')),
-                        'size' => 'regular-text'
-                    ),
-                    array(
-                        'name' => 'withdrawal_charge_amount',
-                        'label' => __('Withdrawal Charge Amount', 'woo-wallet'),
-                        'desc' => __('Enter wallet charge amount', 'woo-wallet'),
-                        'type' => 'number',
-                    )
                 )
             );
             return apply_filters('woo_wallet_settings_filds', $settings_fields);

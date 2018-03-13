@@ -10,7 +10,7 @@
  * Requires at least: 4.4
  * Tested up to: 4.9.4
  * WC requires at least: 3.0
- * WC tested up to: 3.3.3
+ * WC tested up to: 3.3
  * 
  * Text Domain: woo-wallet
  * Domain Path: /languages/
@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Define WC_PLUGIN_FILE.
+// Define WOO_WALLET_PLUGIN_FILE.
 if (!defined('WOO_WALLET_PLUGIN_FILE')) {
     define('WOO_WALLET_PLUGIN_FILE', __FILE__);
 }

@@ -266,7 +266,7 @@ final class WooWallet {
      */
     public function admin_notices() {
         echo '<div class="error"><p>';
-        _e('WooCommerce wallet payment plugin requires <a href="http://wordpress.org/extend/plugins/woocommerce/">WooCommerce</a> plugins to be active!', 'woo-wallet');
+        _e('WooCommerce Wallet plugin requires <a href="http://wordpress.org/extend/plugins/woocommerce/">WooCommerce</a> plugins to be active!', 'woo-wallet');
         echo '</p></div>';
     }
 
