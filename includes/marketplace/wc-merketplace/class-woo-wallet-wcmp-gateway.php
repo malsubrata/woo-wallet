@@ -66,7 +66,7 @@ if (!class_exists('WCMp_Gateway_Wallet')) {
         private function process_wallet_payment() {
             $amount_to_pay = round($this->get_transaction_total() - $this->transfer_charge($this->transaction_mode) - $this->gateway_charge(), 2);
             $for_commissions = implode(',', $this->commissions);
-            $transaction_id = woo_wallet()->wallet->credit($this->vendor->id, $amount_to_pay, __('Commission recived for commission id '. $for_commissions, 'woo-wallet'));
+            $transaction_id = woo_wallet()->wallet->credit($this->vendor->id, $amount_to_pay, __('Commission received for commission id ', 'woo-wallet'). $for_commissions);
             if ($transaction_id) {
                 update_wallet_transaction_meta($transaction_id, '_type', 'vendor_commission');
                 return true;

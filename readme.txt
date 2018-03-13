@@ -111,7 +111,7 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 == Changelog ==
 
 = 1.2.4 - 2018-xx-xx =
-
+* Fix: Typo.
 
 = 1.2.3 - 2018-03-05 =
 * Feature - Improved user search drop-down in transfer wallet amount page.
