@@ -66,7 +66,7 @@ global $wp;
                 </p>
             </form>
         <?php } else { ?>
-            <?php $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()), apply_filters('woo_wallet_transactions_count', 10)); ?>
+            <?php $transactions = get_wallet_transactions(array('limit' => apply_filters('woo_wallet_transactions_count', 10))); ?>
             <?php if (!empty($transactions)) { ?>
                 <ul class="woo-wallet-transactions-items">
                     <?php foreach ($transactions as $transaction) : ?> 

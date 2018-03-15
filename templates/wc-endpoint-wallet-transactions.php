@@ -16,7 +16,7 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
-$transactions = get_wallet_transactions(array('user_id' => get_current_user_id()));
+$transactions = get_wallet_transactions();
 ?>
 <p><?php _e('Current balance :', 'woo-wallet'); ?> <?php echo woo_wallet()->wallet->get_wallet_balance(get_current_user_id()); ?> <a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) : get_permalink(); ?>"><span class="dashicons dashicons-editor-break"></span></a></p>
 <table id="wc-wallet-transaction-details" class="table">
