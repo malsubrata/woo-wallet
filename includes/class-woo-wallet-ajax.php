@@ -93,6 +93,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 wp_send_json_error(array('error' => $ex->getMessage()));
             }
         }
+
         /**
          * Mark wallet rated.
          */
@@ -100,33 +101,43 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             update_option('woocommerce_wallet_admin_footer_text_rated', true);
             die;
         }
+
         /**
          * Search users
          */
         public function woo_wallet_user_search() {
             $return = array();
-            
-            if (isset($_REQUEST['site_id'])) {
-                $id = absint($_REQUEST['site_id']);
+            if (apply_filters('woo_wallet_user_search_exact_match', true)) {
+                $user = get_user_by(apply_filters('woo_wallet_user_search_by', 'email'), $_REQUEST['term']);
+                if ($user && wp_get_current_user()->user_email != $user->user_email) {
+                    $return[] = array(
+                        /* translators: 1: user_login, 2: user_email */
+                        'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
+                        'value' => $user->ID,
+                    );
+                }
             } else {
-                $id = get_current_blog_id();
+                if (isset($_REQUEST['site_id'])) {
+                    $id = absint($_REQUEST['site_id']);
+                } else {
+                    $id = get_current_blog_id();
+                }
+
+                $users = get_users(array(
+                    'blog_id' => $id,
+                    'search' => '*' . $_REQUEST['term'] . '*',
+                    'exclude' => array(get_current_user_id()),
+                    'search_columns' => array('user_login', 'user_nicename', 'user_email'),
+                ));
+
+                foreach ($users as $user) {
+                    $return[] = array(
+                        /* translators: 1: user_login, 2: user_email */
+                        'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
+                        'value' => $user->ID,
+                    );
+                }
             }
-
-            $users = get_users(array(
-                'blog_id' => $id,
-                'search' => '*' . $_REQUEST['term'] . '*',
-                'exclude' => array(get_current_user_id()),
-                'search_columns' => array('user_login', 'user_nicename', 'user_email'),
-                    ));
-
-            foreach ($users as $user) {
-                $return[] = array(
-                    /* translators: 1: user_login, 2: user_email */
-                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
-                    'value' => $user->ID,
-                );
-            }
-
             wp_send_json($return);
         }
 

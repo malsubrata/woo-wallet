@@ -96,7 +96,7 @@ class Woo_Wallet_Install {
     private static function create_product() {
         $product_args = array(
             'post_title' => wc_clean('Wallet Topup'),
-            'post_status' => 'publish',
+            'post_status' => 'private',
             'post_type' => 'product',
             'post_excerpt' => '',
             'post_content' => stripslashes(html_entity_decode('Auto generated product for wallet recharge please do not delete or update.', ENT_QUOTES, 'UTF-8')),

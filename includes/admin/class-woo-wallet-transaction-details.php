@@ -77,7 +77,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
         if ($user_id == NULL) {
             return $data;
         }
-        $transactions = get_wallet_transactions(array('user_id' => $user_id));
+        $transactions = get_wallet_transactions();
         if (!empty($transactions) && is_array($transactions)) {
             foreach ($transactions as $key => $transaction) {
                 $data[] = array(

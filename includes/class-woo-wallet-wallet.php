@@ -114,10 +114,11 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 return;
             }
             /* General Cashback */
-            if (get_wallet_cashback_amount($order->get_id())) {
+            if (apply_filters('woo_wallet_general_cashback_amount', get_wallet_cashback_amount($order->get_id()), $order_id)) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_wallet_cashback_amount($order->get_id()), __('Wallet credit through cashback #', 'woo-wallet') . $order->get_id());
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
+                    do_action('woo_wallet_general_cashback_credited', $transaction_id);
                 }
             }
             /* Coupon Cashback */
@@ -125,6 +126,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_post_meta($order->get_id(), '_coupon_cashback_amount', true), __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback');
+                    do_action('woo_wallet_coupon_cashback_credited', $transaction_id);
                 }
             }
             update_post_meta($order_id, '_wc_wallet_cashback_credited', true);
@@ -169,6 +171,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $email_admin->trigger($this->user_id, $amount, $type, $details);
                 $transaction_id = $wpdb->insert_id;
                 do_action('woo_wallet_transaction_recorded', $transaction_id, $amount, $type);
+                clear_woo_wallet_cache();
                 return $transaction_id;
             }
             return false;
