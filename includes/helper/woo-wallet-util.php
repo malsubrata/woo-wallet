@@ -164,7 +164,7 @@ if (!function_exists('get_wallet_transactions')) {
         $args = wp_parse_args($args, $default_args);
         extract($args);
         $query = array();
-        $query['select'] = "SELECT *";
+        $query['select'] = "SELECT transactions.*";
         $query['from'] = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
         // Joins
         $joins = array();
