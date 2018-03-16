@@ -83,12 +83,14 @@ if (!function_exists('set_wallet_transaction_meta')) {
      * @param mixed $meta_value
      * @return boolean
      */
-    function set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value) {
+    function set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id = '') {
         global $wpdb;
         $meta_key = wp_unslash($meta_key);
         $meta_value = wp_unslash($meta_value);
         $meta_value = maybe_serialize($meta_value);
-        return $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
+        $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
+        clear_woo_wallet_cache($user_id);
+        return $wpdb->insert_id;
     }
 
 }
@@ -103,15 +105,17 @@ if (!function_exists('update_wallet_transaction_meta')) {
      * @param mixed $meta_value
      * @return boolean
      */
-    function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value) {
+    function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id = '') {
         global $wpdb;
         if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key)))) {
-            return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value);
+            return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id);
         } else {
             $meta_key = wp_unslash($meta_key);
             $meta_value = wp_unslash($meta_value);
             $meta_value = maybe_serialize($meta_value);
-            return $wpdb->update("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
+            $status = $wpdb->update("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
+            clear_woo_wallet_cache($user_id);
+            return $status;
         }
     }
 
@@ -160,7 +164,7 @@ if (!function_exists('get_wallet_transactions')) {
             'limit' => '',
             'nocache' => false
         );
-        $args = apply_filters( 'woo_wallet_transactions_query_args', $args );
+        $args = apply_filters('woo_wallet_transactions_query_args', $args);
         $args = wp_parse_args($args, $default_args);
         extract($args);
         $query = array();
@@ -199,7 +203,7 @@ if (!function_exists('get_wallet_transactions')) {
         if ($limit) {
             $query['limit'] = "LIMIT {$limit}";
         }
-        
+
         $query = apply_filters('woo_wallet_transactions_query', $query);
         $query = implode(' ', $query);
         $query_hash = md5($user_id . $query);
@@ -214,24 +218,28 @@ if (!function_exists('get_wallet_transactions')) {
 
 
         $result = $cached_results[$user_id][$query_hash];
-        
+
         return $result;
     }
 
 }
 
-if(!function_exists('clear_woo_wallet_cache')){
+if (!function_exists('clear_woo_wallet_cache')) {
+
     /**
      * Clear WooCommerce Wallet user transient
      */
-    function clear_woo_wallet_cache(){
+    function clear_woo_wallet_cache($user_id = '') {
         $cached_results = get_transient('woo_wallet_transaction_resualts');
-        $user_id = get_current_user_id();
-        if(isset($cached_results[$user_id])){
+        if (!$user_id) {
+            $user_id = get_current_user_id();
+        }
+        if (isset($cached_results[$user_id])) {
             unset($cached_results[$user_id]);
         }
         set_transient('woo_wallet_transaction_resualts', $cached_results, DAY_IN_SECONDS);
     }
+
 }
 
 if (!function_exists('get_wallet_cashback_amount')) {
