@@ -4,25 +4,27 @@ if (!class_exists('WP_List_Table')) {
     require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
-class Woo_Wallet_Transaction_Details extends WP_List_Table {
+class Woo_Wallet_Credit_Details extends WP_List_Table {
 
     public function __construct() {
         parent::__construct(array(
-            'singular' => 'transaction',
-            'plural' => 'transactions',
+            'singular' => 'credit limit',
+            'plural' => 'credit limits',
             'ajax' => false,
-            'screen' => 'wc-wallet-transactions',
+            'screen' => 'wc-wallet-credit',
         ));
     }
 
     public function get_columns() {
         return array(
-            'transaction_id' => __('ID', 'woo-wallet'),
-            'name' => __('Name', 'woo-wallet'),
+            'date' => __('Date', 'woo-wallet'),
+            #'crlim_id' => __('ID', 'woo-wallet'),
+	    #'user_id' => __('User', 'woo-wallet'),
+	    #'name' => __('Name', 'woo-wallet'),
             'type' => __('Type', 'woo-wallet'),
             'amount' => __('Amount', 'woo-wallet'),
-            'details' => __('Details', 'woo-wallet'),
-            'date' => __('Date', 'woo-wallet')
+            'description' => __('Description', 'woo-wallet'),
+            'approver' => __('Approver', 'woo-wallet')
         );
     }
 
@@ -77,15 +79,17 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
         if ($user_id == NULL) {
             return $data;
         }
-        $transactions = get_wallet_transactions(array('user_id' => $user_id));
-        if (!empty($transactions) && is_array($transactions)) {
-            foreach ($transactions as $key => $transaction) {
+        $credit_limits = woo_wallet()->wallet->get_wallet_credit_details($user_id, 'all');
+        if (!empty($credit_limits) && is_array($credit_limits)) {
+            foreach ($credit_limits as $key => $credit_limit) {
                 $data[] = array(
-                    'transaction_id' => $transaction->transaction_id,
-                    'name' => get_user_by('ID', $transaction->user_id)->display_name,
-                    'type' => ('credit'===$transaction->type) ? __('Credit', 'woo-wallet') : __('Debit', 'woo-wallet'),
-                    'amount' => wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)),
-                    'details' => $transaction->details,
+                    'crlim_id' => $credit_limit->crlim_id,
+		    'user_id' => $credit_limit->user_id,
+                    'name' => get_user_by('ID', $credit_limit->user_id)->display_name,
+		    'type' => $credit_limit->type,
+                    'amount' => wc_price($credit_limit->amount*-1),
+                    'description' => $credit_limit->description,
+                    'approver' => get_user_by('ID', $credit_limit->user_id)->display_name,
                     'date' => wc_string_to_datetime($transaction->date)->date(wc_date_format())
                 );
             }
@@ -103,12 +107,13 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
      */
     public function column_default($item, $column_name) {
         switch ($column_name) {
-            case 'transaction_id':
+            case 'date':
+            case 'crlim_id':
             case 'name':
             case 'type':
             case 'amount':
-            case 'details':
-            case 'date':
+            case 'description':
+            case 'approver':
                 return $item[$column_name];
             default:
                 return print_r($item, true);

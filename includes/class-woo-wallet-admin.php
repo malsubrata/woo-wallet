@@ -8,6 +8,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
         public $transaction_details_table = NULL;
         public $balance_details_table = NULL;
+        public $credit_details_table = NULL;
 
         /**
          * Class constructor
@@ -46,6 +47,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_action("load-$woo_wallet_menu_page_hook_add", array($this, 'add_woo_wallet_add_balance_option'));
             $woo_wallet_menu_page_hook_view = add_submenu_page('', __('Woo Wallet', 'woo-wallet'), __('Woo Wallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-transactions', array($this, 'transaction_details_page'));
             add_action("load-$woo_wallet_menu_page_hook_view", array($this, 'add_woo_wallet_transaction_details_option'));
+            $woo_wallet_menu_page_hook_credit = add_submenu_page('', __('Woo Wallet', 'woo-wallet'), __('Woo Wallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-credit', array($this, 'credit_details_page'));
         }
 
         /**
@@ -164,6 +166,66 @@ if (!class_exists('Woo_Wallet_Admin')) {
         }
 
         /**
+         * Admin add wallet credit limit form
+         */
+	public function draw_credit_limit_form() {
+		$user_id = filter_input(INPUT_GET, 'user_id');
+
+
+            $current_credit_limit = 0;
+            if ($user_id != NULL && !empty($user_id)) {
+                $current_credit_limit = woo_wallet()->wallet->get_wallet_credit_details($user_id, 'view');
+            }
+            ?>
+            <div class="wrap">
+                <?php settings_errors(); ?>
+                <h2><?php _e('Add New Credit Limit', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+                <p>
+                    <?php
+                    _e('Current Credit Limit: ', 'woo-wallet');
+                    echo wc_price($current_credit_limit)
+                    ?>
+                </p>
+                <form id="posts-filter" method="post">
+                    <table class="form-table">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><label for="credit_amount"><?php _e('Amount', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <input type="number" step="0.01" name="credit_amount" class="regular-text" />
+                                    <p class="description"><?php _e('Enter Amount', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="credit_type"><?php _e('Type', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <select class="regular-text" name="credit_type" id="credit_type">
+                                        <option value="Personal"><?php _e('Personal', 'woo-wallet'); ?></option>
+                                        <option value="iATPL"><?php _e('iATPL', 'woo-wallet'); ?></option>
+                                    </select>
+                                    <p class="description"><?php _e('Select credit limit type', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="credit_description"><?php _e('Description', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <textarea name="credit_description" class="regular-text"></textarea>
+                                    <p class="description"><?php _e('Enter Description', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
+                    <?php wp_nonce_field('wc-wallet-admin-add-credit-limit', 'wc-wallet-admin-add-credit-limit'); ?>
+                    <?php submit_button(); ?>
+                </form>
+                <div id="ajax-response"></div>
+                <br class="clear"/>
+            </div>
+            <?php
+        }
+
+        /**
          * Display transaction details page
          */
         public function transaction_details_page() {
@@ -189,6 +251,32 @@ if (!class_exists('Woo_Wallet_Admin')) {
         }
 
         /**
+         * Display credit details page
+         */
+        public function credit_details_page( $user_id = '') {
+		if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+			$this->add_woo_wallet_credit_limit();
+		} else {
+			$user_id = filter_input(INPUT_GET, 'user_id');
+			$current_credit_limit = 0;
+			if ($user_id != NULL) {
+				$current_credit_limit = woo_wallet()->wallet->get_current_credit_limit($user_id);
+			}
+			?>
+				<form id="posts-filter" method="post">
+					<?php $this->draw_credit_limit_form( $user_id ); ?>
+				</form>
+				<div id="ajax-response"></div>
+				<h2><?php _e('Credit Limit History', 'woo-wallet'); ?></h2>
+				<?php $this->load_woo_wallet_credit_details(); ?>
+				<?php $this->credit_details_table->display(); ?>
+				<br class="clear"/>
+			</div>
+		<?php
+		}
+	}
+
+        /**
          * Wallet details page initialization
          */
         public function add_woo_wallet_details() {
@@ -205,7 +293,69 @@ if (!class_exists('Woo_Wallet_Admin')) {
         }
 
         /**
-         * Handel admin add wallet balance
+         * Admin WooWallet adjust user credit limit
+         */
+
+        public function adjust_woo_wallet_credit_limit() {
+
+            $user_id = filter_input( INPUT_GET, 'user_id' );
+
+            $current_credit_limit = 0;
+            if ($user_id != NULL && !empty($user_id)) {
+                $credit_limit_entries = woo_wallet()->wallet->get_credit_limit_entries($user_id);
+            }
+
+            ?>
+            <div class="wrap">
+                <?php settings_errors(); ?>
+                <h2><?php _e( 'Adjust Credit Limit', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+                <p>
+                    <?php
+                    _e( 'Current wallet balance: ', 'woo-wallet' );
+                    echo wc_price( $current_wallet_balance )
+                    ?>
+                </p>
+                <form id="posts-filter" method="post">
+                    <table class="form-table">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><label for="balance_amount"><?php _e('Amount', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <input type="number" step="0.01" name="balance_amount" class="regular-text" />
+                                    <p class="description"><?php _e('Enter Amount', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="payment_type"><?php _e('Type', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <select class="regular-text" name="payment_type" id="payment_type">
+                                        <option value="credit"><?php _e('Credit', 'woo-wallet'); ?></option>
+                                        <option value="debit"><?php _e('Debit', 'woo-wallet'); ?></option>
+                                    </select>
+                                    <p class="description"><?php _e('Select payment type', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="payment_description"><?php _e('Description', 'woo-wallet'); ?></label></th>
+                                <td>
+                                    <textarea name="payment_description" class="regular-text"></textarea>
+                                    <p class="description"><?php _e('Enter Description', 'woo-wallet'); ?></p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
+                    <?php wp_nonce_field('wc-wallet-admin-add-balance', 'wc-wallet-admin-add-balance'); ?>
+                    <?php submit_button(); ?>
+                </form>
+                <div id="ajax-response"></div>
+                <br class="clear"/>
+            </div>
+            <?php
+        }
+
+        /**
+         * Handle admin add wallet balance
          */
         public function add_woo_wallet_add_balance_option() {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['wc-wallet-admin-add-balance']) && wp_verify_nonce($_POST['wc-wallet-admin-add-balance'], 'wc-wallet-admin-add-balance')) {
@@ -215,12 +365,13 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 $amount = filter_input(INPUT_POST, 'balance_amount');
                 $payment_type = filter_input(INPUT_POST, 'payment_type');
                 $description = filter_input(INPUT_POST, 'payment_description');
+		$approver = get_current_user_id();
                 if ($user_id != NULL && !empty($user_id) && $amount != NULL && !empty($amount)) {
                     $amount = number_format($amount, 2, '.', '');
                     if ('credit' === $payment_type) {
-                        $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description);
+                        $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description, $approver);
                     } else if ('debit' === $payment_type) {
-                        $transaction_id = woo_wallet()->wallet->debit($user_id, $amount, $description);
+                        $transaction_id = woo_wallet()->wallet->debit($user_id, $amount, $description, $approver);
                     }
                     if (!$transaction_id) {
                         $message = __('An error occurred please try again', 'woo-wallet');
@@ -238,12 +389,55 @@ if (!class_exists('Woo_Wallet_Admin')) {
         }
 
         /**
+         * Handle admin add wallet credit limit
+         */
+        public function add_woo_wallet_credit_limit() {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['wc-wallet-admin-add-credit-limit']) && wp_verify_nonce($_POST['wc-wallet-admin-add-credit-limit'], 'wc-wallet-admin-add-credit-limit')) {
+		    error_log("MADE IT THIS FAR");
+                $crlim_id = NULL;
+                $message = '';
+                $user_id = filter_input(INPUT_POST, 'user_id');
+                $amount = filter_input(INPUT_POST, 'credit_amount');
+                $type = filter_input(INPUT_POST, 'credit_type');
+                $description = filter_input(INPUT_POST, 'credit_description');
+		if (	$user_id != NULL && !empty($user_id) && 
+			$amount != NULL && !empty($amount) ) {
+
+                    	$amount = number_format($amount, 2, '.', '');
+                        $crlim_id = woo_wallet()->wallet->record_credit_limit($user_id, $amount, $type, $description);
+
+                }
+
+                if ( ! $crlim_id ) {
+                        $message = __('An error occurred please try again', 'woo-wallet');
+                } else {
+                    $message = __('Please enter amount', 'woo-wallet');
+                }
+#                if (!$crlim_id) {
+#                    add_settings_error('', '102', $message);
+#                } else {
+                    wp_safe_redirect(add_query_arg(array('page' => 'woo-wallet-credit', 'user_id' => $user_id), admin_url('admin.php')));
+                    exit();
+                #}
+            }
+        }
+
+        /**
          * Transaction details page initialization
          */
         public function add_woo_wallet_transaction_details_option() {
             include_once( WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-transaction-details.php' );
             $this->transaction_details_table = new Woo_Wallet_Transaction_Details();
             $this->transaction_details_table->prepare_items();
+        }
+
+        /**
+         * Credit details page initialization
+         */
+        public function load_woo_wallet_credit_details() {
+            include_once( WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-credit-details.php' );
+            $this->credit_details_table = new Woo_Wallet_Credit_Details();
+            $this->credit_details_table->prepare_items();
         }
 
         /**

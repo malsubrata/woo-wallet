@@ -11,7 +11,7 @@
  * the readme will list any important changes.
  *
  * @author 	Subrata Mal
- * @version     1.2.4
+ * @version     1.0.0
  */
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -21,11 +21,11 @@ global $wp;
 
 <div class="woo-wallet-my-wallet-container">
     <div class="woo-wallet-sidebar">
-        <h3 class="woo-wallet-sidebar-heading"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) : get_permalink(); ?>"><?php _e('My Wallet', 'woo-wallet'); ?></a></h3>
+	<h3 class="woo-wallet-sidebar-heading"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) : get_permalink(); ?>"><?php _e(woo_wallet()->settings_api->get_option('title','woocommerce_wallet_settings', ''), 'woo-wallet'); ?></a></h3>
         <ul>
-            <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_endpoint_url( get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'add', wc_get_page_permalink( 'myaccount' ))) : '?wallet_action=add'; ?>" ><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
+            <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')) . 'add/') : '?wallet_action=add'; ?>" ><span class="dashicons dashicons-plus-alt"></span><p><?php _e('Wallet topup', 'woo-wallet'); ?></p></a></li>
             <?php if (apply_filters('woo_wallet_is_enable_transfer', 'on' === woo_wallet()->settings_api->get_option('is_enable_wallet_transfer', '_wallet_settings_general', 'on'))) : ?>
-                <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_endpoint_url( get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'transfer', wc_get_page_permalink( 'myaccount' ))) : '?wallet_action=transfer'; ?>" ><span class="dashicons dashicons-randomize"></span><p><?php _e('Wallet transfer', 'woo-wallet'); ?></p></a></li>
+                <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')) . 'transfer/') : '?wallet_action=transfer'; ?>" ><span class="dashicons dashicons-randomize"></span><p><?php _e('Wallet transfer', 'woo-wallet'); ?></p></a></li>
             <?php endif; ?>
             <li class="card"><a href="<?php echo is_account_page() ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'))) : '?wallet_action=view_transactions'; ?>"><span class="dashicons dashicons-list-view"></span><p><?php _e('Transactions', 'woo-wallet'); ?></p></a></li>
         </ul>
@@ -66,7 +66,7 @@ global $wp;
                 </p>
             </form>
         <?php } else { ?>
-            <?php $transactions = get_wallet_transactions(array('limit' => apply_filters('woo_wallet_transactions_count', 10))); ?>
+            <?php $transactions = get_wallet_transactions(array('user_id' => get_current_user_id()), apply_filters('woo_wallet_transactions_count', 10)); ?>
             <?php if (!empty($transactions)) { ?>
                 <ul class="woo-wallet-transactions-items">
                     <?php foreach ($transactions as $transaction) : ?> 

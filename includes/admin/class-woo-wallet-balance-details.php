@@ -20,8 +20,9 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'id' => __('ID', 'woo-wallet'),
             'username' => __('Username', 'woo-wallet'),
             'name' => __('Name', 'woo-wallet'),
-            'email' => __('Email', 'woo-wallet'),
+	    /* 'email' => __('Email', 'woo-wallet'), */
             'balance' => __('Remaining balance', 'woo-wallet'),
+            'credit-limit' => __('Credit Limit', 'woo-wallet'),
             'actions' => __('Actions', 'woo-wallet'),
         );
     }
@@ -108,6 +109,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
                 'name' => $user->data->display_name,
                 'email' => $user->data->user_email,
                 'balance' => woo_wallet()->wallet->get_wallet_balance($user->ID),
+		'credit-limit' => woo_wallet()->wallet->get_wallet_credit_details($user->ID,'view'),
                 'actions' => ''
             );
         }
@@ -129,9 +131,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             case 'name':
             case 'email':
             case 'balance':
+            case 'credit-limit':
                 return $item[$column_name];
             case 'actions':
-                return '<p><a href="'. add_query_arg(array('page' => 'woo-wallet-add', 'user_id' => $item['id']), admin_url('admin.php')).'" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="'. add_query_arg(array('page' => 'woo-wallet-transactions', 'user_id' => $item['id']), admin_url('admin.php')).'"></a></p>';
+                return '<p><a href="'. add_query_arg(array('page' => 'woo-wallet-add', 'user_id' => $item['id']), admin_url('admin.php')).'" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="'. add_query_arg(array('page' => 'woo-wallet-transactions', 'user_id' => $item['id']), admin_url('admin.php')).'"></a> <a href="'. add_query_arg(array('page' => 'woo-wallet-credit', 'user_id' => $item['id']), admin_url('admin.php')).'" class="button tips wallet-credit"></a></p>';
             default:
                 return print_r($item, true);
         }

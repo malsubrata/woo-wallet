@@ -92,6 +92,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             return $title;
         }
 
+	/**
+	 * Get Wallet WooCommerce endpoint title
+	 */
+
         /**
          * Register and enqueue frontend styles and scripts
          */
@@ -125,7 +129,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function woo_wallet_menu_items($items) {
             unset($items['edit-account']);
             unset($items['customer-logout']);
-            $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
+            $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __(woo_wallet()->settings_api->get_option('title','woocommerce_wallet_settings', ''));
             $items['edit-account'] = __('Account details', 'woo-wallet');
             $items['customer-logout'] = __('Logout', 'woo-wallet');
             return $items;
