@@ -69,7 +69,7 @@ class Woo_Wallet_Install {
             amount DECIMAL(10,2) NOT NULL,
             balance DECIMAL(10,2) NOT NULL,
             currency varchar(20) NOT NULL,
-            details longtext NULL,
+            description longtext NULL,
             date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	    approver_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             PRIMARY KEY  (transaction_id),
