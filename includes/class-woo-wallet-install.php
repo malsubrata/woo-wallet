@@ -42,7 +42,11 @@ class Woo_Wallet_Install {
         $wpdb->hide_errors();
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-        dbDelta(self::get_schema());
+	$tables = self::get_schema();
+
+	foreach( $tables as $table ) {
+	        dbDelta( $table );
+	}
     }
 
     /**
@@ -57,7 +61,7 @@ class Woo_Wallet_Install {
         if ($wpdb->has_cap('collation')) {
             $collate = $wpdb->get_charset_collate();
         }
-        $tables = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_transactions (
+        $tables[] = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_transactions (
             transaction_id BIGINT UNSIGNED NOT NULL auto_increment,
             blog_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
             user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -67,10 +71,22 @@ class Woo_Wallet_Install {
             currency varchar(20) NOT NULL,
             details longtext NULL,
             date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	    approver_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             PRIMARY KEY  (transaction_id),
             KEY user_id (user_id)
-        ) $collate;
-        CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
+        ) $collate;";
+	$tables[] = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_credit_limits (
+            crlim_id BIGINT UNSIGNED NOT NULL auto_increment,
+            user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            type varchar(20) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            details longtext NULL,
+            date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	    approver_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY  (crlim_id),
+            KEY user_id (user_id)
+	) $collate;";
+        $tables[] = "CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,
             transaction_id BIGINT UNSIGNED NOT NULL,
             meta_key varchar(255) default NULL,
@@ -96,7 +112,7 @@ class Woo_Wallet_Install {
     private static function create_product() {
         $product_args = array(
             'post_title' => wc_clean('Wallet Topup'),
-            'post_status' => 'private',
+            'post_status' => 'publish',
             'post_type' => 'product',
             'post_excerpt' => '',
             'post_content' => stripslashes(html_entity_decode('Auto generated product for wallet recharge please do not delete or update.', ENT_QUOTES, 'UTF-8')),

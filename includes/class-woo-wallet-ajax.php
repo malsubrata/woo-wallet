@@ -27,6 +27,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             if (!current_user_can('edit_shop_orders')) {
                 wp_die(-1);
             }
+	    $approver = get_current_user_id();
             $order_id = absint($_POST['order_id']);
             $refund_amount = wc_format_decimal(sanitize_text_field($_POST['refund_amount']), wc_get_price_decimals());
             $refund_reason = sanitize_text_field($_POST['refund_reason']);
@@ -71,7 +72,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                     'restock_items' => $restock_refunded_items,
                 ));
                 if (!is_wp_error($refund)) {
-                    $wallet_credit = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Wallet refund #' . $order->get_id(), 'woo-wallet'));
+                    $wallet_credit = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Refund to wallet for order ' . $order->get_order_number(), 'woo-wallet'), $approver);
                     if (!$wallet_credit) {
                         throw new Exception(__('Refund not credited to customer', 'woo-wallet'));
                     }
@@ -93,7 +94,6 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 wp_send_json_error(array('error' => $ex->getMessage()));
             }
         }
-
         /**
          * Mark wallet rated.
          */
@@ -101,43 +101,33 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             update_option('woocommerce_wallet_admin_footer_text_rated', true);
             die;
         }
-
         /**
          * Search users
          */
         public function woo_wallet_user_search() {
             $return = array();
-            if (apply_filters('woo_wallet_user_search_exact_match', true)) {
-                $user = get_user_by(apply_filters('woo_wallet_user_search_by', 'email'), $_REQUEST['term']);
-                if ($user && wp_get_current_user()->user_email != $user->user_email) {
-                    $return[] = array(
-                        /* translators: 1: user_login, 2: user_email */
-                        'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
-                        'value' => $user->ID,
-                    );
-                }
+            
+            if (isset($_REQUEST['site_id'])) {
+                $id = absint($_REQUEST['site_id']);
             } else {
-                if (isset($_REQUEST['site_id'])) {
-                    $id = absint($_REQUEST['site_id']);
-                } else {
-                    $id = get_current_blog_id();
-                }
-
-                $users = get_users(array(
-                    'blog_id' => $id,
-                    'search' => '*' . $_REQUEST['term'] . '*',
-                    'exclude' => array(get_current_user_id()),
-                    'search_columns' => array('user_login', 'user_nicename', 'user_email'),
-                ));
-
-                foreach ($users as $user) {
-                    $return[] = array(
-                        /* translators: 1: user_login, 2: user_email */
-                        'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
-                        'value' => $user->ID,
-                    );
-                }
+                $id = get_current_blog_id();
             }
+
+            $users = get_users(array(
+                'blog_id' => $id,
+                'search' => '*' . $_REQUEST['term'] . '*',
+                'exclude' => array(get_current_user_id()),
+                'search_columns' => array('user_login', 'user_nicename', 'user_email'),
+                    ));
+
+            foreach ($users as $user) {
+                $return[] = array(
+                    /* translators: 1: user_login, 2: user_email */
+                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
+                    'value' => $user->ID,
+                );
+            }
+
             wp_send_json($return);
         }
 

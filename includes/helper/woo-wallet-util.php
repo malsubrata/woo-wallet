@@ -83,14 +83,12 @@ if (!function_exists('set_wallet_transaction_meta')) {
      * @param mixed $meta_value
      * @return boolean
      */
-    function set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id = '') {
+    function set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value) {
         global $wpdb;
         $meta_key = wp_unslash($meta_key);
         $meta_value = wp_unslash($meta_value);
         $meta_value = maybe_serialize($meta_value);
-        $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
-        clear_woo_wallet_cache($user_id);
-        return $wpdb->insert_id;
+        return $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
     }
 
 }
@@ -105,17 +103,15 @@ if (!function_exists('update_wallet_transaction_meta')) {
      * @param mixed $meta_value
      * @return boolean
      */
-    function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id = '') {
+    function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value) {
         global $wpdb;
         if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key)))) {
-            return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id);
+            return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value);
         } else {
             $meta_key = wp_unslash($meta_key);
             $meta_value = wp_unslash($meta_value);
             $meta_value = maybe_serialize($meta_value);
-            $status = $wpdb->update("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
-            clear_woo_wallet_cache($user_id);
-            return $status;
+            return $wpdb->update("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('meta_value' => $meta_value), array('transaction_id' => $transaction_id, "meta_key" => $meta_key), array('%s'), array('%d', '%s'));
         }
     }
 
@@ -154,90 +150,24 @@ if (!function_exists('get_wallet_transactions')) {
      */
     function get_wallet_transactions($args = array(), $limit = '', $output = OBJECT) {
         global $wpdb;
-        $default_args = array(
-            'user_id' => get_current_user_id(),
-            'where' => array(),
-            'where_meta' => array(),
-            'order_by' => 'transaction_id',
-            'order' => 'DESC',
-            'join_type' => 'INNER',
-            'limit' => '',
-            'nocache' => false
-        );
-        $args = apply_filters('woo_wallet_transactions_query_args', $args);
-        $args = wp_parse_args($args, $default_args);
-        extract($args);
-        $query = array();
-        $query['select'] = "SELECT transactions.*";
-        $query['from'] = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
-        // Joins
-        $joins = array();
-        if (!empty($where_meta)) {
-            $joins["order_items"] = "{$join_type} JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
-        }
-        $query['join'] = implode(' ', $joins);
-
-        $query['where'] = "WHERE transactions.user_id = {$user_id}";
-
-        if (!empty($where_meta)) {
-            foreach ($where_meta as $value) {
-                if (!isset($value['operator'])) {
-                    $value['operator'] = '=';
+        $query = '';
+        if (!empty($args)) {
+            foreach ($args as $key => $arg) {
+                if (!$wpdb->get_var("SHOW COLUMNS FROM `{$wpdb->base_prefix}woo_wallet_transactions` LIKE '{$key}';")) {
+                    unset($args[$key]);
                 }
-                $query['where'] .= " AND (transaction_meta.meta_key = '{$value['key']}' AND transaction_meta.meta_value {$value['operator']} '{$value['value']}')";
             }
+            $query .= ' WHERE ';
+            $query .= implode(' AND ', array_map(
+                            function ($v, $k) {
+                        return sprintf("%s = '%s'", $k, $v);
+                    }, $args, array_keys($args)
+            ));
         }
-
-        if (!empty($where)) {
-            foreach ($where as $value) {
-                if (!isset($value['operator'])) {
-                    $value['operator'] = '=';
-                }
-                $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} '{$value['value']}'";
-            }
-        }
-        if ($order_by) {
-            $query['order_by'] = "ORDER BY transactions.{$order_by} {$order}";
-        }
-
         if ($limit) {
-            $query['limit'] = "LIMIT {$limit}";
+            $limit = " LIMIT 0, {$limit}";
         }
-
-        $query = apply_filters('woo_wallet_transactions_query', $query);
-        $query = implode(' ', $query);
-        $query_hash = md5($user_id . $query);
-        $cached_results = get_transient('woo_wallet_transaction_resualts');
-
-        if ($nocache || !isset($cached_results[$user_id][$query_hash])) {
-            // Enable big selects for reports
-            $wpdb->query('SET SESSION SQL_BIG_SELECTS=1');
-            $cached_results[$user_id][$query_hash] = $wpdb->get_results($query);
-            set_transient('woo_wallet_transaction_resualts', $cached_results, DAY_IN_SECONDS);
-        }
-
-
-        $result = $cached_results[$user_id][$query_hash];
-
-        return $result;
-    }
-
-}
-
-if (!function_exists('clear_woo_wallet_cache')) {
-
-    /**
-     * Clear WooCommerce Wallet user transient
-     */
-    function clear_woo_wallet_cache($user_id = '') {
-        $cached_results = get_transient('woo_wallet_transaction_resualts');
-        if (!$user_id) {
-            $user_id = get_current_user_id();
-        }
-        if (isset($cached_results[$user_id])) {
-            unset($cached_results[$user_id]);
-        }
-        set_transient('woo_wallet_transaction_resualts', $cached_results, DAY_IN_SECONDS);
+        return $wpdb->get_results("SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions {$query} ORDER BY `transaction_id` DESC" . $limit, $output);
     }
 
 }
@@ -358,7 +288,8 @@ if (!function_exists('is_full_payment_through_wallet')) {
     function is_full_payment_through_wallet() {
         $is_valid_payment_through_wallet = true;
         $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
-        if (wc()->cart && ($current_wallet_balance < wc()->cart->get_total('') || is_wallet_rechargeable_cart())) {
+        $current_credit_limit = woo_wallet()->wallet->get_current_credit_limit(get_current_user_id(), '');
+        if (wc()->cart && ($current_wallet_balance+$current_credit_limit < wc()->cart->get_total('') || is_wallet_rechargeable_cart())) {
             $is_valid_payment_through_wallet = false;
         }
         return apply_filters('is_valid_payment_through_wallet', $is_valid_payment_through_wallet);

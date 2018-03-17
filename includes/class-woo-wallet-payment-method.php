@@ -109,11 +109,14 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
      */
     public function process_payment($order_id) {
         $order = wc_get_order($order_id);
-        if($order->get_total('edit') > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')){
-            wc_add_notice( __('Payment error: ', 'woo-wallet') . sprintf(__('Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet'), wc_price($order->get_total('edit') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'))), 'error' );
+	$current_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit');
+	$current_credit_limit = woo_wallet()->wallet->get_current_credit_limit(get_current_user_id());
+	error_log("BALANCE $current_balance CL $current_credit_limit");
+        if($order->get_total('edit') > $current_balance + $current_credit_limit){
+            wc_add_notice( __('Payment error: ', 'woo-wallet') . sprintf(__('There are insuffient funds in your wallet to pay for this transaction. (You are %s short.)', 'woo-wallet'), wc_price($order->get_total('edit') - woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')-$current_credit_limit)), 'error' );
             return;
         }
-        $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('For order payment #', 'woo-wallet') . $order->get_id());
+        $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('Payment for order ', 'woo-wallet') . $order->get_order_number());
         // Mark as processing or on-hold
         $order->update_status(apply_filters('woocommerce_wallet_process_payment_order_status', !$wallet_response ? 'on-hold' : 'processing', $order), __('Payment via wallet.', 'woo-wallet'));
 
@@ -139,7 +142,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
         if(get_post_meta($order->get_id(), '_wallet_scheduled_subscription_payment_processed', true)){
             return;
         }
-        $wallet_response = woo_wallet()->wallet->debit($order->get_customer_id(), $amount_to_charge, __('For order payment #', 'woo-wallet') . $order->get_id());
+        $wallet_response = woo_wallet()->wallet->debit($order->get_customer_id(), $amount_to_charge, __('Payment for order ', 'woo-wallet') . $order->get_order_number());
         if($wallet_response){
             $order->payment_complete();
         } else{
