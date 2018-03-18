@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9.4
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -110,13 +110,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
-= 1.2.4 - 2018-xx-xx =
+= 1.1.4 - 2018-03-19 =
 * Fix - Typo.
 * Fix - non-sef endpoint url generation #2
 * Tweak - AJAX user search dropdown in transfer fund page.
 * Tweak - Database query improvement.
 
-= 1.2.3 - 2018-03-05 =
+= 1.1.3 - 2018-03-05 =
 * Feature - Improved user search drop-down in transfer wallet amount page.
 * Fix - Payment gateway charge percent issue.
 * Fix - Cashback rule for non logged in user.
@@ -129,4 +129,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.2 =
+= 1.1 =

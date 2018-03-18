@@ -1,12 +1,12 @@
 *** Changelog ***
 
-= 1.2.4 - 2018-xx-xx =
+= 1.1.4 - 2018-03-19 =
 * Fix - Typo.
 * Fix - non-sef endpoint url generation #2
 * Tweak - AJAX user search dropdown in transfer fund page.
 * Tweak - Database query improvement.
 
-= 1.2.3 - 2018-03-05 =
+= 1.1.3 - 2018-03-05 =
 * Feature - Improved user search drop-down in transfer wallet amount page.
 * Fix - Payment gateway charge percent issue.
 * Fix - Cashback rule for non logged in user.

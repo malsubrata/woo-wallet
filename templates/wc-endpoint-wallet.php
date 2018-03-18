@@ -11,7 +11,7 @@
  * the readme will list any important changes.
  *
  * @author 	Subrata Mal
- * @version     1.2.4
+ * @version     1.1.4
  */
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
