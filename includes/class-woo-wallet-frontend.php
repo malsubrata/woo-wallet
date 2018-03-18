@@ -80,10 +80,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function woocommerce_endpoint_title($title, $endpoint) {
             switch ($endpoint) {
                 case 'woo-wallet' :
-                    $title = __('My Wallet', 'woo-wallet');
+                    $title = apply_filters('woo_wallet_account_menu_title', __('My Wallet', 'woo-wallet'));
                     break;
                 case 'woo-wallet-transactions' :
-                    $title = __('Wallet Transactions', 'woo-wallet');
+                    $title = apply_filters('woo_wallet_account_transaction_menu_title',__('Wallet Transactions', 'woo-wallet'));
                     break;
                 default :
                     $title = '';
@@ -125,7 +125,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function woo_wallet_menu_items($items) {
             unset($items['edit-account']);
             unset($items['customer-logout']);
-            $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
+            $items[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = apply_filters('woo_wallet_account_menu_title', __('My Wallet', 'woo-wallet'));
             $items['edit-account'] = __('Account details', 'woo-wallet');
             $items['customer-logout'] = __('Logout', 'woo-wallet');
             return $items;

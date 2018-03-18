@@ -107,7 +107,7 @@ if (!function_exists('update_wallet_transaction_meta')) {
      */
     function update_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id = '') {
         global $wpdb;
-        if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key)))) {
+        if (is_null($wpdb->get_var($wpdb->prepare("SELECT meta_id FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", array($transaction_id, $meta_key))))) {
             return set_wallet_transaction_meta($transaction_id, $meta_key, $meta_value, $user_id);
         } else {
             $meta_key = wp_unslash($meta_key);
@@ -152,7 +152,7 @@ if (!function_exists('get_wallet_transactions')) {
      * @param mixed $output
      * @return db rows
      */
-    function get_wallet_transactions($args = array(), $limit = '', $output = OBJECT) {
+    function get_wallet_transactions($args = array(), $output = OBJECT) {
         global $wpdb;
         $default_args = array(
             'user_id' => get_current_user_id(),
@@ -187,7 +187,7 @@ if (!function_exists('get_wallet_transactions')) {
                 $query['where'] .= " AND (transaction_meta.meta_key = '{$value['key']}' AND transaction_meta.meta_value {$value['operator']} '{$value['value']}')";
             }
         }
-
+        
         if (!empty($where)) {
             foreach ($where as $value) {
                 if (!isset($value['operator'])) {
