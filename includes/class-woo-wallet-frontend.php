@@ -376,7 +376,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
             }
             if (!is_full_payment_through_wallet() && is_user_logged_in() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
-                $current_wallet_balance = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), $order_id);
+                $current_wallet_balance = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), $order);
                 update_post_meta($order_id, '_original_order_amount', $order->get_total(''));
                 $order->set_total($order->get_total('') - $current_wallet_balance);
                 update_post_meta($order_id, '_via_wallet_payment', $current_wallet_balance);

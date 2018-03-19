@@ -16,7 +16,7 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
-$current_wallet_amount = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'));
+$current_wallet_amount = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), NULL);
 $rest_amount = wc()->cart->get_total('edit') - $current_wallet_amount;
 if ('on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) {
     ?>
