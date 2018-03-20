@@ -59,14 +59,14 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             'title' => array(
                 'title' => __('Title', 'woo-wallet'),
                 'type' => 'text',
-                'description' => __('Payment method description that the customer will see on your checkout.', 'woo-wallet'),
+                'description' => __('This controls the title which the user sees during checkout.', 'woo-wallet'),
                 'default' => __('Wallet payment', 'woo-wallet'),
                 'desc_tip' => true,
             ),
             'description' => array(
                 'title' => __('Description', 'woo-wallet'),
                 'type' => 'textarea',
-                'description' => __('Payment method description that the customer will see on your website.', 'woo-wallet'),
+                'description' => __('Payment method description that the customer will see on your checkout.', 'woo-wallet'),
                 'default' => __('Pay with wallet.', 'woo-wallet'),
                 'desc_tip' => true,
             ),
