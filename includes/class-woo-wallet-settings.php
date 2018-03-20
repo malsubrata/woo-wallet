@@ -107,7 +107,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                     array(
                         'name' => 'min_topup_amount',
                         'label' => __('Minimum Topup Amount', 'woo-wallet'),
-                        'desc' => __('The minimum amount needed for wallet top up.', 'woo-wallet'),
+                        'desc' => __('The minimum amount needed for wallet top up', 'woo-wallet'),
                         'type' => 'number',
                     ),
                     array(

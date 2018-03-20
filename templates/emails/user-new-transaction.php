@@ -22,10 +22,10 @@ if (!defined('ABSPATH')) {
 do_action('woocommerce_email_header', $email_heading, $email);
 ?>
 <?php if ($type == 'credit') { ?>
-<p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been credited to your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is ', 'woo-wallet'); ?><?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
+<p><?php _e("Thank you for using your wallet.", 'woo-wallet'); ?> <?php echo wc_price($amount); ?> <?php _e( 'has been credited to your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is', 'woo-wallet'); ?> <?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
 <?php } ?>
 <?php if ($type == 'debit') { ?>
-    <p><?php _e("Thank you for using your wallet. ", 'woo-wallet'); ?><?php echo wc_price($amount); ?> <?php _e( ' has been debited from your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is ', 'woo-wallet'); ?><?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
+    <p><?php _e("Thank you for using your wallet.", 'woo-wallet'); ?> <?php echo wc_price($amount); ?> <?php _e( 'has been debited from your wallet.', 'woo-wallet'); ?> <?php _e('Current wallet balance is', 'woo-wallet'); ?> <?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?></p>
 <?php } ?>
 <?php
 /**
