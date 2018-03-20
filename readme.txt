@@ -110,6 +110,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.1.5 -2018-xx-xx =
+* Fixed - User search in admin balance details page.
+
 = 1.1.4 - 2018-03-19 =
 * Fix - Typo.
 * Fix - non-sef endpoint url generation #2
