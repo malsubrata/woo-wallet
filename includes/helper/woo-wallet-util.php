@@ -193,7 +193,12 @@ if (!function_exists('get_wallet_transactions')) {
                 if (!isset($value['operator'])) {
                     $value['operator'] = '=';
                 }
-                $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} '{$value['value']}'";
+                if($value['operator'] == 'IN' && is_array($value['value'])){
+                    $value['value'] = implode(',', $value['value']);
+                    $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} ({$value['value']})";
+                } else{
+                    $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} '{$value['value']}'";
+                }
             }
         }
         if ($order_by) {

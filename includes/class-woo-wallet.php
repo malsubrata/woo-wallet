@@ -139,12 +139,15 @@ final class WooWallet {
         add_filter('woocommerce_payment_gateways', array($this, 'load_gateway'));
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_credit_purchase'));
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_credit_purchase'));
-
+        
+        add_action('woocommerce_order_status_on-hold', array($this->wallet, 'wallet_partial_payment'), 10);
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_partial_payment'), 10);
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_partial_payment'), 10);
 
         add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_cashback'), 12);
         add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_cashback'), 12);
+        
+        add_action('woocommerce_order_status_cancelled', array($this->wallet, 'process_cancelled_order'));
 
         add_filter('woocommerce_reports_get_order_report_query', array($this, 'woocommerce_reports_get_order_report_query'));
 
