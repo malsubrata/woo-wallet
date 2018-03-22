@@ -157,17 +157,8 @@ if (!class_exists('Woo_Wallet_Wallet')) {
 
             /** debit cashback amount * */
             if (apply_filters('woo_wallet_debit_cashback_upon_cancellation', true) && get_post_meta($order_id, '_wc_wallet_cashback_credited', true)) {
-                $transaction_ids = array();
-                $_general_cashback_transaction_id = get_post_meta($order_id, '_general_cashback_transaction_id', true);
-                $_coupon_cashback_transaction_id = get_post_meta($order_id, '_coupon_cashback_transaction_id', true);
-                if ($_general_cashback_transaction_id) {
-                    $transaction_ids[] = $_general_cashback_transaction_id;
-                }
-                if ($_coupon_cashback_transaction_id) {
-                    $transaction_ids[] = $_coupon_cashback_transaction_id;
-                }
-                if (!empty($transaction_ids)) {
-                    $total_cashback_amount = array_sum(wp_list_pluck(get_wallet_transactions(array('user_id' => $order->get_customer_id(), 'where' => array(array('key' => 'transaction_id', 'value' => $transaction_ids, 'operator' => 'IN')))), 'amount'));
+                $total_cashback_amount = get_total_order_cashback_amount($order_id);
+                if ($total_cashback_amount) {
                     $this->debit($order->get_customer_id(), $total_cashback_amount, sprintf(__('Cashback for #%s has been debited upon cancellation', 'woo-wallet'), $order_id));
                     delete_post_meta($order_id, '_wc_wallet_cashback_credited');
                 }

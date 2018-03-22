@@ -187,16 +187,16 @@ if (!function_exists('get_wallet_transactions')) {
                 $query['where'] .= " AND (transaction_meta.meta_key = '{$value['key']}' AND transaction_meta.meta_value {$value['operator']} '{$value['value']}')";
             }
         }
-        
+
         if (!empty($where)) {
             foreach ($where as $value) {
                 if (!isset($value['operator'])) {
                     $value['operator'] = '=';
                 }
-                if($value['operator'] == 'IN' && is_array($value['value'])){
+                if ($value['operator'] == 'IN' && is_array($value['value'])) {
                     $value['value'] = implode(',', $value['value']);
                     $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} ({$value['value']})";
-                } else{
+                } else {
                     $query['where'] .= " AND transactions.{$value['key']} {$value['operator']} '{$value['value']}'";
                 }
             }
@@ -381,6 +381,34 @@ if (!function_exists('get_all_wallet_users')) {
             'order' => 'ASC'
         );
         return get_users($args);
+    }
+
+}
+
+if (!function_exists('get_total_order_cashback_amount')) {
+    /**
+     * Get total cashback amount of an order.
+     * @param int $order_id
+     * @return float
+     */
+    function get_total_order_cashback_amount($order_id) {
+        $order = wc_get_order($order_id);
+        $total_cashback_amount = 0;
+        if ($order) {
+            $transaction_ids = array();
+            $_general_cashback_transaction_id = get_post_meta($order_id, '_general_cashback_transaction_id', true);
+            $_coupon_cashback_transaction_id = get_post_meta($order_id, '_coupon_cashback_transaction_id', true);
+            if ($_general_cashback_transaction_id) {
+                $transaction_ids[] = $_general_cashback_transaction_id;
+            }
+            if ($_coupon_cashback_transaction_id) {
+                $transaction_ids[] = $_coupon_cashback_transaction_id;
+            }
+            if (!empty($transaction_ids)) {
+                $total_cashback_amount = array_sum(wp_list_pluck(get_wallet_transactions(array('user_id' => $order->get_customer_id(), 'where' => array(array('key' => 'transaction_id', 'value' => $transaction_ids, 'operator' => 'IN')))), 'amount'));
+            }
+        }
+        return apply_filters('woo_wallet_total_order_cashback_amount', $total_cashback_amount);
     }
 
 }

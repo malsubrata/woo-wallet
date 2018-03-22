@@ -305,13 +305,13 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function add_wallet_payment_amount($order_id) {
             $order = wc_get_order($order_id);
-            if(get_post_meta($order_id, '_coupon_cashback_amount', true)){
+            if($total_cashback_amount = get_total_order_cashback_amount($order_id)){
                 ?>
                 <tr>
                     <td class="label"><?php _e('Cashback', 'woo-wallet'); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                        <?php echo wc_price(get_post_meta($order_id, '_coupon_cashback_amount', true), array('currency' => $order->get_currency())); ?>
+                        <?php echo wc_price($total_cashback_amount, array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <?php
