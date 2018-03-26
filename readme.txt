@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9.4
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -110,8 +110,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
-= 1.1.5 -2018-xx-xx =
-* Fixed - User search in admin balance details page.
+= 1.1.5 -2018-03-26 =
+* Feature - Display cashback amount in admin order page.
+* Fix - User search in admin balance details page.
+* Fix - Typos in localization strings #4
+* Fix - Partial payment and cashback issue upon order cancellation.
+* Updated - Language file.
 
 = 1.1.4 - 2018-03-19 =
 * Fix - Typo.

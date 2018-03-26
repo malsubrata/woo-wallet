@@ -1,7 +1,11 @@
 *** Changelog ***
 
-= 1.1.5 -2018-xx-xx =
-* Fixed - User search in admin balance details page.
+= 1.1.5 -2018-03-26 =
+* Feature - Display cashback amount in admin order page.
+* Fix - User search in admin balance details page.
+* Fix - Typos in localization strings #4
+* Fix - Partial payment and cashback issue upon order cancellation.
+* Updated - Language file.
 
 = 1.1.4 - 2018-03-19 =
 * Fix - Typo.

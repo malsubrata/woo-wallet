@@ -49,7 +49,7 @@ global $wp;
         <?php } else if (apply_filters('woo_wallet_is_enable_transfer', 'on' === woo_wallet()->settings_api->get_option('is_enable_wallet_transfer', '_wallet_settings_general', 'on')) && ((isset($wp->query_vars['woo-wallet']) && 'transfer' === $wp->query_vars['woo-wallet']) || (isset($_GET['wallet_action']) && 'transfer' === $_GET['wallet_action']))) { ?> 
             <form method="post" action="">
                 <p class="woo-wallet-field-container form-row form-row-wide">
-                    <label for="woo_wallet_transfer_user_id"><?php _e('Select whom to transfer', 'woo-wallet'); ?></label>
+                    <label for="woo_wallet_transfer_user_id"><?php _e('Select whom to transfer', 'woo-wallet'); ?> <?php if(apply_filters('woo_wallet_user_search_exact_match', true)){ _e('(Email)', 'woo-wallet'); } ?></label>
                     <select name="woo_wallet_transfer_user_id" class="woo-wallet-select2" required=""></select>
                 </p>
                 <p class="woo-wallet-field-container form-row form-row-wide">
