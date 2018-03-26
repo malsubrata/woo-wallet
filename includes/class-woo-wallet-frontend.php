@@ -301,10 +301,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function woo_wallet_set_recharge_product_price($cart) {
             $product = get_wallet_rechargeable_product();
-            if (!$product) {
+            if (!$product && empty($cart->cart_contents)) {
                 return;
             }
-            foreach ($cart->get_cart_contents() as $key => $value) {
+            foreach ($cart->cart_contents as $key => $value) {
                 if (isset($value['recharge_amount']) && $value['recharge_amount'] && $product->get_id() == $value['product_id']) {
                     $value['data']->set_price($value['recharge_amount']);
                 }
