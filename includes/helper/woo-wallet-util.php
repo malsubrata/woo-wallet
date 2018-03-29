@@ -212,7 +212,7 @@ if (!function_exists('get_wallet_transactions')) {
         $query = apply_filters('woo_wallet_transactions_query', $query);
         $query = implode(' ', $query);
         $query_hash = md5($user_id . $query);
-        $cached_results = get_transient('woo_wallet_transaction_resualts');
+        $cached_results = is_array(get_transient('woo_wallet_transaction_resualts')) ? get_transient('woo_wallet_transaction_resualts') : array();
 
         if ($nocache || !isset($cached_results[$user_id][$query_hash])) {
             // Enable big selects for reports
@@ -235,7 +235,7 @@ if (!function_exists('clear_woo_wallet_cache')) {
      * Clear WooCommerce Wallet user transient
      */
     function clear_woo_wallet_cache($user_id = '') {
-        $cached_results = get_transient('woo_wallet_transaction_resualts');
+        $cached_results = is_array(get_transient('woo_wallet_transaction_resualts')) ? get_transient('woo_wallet_transaction_resualts') : array();
         if (!$user_id) {
             $user_id = get_current_user_id();
         }
