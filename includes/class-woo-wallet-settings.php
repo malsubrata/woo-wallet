@@ -181,7 +181,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                     array(
                         'name' => 'is_enable_gateway_charge',
                         'label' => __('Payment gateway charge', 'woo-wallet'),
-                        'desc' => __('Charge customer when they add balance to there wallet?', 'woo-wallet'),
+                        'desc' => __('Charge customer when they add balance to their wallet?', 'woo-wallet'),
                         'type' => 'checkbox',
                     ),
                     array(

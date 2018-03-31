@@ -83,7 +83,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     $title = apply_filters('woo_wallet_account_menu_title', __('My Wallet', 'woo-wallet'));
                     break;
                 case 'woo-wallet-transactions' :
-                    $title = apply_filters('woo_wallet_account_transaction_menu_title',__('Wallet Transactions', 'woo-wallet'));
+                    $title = apply_filters('woo_wallet_account_transaction_menu_title', __('Wallet Transactions', 'woo-wallet'));
                     break;
                 default :
                     $title = '';
@@ -105,7 +105,25 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_style_add_data('woo-wallet-style', 'rtl', 'replace');
             wp_register_script('jquery-datatables-script', '//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js', array('jquery'));
             wp_register_script('wc-endpoint-wallet', woo_wallet()->plugin_url() . '/assets/js/frontend/wc-endpoint-wallet' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
-            wp_localize_script('wc-endpoint-wallet', 'wallet_param', array('ajax_url' => admin_url('admin-ajax.php')));
+            $wallet_localize_param = array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'search_by_user_email' => apply_filters('woo_wallet_user_search_exact_match', true),
+                'i18n' => array(
+                    'emptyTable' => __('No transactions available', 'woo-wallet'),
+                    'lengthMenu' => sprintf(__('Show %s entries', 'woo-wallet'), '_MENU_'),
+                    'info' => sprintf(__('Showing %1s to %2s of %3s entries', 'woo-wallet'), '_START_', '_END_', '_TOTAL_'),
+                    'paginate' => array(
+                        'first' => __('First', 'woo-wallet'),
+                        'last' => __('Last', 'woo-wallet'),
+                        'next' => __('Next', 'woo-wallet'),
+                        'previous' => __('Previous', 'woo-wallet')
+                    ),
+                    'non_valid_email_text' => __('Please enter a valid email address', 'woo-wallet'),
+                    'no_resualt' => __('No results found', 'woo-wallet'),
+                    'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet')
+                )
+            );
+            wp_localize_script('wc-endpoint-wallet', 'wallet_param', $wallet_localize_param);
             wp_enqueue_style('woo-wallet-style');
             if (is_account_page()) {
                 wp_enqueue_style('dashicons');
@@ -548,12 +566,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $label;
         }
+
         /**
          * Update WC Cart get_total if cashback coupon applied.
          * @param float $total
          * @return float
          */
-        public function woocommerce_cart_get_total($total){
+        public function woocommerce_cart_get_total($total) {
             if (is_user_logged_in()) {
                 foreach (WC()->cart->get_applied_coupons() as $code) {
                     $coupon = new WC_Coupon($code);

@@ -4,10 +4,30 @@ jQuery(function ($) {
     $('#wc-wallet-transaction-details').DataTable(
             {
                 searching: false,
-                order: [[0, 'desc']]
+                order: [[0, 'desc']],
+                language: {
+                    emptyTable: wallet_param.i18n.emptyTable,
+                    lengthMenu: wallet_param.i18n.lengthMenu,
+                    info: wallet_param.i18n.info,
+                    paginate: wallet_param.i18n.paginate
+                }
             }
     );
     $('.woo-wallet-select2').selectWoo({
+        language: {
+            inputTooShort: function () {
+                if (wallet_param.search_by_user_email) {
+                    return wallet_param.i18n.non_valid_email_text;
+                }
+                return wallet_param.i18n.inputTooShort;
+            },
+            noResults: function () {
+                if (wallet_param.search_by_user_email) {
+                    return wallet_param.i18n.non_valid_email_text;
+                } 
+                return wallet_param.i18n.no_resualt;
+            }
+        },
         minimumInputLength: 3,
         ajax: {
             url: wallet_param.ajax_url,
