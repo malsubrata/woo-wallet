@@ -86,7 +86,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
                     'type' => ('credit' === $transaction->type) ? __('Credit', 'woo-wallet') : __('Debit', 'woo-wallet'),
                     'amount' => wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)),
                     'details' => $transaction->details,
-                    'date' => wc_string_to_datetime($transaction->date)->date(wc_date_format())
+                    'date' => wc_string_to_datetime($transaction->date)->date_i18n(wc_date_format())
                 );
             }
         }

@@ -36,7 +36,7 @@ $transactions = get_wallet_transactions();
             <td><?php echo $transaction->type == 'credit' ? wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)) : ' - '; ?></td>
             <td><?php echo $transaction->type == 'debit' ? wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)) : ' - '; ?></td>
             <td><?php echo $transaction->details; ?></td>
-            <td><?php echo wc_string_to_datetime($transaction->date)->date(wc_date_format()); ?></td>
+            <td><?php echo wc_string_to_datetime($transaction->date)->date_i18n(wc_date_format()); ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>
