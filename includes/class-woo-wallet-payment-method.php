@@ -122,6 +122,10 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
 
         // Remove cart
         WC()->cart->empty_cart();
+        
+        if($wallet_response){
+            do_action('woo_wallet_payment_processed', $order_id, $wallet_response);
+        }
 
         // Return thankyou redirect
         return array(
