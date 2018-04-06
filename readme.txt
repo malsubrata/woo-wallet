@@ -32,7 +32,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
 - Users can transfer wallet amount to other user.
-- Shortcode `woo_wallet` which will display user wallet page.
+- Shortcode `woo-wallet` which will display user wallet page.
 - Convert WooCommerce coupon into cashback.
 - Support WordPress Multisite Network
 - Supports multiple languages translations.
@@ -109,6 +109,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 8. WooCommerce refund.
 
 == Changelog ==
+
+= 1.1.6 -2018-04-XX =
+* Feature - REST API
 
 = 1.1.5 -2018-03-26 =
 * Feature - Display cashback amount in admin order page.

@@ -125,6 +125,7 @@ final class WooWallet {
         register_activation_hook(WOO_WALLET_PLUGIN_FILE, array('Woo_Wallet_Install', 'install'));
         add_filter('plugin_action_links_' . plugin_basename(WOO_WALLET_PLUGIN_FILE), array($this, 'plugin_action_links'));
         add_action('init', array($this, 'init'), 5);
+        add_action('rest_api_init', array($this, 'rest_api_init'));
         do_action('woo_wallet_init');
     }
 
@@ -157,6 +158,15 @@ final class WooWallet {
             flush_rewrite_rules();
             update_option('_wallet_enpoint_added', true);
         }
+    }
+    
+    /**
+     * WP REST API init.
+     */
+    public function rest_api_init(){
+        include_once( WOO_WALLET_ABSPATH . 'includes/api/class-woo-wallet-rest-controller.php' );
+        $rest_controller = new WOO_Wallet_REST_Controller();
+        $rest_controller->register_routes();
     }
 
     public function plugin_action_links($links) {

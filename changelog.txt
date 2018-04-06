@@ -1,5 +1,8 @@
 *** Changelog ***
 
+= 1.1.6 -2018-04-XX =
+* Feature - REST API
+
 = 1.1.5 -2018-03-26 =
 * Feature - Display cashback amount in admin order page.
 * Fix - User search in admin balance details page.
