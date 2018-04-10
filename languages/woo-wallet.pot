@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the WooCommerce Wallet package.
 msgid ""
 msgstr ""
-"Project-Id-Version: WooCommerce Wallet 1.1.5\n"
+"Project-Id-Version: WooCommerce Wallet 1.1.6\n"
 "Report-Msgid-Bugs-To: https://github.com/malsubrata/woo-wallet/issues\n"
-"POT-Creation-Date: 2018-03-31 16:27:08+00:00\n"
+"POT-Creation-Date: 2018-04-10 17:29:31+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -70,6 +70,11 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:142
 #: templates/wc-endpoint-wallet-transactions.php:27
 msgid "Debit"
+msgstr ""
+
+#: includes/api/class-woo-wallet-rest-controller.php:32
+#: includes/api/class-woo-wallet-rest-controller.php:56
+msgid "Unique identifier for the resource."
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:43
@@ -249,6 +254,10 @@ msgstr ""
 msgid "Invalid refund amount"
 msgstr ""
 
+#: includes/class-woo-wallet-ajax.php:74
+msgid "Wallet refund #"
+msgstr ""
+
 #: includes/class-woo-wallet-ajax.php:76
 msgid "Refund not credited to customer"
 msgstr ""
@@ -371,7 +380,7 @@ msgid "Cashback: %s"
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:42
-#: includes/marketplace/dokan/class-woo-wallet-dokan.php:22
+#: includes/marketplace/dokan/class-woo-wallet-dokan.php:23
 #: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp.php:17
 #: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp.php:22
 msgid "Wallet"
@@ -432,7 +441,7 @@ msgid "Your wallet balance is low. Please add %s to proceed with this transactio
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:116
-#: includes/class-woo-wallet-payment-method.php:142
+#: includes/class-woo-wallet-payment-method.php:146
 #: includes/class-woo-wallet-wallet.php:140
 msgid "For order payment #"
 msgstr ""
@@ -441,7 +450,7 @@ msgstr ""
 msgid "Payment via wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:146
+#: includes/class-woo-wallet-payment-method.php:150
 msgid "Insufficient funds in customer wallet"
 msgstr ""
 
@@ -450,7 +459,7 @@ msgid "Choose File"
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:30
-#: includes/class-woo-wallet-settings.php:218 includes/class-woo-wallet.php:164
+#: includes/class-woo-wallet-settings.php:218 includes/class-woo-wallet.php:174
 msgid "Settings"
 msgstr ""
 
@@ -645,11 +654,11 @@ msgstr ""
 msgid "Cashback for #%s has been debited upon cancellation"
 msgstr ""
 
-#: includes/class-woo-wallet.php:164
+#: includes/class-woo-wallet.php:174
 msgid "View Wallet settings"
 msgstr ""
 
-#: includes/class-woo-wallet.php:272
+#: includes/class-woo-wallet.php:282
 msgid ""
 "WooCommerce Wallet plugin requires <a "
 "href=\"https://wordpress.org/plugins/woocommerce/\">WooCommerce</a> plugins "
@@ -698,6 +707,22 @@ msgstr ""
 
 #: includes/emails/class-woo-wallet-email-new-transaction.php:143
 msgid "Choose which format of email to send."
+msgstr ""
+
+#: includes/marketplace/dokan/class-woo-wallet-dokan.php:75
+msgid "Something went wrong and the order can not be processed!"
+msgstr ""
+
+#: includes/marketplace/dokan/class-woo-wallet-dokan.php:81
+msgid "Order %s payment completed"
+msgstr ""
+
+#: includes/marketplace/dokan/class-woo-wallet-dokan.php:130
+msgid "Order %d payment Auto paid via Wallet"
+msgstr ""
+
+#: includes/marketplace/dokan/class-woo-wallet-dokan.php:135
+msgid "Commission received for order id "
 msgstr ""
 
 #: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp-gateway.php:28

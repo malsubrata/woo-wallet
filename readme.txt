@@ -3,8 +3,8 @@ Contributors: subratamal, bappa1995
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 4.9.4
-Stable tag: 1.1.5
+Tested up to: 4.9
+Stable tag: 1.1.6
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -33,6 +33,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - The admin can adjust the wallet amount of any customer from the backend.
 - Users can transfer wallet amount to other user.
 - Shortcode `woo-wallet` which will display user wallet page.
+- Built with a REST API
 - Convert WooCommerce coupon into cashback.
 - Support WordPress Multisite Network
 - Supports multiple languages translations.
@@ -93,6 +94,10 @@ If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://w
 
 Bugs can be reported either in our support forum or preferably on the [GitHub repository](https://github.com/malsubrata/woo-wallet/issues).
 
+= Where can I find the REST API documentation? =
+
+You can find the documentation of our [GitHub repository](https://github.com/malsubrata/woo-wallet).
+
 = This plugin is awesome! Can I contribute? =
 
 Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/woo-wallet) :)
@@ -110,10 +115,15 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
-= 1.1.6 -2018-04-XX =
-* Feature - REST API
+= 1.1.6 - 2018-04-11 =
+* Feature - REST API.
+* Feature - Auto transfer commission for dokan marketplace.
+* Add - DataTable language support.
+* Fix - Is array checking for transient option.
+* Fix - Date format for different language support.
+* Fix - Use of get_order_number instead of get_id to display order number.
 
-= 1.1.5 -2018-03-26 =
+= 1.1.5 - 2018-03-26 =
 * Feature - Display cashback amount in admin order page.
 * Fix - User search in admin balance details page.
 * Fix - Typos in localization strings #4
@@ -125,15 +135,6 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 * Fix - non-sef endpoint url generation #2
 * Tweak - AJAX user search dropdown in transfer fund page.
 * Tweak - Database query improvement.
-
-= 1.1.3 - 2018-03-05 =
-* Feature - Improved user search drop-down in transfer wallet amount page.
-* Fix - Payment gateway charge percent issue.
-* Fix - Cashback rule for non logged in user.
-* Fix - Coupon cashback rule for non logged in user.
-* Tweak - Improved look and feel of admin settings page.
-* Dev - Added filter `woo_wallet_is_enable_transfer`, `woo_wallet_payment_is_available`
-* Updated - Language file.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 

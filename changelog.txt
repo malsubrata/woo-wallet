@@ -1,9 +1,14 @@
 *** Changelog ***
 
-= 1.1.6 -2018-04-XX =
-* Feature - REST API
+= 1.1.6 - 2018-04-11 =
+* Feature - REST API.
+* Feature - Auto transfer commission for dokan marketplace.
+* Add - DataTable language support.
+* Fix - Is array checking for transient option.
+* Fix - Date format for different language support.
+* Fix - Use of get_order_number instead of get_id to display order number.
 
-= 1.1.5 -2018-03-26 =
+= 1.1.5 - 2018-03-26 =
 * Feature - Display cashback amount in admin order page.
 * Fix - User search in admin balance details page.
 * Fix - Typos in localization strings #4
