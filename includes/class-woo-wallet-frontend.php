@@ -339,7 +339,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (sizeof(wc()->cart->get_cart()) > 0 && $product) {
                 foreach (wc()->cart->get_cart() as $key => $cart_item) {
                     if ($cart_item['product_id'] == $product->get_id()) {
-                        wc_add_notice(__('You can not add another product while your cart contains with wallet recharge product.', 'woo-wallet'), 'error');
+                        wc_add_notice(apply_filters('woo_wallet_restrict_other_from_add_to_cart', __('You can not add another product while your cart contains with wallet rechargeable product.', 'woo-wallet')), 'error');
                         $valid = false;
                     }
                 }
