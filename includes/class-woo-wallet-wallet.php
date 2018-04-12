@@ -140,7 +140,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $transaction_id = $this->debit($order->get_customer_id(), get_post_meta($order_id, '_via_wallet_payment', true), __('For order payment #', 'woo-wallet') . $order->get_order_number());
                 if ($transaction_id) {
                     $order->add_order_note(sprintf(__('%s paid through wallet', 'woo-wallet'), wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
-                    update_wallet_transaction_meta($transaction_id, '_partial_payment', true, $order->get_id());
+                    update_wallet_transaction_meta($transaction_id, '_partial_payment', true, $order->get_customer_id());
                     update_post_meta($order_id, '_partial_pay_through_wallet_compleate', $transaction_id);
                 }
             }
