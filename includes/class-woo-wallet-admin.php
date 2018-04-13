@@ -34,6 +34,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 add_action('created_term', array($this, 'save_product_cashback_field'), 10, 3);
                 add_action('edit_term', array($this, 'save_product_cashback_field'), 10, 3);
             }
+            add_filter('woocommerce_custom_nav_menu_items', array($this, 'woocommerce_custom_nav_menu_items'));
         }
 
         /**
@@ -305,7 +306,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function add_wallet_payment_amount($order_id) {
             $order = wc_get_order($order_id);
-            if($total_cashback_amount = get_total_order_cashback_amount($order_id)){
+            if ($total_cashback_amount = get_total_order_cashback_amount($order_id)) {
                 ?>
                 <tr>
                     <td class="label"><?php _e('Cashback', 'woo-wallet'); ?>:</td>
@@ -422,7 +423,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $settings = array_merge($settings, $walletendpoint_settings);
             return $settings;
         }
-
+        /**
+         * Display product category wise cashback field.
+         */
         public function add_product_cat_cashback_field() {
             ?>
             <div class="form-field term-display-type-wrap">
@@ -438,7 +441,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </div>
             <?php
         }
-
+        /**
+         * Display product category wise cashback field.
+         */
         public function edit_product_cat_cashback_field($term) {
             $cashback_type = get_woocommerce_term_meta($term->term_id, '_woo_cashback_type', true);
             $cashback_amount = get_woocommerce_term_meta($term->term_id, '_woo_cashback_amount', true);
@@ -458,7 +463,12 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </tr>
             <?php
         }
-
+        /**
+         * Save cashback field on category save.
+         * @param int $term_id
+         * @param int $tt_id
+         * @param string $taxonomy
+         */
         public function save_product_cashback_field($term_id, $tt_id = '', $taxonomy = '') {
             if ('product_cat' === $taxonomy) {
                 if (isset($_POST['woo_product_cat_cashback_type'])) {
@@ -468,6 +478,15 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     update_woocommerce_term_meta($term_id, '_woo_cashback_amount', sanitize_text_field($_POST['woo_product_cat_cashback_amount']));
                 }
             }
+        }
+        /**
+         * Adds wallet endpoint to WooCommerce endpoints menu option.
+         * @param array $endpoints
+         * @return array
+         */
+        public function woocommerce_custom_nav_menu_items($endpoints) {
+            $endpoints['woo-wallet'] = __('My Wallet', 'woo-wallet');
+            return $endpoints;
         }
 
     }
