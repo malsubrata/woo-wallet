@@ -485,7 +485,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * @return array
          */
         public function woocommerce_custom_nav_menu_items($endpoints) {
-            $endpoints['woo-wallet'] = __('My Wallet', 'woo-wallet');
+            $endpoints[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
             return $endpoints;
         }
 
