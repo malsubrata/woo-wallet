@@ -138,15 +138,18 @@ final class WooWallet {
         $this->add_marketplace_support();
         add_filter('woocommerce_email_classes', array($this, 'woocommerce_email_classes'));
         add_filter('woocommerce_payment_gateways', array($this, 'load_gateway'));
-        add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_credit_purchase'));
-        add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_credit_purchase'));
         
-        add_action('woocommerce_order_status_on-hold', array($this->wallet, 'wallet_partial_payment'), 10);
-        add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_partial_payment'), 10);
-        add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_partial_payment'), 10);
-
-        add_action('woocommerce_order_status_processing', array($this->wallet, 'wallet_cashback'), 12);
-        add_action('woocommerce_order_status_completed', array($this->wallet, 'wallet_cashback'), 12);
+        foreach (apply_filters('wallet_credit_purchase_order_status', array('processing', 'completed')) as $status){
+            add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_credit_purchase'));
+        }
+        
+        foreach (apply_filters('wallet_partial_payment_order_status', array('on-hold', 'processing', 'completed')) as $status){
+            add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_partial_payment'));
+        }
+        
+        foreach (apply_filters('wallet_cashback_order_status', array('processing', 'completed')) as $status){
+            add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_cashback'), 12);
+        }
         
         add_action('woocommerce_order_status_cancelled', array($this->wallet, 'process_cancelled_order'));
 

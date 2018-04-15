@@ -110,11 +110,8 @@ if (!class_exists('Woo_Wallet_Wallet')) {
 
         public function wallet_cashback($order_id) {
             $order = wc_get_order($order_id);
-            if (get_post_meta($order_id, '_wc_wallet_cashback_credited', true)) {
-                return;
-            }
             /* General Cashback */
-            if (apply_filters('woo_wallet_general_cashback_amount', get_wallet_cashback_amount($order->get_id()), $order_id)) {
+            if (apply_filters('process_woo_wallet_general_cashback', !get_post_meta($order->get_id(), '_general_cashback_transaction_id', true), $order) && get_wallet_cashback_amount($order->get_id())) {
                 $transaction_id = $this->credit($order->get_customer_id(), get_wallet_cashback_amount($order->get_id()), __('Wallet credit through cashback #', 'woo-wallet') . $order->get_order_number());
                 if ($transaction_id) {
                     update_wallet_transaction_meta($transaction_id, '_type', 'cashback', $order->get_customer_id());
@@ -123,15 +120,17 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 }
             }
             /* Coupon Cashback */
-            if (apply_filters('woo_wallet_coupon_cashback_amount', get_post_meta($order->get_id(), '_coupon_cashback_amount', true), $order)) {
-                $transaction_id = $this->credit($order->get_customer_id(), get_post_meta($order->get_id(), '_coupon_cashback_amount', true), __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
-                if ($transaction_id) {
-                    update_wallet_transaction_meta($transaction_id, '_type', 'cashback', $order->get_customer_id());
-                    update_post_meta($order->get_id(), '_coupon_cashback_transaction_id', $transaction_id);
-                    do_action('woo_wallet_coupon_cashback_credited', $transaction_id);
+            if (apply_filters('process_woo_wallet_coupon_cashback', !get_post_meta($order->get_id(), '_coupon_cashback_transaction_id', true), $order) && get_post_meta($order->get_id(), '_coupon_cashback_amount', true)) {
+                $coupon_cashback_amount = apply_filters('woo_wallet_coupon_cashback_amount', get_post_meta($order->get_id(), '_coupon_cashback_amount', true), $order);
+                if ($coupon_cashback_amount) {
+                    $transaction_id = $this->credit($order->get_customer_id(), $coupon_cashback_amount, __('Wallet credit through cashback by applying coupon', 'woo-wallet'));
+                    if ($transaction_id) {
+                        update_wallet_transaction_meta($transaction_id, '_type', 'cashback', $order->get_customer_id());
+                        update_post_meta($order->get_id(), '_coupon_cashback_transaction_id', $transaction_id);
+                        do_action('woo_wallet_coupon_cashback_credited', $transaction_id);
+                    }
                 }
             }
-            update_post_meta($order_id, '_wc_wallet_cashback_credited', true);
         }
 
         public function wallet_partial_payment($order_id) {
