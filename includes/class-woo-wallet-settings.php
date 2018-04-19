@@ -109,12 +109,14 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Minimum Topup Amount', 'woo-wallet'),
                         'desc' => __('The minimum amount needed for wallet top up', 'woo-wallet'),
                         'type' => 'number',
+                        'step' => '0.01'
                     ),
                     array(
                         'name' => 'max_topup_amount',
                         'label' => __('Maximum Topup Amount', 'woo-wallet'),
                         'desc' => __('The maximum amount needed for wallet top up', 'woo-wallet'),
                         'type' => 'number',
+                        'step' => '0.01'
                     )), $this->wp_menu_locations(), array(
                     array(
                         'name' => 'is_auto_deduct_for_partial_payment',
@@ -158,18 +160,21 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Minimum Cart Amount', 'woo-wallet'),
                         'desc' => __('Enter applicable minimum cart amount for cashback', 'woo-wallet'),
                         'type' => 'number',
+                        'step' => '0.01'
                     ),
                     array(
                         'name' => 'cashback_amount',
                         'label' => __('Cashback Amount', 'woo-wallet'),
                         'desc' => __('Enter cashback amount', 'woo-wallet'),
                         'type' => 'number',
+                        'step' => '0.01'
                     ),
                     array(
                         'name' => 'max_cashback_amount',
                         'label' => __('Maximum Cashback Amount', 'woo-wallet'),
                         'desc' => __('Enter maximum cashback amount', 'woo-wallet'),
                         'type' => 'number',
+                        'step' => '0.01'
                     ),
                     array(
                         'name' => 'allow_min_cashback',

@@ -277,6 +277,8 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 woocommerce_wp_text_input(array(
                     'id' => 'wcwp_cashback_amount',
                     'type' => 'number',
+                    'data_type' => 'decimal',
+                    'custom_attributes' => array('step' => '0.01'),
                     'label' => __('Cashback Amount', 'woo-wallet'),
                     'description' => __('Enter cashback amount', 'woo-wallet'),
                     'value' => get_post_meta($post->ID, '_cashback_amount', true)
@@ -292,10 +294,10 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function save_post_product($post_ID) {
             if (isset($_POST['wcwp_cashback_type'])) {
-                update_post_meta($post_ID, '_cashback_type', $_POST['wcwp_cashback_type']);
+                update_post_meta($post_ID, '_cashback_type', esc_attr($_POST['wcwp_cashback_type']));
             }
             if (isset($_POST['wcwp_cashback_amount'])) {
-                update_post_meta($post_ID, '_cashback_amount', $_POST['wcwp_cashback_amount']);
+                update_post_meta($post_ID, '_cashback_amount', sanitize_text_field($_POST['wcwp_cashback_amount']));
             }
         }
 
@@ -437,7 +439,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </div>
             <div class="form-field term-display-type-wrap">
                 <label for="woo_product_cat_cashback_amount"><?php _e('Cashback Amount', 'woo-wallet'); ?></label>
-                <input type="number" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="" placeholder="">
+                <input type="number" step="0.01" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="" placeholder="">
             </div>
             <?php
         }
@@ -459,7 +461,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </tr>
             <tr class="form-field">
                 <th scope="row" valign="top"><?php _e('Cashback Amount', 'woo-wallet'); ?></th>
-                <td><input type="number" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="<?php echo $cashback_amount; ?>" placeholder=""></td>
+                <td><input type="number" step="0.01" name="woo_product_cat_cashback_amount" id="woo_product_cat_cashback_amount" value="<?php echo $cashback_amount; ?>" placeholder=""></td>
             </tr>
             <?php
         }

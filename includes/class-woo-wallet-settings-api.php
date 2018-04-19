@@ -208,7 +208,7 @@ if (!class_exists('Woo_Wallet_Settings_API')):
             $placeholder = empty($args['placeholder']) ? '' : ' placeholder="' . $args['placeholder'] . '"';
             $min = empty($args['min']) ? '' : ' min="' . $args['min'] . '"';
             $max = empty($args['max']) ? '' : ' max="' . $args['max'] . '"';
-            $step = empty($args['max']) ? '' : ' step="' . $args['step'] . '"';
+            $step = empty($args['step']) ? '' : ' step="' . $args['step'] . '"';
 
             $html = sprintf('<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step);
             $html .= $this->get_field_description($args);
