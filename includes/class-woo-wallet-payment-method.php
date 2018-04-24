@@ -114,8 +114,6 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             return;
         }
         $wallet_response = woo_wallet()->wallet->debit(get_current_user_id(), $order->get_total(''), __('For order payment #', 'woo-wallet') . $order->get_order_number());
-        // Mark as processing or on-hold
-        $order->update_status(apply_filters('woocommerce_wallet_process_payment_order_status', !$wallet_response ? 'on-hold' : 'processing', $order), __('Payment via wallet.', 'woo-wallet'));
 
         // Reduce stock levels
         wc_reduce_stock_levels($order_id);
@@ -124,6 +122,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
         WC()->cart->empty_cart();
         
         if($wallet_response){
+            $order->payment_complete($wallet_response);
             do_action('woo_wallet_payment_processed', $order_id, $wallet_response);
         }
 
