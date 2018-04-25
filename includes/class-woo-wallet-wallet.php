@@ -8,7 +8,6 @@ if (!class_exists('Woo_Wallet_Wallet')) {
 
     class Woo_Wallet_Wallet {
         /* WordPress user id */
-
         public $user_id = 0;
         /* user wallet balance */
         public $wallet_balance = 0;
@@ -105,6 +104,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 update_post_meta($order_id, '_wc_wallet_purchase_credited', true);
                 update_post_meta($order_id, '_wallet_payment_transaction_id', $transaction_id);
                 update_wallet_transaction_meta($transaction_id, '_wc_wallet_purchase_gateway_charge', $charge_amount, $order->get_customer_id());
+                do_action('woo_wallet_credit_purchase_completed', $transaction_id, $order);
             }
         }
 
@@ -141,6 +141,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                     $order->add_order_note(sprintf(__('%s paid through wallet', 'woo-wallet'), wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
                     update_wallet_transaction_meta($transaction_id, '_partial_payment', true, $order->get_customer_id());
                     update_post_meta($order_id, '_partial_pay_through_wallet_compleate', $transaction_id);
+                    do_action('woo_wallet_partial_payment_completed', $transaction_id, $order);
                 }
             }
         }
