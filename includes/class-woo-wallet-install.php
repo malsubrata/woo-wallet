@@ -14,6 +14,9 @@ class Woo_Wallet_Install {
         ),
         '1.1.0' => array(
             'woo_wallet_update_110_db_column'
+        ),
+        '1.1.7' => array(
+            'woo_wallet_update_117_db_column'
         )
     );
     
@@ -66,6 +69,7 @@ class Woo_Wallet_Install {
             balance DECIMAL(10,2) NOT NULL,
             currency varchar(20) NOT NULL,
             details longtext NULL,
+            deleted tinyint(1) NOT NULL DEFAULT 0,
             date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (transaction_id),
             KEY user_id (user_id)

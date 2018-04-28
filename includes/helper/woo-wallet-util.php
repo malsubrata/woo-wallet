@@ -178,6 +178,7 @@ if (!function_exists('get_wallet_transactions')) {
         $query['join'] = implode(' ', $joins);
 
         $query['where'] = "WHERE transactions.user_id = {$user_id}";
+        $query['where'] .= " AND transactions.deleted = 0";
 
         if (!empty($where_meta)) {
             foreach ($where_meta as $value) {
@@ -201,6 +202,13 @@ if (!function_exists('get_wallet_transactions')) {
                 }
             }
         }
+
+        if (!empty($after) || !empty($before)) {
+            $after = empty($after) ? '0000-00-00' : $after;
+            $before = empty($before) ? current_time('mysql', 1) : $before;
+            $query['where'] .= " AND `date` BETWEEN STR_TO_DATE('" . $after . "', '%Y-%m-%d %H:%i:%s') and STR_TO_DATE('" . $before . "', '%Y-%m-%d %H:%i:%s')";
+        }
+        
         if ($order_by) {
             $query['order_by'] = "ORDER BY transactions.{$order_by} {$order}";
         }
@@ -386,6 +394,7 @@ if (!function_exists('get_all_wallet_users')) {
 }
 
 if (!function_exists('get_total_order_cashback_amount')) {
+
     /**
      * Get total cashback amount of an order.
      * @param int $order_id
