@@ -35,6 +35,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 add_action('edit_term', array($this, 'save_product_cashback_field'), 10, 3);
             }
             add_filter('woocommerce_custom_nav_menu_items', array($this, 'woocommerce_custom_nav_menu_items'));
+
+            add_filter('manage_users_columns', array($this, 'manage_users_columns'));
+            add_filter('manage_users_custom_column', array($this, 'manage_users_custom_column'), 10, 3);
         }
 
         /**
@@ -425,6 +428,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $settings = array_merge($settings, $walletendpoint_settings);
             return $settings;
         }
+
         /**
          * Display product category wise cashback field.
          */
@@ -443,6 +447,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </div>
             <?php
         }
+
         /**
          * Display product category wise cashback field.
          */
@@ -465,6 +470,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             </tr>
             <?php
         }
+
         /**
          * Save cashback field on category save.
          * @param int $term_id
@@ -481,6 +487,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 }
             }
         }
+
         /**
          * Adds wallet endpoint to WooCommerce endpoints menu option.
          * @param array $endpoints
@@ -489,6 +496,32 @@ if (!class_exists('Woo_Wallet_Admin')) {
         public function woocommerce_custom_nav_menu_items($endpoints) {
             $endpoints[get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet')] = __('My Wallet', 'woo-wallet');
             return $endpoints;
+        }
+
+        /**
+         * Add column
+         * @param  array $columns
+         * @return array
+         */
+        public function manage_users_columns($columns) {
+            if (current_user_can('manage_woocommerce')) {
+                $columns['current_wallet_balance'] = __('Wallet Balance', 'woo-wallet');
+            }
+            return $columns;
+        }
+
+        /**
+         * Column value
+         * @param  string $value
+         * @param  string $column_name
+         * @param  int $user_id
+         * @return string
+         */
+        public function manage_users_custom_column($value, $column_name, $user_id) {
+            if ($column_name === 'current_wallet_balance') {
+                return woo_wallet()->wallet->get_wallet_balance($user_id);
+            }
+            return $value;
         }
 
     }
