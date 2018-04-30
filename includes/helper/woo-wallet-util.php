@@ -275,7 +275,8 @@ if (!function_exists('get_wallet_cashback_amount')) {
             if ('product' === $cashback_rule) {
                 if (sizeof(wc()->cart->get_cart()) > 0) {
                     foreach (wc()->cart->get_cart() as $key => $cart_item) {
-                        $product = wc_get_product($cart_item['product_id']);
+                        $cart_item_product_id = ( 0 != $cart_item['variation_id'] ) ? $cart_item['variation_id'] : $cart_item['product_id'];
+                        $product = wc_get_product($cart_item_product_id);
                         $qty = $cart_item['quantity'];
                         $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
                         $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
