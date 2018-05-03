@@ -1,6 +1,7 @@
 # Grunt
 /node_modules/
 none
+package-lock.json
 
 # Sass
 .sass-cache/
