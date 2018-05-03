@@ -1,4 +1,14 @@
 *** Changelog ***
+= 1.1.7 - 2018-05-03 =
+* Add - Filter `woo_wallet_restrict_other_from_add_to_cart`, `woo_wallet_disable_partial_payment`.
+* Add - Wallet endpoint to WooCommerce endpoints menu option.
+* Add - Wallet balance column to user table.
+* Add - Decimal support for number field.
+* Tweak - Wallet cashback logic.
+* Dev - Added `deleted` column to transaction table.
+* Fix - Wallet payment method.
+* Fix - number format.
+* Fix - Variable product cashback calculation.
 
 = 1.1.6 - 2018-04-11 =
 * Feature - REST API.

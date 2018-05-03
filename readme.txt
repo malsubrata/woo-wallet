@@ -100,7 +100,7 @@ Bugs can be reported either in our support forum or preferably on the [GitHub re
 
 = Where can I find the REST API documentation? =
 
-You can find the documentation of our [GitHub repository](https://github.com/malsubrata/woo-wallet/wiki/WooCommerce-Wallet-REST-API).
+You can find the documentation of our [Wallet REST API Docs](https://github.com/malsubrata/woo-wallet/wiki/WooCommerce-Wallet-REST-API).
 
 = This plugin is awesome! Can I contribute? =
 
@@ -119,6 +119,17 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Changelog ==
 
+= 1.1.7 - 2018-05-03 =
+* Add - Filter `woo_wallet_restrict_other_from_add_to_cart`, `woo_wallet_disable_partial_payment`.
+* Add - Wallet endpoint to WooCommerce endpoints menu option.
+* Add - Wallet balance column to user table.
+* Add - Decimal support for number field.
+* Tweak - Wallet cashback logic.
+* Dev - Added `deleted` column to transaction table.
+* Fix - Wallet payment method.
+* Fix - number format.
+* Fix - Variable product cashback calculation.
+
 = 1.1.6 - 2018-04-11 =
 * Feature - REST API.
 * Feature - Auto transfer commission for dokan marketplace.
@@ -133,12 +144,6 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 * Fix - Typos in localization strings #4
 * Fix - Partial payment and cashback issue upon order cancellation.
 * Updated - Language file.
-
-= 1.1.4 - 2018-03-19 =
-* Fix - Typo.
-* Fix - non-sef endpoint url generation #2
-* Tweak - AJAX user search dropdown in transfer fund page.
-* Tweak - Database query improvement.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
