@@ -85,7 +85,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
      * @return boolean
      */
     public function is_available() {
-        return apply_filters('woo_wallet_payment_is_available', (is_full_payment_through_wallet() && is_user_logged_in()));
+        return apply_filters('woo_wallet_payment_is_available', (parent::is_available() && is_full_payment_through_wallet() && is_user_logged_in()));
     }
     
     public function get_icon() {
