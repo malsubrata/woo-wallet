@@ -400,13 +400,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * @return array
          */
         public function add_woocommerce_account_endpoint_settings($settings) {
-            $walletendpoint_settings = array(
-                array(
-                    'title' => __('Wallet endpoints', 'woo-wallet'),
-                    'type' => 'title',
-                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woo-wallet'),
-                    'id' => 'wallet_endpoint_options'
-                ),
+            $settings_fields = apply_filters('woo_wallet_endpoint_settings_fields', array(
                 array(
                     'title' => __('My Wallet', 'woo-wallet'),
                     'desc' => __('Endpoint for the "My account &rarr; My Wallet" page.', 'woo-wallet'),
@@ -422,11 +416,23 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     'type' => 'text',
                     'default' => 'woo-wallet-transactions',
                     'desc_tip' => true,
-                ),
-                array('type' => 'sectionend', 'id' => 'wallet_endpoint_options'),
+                )
+            ));
+
+            $walletendpoint_settings = array(
+                array(
+                    'title' => __('Wallet endpoints', 'woo-wallet'),
+                    'type' => 'title',
+                    'desc' => __('Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint.', 'woo-wallet'),
+                    'id' => 'wallet_endpoint_options'
+                )
             );
-            $settings = array_merge($settings, $walletendpoint_settings);
-            return $settings;
+            foreach ($settings_fields as $settings_field) {
+                $walletendpoint_settings[] = $settings_field;
+            }
+            $walletendpoint_settings[] = array('type' => 'sectionend', 'id' => 'wallet_endpoint_options');
+
+            return array_merge($settings, $walletendpoint_settings);
         }
 
         /**

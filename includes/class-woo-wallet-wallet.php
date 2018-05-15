@@ -39,6 +39,9 @@ if (!class_exists('Woo_Wallet_Wallet')) {
          */
         public function get_wallet_balance($user_id = '', $context = 'view') {
             global $wpdb;
+            if(empty($user_id)){
+                $user_id = get_current_user_id();
+            }
             $this->set_user_id($user_id);
             $this->wallet_balance = 0;
             if ($this->user_id) {

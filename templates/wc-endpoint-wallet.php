@@ -42,7 +42,7 @@ global $wp;
         </div>
         <div style="clear: both"></div>
         <hr/>
-        <?php if (isset($wp->query_vars['woo-wallet']) || isset($_GET['wallet_action'])) { ?>
+        <?php if ((isset($wp->query_vars['woo-wallet']) && !empty($wp->query_vars['woo-wallet'])) || isset($_GET['wallet_action'])) { ?>
             <?php if (apply_filters('woo_wallet_is_enable_top_up', true) && ((isset($wp->query_vars['woo-wallet']) && 'add' === $wp->query_vars['woo-wallet']) || (isset($_GET['wallet_action']) && 'add' === $_GET['wallet_action']))) { ?>
                 <form method="post" action="">
                     <div class="woo-wallet-add-amount">
