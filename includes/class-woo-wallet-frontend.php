@@ -120,7 +120,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     ),
                     'non_valid_email_text' => __('Please enter a valid email address', 'woo-wallet'),
                     'no_resualt' => __('No results found', 'woo-wallet'),
-                    'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet')
+                    'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet'),
+                    'searching' => __('Searching…', 'woo-wallet')
                 )
             );
             wp_localize_script('wc-endpoint-wallet', 'wallet_param', $wallet_localize_param);

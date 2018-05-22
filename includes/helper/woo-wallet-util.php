@@ -208,7 +208,7 @@ if (!function_exists('get_wallet_transactions')) {
             $before = empty($before) ? current_time('mysql', 1) : $before;
             $query['where'] .= " AND `date` BETWEEN STR_TO_DATE('" . $after . "', '%Y-%m-%d %H:%i:%s') and STR_TO_DATE('" . $before . "', '%Y-%m-%d %H:%i:%s')";
         }
-        
+
         if ($order_by) {
             $query['order_by'] = "ORDER BY transactions.{$order_by} {$order}";
         }
@@ -233,6 +233,22 @@ if (!function_exists('get_wallet_transactions')) {
         $result = $cached_results[$user_id][$query_hash];
 
         return $result;
+    }
+
+}
+
+if (!function_exists('update_wallet_transaction')) {
+
+    function update_wallet_transaction($transaction_id, $user_id, $data = array(), $format = NULL) {
+        global $wpdb;
+        $update = false;
+        if (!empty($data)) {
+            $update = $wpdb->update("{$wpdb->base_prefix}woo_wallet_transactions", $data, array('transaction_id' => $transaction_id), $format, array('%d'));
+            if ($update) {
+                clear_woo_wallet_cache($user_id);
+            }
+        }
+        return $update;
     }
 
 }

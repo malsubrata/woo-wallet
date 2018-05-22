@@ -26,6 +26,9 @@ jQuery(function ($) {
                     return wallet_param.i18n.non_valid_email_text;
                 } 
                 return wallet_param.i18n.no_resualt;
+            },
+            searching: function (){
+                return wallet_param.i18n.searching;
             }
         },
         minimumInputLength: 3,
