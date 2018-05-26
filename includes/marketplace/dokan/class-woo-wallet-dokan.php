@@ -11,6 +11,8 @@ if (!class_exists('Woo_Wallet_Dokan')) {
             add_filter('dokan_withdraw_methods', array($this, 'load_withdraw_method'));
             add_filter('dokan_get_seller_active_withdraw_methods', array($this, 'dokan_get_seller_active_withdraw_methods'));
             add_action('woo_wallet_payment_processed', array($this, 'woo_wallet_payment_processed'));
+            add_action('dokan_product_edit_after_options', array($this, 'dokan_product_edit_after_options'));
+            add_action('dokan_product_updated', array($this, 'dokan_product_updated'));
         }
 
         /**
@@ -138,6 +140,61 @@ if (!class_exists('Woo_Wallet_Dokan')) {
                         $withdraw->insert_withdraw($data);
                     }
                 }
+            }
+        }
+
+        public function dokan_product_edit_after_options($post_id) {
+            // REMOVE IF DOKAN MERGE PULL REQUEST
+            global $post;
+            if (!$post_id) {
+                if (isset($post->ID) && $post->ID && $post->post_type == 'product') {
+                    $post_id = $post->ID;
+                }
+                if (isset($_GET['product_id'])) {
+                    $post_id = intval($_GET['product_id']);
+                }
+            }
+            // END
+            ?>
+            <div class="dokan-cashback-options dokan-edit-row dokan-clearfix" style="margin-bottom: 20px;">
+                <div class="dokan-section-heading" data-togglehandler="dokan_cashback_options">
+                    <h2><i class="fa fa-cog" aria-hidden="true"></i> <?php _e('Cashback Options', 'woo-wallet'); ?></h2>
+                    <p><?php _e('Set product cashback options', 'dokan-lite'); ?></p>
+                    <a href="#" class="dokan-section-toggle">
+                        <i class="fa fa-sort-desc fa-flip-vertical" aria-hidden="true"></i>
+                    </a>
+                    <div class="dokan-clearfix"></div>
+                </div>
+
+                <div class="dokan-section-content">
+
+                    <div class="dokan-form-group content-half-part">
+                        <label for="_cashback_type" class="form-label"><?php _e('Cashback type', 'woo-wallet'); ?></label>
+                        <?php
+                        dokan_post_input_box($post_id, '_cashback_type', array('options' => array(
+                                'percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')
+                            )), 'select');
+                        ?>
+                    </div>
+
+                    <div class="dokan-form-group content-half-part">
+                        <label for="_cashback_amount" class="form-label"><?php _e('Cashback Amount', 'woo-wallet'); ?></label>
+                        <div class="dokan-input-group">
+                            <span class="dokan-input-group-addon"><?php echo get_woocommerce_currency_symbol(); ?></span>
+                            <?php dokan_post_input_box($post_id, '_cashback_amount', array('class' => 'dokan-product-sales-price', 'placeholder' => __('0.00', 'woo-wallet')), 'number'); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+        }
+
+        public function dokan_product_updated($post_id) {
+            if (isset($_POST['_cashback_type'])) {
+                update_post_meta($post_id, '_cashback_type', esc_attr($_POST['_cashback_type']));
+            }
+            if (isset($_POST['_cashback_amount'])) {
+                update_post_meta($post_id, '_cashback_amount', sanitize_text_field($_POST['_cashback_amount']));
             }
         }
 
