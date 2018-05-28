@@ -1,5 +1,4 @@
 <?php
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -11,8 +10,10 @@ if (!class_exists('Woo_Wallet_Dokan')) {
             add_filter('dokan_withdraw_methods', array($this, 'load_withdraw_method'));
             add_filter('dokan_get_seller_active_withdraw_methods', array($this, 'dokan_get_seller_active_withdraw_methods'));
             add_action('woo_wallet_payment_processed', array($this, 'woo_wallet_payment_processed'));
-            add_action('dokan_product_edit_after_options', array($this, 'dokan_product_edit_after_options'));
-            add_action('dokan_product_updated', array($this, 'dokan_product_updated'));
+            if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
+                add_action('dokan_product_edit_after_options', array($this, 'dokan_product_edit_after_options'));
+                add_action('dokan_product_updated', array($this, 'dokan_product_updated'));
+            }
         }
 
         /**

@@ -6,11 +6,11 @@
  * Description: The leading wallet plugin with partial payment, refunds, cashbacks and what not!
  * Author: Subrata Mal
  * Author URI: https://profiles.wordpress.org/subratamal
- * Version: 1.1.7
+ * Version: 1.1.8
  * Requires at least: 4.4
  * Tested up to: 4.9
  * WC requires at least: 3.0
- * WC tested up to: 3.3
+ * WC tested up to: 3.4
  * 
  * Text Domain: woo-wallet
  * Domain Path: /languages/

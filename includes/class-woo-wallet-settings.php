@@ -140,12 +140,22 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'type' => 'checkbox',
                     ),
                     array(
+                        'name' => 'process_cashback_status',
+                        'label' => __('Process cashback', 'woo-wallet'),
+                        'desc' => __('Select order status to process cashback', 'woo-wallet'),
+                        'type' => 'select',
+                        'options' => array('pending' => __('Pending payment', 'woo-wallet'), 'on-hold' => __('On hold', 'woo-wallet'), 'processing' => __('Processing', 'woo-wallet'), 'completed' => __('Completed', 'woo-wallet')),
+                        'default' => array('processing', 'completed'),
+                        'size' => 'regular-text wc-enhanced-select',
+                        'multiple' => true
+                    ),
+                    array(
                         'name' => 'cashback_rule',
                         'label' => __('Cashback Rule', 'woo-wallet'),
                         'desc' => __('Select Cashback Rule cart or product wise', 'woo-wallet'),
                         'type' => 'select',
                         'options' => array('cart' => __('Cart wise', 'woo-wallet'), 'product' => __('Product wise', 'woo-wallet'), 'product_cat' => __('Product category wise', 'woo-wallet')),
-                        'size' => 'regular-text'
+                        'size' => 'regular-text wc-enhanced-select'
                     ),
                     array(
                         'name' => 'cashback_type',
@@ -153,7 +163,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('Select cashback type percentage or fixed', 'woo-wallet'),
                         'type' => 'select',
                         'options' => array('percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')),
-                        'size' => 'regular-text'
+                        'size' => 'regular-text wc-enhanced-select'
                     ),
                     array(
                         'name' => 'min_cart_amount',
@@ -195,7 +205,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('Select gateway charge type percentage or fixed', 'woo-wallet'),
                         'type' => 'select',
                         'options' => array('percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')),
-                        'size' => 'regular-text'
+                        'size' => 'regular-text wc-enhanced-select'
                     )), $this->get_wc_payment_gateways(), array()
                 )
             );
@@ -244,7 +254,8 @@ if (!class_exists('Woo_Wallet_Settings')):
                             'name' => $gateway->id,
                             'label' => $method_title,
                             'desc' => __('Enter gateway charge amount for ', 'woo-wallet') . $method_title,
-                            'type' => 'text',
+                            'type' => 'number',
+                            'step' => '0.01',
                         );
                     } else {
                         $gateways[] = $gateway->id;

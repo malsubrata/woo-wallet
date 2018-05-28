@@ -299,7 +299,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
                         $product_wise_cashback_amount = get_post_meta($product_id, '_cashback_amount', true) ? get_post_meta($product_id, '_cashback_amount', true) : 0;
                         if ($product_wise_cashback_type && $product_wise_cashback_amount) {
                             if ('percent' === $product_wise_cashback_type) {
-                                $product_wise_percent_cashback_amount = $product->get_price('edit') * $qty * ($product_wise_cashback_amount / 100);
+                                $product_wise_percent_cashback_amount = filter_var(strip_tags(wc()->cart->get_product_price($cart_item['data'])), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) * $qty * ($product_wise_cashback_amount / 100);
                                 if ($max_cashbak_amount && $product_wise_percent_cashback_amount > $max_cashbak_amount) {
                                     $cashback_amount += $max_cashbak_amount;
                                 } else {
@@ -310,7 +310,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
                             }
                         } else {
                             if ('percent' === $global_cashbak_type) {
-                                $product_wise_percent_cashback_amount = $product->get_price('edit') * $qty * ($global_cashbak_amount / 100);
+                                $product_wise_percent_cashback_amount = filter_var(strip_tags(wc()->cart->get_product_price($cart_item['data'])), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) * $qty * ($global_cashbak_amount / 100);
                                 if ($max_cashbak_amount && $product_wise_percent_cashback_amount > $max_cashbak_amount) {
                                     $cashback_amount += $max_cashbak_amount;
                                 } else {
@@ -335,7 +335,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
                                 $category_wise_cashback_amount = get_woocommerce_term_meta($term_id, '_woo_cashback_amount', true);
                                 if ($category_wise_cashback_type && $category_wise_cashback_amount) {
                                     if ('percent' === $category_wise_cashback_type) {
-                                        $category_wise_cashback_amount = $product->get_price('edit') * $qty * ($category_wise_cashback_amount / 100);
+                                        $category_wise_cashback_amount = filter_var(strip_tags(wc()->cart->get_product_price($cart_item['data'])), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) * $qty * ($category_wise_cashback_amount / 100);
                                         if ($max_cashbak_amount && $category_wise_cashback_amount > $max_cashbak_amount) {
                                             $category_wise_cashback_amount = $max_cashbak_amount;
                                         }
@@ -348,7 +348,7 @@ if (!function_exists('get_wallet_cashback_amount')) {
                             $cashback_amount += ('on' === woo_wallet()->settings_api->get_option('allow_min_cashback', '_wallet_settings_credit', 'on')) ? min($category_wise_cashback_amounts) : max($category_wise_cashback_amounts);
                         } else {
                             if ('percent' === $global_cashbak_type) {
-                                $category_wise_cashback_amount = $product->get_price('edit') * $qty * ($global_cashbak_amount / 100);
+                                $category_wise_cashback_amount = filter_var(strip_tags(wc()->cart->get_product_price($cart_item['data'])), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) * $qty * ($global_cashbak_amount / 100);
                                 if ($max_cashbak_amount && $category_wise_cashback_amount > $max_cashbak_amount) {
                                     $cashback_amount += $max_cashbak_amount;
                                 } else {

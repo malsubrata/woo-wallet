@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 global $wp;
+do_action('woo_wallet_before_my_wallet_content');
 ?>
 
 <div class="woo-wallet-my-wallet-container">
@@ -102,3 +103,4 @@ global $wp;
         ?>
     </div>
 </div>
+<?php do_action('woo_wallet_after_my_wallet_content');

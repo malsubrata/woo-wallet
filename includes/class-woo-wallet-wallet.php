@@ -8,6 +8,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
 
     class Woo_Wallet_Wallet {
         /* WordPress user id */
+
         public $user_id = 0;
         /* user wallet balance */
         public $wallet_balance = 0;
@@ -39,7 +40,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
          */
         public function get_wallet_balance($user_id = '', $context = 'view') {
             global $wpdb;
-            if(empty($user_id)){
+            if (empty($user_id)) {
                 $user_id = get_current_user_id();
             }
             $this->set_user_id($user_id);
@@ -157,13 +158,15 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $order->add_order_note(sprintf(__('Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet'), wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
                 delete_post_meta($order_id, '_partial_pay_through_wallet_compleate');
             }
-
+            
             /** debit cashback amount * */
-            if (apply_filters('woo_wallet_debit_cashback_upon_cancellation', true) && get_post_meta($order_id, '_wc_wallet_cashback_credited', true)) {
+            if (apply_filters('woo_wallet_debit_cashback_upon_cancellation', get_total_order_cashback_amount($order_id))) {
                 $total_cashback_amount = get_total_order_cashback_amount($order_id);
                 if ($total_cashback_amount) {
-                    $this->debit($order->get_customer_id(), $total_cashback_amount, sprintf(__('Cashback for #%s has been debited upon cancellation', 'woo-wallet'), $order->get_order_number()));
-                    delete_post_meta($order_id, '_wc_wallet_cashback_credited');
+                    if ($this->debit($order->get_customer_id(), $total_cashback_amount, sprintf(__('Cashback for #%s has been debited upon cancellation', 'woo-wallet'), $order->get_order_number()))) {
+                        delete_post_meta($order_id, '_general_cashback_transaction_id');
+                        delete_post_meta($order_id, '_coupon_cashback_transaction_id');
+                    }
                 }
             }
         }

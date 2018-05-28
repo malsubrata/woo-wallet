@@ -13,11 +13,13 @@ final class WooWallet {
      * @since 1.0.0
      */
     protected static $_instance = null;
+
     /**
      * Setting API instance
      * @var Woo_Wallet_Settings_API 
      */
     public $settings_api = null;
+
     /**
      * wallet instance
      * @var Woo_Wallet_Wallet 
@@ -56,7 +58,7 @@ final class WooWallet {
         $this->define('WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/');
         $this->define('WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE));
         $this->define('WOO_WALLET_ICON', 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/PjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDMzNC44NzcgMzM0Ljg3NyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMzM0Ljg3NyAzMzQuODc3OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGc+PHBhdGggZD0iTTMzMy4xOTYsMTU1Ljk5OWgtMTYuMDY3VjgyLjA5YzAtMTcuNzE5LTE0LjQxNS0zMi4xMzQtMzIuMTM0LTMyLjEzNGgtMjEuNzYxTDI0MC45NjUsOS45MTdDMjM3LjU3MSwzLjc5OCwyMzEuMTEyLDAsMjI0LjEwNywwYy0zLjI2NSwwLTYuNTA0LDAuODQyLTkuMzY0LDIuNDI5bC04NS40NjQsNDcuNTI2SDMzLjgxNWMtMTcuNzE5LDAtMzIuMTM0LDE0LjQxNS0zMi4xMzQsMzIuMTM0djIyMC42NTNjMCwxNy43MTksMTQuNDE1LDMyLjEzNCwzMi4xMzQsMzIuMTM0aDI1MS4xOGMxNy43MTksMCwzMi4xMzQtMTQuNDE1LDMyLjEzNC0zMi4xMzR2LTY0LjgwMmgxNi4wNjdWMTU1Ljk5OXogTTI4NC45OTUsNjIuODA5YzkuODk3LDAsMTcuOTgyLDcuNTE5LDE5LjA2OCwxNy4xNGgtMjQuMTUybC05LjUyNS0xNy4xNEgyODQuOTk1eiBNMjIwLjk5NiwxMy42NjNjMy4wMTQtMS42OSw3LjA3LTAuNTA4LDguNzM0LDIuNDk0bDM1LjQ3Niw2My43ODZIMTAxLjc5OEwyMjAuOTk2LDEzLjY2M3ogTTMwNC4yNzUsMzAyLjc0MmMwLDEwLjYzLTguNjUxLDE5LjI4MS0xOS4yODEsMTkuMjgxSDMzLjgxNWMtMTAuNjMsMC0xOS4yODEtOC42NTEtMTkuMjgxLTE5LjI4MVY4Mi4wOWMwLTEwLjYzLDguNjUxLTE5LjI4MSwxOS4yODEtMTkuMjgxaDcyLjM1M0w3NS4zNDUsNzkuOTVIMzcuODMyYy0zLjU1NCwwLTYuNDI3LDIuODc5LTYuNDI3LDYuNDI3czIuODczLDYuNDI3LDYuNDI3LDYuNDI3aDE0LjM5NmgyMzQuODNoMTcuMjE3djYzLjIwMWgtNDYuOTk5Yy0yMS44MjYsMC0zOS41ODksMTcuNzY0LTM5LjU4OSwzOS41ODl2Mi43NjRjMCwyMS44MjYsMTcuNzY0LDM5LjU4OSwzOS41ODksMzkuNTg5aDQ2Ljk5OVYzMDIuNzQyeiBNMzIwLjM0MiwyMjUuMDg3aC0zLjIxM2gtNTkuODUzYy0xNC43NDMsMC0yNi43MzYtMTEuOTkyLTI2LjczNi0yNi43MzZ2LTIuNzY0YzAtMTQuNzQzLDExLjk5Mi0yNi43MzYsMjYuNzM2LTI2LjczNmg1OS44NTNoMy4yMTNWMjI1LjA4N3ogTTI3Ni45NjEsMTk3LjQ5N2MwLDcuODQxLTYuMzUsMTQuMTktMTQuMTksMTQuMTljLTcuODQxLDAtMTQuMTktNi4zNS0xNC4xOS0xNC4xOXM2LjM1LTE0LjE5LDE0LjE5LTE0LjE5QzI3MC42MTIsMTgzLjMwNiwyNzYuOTYxLDE4OS42NjIsMjc2Ljk2MSwxOTcuNDk3eiIvPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48L3N2Zz4=');
-        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.1.7');
+        $this->define('WOO_WALLET_PLUGIN_VERSION', '1.1.8');
     }
 
     /**
@@ -139,19 +141,19 @@ final class WooWallet {
         $this->add_marketplace_support();
         add_filter('woocommerce_email_classes', array($this, 'woocommerce_email_classes'));
         add_filter('woocommerce_payment_gateways', array($this, 'load_gateway'));
-        
-        foreach (apply_filters('wallet_credit_purchase_order_status', array('processing', 'completed')) as $status){
+
+        foreach (apply_filters('wallet_credit_purchase_order_status', array('processing', 'completed')) as $status) {
             add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_credit_purchase'));
         }
-        
-        foreach (apply_filters('wallet_partial_payment_order_status', array('on-hold', 'processing', 'completed')) as $status){
+
+        foreach (apply_filters('wallet_partial_payment_order_status', array('on-hold', 'processing', 'completed')) as $status) {
             add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_partial_payment'));
         }
-        
-        foreach (apply_filters('wallet_cashback_order_status', array('processing', 'completed')) as $status){
+
+        foreach (apply_filters('wallet_cashback_order_status', $this->settings_api->get_option('process_cashback_status', '_wallet_settings_credit', array('processing', 'completed'))) as $status) {
             add_action('woocommerce_order_status_' . $status, array($this->wallet, 'wallet_cashback'), 12);
         }
-        
+
         add_action('woocommerce_order_status_cancelled', array($this->wallet, 'process_cancelled_order'));
 
         add_filter('woocommerce_reports_get_order_report_query', array($this, 'woocommerce_reports_get_order_report_query'));
@@ -163,11 +165,11 @@ final class WooWallet {
             update_option('_wallet_enpoint_added', true);
         }
     }
-    
+
     /**
      * WP REST API init.
      */
-    public function rest_api_init(){
+    public function rest_api_init() {
         include_once( WOO_WALLET_ABSPATH . 'includes/api/class-woo-wallet-rest-controller.php' );
         $rest_controller = new WOO_Wallet_REST_Controller();
         $rest_controller->register_routes();
@@ -232,7 +234,7 @@ final class WooWallet {
             include_once( WOO_WALLET_ABSPATH . 'includes/marketplace/wc-merketplace/class-woo-wallet-wcmp-gateway.php' );
             include_once( WOO_WALLET_ABSPATH . 'includes/marketplace/wc-merketplace/class-woo-wallet-wcmp.php' );
         }
-        if(class_exists('WeDevs_Dokan')){
+        if (class_exists('WeDevs_Dokan')) {
             include_once( WOO_WALLET_ABSPATH . 'includes/marketplace/dokan/class-woo-wallet-dokan.php' );
         }
     }

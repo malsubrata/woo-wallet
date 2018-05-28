@@ -13,6 +13,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * Class constructor
          */
         public function __construct() {
+            add_action('admin_init', array($this, 'admin_init'));
             add_action('admin_enqueue_scripts', array($this, 'admin_scripts'), 10);
             add_action('admin_menu', array($this, 'admin_menu'), 50);
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
@@ -26,8 +27,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
 
             add_filter('admin_footer_text', array($this, 'admin_footer_text'), 1);
-
-            add_filter('woocommerce_account_settings', array($this, 'add_woocommerce_account_endpoint_settings'));
+            
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product_cat' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
                 add_action('product_cat_add_form_fields', array($this, 'add_product_cat_cashback_field'));
                 add_action('product_cat_edit_form_fields', array($this, 'edit_product_cat_cashback_field'));
@@ -38,6 +38,16 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
             add_filter('manage_users_columns', array($this, 'manage_users_columns'));
             add_filter('manage_users_custom_column', array($this, 'manage_users_custom_column'), 10, 3);
+        }
+        /**
+         * Admin init
+         */
+        public function admin_init(){
+            if(version_compare( WC_VERSION, '3.4', '<' )){
+                add_filter('woocommerce_account_settings', array($this, 'add_woocommerce_account_endpoint_settings'));
+            } else{
+                add_filter('woocommerce_settings_pages', array($this, 'add_woocommerce_account_endpoint_settings'));
+            }
         }
 
         /**

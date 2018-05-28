@@ -28,7 +28,7 @@ if (!class_exists('Woo_Wallet_Settings_API')):
          * Class constructor
          */
         public function __construct() {
-            add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+            add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'), 15);
         }
 
         /**
@@ -37,11 +37,12 @@ if (!class_exists('Woo_Wallet_Settings_API')):
         function admin_enqueue_scripts() {
             wp_enqueue_style('dashicons');
             wp_enqueue_style('wp-color-picker');
+            wp_enqueue_style('woocommerce_admin_styles');
 
             wp_enqueue_media();
             wp_enqueue_script('wp-color-picker');
             wp_enqueue_script('jquery');
-            
+            wp_enqueue_script( 'wc-enhanced-select' );
         }
 
         /**
@@ -143,6 +144,7 @@ if (!class_exists('Woo_Wallet_Settings_API')):
                         'min' => isset($option['min']) ? $option['min'] : '',
                         'max' => isset($option['max']) ? $option['max'] : '',
                         'step' => isset($option['step']) ? $option['step'] : '',
+                        'multiple' => isset($option['multiple']) ? $option['multiple'] : ''
                     );
 
                     add_settings_field("{$section}[{$name}]", $label, $callback, $section, $section, $args);
@@ -206,9 +208,9 @@ if (!class_exists('Woo_Wallet_Settings_API')):
             $size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
             $type = isset($args['type']) ? $args['type'] : 'number';
             $placeholder = empty($args['placeholder']) ? '' : ' placeholder="' . $args['placeholder'] . '"';
-            $min = empty($args['min']) ? '' : ' min="' . $args['min'] . '"';
+            $min = empty($args['min']) ? ' min="0"' : ' min="' . $args['min'] . '"';
             $max = empty($args['max']) ? '' : ' max="' . $args['max'] . '"';
-            $step = empty($args['step']) ? '' : ' step="' . $args['step'] . '"';
+            $step = empty($args['step']) ? ' step="0.01"' : ' step="' . $args['step'] . '"';
 
             $html = sprintf('<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step);
             $html .= $this->get_field_description($args);
@@ -286,13 +288,23 @@ if (!class_exists('Woo_Wallet_Settings_API')):
          * @param array   $args settings field args
          */
         function callback_select($args) {
-
-            $value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
+            
             $size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular-text';
-            $html = sprintf('<select class="%1$s" name="%2$s[%3$s]" id="%2$s-%3$s">', $size, $args['section'], $args['id']);
-
+            $multiple = !empty($args['multiple']) ? ' multiple="true"' : '';
+            if($multiple){
+                $value = $this->get_option($args['id'], $args['section'], $args['std']);
+                $html = sprintf('<select class="%1$s" name="%2$s[%3$s][]" id="%2$s-%3$s" %4$s>', $size, $args['section'], $args['id'], $multiple);
+            } else{
+                $value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
+                $html = sprintf('<select class="%1$s" name="%2$s[%3$s]" id="%2$s-%3$s">', $size, $args['section'], $args['id']);
+            }
+            
             foreach ($args['options'] as $key => $label) {
-                $html .= sprintf('<option value="%s"%s>%s</option>', $key, selected($value, $key, false), $label);
+                if($multiple){
+                    $html .= sprintf('<option value="%s"%s>%s</option>', $key, selected(in_array($key, $value), true, false), $label);
+                } else{
+                    $html .= sprintf('<option value="%s"%s>%s</option>', $key, selected($value, $key, false), $label);
+                }
             }
 
             $html .= sprintf('</select>');
@@ -494,7 +506,7 @@ if (!class_exists('Woo_Wallet_Settings_API')):
             }
 
             foreach ($this->settings_sections as $tab) {
-                if(!isset($tab['icon']) || empty($tab['icon'])){
+                if (!isset($tab['icon']) || empty($tab['icon'])) {
                     $tab['icon'] = 'dashicons-admin-generic';
                 }
                 $html .= sprintf('<a href="#%1$s" class="nav-tab" id="%1$s-tab"><span class="dashicons %2$s"></span> %3$s</a>', $tab['id'], $tab['icon'], $tab['title']);
@@ -559,5 +571,7 @@ if (!class_exists('Woo_Wallet_Settings_API')):
         }
 
     }
+
+    
 
 endif;

@@ -625,8 +625,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('selectWoo');
                 wp_enqueue_script('wc-endpoint-wallet');
-                if (isset($_GET['wallet_action']) && 'view_transactions' === $_GET['wallet_action']) {
-                    woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+                if (isset($_GET['wallet_action']) && !empty($_GET['wallet_action'])) {
+                    if('view_transactions' === $_GET['wallet_action']){
+                        woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+                    }
+                    do_action('woo_wallet_shortcode_action', $_GET['wallet_action']);
                 } else {
                     woo_wallet()->get_template('wc-endpoint-wallet.php');
                 }
