@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
-Stable tag: 1.1.8
+Stable tag: 1.1.9
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -118,8 +118,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 8. WooCommerce refund.
 
 == Changelog ==
+= 1.1.9 - 2018-05-30 =
+* Fix - Cashback calculation.
 
-= 1.1.8 -2018 -05-28 =
+= 1.1.8 - 2018-05-28 =
 * Add - Settings option to choose order status for processing cashback.
 * Add - Filters in my wallet page and wallet icon constant.
 * Add - Filter `woo_wallet_order_refunded`.

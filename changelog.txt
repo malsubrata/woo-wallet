@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.1.9 - 2018-05-30 =
+* Fix - Cashback calculation.
+
 = 1.1.8 -2018 -05-28 =
 * Add - Settings option to choose order status for processing cashback.
 * Add - Filters in my wallet page and wallet icon constant.
