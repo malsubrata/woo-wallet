@@ -398,7 +398,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
 					});
 				");
                 } else {
-                    $footer_text = __('Thank you using WooCommerce Wallet.', 'woo-wallet');
+                    $footer_text = __('Thank you for using WooCommerce Wallet.', 'woo-wallet');
                 }
             }
             return $footer_text;

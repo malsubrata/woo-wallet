@@ -305,7 +305,8 @@ if (!class_exists('Woo_Wallet_Settings')):
                     'options' => array(
                         'taxable' => __('Taxable', 'woo-wallet'),
                         'none' => _x('None', 'Tax status', 'woo-wallet'),
-                    )
+                    ),
+                    'size' => 'regular-text wc-enhanced-select',
                 );
                 $tax_options[] = array(
                     'name' => '_tax_class',
@@ -314,6 +315,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                     'type' => 'select',
                     'options' => wc_get_product_tax_class_options(),
                     'desc' => __('Choose a tax class for rechargeable product. Tax classes are used to apply different tax rates specific to certain types of product.', 'woo-wallet'),
+                    'size' => 'regular-text wc-enhanced-select',
                 );
             }
             return $tax_options;
