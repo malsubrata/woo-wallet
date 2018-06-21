@@ -529,10 +529,10 @@ if (!class_exists('Woo_Wallet_Settings_API')):
                     <div id="<?php echo $form['id']; ?>" class="group" style="display: none;">
                         <form method="post" action="options.php">
                             <?php
-                            do_action('wsa_form_top_' . $form['id'], $form);
+                            do_action('woo_wallet_form_top_' . $form['id'], $form);
                             settings_fields($form['id']);
                             do_settings_sections($form['id']);
-                            do_action('wsa_form_bottom_' . $form['id'], $form);
+                            do_action('woo_wallet_form_bottom_' . $form['id'], $form);
                             if (isset($this->settings_fields[$form['id']])):
                                 ?>
                                 <div style="padding-left: 10px">
