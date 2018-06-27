@@ -131,6 +131,21 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('If checked user will be able to transfer fund to another user.', 'woo-wallet'),
                         'type' => 'checkbox',
                         'default' => 'on'
+                    ),
+                    array(
+                        'name' => 'transfer_charge_type',
+                        'label' => __('Transfer charge type', 'woo-wallet'),
+                        'desc' => __('Select transfer charge type percentage or fixed', 'woo-wallet'),
+                        'type' => 'select',
+                        'options' => array('percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')),
+                        'size' => 'regular-text wc-enhanced-select'
+                    ),
+                    array(
+                        'name' => 'transfer_charge_amount',
+                        'label' => __('Transfer charge Amount', 'woo-wallet'),
+                        'desc' => __('Enter transfer charge amount', 'woo-wallet'),
+                        'type' => 'number',
+                        'step' => '0.01'
                     )), $this->get_wc_payment_allowed_gateways()
                 ),
                 '_wallet_settings_credit' => array_merge(array(

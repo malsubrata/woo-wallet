@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-if (!class_exists('WCMp_Gateway_Wallet')) {
+if (!class_exists('WCMp_Gateway_Wallet') && class_exists('WCMp_Payment_Gateway')) {
 
     class WCMp_Gateway_Wallet extends WCMp_Payment_Gateway {
 

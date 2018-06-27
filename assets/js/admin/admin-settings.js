@@ -76,6 +76,15 @@ jQuery(function ($) {
                     $('._tax_class').hide();
                 }
             }).change();
+            $('#wcwp-_wallet_settings_general-is_enable_wallet_transfer').on('change', function(){
+                if ($(this).is(':checked')) {
+                    $('.transfer_charge_type').show();
+                    $('.transfer_charge_amount').show();
+                } else{
+                    $('.transfer_charge_type').hide();
+                    $('.transfer_charge_amount').hide();
+                }
+            }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_gateway_charge').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('.gateway_charge_type').show();

@@ -23,7 +23,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Registers the routes for the objects of the controller.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      */
     public function register_routes() {
         register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>[\d]+)', array(
@@ -71,7 +71,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Retrieves one item from the collection.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      *
      * @param WP_REST_Request $request Full data about the request.
      * @return WP_Error|WP_REST_Response Response object on success, or WP_Error object on failure.
@@ -86,7 +86,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Retrieves a collection of items.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      *
      * @param WP_REST_Request $request Full data about the request.
      * @return WP_Error|WP_REST_Response Response object on success, or WP_Error object on failure.
@@ -101,7 +101,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Creates one item from the collection.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      *
      * @param WP_REST_Request $request Full data about the request.
      * @return WP_Error|WP_REST_Response Response object on success, or WP_Error object on failure.
@@ -126,7 +126,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Checks if a given request has access to get items.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      *
      * @param WP_REST_Request $request Full data about the request.
      * @return WP_Error|bool True if the request has read access, WP_Error object otherwise.
@@ -138,7 +138,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
     /**
      * Checks if a given request has access to create items.
      *
-     * @since WP 4.7.0
+     * @since 1.1.6
      *
      * @param WP_REST_Request $request Full data about the request.
      * @return WP_Error|bool True if the request has access to create items, WP_Error object otherwise.

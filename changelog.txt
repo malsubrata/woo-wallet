@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.1.10 - 2018-06-28 =
+* Add - Wallet transfer charge.
+* Dev - Created class instance.
+
 = 1.1.9 - 2018-05-30 =
 * Fix - Cashback calculation.
 

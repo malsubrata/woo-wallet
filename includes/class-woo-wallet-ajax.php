@@ -6,7 +6,24 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Ajax')) {
 
     class Woo_Wallet_Ajax {
-
+        /**
+         * The single instance of the class.
+         *
+         * @var Woo_Wallet_Ajax
+         * @since 1.1.10
+         */
+        protected static $_instance = null;
+        
+        /**
+         * Main instance
+         * @return class object
+         */
+        public static function instance() {
+            if (is_null(self::$_instance)) {
+                self::$_instance = new self();
+            }
+            return self::$_instance;
+        }
         /**
          * Class constructor
          */
@@ -146,4 +163,4 @@ if (!class_exists('Woo_Wallet_Ajax')) {
     }
 
 }
-new Woo_Wallet_Ajax();
+Woo_Wallet_Ajax::instance();
