@@ -6,8 +6,36 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
     class Woo_Wallet_Admin {
 
+        /**
+         * The single instance of the class.
+         *
+         * @var Woo_Wallet_Admin
+         * @since 1.1.10
+         */
+        protected static $_instance = null;
+
+        /**
+         * Woo_Wallet_Transaction_Details Class Object
+         * @var Woo_Wallet_Transaction_Details 
+         */
         public $transaction_details_table = NULL;
+
+        /**
+         * Woo_Wallet_Balance_Details Class Object
+         * @var Woo_Wallet_Balance_Details 
+         */
         public $balance_details_table = NULL;
+
+        /**
+         * Main instance
+         * @return class object
+         */
+        public static function instance() {
+            if (is_null(self::$_instance)) {
+                self::$_instance = new self();
+            }
+            return self::$_instance;
+        }
 
         /**
          * Class constructor
@@ -543,4 +571,4 @@ if (!class_exists('Woo_Wallet_Admin')) {
     }
 
 }
-new Woo_Wallet_Admin();
+Woo_Wallet_Admin::instance();

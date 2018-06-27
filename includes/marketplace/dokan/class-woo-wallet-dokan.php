@@ -5,7 +5,25 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Dokan')) {
 
     class Woo_Wallet_Dokan {
-
+        /**
+         * The single instance of the class.
+         *
+         * @var Woo_Wallet_Dokan
+         * @since 1.1.10
+         */
+        protected static $_instance = null;
+        
+        /**
+         * Main instance
+         * @return class object
+         */
+        public static function instance() {
+            if (is_null(self::$_instance)) {
+                self::$_instance = new self();
+            }
+            return self::$_instance;
+        }
+        
         public function __construct() {
             add_filter('dokan_withdraw_methods', array($this, 'load_withdraw_method'));
             add_filter('dokan_get_seller_active_withdraw_methods', array($this, 'dokan_get_seller_active_withdraw_methods'));
@@ -202,4 +220,4 @@ if (!class_exists('Woo_Wallet_Dokan')) {
     }
 
 }
-new Woo_Wallet_Dokan();
+Woo_Wallet_Dokan::instance();

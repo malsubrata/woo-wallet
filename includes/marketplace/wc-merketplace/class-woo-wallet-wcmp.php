@@ -6,7 +6,25 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_WCMp')) {
 
     class Woo_Wallet_WCMp {
-
+        /**
+         * The single instance of the class.
+         *
+         * @var Woo_Wallet_WCMp
+         * @since 1.1.10
+         */
+        protected static $_instance = null;
+        
+        /**
+         * Main instance
+         * @return class object
+         */
+        public static function instance() {
+            if (is_null(self::$_instance)) {
+                self::$_instance = new self();
+            }
+            return self::$_instance;
+        }
+        
         public function __construct() {
             add_filter('automatic_payment_method', array($this, 'add_wallet_payment_method'));
             add_filter('wcmp_vendor_payment_mode', array($this, 'add_wallet_vendor_payment_method'));
@@ -32,4 +50,4 @@ if (!class_exists('Woo_Wallet_WCMp')) {
     }
 
 }
-new Woo_Wallet_WCMp();
+Woo_Wallet_WCMp::instance();

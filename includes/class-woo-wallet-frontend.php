@@ -5,7 +5,24 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Frontend')) {
 
     class Woo_Wallet_Frontend {
-
+        /**
+         * The single instance of the class.
+         *
+         * @var Woo_Wallet_Frontend
+         * @since 1.1.10
+         */
+        protected static $_instance = null;
+        
+        /**
+         * Main instance
+         * @return class object
+         */
+        public static function instance() {
+            if (is_null(self::$_instance)) {
+                self::$_instance = new self();
+            }
+            return self::$_instance;
+        }
         /**
          * Class constructor
          */
@@ -254,20 +271,33 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
                 $note = isset($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : __('Wallet transfer', 'woo-wallet');
                 $whom = get_userdata($whom);
+                $transfer_charge_type = woo_wallet()->settings_api->get_option('transfer_charge_type', '_wallet_settings_general', 'percent');
+                $transfer_charge_amount = woo_wallet()->settings_api->get_option('transfer_charge_amount', '_wallet_settings_general', 0);
+                $transfer_charge = 0;
+                if('percent' === $transfer_charge_type){
+                    $transfer_charge = ($amount * $transfer_charge_amount) / 100;
+                } else{
+                    $transfer_charge = $transfer_charge_amount;
+                }
+                $transfer_charge = apply_filters('woo_wallet_transfer_charge_amount', $transfer_charge, $whom);
+                $credit_amount = apply_filters('woo_wallet_transfer_credit_amount', $amount, $whom);
+                $debit_amount = apply_filters('woo_wallet_transfer_debit_amount', $amount + $transfer_charge, $whom);
                 if (!$whom) {
                     return array(
                         'is_valid' => false,
                         'message' => __('Invalid user', 'woo-wallet')
                     );
                 }
-                if (floatval($amount) > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')) {
+                if (floatval($debit_amount) > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')) {
                     return array(
                         'is_valid' => false,
                         'message' => __('Entered amount is greater than current wallet amount.', 'woo-wallet')
                     );
                 }
-                if (woo_wallet()->wallet->credit($whom->ID, $amount, $note)) {
-                    woo_wallet()->wallet->debit(get_current_user_id(), $amount, $note);
+                
+                if (woo_wallet()->wallet->credit($whom->ID, $credit_amount, $note)) {
+                    $transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $note);
+                    update_wallet_transaction_meta($transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id());
                     $response = array(
                         'is_valid' => true,
                         'message' => __('Amount transferred successfully!!', 'woo-wallet')
@@ -374,7 +404,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 <div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
                     <?php
                     if (is_user_logged_in()) {
-                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('If you place this order then %s will be credited to your wallet.', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
                     } else {
                         echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
                     }
@@ -641,4 +671,4 @@ if (!class_exists('Woo_Wallet_Frontend')) {
     }
 
 }
-new Woo_Wallet_Frontend();
+Woo_Wallet_Frontend::instance();
