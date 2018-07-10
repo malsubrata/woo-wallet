@@ -132,7 +132,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
      * @return WP_Error|bool True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request) {
-        return current_user_can('manage_woocommerce');
+        return apply_filters('woo_wallet_rest_check_permissions', current_user_can('manage_woocommerce'), 'read');
     }
 
     /**
@@ -144,7 +144,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
      * @return WP_Error|bool True if the request has access to create items, WP_Error object otherwise.
      */
     public function create_item_permissions_check($request) {
-        return current_user_can('manage_woocommerce');
+        return apply_filters('woo_wallet_rest_check_permissions', current_user_can('manage_woocommerce'), 'create');
     }
 
 }
