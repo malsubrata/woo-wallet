@@ -59,6 +59,7 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('wp-color-picker');
                 wp_enqueue_style('woo_wallet_admin_styles');
+                wp_add_inline_style('woo_wallet_admin_styles', 'tr.licence_key_nonce{ display:none; }');
                 wp_enqueue_media();
                 wp_enqueue_script('wp-color-picker');
                 wp_enqueue_script('jquery');
@@ -100,8 +101,7 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
          * display plugin settings page
          */
         public function plugin_page() {
-            echo '<div class="wrap">';
-            //echo '<h2 style="margin-bottom: 15px;">' . __('Extensions', 'woo-wallet') . '</h2>';
+            echo '<div class="wrap wc_addons_wrap">';
             settings_errors();
             echo '<div class="wallet-settings-extensions-wrap">';
             $this->settings_api->show_navigation();
@@ -113,45 +113,38 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
         public function display_extensions() {
             ?>
             <style type="text/css">
-                .woo-wallet-extension-card {
-                    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-                    transition: 0.3s;
-                    width: 30%;
-                    float: left;
-                    margin: 0 38px 0px 0;
-                }
-                
-                .addon-img-container{
-                        background: #f7f7f7;
-                }
-
-                .woo-wallet-extension-card:hover {
-                    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-                }
-
-                .woo-wallet-extension-card .container {
-                    padding: 2px 16px 18px;
+                div#_wallet_settings_extensions_general h2 {
+                    display: none;
                 }
             </style>
-
-            <div class="woo-wallet-extension-card">
-                <div class="addon-img-container">
-                    <img src="//woowallet.in/wp-content/uploads/2018/06/if_Money_877024-1.png" alt="Avatar" style="width:100%">
-                </div>
-                <div class="container">
-                    <h4><b>Woo Wallet withdrawal</b></h4> 
-                    <p>Let users withdraw their fund to account via bank, PayPal or any other supported payment gateway's</p> 
-                    <a href="" class="button-primary" target="_blank">From: $49</a>
-                </div>
-            </div>
-            <div class="woo-wallet-extension-card">
-                <div class="addon-img-container">
-                <img src="http://placekitten.com/816/610" alt="Avatar" style="width:100%">
-                </div>
-                <div class="container">
-                    <h4><b>Woo wallet importer</b></h4> 
-                    <p>Architect & Engineer</p> 
-                    <a href="" class="button-primary" target="_blank">From: $19</a>
+            <div class="addons-featured">
+                <div class="addons-banner-block">
+                    <h1>Obtain Superpowers to get the best out of WooWallet </h1>
+                    <p>These power boosting extensions can unlock the ultimate potential for your site.</p>
+                    <div class="addons-banner-block-items">
+                        <div class="addons-banner-block-item">
+                            <div class="addons-banner-block-item-icon">
+                                <img class="addons-img" src="https://d30y9cdsu7xlg0.cloudfront.net/png/691726-200.png">
+                            </div>
+                            <div class="addons-banner-block-item-content">
+                                <h3>WooWallet Withdrawal</h3>
+                                <p>Enhance your coupon options - create gift certificates, store credit, coupons based on purchases and more.</p>
+                                <a class="addons-button addons-button-solid" href="https://woocommerce.com/products/smart-coupons/?utm_source=product&amp;utm_medium=upsell&amp;utm_campaign=wcaddons&amp;utm_content=featured">
+                                    From: $49		</a>
+                            </div>
+                        </div>
+                        <div class="addons-banner-block-item">
+                            <div class="addons-banner-block-item-icon">
+                                <img class="addons-img" src="https://d30y9cdsu7xlg0.cloudfront.net/png/24574-200.png">
+                            </div>
+                            <div class="addons-banner-block-item-content">
+                                <h3>WooWallet Importer</h3>
+                                <p>Automatically contact customers after purchase - be it everyone, your most loyal or your biggest spenders - and keep your store top-of-mind.</p>
+                                <a class="addons-button addons-button-solid" href="https://woocommerce.com/products/follow-up-emails/?utm_source=product&amp;utm_medium=upsell&amp;utm_campaign=wcaddons&amp;utm_content=featured">
+                                    From: $19		</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <?php
