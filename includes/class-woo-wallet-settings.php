@@ -160,7 +160,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'label' => __('Process cashback', 'woo-wallet'),
                         'desc' => __('Select order status to process cashback', 'woo-wallet'),
                         'type' => 'select',
-                        'options' => array('pending' => __('Pending payment', 'woo-wallet'), 'on-hold' => __('On hold', 'woo-wallet'), 'processing' => __('Processing', 'woo-wallet'), 'completed' => __('Completed', 'woo-wallet')),
+                        'options' => apply_filters('woo_wallet_process_cashback_status', array('pending' => __('Pending payment', 'woo-wallet'), 'on-hold' => __('On hold', 'woo-wallet'), 'processing' => __('Processing', 'woo-wallet'), 'completed' => __('Completed', 'woo-wallet'))),
                         'default' => array('processing', 'completed'),
                         'size' => 'regular-text wc-enhanced-select',
                         'multiple' => true

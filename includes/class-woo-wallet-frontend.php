@@ -479,7 +479,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
             if ('yes' === $_is_coupon_cashback && is_user_logged_in()) {
                 $discount_total = $order->get_discount_total('edit');
-                $coupon_amount = WC()->cart->get_coupon_discount_amount($code);
+                $coupon_amount = WC()->cart->get_coupon_discount_amount($code, WC()->cart->display_cart_ex_tax);
                 $discount_total -= $coupon_amount;
                 $order->set_discount_total($discount_total);
                 $order_id = $order->save();
@@ -609,7 +609,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     $coupon = new WC_Coupon($code);
                     $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
                     if ('yes' === $_is_coupon_cashback) {
-                        $total += WC()->cart->get_coupon_discount_amount($code);
+                        $total += WC()->cart->get_coupon_discount_amount($code, WC()->cart->display_cart_ex_tax);
                     }
                 }
             }

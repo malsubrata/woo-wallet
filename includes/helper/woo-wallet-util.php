@@ -12,10 +12,11 @@ if (!function_exists('is_wallet_rechargeable_order')) {
         foreach ($order->get_items('line_item') as $item) {
             $product_id = $item['product_id'];
             if ($product_id == get_wallet_rechargeable_product()->get_id()) {
-                return true;
+                $is_wallet_rechargeable_order = true;
+                break;
             }
         }
-        return $is_wallet_rechargeable_order;
+        return apply_filters('woo_wallet_is_wallet_rechargeable_order', $is_wallet_rechargeable_order, $order);
     }
 
 }
@@ -27,14 +28,16 @@ if (!function_exists('is_wallet_rechargeable_cart')) {
      * @return boolean
      */
     function is_wallet_rechargeable_cart() {
+        $is_wallet_rechargeable_cart = false;
         if (sizeof(wc()->cart->get_cart()) > 0 && get_wallet_rechargeable_product()) {
             foreach (wc()->cart->get_cart() as $key => $cart_item) {
                 if ($cart_item['product_id'] == get_wallet_rechargeable_product()->get_id()) {
-                    return true;
+                    $is_wallet_rechargeable_cart = true;
+                    break;
                 }
             }
         }
-        return false;
+        return apply_filters('woo_wallet_is_wallet_rechargeable_cart', $is_wallet_rechargeable_cart);
     }
 
 }
