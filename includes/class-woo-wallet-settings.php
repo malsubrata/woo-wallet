@@ -63,6 +63,7 @@ if (!class_exists('Woo_Wallet_Settings')):
                 wp_enqueue_script('jquery');
                 wp_enqueue_script('woo-wallet-admin-settings');
                 $localize_param = array(
+                    'screen_id' => $screen_id,
                     'gateways' => $this->get_wc_payment_gateways('id')
                 );
                 wp_localize_script('woo-wallet-admin-settings', 'woo_wallet_admin_settings_param', $localize_param);

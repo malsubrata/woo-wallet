@@ -67,7 +67,8 @@ jQuery(function ($) {
                 // Finally, open the modal
                 file_frame.open();
             });
-
+        },
+        settings_page_init : function (){
             $('#_wallet_settings_general-_tax_status').on('change', function () {
                 if ($(this).val() === 'taxable') {
                     $('._tax_class').show();
@@ -128,4 +129,7 @@ jQuery(function ($) {
         }
     };
     settings.init();
+    if(woo_wallet_admin_settings_param.screen_id === 'woowallet_page_woo-wallet-settings'){
+        settings.settings_page_init();
+    }
 });
