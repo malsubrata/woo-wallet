@@ -3,9 +3,6 @@
 jQuery(function ($) {
     var woo_wallet_order_items = {
         init: function () {
-            if (woo_wallet_admin_order_param.payment_method === 'wallet') {
-                $('.refund-actions .button.tips.disabled').remove();
-            }
             if (woo_wallet_admin_order_param.is_refundable) {
                 $('.refund-actions .do-manual-refund').before('<button type="button" class="button button-primary do-wallet-refund">'+ woo_wallet_admin_order_param.i18n.refund+' <span class="wc-order-refund-amount">' + woo_wallet_admin_order_param.default_price + '</span> '+ woo_wallet_admin_order_param.i18n.via_wallet+'</button>');
                 $('#woocommerce-order-items').on('click', '.refund-actions .do-wallet-refund', this.do_wallet_refund);
