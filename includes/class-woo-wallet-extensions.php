@@ -80,7 +80,7 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
                 array(
                     'id' => '_wallet_settings_extensions_general',
                     'title' => __('Extensions', 'woo-wallet'),
-                    'icon' => 'dashicons-admin-generic',
+                    'icon' => 'dashicons-admin-plugins',
                 )
             );
             return apply_filters('woo_wallet_extensions_settings_sections', $sections);
@@ -128,8 +128,8 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
                             </div>
                             <div class="addons-banner-block-item-content">
                                 <h3>WooWallet Withdrawal</h3>
-                                <p>Enhance your coupon options - create gift certificates, store credit, coupons based on purchases and more.</p>
-                                <a class="addons-button addons-button-solid" href="https://woocommerce.com/products/smart-coupons/?utm_source=product&amp;utm_medium=upsell&amp;utm_campaign=wcaddons&amp;utm_content=featured">
+                                <p>Let your users withdraw their WooWallet balance to bank and other digital accounts like PayPal with this awesome addon.</p>
+                                <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-withdrawal/">
                                     From: $49		</a>
                             </div>
                         </div>
@@ -139,9 +139,9 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
                             </div>
                             <div class="addons-banner-block-item-content">
                                 <h3>WooWallet Importer</h3>
-                                <p>Automatically contact customers after purchase - be it everyone, your most loyal or your biggest spenders - and keep your store top-of-mind.</p>
-                                <a class="addons-button addons-button-solid" href="https://woocommerce.com/products/follow-up-emails/?utm_source=product&amp;utm_medium=upsell&amp;utm_campaign=wcaddons&amp;utm_content=featured">
-                                    From: $19		</a>
+                                <p>WooWallet importer addon enables you to modify the WooWallet balances of multiple or all users with just one CSV import, hassle free.</p>
+                                <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-importer/">
+                                    From: $15		</a>
                             </div>
                         </div>
                     </div>
