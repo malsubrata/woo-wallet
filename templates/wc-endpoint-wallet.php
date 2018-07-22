@@ -90,7 +90,7 @@ do_action('woo_wallet_before_my_wallet_content');
                             </div>
                             <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?>"><?php
                                 echo $transaction->type == 'credit' ? '+' : '-';
-                                echo wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency));
+                                echo wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id));
                                 ?></div>
                         </li>
                     <?php endforeach; ?>

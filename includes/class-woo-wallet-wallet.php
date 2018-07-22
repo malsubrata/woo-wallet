@@ -45,13 +45,21 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             }
             $this->set_user_id($user_id);
             $this->wallet_balance = 0;
+            $args = apply_filters('woo_wallet_wc_price_args', array(
+                'ex_tax_label' => false,
+                'currency' => '',
+                'decimal_separator' => wc_get_price_decimal_separator(),
+                'thousand_separator' => wc_get_price_thousand_separator(),
+                'decimals' => wc_get_price_decimals(),
+                'price_format' => get_woocommerce_price_format(),
+            ), $this->user_id);
             if ($this->user_id) {
                 $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
                 if ($resualt) {
-                    $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id), $resualt->currency), wc_get_price_decimals(), '.', '');
+                    $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id), $resualt->currency, $this->user_id), wc_get_price_decimals(), '.', '');
                 }
             }
-            return 'view' === $context ? wc_price($this->wallet_balance) : number_format($this->wallet_balance, wc_get_price_decimals(), '.', '');
+            return 'view' === $context ? wc_price($this->wallet_balance, $args) : number_format($this->wallet_balance, $args['decimals'], $args['decimal_separator'], $args['thousand_separator']);
         }
 
         /**
@@ -158,7 +166,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $order->add_order_note(sprintf(__('Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet'), wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
                 delete_post_meta($order_id, '_partial_pay_through_wallet_compleate');
             }
-            
+
             /** debit cashback amount * */
             if (apply_filters('woo_wallet_debit_cashback_upon_cancellation', get_total_order_cashback_amount($order_id))) {
                 $total_cashback_amount = get_total_order_cashback_amount($order_id);

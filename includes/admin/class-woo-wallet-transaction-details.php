@@ -77,6 +77,14 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
         if ($user_id == NULL) {
             return $data;
         }
+        $args = apply_filters('woo_wallet_wc_price_args', array(
+            'ex_tax_label' => false,
+            'currency' => '',
+            'decimal_separator' => wc_get_price_decimal_separator(),
+            'thousand_separator' => wc_get_price_thousand_separator(),
+            'decimals' => wc_get_price_decimals(),
+            'price_format' => get_woocommerce_price_format(),
+        ), $user_id);
         $transactions = get_wallet_transactions(array('user_id' => $user_id));
         if (!empty($transactions) && is_array($transactions)) {
             foreach ($transactions as $key => $transaction) {
@@ -84,7 +92,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
                     'transaction_id' => $transaction->transaction_id,
                     'name' => get_user_by('ID', $transaction->user_id)->display_name,
                     'type' => ('credit' === $transaction->type) ? __('Credit', 'woo-wallet') : __('Debit', 'woo-wallet'),
-                    'amount' => wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency)),
+                    'amount' => wc_price(apply_filters('woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id), $args),
                     'details' => $transaction->details,
                     'date' => wc_string_to_datetime($transaction->date)->date_i18n(wc_date_format())
                 );

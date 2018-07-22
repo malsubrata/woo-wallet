@@ -152,10 +152,6 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function add_balance_to_user_wallet() {
             $user_id = filter_input(INPUT_GET, 'user_id');
-            $current_wallet_balance = 0;
-            if ($user_id != NULL && !empty($user_id)) {
-                $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance($user_id, '');
-            }
             ?>
             <div class="wrap">
                 <?php settings_errors(); ?>
@@ -163,7 +159,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 <p>
                     <?php
                     _e('Current wallet balance: ', 'woo-wallet');
-                    echo wc_price($current_wallet_balance)
+                    echo woo_wallet()->wallet->get_wallet_balance($user_id);
                     ?>
                 </p>
                 <form id="posts-filter" method="post">
@@ -210,16 +206,12 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function transaction_details_page() {
             $user_id = filter_input(INPUT_GET, 'user_id');
-            $current_wallet_balance = 0;
-            if ($user_id != NULL) {
-                $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance($user_id, '');
-            }
             ?>
             <div class="wrap">
                 <h2><?php _e('Transaction details', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
                 <p><?php
                     _e('Current wallet balance: ', 'woo-wallet');
-                    echo wc_price($current_wallet_balance)
+                    echo woo_wallet()->wallet->get_wallet_balance($user_id);
                     ?></p>
                 <form id="posts-filter" method="get">
                     <?php $this->transaction_details_table->display(); ?>
