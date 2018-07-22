@@ -59,7 +59,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                     $this->wallet_balance = apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id);
                 }
             }
-            return 'view' === $context ? wc_price($this->wallet_balance, $args) : number_format($this->wallet_balance, $args['decimals'], $args['decimal_separator'], $args['thousand_separator']);
+            return 'view' === $context ? wc_price($this->wallet_balance, $args) : number_format($this->wallet_balance, wc_get_price_decimals(), '.', '');
         }
 
         /**
