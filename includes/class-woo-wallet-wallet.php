@@ -56,7 +56,7 @@ if (!class_exists('Woo_Wallet_Wallet')) {
             if ($this->user_id) {
                 $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
                 if ($resualt) {
-                    $this->wallet_balance = number_format(apply_filters('woo_wallet_amount', apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id), $resualt->currency, $this->user_id), wc_get_price_decimals(), '.', '');
+                    $this->wallet_balance = apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id);
                 }
             }
             return 'view' === $context ? wc_price($this->wallet_balance, $args) : number_format($this->wallet_balance, $args['decimals'], $args['decimal_separator'], $args['thousand_separator']);

@@ -55,7 +55,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_action('woocommerce_coupon_options_save', array($this, 'save_coupon_data'));
 
             add_filter('admin_footer_text', array($this, 'admin_footer_text'), 1);
-            
+
             if ('on' === woo_wallet()->settings_api->get_option('is_enable_cashback_reward_program', '_wallet_settings_credit', 'on') && 'product_cat' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
                 add_action('product_cat_add_form_fields', array($this, 'add_product_cat_cashback_field'));
                 add_action('product_cat_edit_form_fields', array($this, 'edit_product_cat_cashback_field'));
@@ -67,13 +67,14 @@ if (!class_exists('Woo_Wallet_Admin')) {
             add_filter('manage_users_columns', array($this, 'manage_users_columns'));
             add_filter('manage_users_custom_column', array($this, 'manage_users_custom_column'), 10, 3);
         }
+
         /**
          * Admin init
          */
-        public function admin_init(){
-            if(version_compare( WC_VERSION, '3.4', '<' )){
+        public function admin_init() {
+            if (version_compare(WC_VERSION, '3.4', '<')) {
                 add_filter('woocommerce_account_settings', array($this, 'add_woocommerce_account_endpoint_settings'));
-            } else{
+            } else {
                 add_filter('woocommerce_settings_pages', array($this, 'add_woocommerce_account_endpoint_settings'));
             }
         }
@@ -139,7 +140,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 <h2><?php _e('Users wallet details', 'woo-wallet'); ?></h2>
                 <form id="posts-filter" method="post">
                     <?php $this->balance_details_table->search_box(__('Search Users', 'woo-wallet'), 'search_id'); ?>
-                    <?php $this->balance_details_table->display(); ?>
+            <?php $this->balance_details_table->display(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -154,7 +155,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $user_id = filter_input(INPUT_GET, 'user_id');
             ?>
             <div class="wrap">
-                <?php settings_errors(); ?>
+            <?php settings_errors(); ?>
                 <h2><?php _e('Adjust Balance', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
                 <p>
                     <?php
@@ -166,7 +167,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <table class="form-table">
                         <tbody>
                             <tr>
-                                <th scope="row"><label for="balance_amount"><?php _e('Amount', 'woo-wallet'); ?></label></th>
+                                <th scope="row"><label for="balance_amount"><?php echo __('Amount', 'woo-wallet') . ' (' . get_woocommerce_currency_symbol() . ')'; ?></label></th>
                                 <td>
                                     <input type="number" step="0.01" name="balance_amount" class="regular-text" />
                                     <p class="description"><?php _e('Enter Amount', 'woo-wallet'); ?></p>
@@ -193,7 +194,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     </table>
                     <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
                     <?php wp_nonce_field('wc-wallet-admin-add-balance', 'wc-wallet-admin-add-balance'); ?>
-                    <?php submit_button(); ?>
+            <?php submit_button(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -214,7 +215,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     echo woo_wallet()->wallet->get_wallet_balance($user_id);
                     ?></p>
                 <form id="posts-filter" method="get">
-                    <?php $this->transaction_details_table->display(); ?>
+            <?php $this->transaction_details_table->display(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -347,7 +348,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <td class="label"><?php _e('Cashback', 'woo-wallet'); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                        <?php echo wc_price($total_cashback_amount, array('currency' => $order->get_currency())); ?>
+                <?php echo wc_price($total_cashback_amount, array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <?php
@@ -359,14 +360,14 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <td class="label"><?php _e('Via wallet', 'woo-wallet'); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                        <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
+                <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <tr>
                     <td class="label"><?php printf(__('Via %s', 'woo-wallet'), $order->get_payment_method_title()); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                        <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
+                <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <?php
