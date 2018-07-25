@@ -1,7 +1,7 @@
 {
   "name": "woo-wallet",
   "title": "WooCommerce Wallet",
-  "version": "1.1.10",
+  "version": "1.2.0",
   "description": "A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.",
   "main": "Gruntfile.js",
   "scripts": {

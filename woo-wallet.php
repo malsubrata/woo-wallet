@@ -6,7 +6,7 @@
  * Description: The leading wallet plugin with partial payment, refunds, cashbacks and what not!
  * Author: Subrata Mal
  * Author URI: https://profiles.wordpress.org/subratamal
- * Version: 1.1.10
+ * Version: 1.2.0
  * Requires at least: 4.4
  * Tested up to: 4.9
  * WC requires at least: 3.0

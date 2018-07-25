@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.2.0 - 2018-07-26 =
+* Add - Extension page.
+* Fix - Refund using default WooCommerce refund function.
+* Dev - details variable in email.
+* Dev - Added filter `woo_wallet_rest_check_permissions`, `woo_wallet_process_cashback_status`, `woo_wallet_wc_price_args`.
+
 = 1.1.10 - 2018-06-28 =
 * Add - Wallet transfer charge.
 * Dev - Created class instance.
