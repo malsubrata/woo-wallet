@@ -5,7 +5,7 @@
  * Plugin URI: https://wordpress.org/plugins/woo-wallet/
  * Description: The leading wallet plugin with partial payment, refunds, cashbacks and what not!
  * Author: Subrata Mal
- * Author URI: https://profiles.wordpress.org/subratamal
+ * Author URI: https://woowallet.in/
  * Version: 1.2.0
  * Requires at least: 4.4
  * Tested up to: 4.9

@@ -46,6 +46,11 @@ After the plugin installation, the admin needs to do the payment method configur
 Now for enable cashback rules, navigate to WooWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
 On the front-end, the customers can log in to the store and go to wallet page from My Account. Enter the amount to add and then complete the checkout process just like any other product purchase.
 
+= Premium extensions =
+
+- [WooWallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
+- [WooWallet Importer](https://woowallet.in/product/woo-wallet-importer/)
+
 = Translator Contributors =
 - [#fa_IR](https://translate.wordpress.org/locale/fa/default/wp-plugins/woo-wallet) - [@rahimvaziri](https://wordpress.org/support/users/rahimvaziri/)
 - [#es_ES](https://translate.wordpress.org/locale/es/default/wp-plugins/woo-wallet) - [@chipweb](https://wordpress.org/support/users/chipweb/)
