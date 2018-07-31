@@ -295,9 +295,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     );
                 }
                 
-                if (woo_wallet()->wallet->credit($whom->ID, $credit_amount, $note)) {
-                    $transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $note);
-                    update_wallet_transaction_meta($transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id());
+                if ($credit_transaction_id = woo_wallet()->wallet->credit($whom->ID, $credit_amount, $note)) {
+                    do_action('woo_wallet_transfer_amount_credited', $credit_transaction_id, $whom->ID, get_current_user_id());
+                    $debit_transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $note);
+                    do_action('woo_wallet_transfer_amount_debited', $debit_transaction_id, get_current_user_id(), $whom->ID);
+                    update_wallet_transaction_meta($debit_transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id());
                     $response = array(
                         'is_valid' => true,
                         'message' => __('Amount transferred successfully!!', 'woo-wallet')
