@@ -92,8 +92,9 @@ if (!function_exists('set_wallet_transaction_meta')) {
         $meta_value = wp_unslash($meta_value);
         $meta_value = maybe_serialize($meta_value);
         $wpdb->insert("{$wpdb->base_prefix}woo_wallet_transaction_meta", array("transaction_id" => $transaction_id, "meta_key" => $meta_key, "meta_value" => $meta_value));
+        $meta_id = $wpdb->insert_id;
         clear_woo_wallet_cache($user_id);
-        return $wpdb->insert_id;
+        return $meta_id;
     }
 
 }
