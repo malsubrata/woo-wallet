@@ -36,7 +36,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
         $hidden = $this->get_hidden_columns();
         $sortable = $this->get_sortable_columns();
         $data = $this->table_data();
-        $perPage = 10;
+        $perPage = $this->get_items_per_page('transactions_per_page', 10);
         $currentPage = $this->get_pagenum();
         $totalItems = count($data);
         $this->set_pagination_args(array(

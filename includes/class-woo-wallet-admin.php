@@ -66,6 +66,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
 
             add_filter('manage_users_columns', array($this, 'manage_users_columns'));
             add_filter('manage_users_custom_column', array($this, 'manage_users_custom_column'), 10, 3);
+            add_filter('set-screen-option', array($this, 'set_wallet_screen_options'), 10, 3);
         }
 
         /**
@@ -276,9 +277,23 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * Transaction details page initialization
          */
         public function add_woo_wallet_transaction_details_option() {
+            $option = 'per_page';
+            $args = array(
+                'label' => 'Number of items per page:',
+                'default' => 10,
+                'option' => 'transactions_per_page'
+            );
+            add_screen_option($option, $args);
             include_once( WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-transaction-details.php' );
             $this->transaction_details_table = new Woo_Wallet_Transaction_Details();
             $this->transaction_details_table->prepare_items();
+        }
+        
+        public function set_wallet_screen_options($screen_option, $option, $value){
+            if('transactions_per_page' === $option){
+                $screen_option = $value;
+            }
+            return $screen_option;
         }
 
         /**
@@ -556,7 +571,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function manage_users_custom_column($value, $column_name, $user_id) {
             if ($column_name === 'current_wallet_balance') {
-                return woo_wallet()->wallet->get_wallet_balance($user_id);
+                return sprintf('<a href="%s" title="%s">%s</a>', admin_url('?page=woo-wallet-transactions&user_id='. $user_id), __('View details', 'woo-wallet'), woo_wallet()->wallet->get_wallet_balance($user_id));
             }
             return $value;
         }
