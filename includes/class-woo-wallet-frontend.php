@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Frontend')) {
 
     class Woo_Wallet_Frontend {
+
         /**
          * The single instance of the class.
          *
@@ -12,7 +13,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @since 1.1.10
          */
         protected static $_instance = null;
-        
+
         /**
          * Main instance
          * @return class object
@@ -23,6 +24,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return self::$_instance;
         }
+
         /**
          * Class constructor
          */
@@ -56,6 +58,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
             add_filter('woocommerce_cart_get_total', array($this, 'woocommerce_cart_get_total'));
             add_shortcode('woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback');
+            add_action('woocommerce_cart_calculate_fees', array($this, 'woo_wallet_add_partial_payment_fee'));
+            add_filter('woocommerce_cart_totals_get_fees_from_cart_taxes', array($this, 'woocommerce_cart_totals_get_fees_from_cart_taxes'), 10, 2);
         }
 
         /**
@@ -274,9 +278,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 $transfer_charge_type = woo_wallet()->settings_api->get_option('transfer_charge_type', '_wallet_settings_general', 'percent');
                 $transfer_charge_amount = woo_wallet()->settings_api->get_option('transfer_charge_amount', '_wallet_settings_general', 0);
                 $transfer_charge = 0;
-                if('percent' === $transfer_charge_type){
+                if ('percent' === $transfer_charge_type) {
                     $transfer_charge = ($amount * $transfer_charge_amount) / 100;
-                } else{
+                } else {
                     $transfer_charge = $transfer_charge_amount;
                 }
                 $transfer_charge = apply_filters('woo_wallet_transfer_charge_amount', $transfer_charge, $whom);
@@ -294,7 +298,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                         'message' => __('Entered amount is greater than current wallet amount.', 'woo-wallet')
                     );
                 }
-                
+
                 if ($credit_transaction_id = woo_wallet()->wallet->credit($whom->ID, $credit_amount, $note)) {
                     do_action('woo_wallet_transfer_amount_credited', $credit_transaction_id, $whom->ID, get_current_user_id());
                     $debit_transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $note);
@@ -426,13 +430,49 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id)) && is_user_logged_in()) {
                 update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
             }
-            if (!apply_filters('woo_wallet_disable_partial_payment', false) && !is_full_payment_through_wallet() && is_user_logged_in() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
-                $current_wallet_balance = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), $order);
-                update_post_meta($order_id, '_original_order_amount', $order->get_total(''));
-                $order->set_total($order->get_total('') - $current_wallet_balance);
-                update_post_meta($order_id, '_via_wallet_payment', $current_wallet_balance);
-                $order->save();
+//            if (!apply_filters('woo_wallet_disable_partial_payment', false) && !is_full_payment_through_wallet() && is_user_logged_in() && ((isset($_POST['partial_pay_through_wallet']) && !empty($_POST['partial_pay_through_wallet'])) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && !is_wallet_rechargeable_order(wc_get_order($order_id))) {
+//                $current_wallet_balance = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), $order);
+//                update_post_meta($order_id, '_original_order_amount', $order->get_total(''));
+//                $order->set_total($order->get_total('') - $current_wallet_balance);
+//                update_post_meta($order_id, '_via_wallet_payment', $current_wallet_balance);
+//                $order->save();
+//            }
+        }
+
+        /**
+         * Sets partial payment amount to cart as negative fee
+         * @since 1.2.1
+         */
+        public function woo_wallet_add_partial_payment_fee() {
+            $parial_payment_amount = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), 'NULL');
+            $fee = array(
+                'id' => '_via_wallet_partial_payment',
+                'name' => __('Via wallet'),
+                'amount' => (float) -1 * $parial_payment_amount,
+                'taxable' => false,
+                'tax_class' => '',
+            );
+            if (is_enable_wallet_partial_payment()) {
+                wc()->cart->fees_api()->add_fee($fee);
+            } else {
+                $all_fees = wc()->cart->fees_api()->get_fees();
+                if (isset($all_fees['_via_partial_payment_wallet'])) {
+                    unset($all_fees['_via_partial_payment_wallet']);
+                    wc()->cart->fees_api()->set_fees($all_fees);
+                }
             }
+        }
+        /**
+         * Unset Fee tax for partial amount
+         * @param array $fee_taxes
+         * @param object $fee
+         * @return array
+         */
+        public function woocommerce_cart_totals_get_fees_from_cart_taxes($fee_taxes, $fee){
+            if('_via_wallet_partial_payment' === $fee->object->id){
+               $fee_taxes = array(); 
+            }
+            return $fee_taxes;
         }
 
         /**
@@ -440,7 +480,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return NULL
          */
         public function woocommerce_review_order_after_order_total() {
-            if (apply_filters('woo_wallet_disable_partial_payment', (!is_user_logged_in() || is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '') <= 0 || (isset(wc()->cart->recurring_carts) && !empty(wc()->cart->recurring_carts))))) {
+            if (apply_filters('woo_wallet_disable_partial_payment', (is_full_payment_through_wallet() && !is_enable_wallet_partial_payment()))) {
                 return;
             }
             wp_enqueue_style('dashicons');

@@ -42,6 +42,45 @@ if (!function_exists('is_wallet_rechargeable_cart')) {
 
 }
 
+if (!function_exists('is_enable_wallet_partial_payment')) {
+
+    function is_enable_wallet_partial_payment() {
+        $is_enable = false;
+        $cart_total = wc()->cart->get_subtotal('edit') + wc()->cart->get_taxes_total() + wc()->cart->get_shipping_total('edit') - wc()->cart->get_discount_total();
+        if ((wc()->session->get('is_wallet_partial_payment', false) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && $cart_total > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')) {
+            $is_enable = true;
+        }
+        return $is_enable;
+    }
+
+}
+
+if (!function_exists('get_order_partial_payment_amount')) {
+
+    function get_order_partial_payment_amount($order_id) {
+        $via_wallet = 0;
+        $order = wc_get_order($order_id);
+        if ($order) {
+            $line_items_fee = $order->get_items('fee');
+            foreach ($line_items_fee as $item_id => $item) {
+                if ('via_wallet' === strtolower(str_replace(' ', '_', $item->get_name('edit')))) {
+                    $via_wallet += $item->get_total('edit');
+                }
+            }
+        }
+        return abs($via_wallet);
+    }
+
+}
+
+if (!function_exists('update_wallet_partial_payment_session')) {
+
+    function update_wallet_partial_payment_session($set = false) {
+        wc()->session->set('is_wallet_partial_payment', $set);
+    }
+
+}
+
 if (!function_exists('get_wallet_rechargeable_orders')) {
 
     /**

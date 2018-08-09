@@ -147,10 +147,11 @@ if (!class_exists('Woo_Wallet_Wallet')) {
 
         public function wallet_partial_payment($order_id) {
             $order = wc_get_order($order_id);
-            if (get_post_meta($order_id, '_via_wallet_payment', true) && !get_post_meta($order_id, '_partial_pay_through_wallet_compleate', true)) {
-                $transaction_id = $this->debit($order->get_customer_id(), get_post_meta($order_id, '_via_wallet_payment', true), __('For order payment #', 'woo-wallet') . $order->get_order_number());
+            $partial_payment_amount = get_order_partial_payment_amount($order_id);
+            if ($partial_payment_amount && !get_post_meta($order_id, '_partial_pay_through_wallet_compleate', true)) {
+                $transaction_id = $this->debit($order->get_customer_id(), $partial_payment_amount, __('For order payment #', 'woo-wallet') . $order->get_order_number());
                 if ($transaction_id) {
-                    $order->add_order_note(sprintf(__('%s paid through wallet', 'woo-wallet'), wc_price(get_post_meta($order_id, '_via_wallet_payment', true))));
+                    $order->add_order_note(sprintf(__('%s paid through wallet', 'woo-wallet'), wc_price($partial_payment_amount)));
                     update_wallet_transaction_meta($transaction_id, '_partial_payment', true, $order->get_customer_id());
                     update_post_meta($order_id, '_partial_pay_through_wallet_compleate', $transaction_id);
                     do_action('woo_wallet_partial_payment_completed', $transaction_id, $order);

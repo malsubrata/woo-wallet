@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 if (!class_exists('Woo_Wallet_Ajax')) {
 
     class Woo_Wallet_Ajax {
+
         /**
          * The single instance of the class.
          *
@@ -13,7 +14,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
          * @since 1.1.10
          */
         protected static $_instance = null;
-        
+
         /**
          * Main instance
          * @return class object
@@ -24,6 +25,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             }
             return self::$_instance;
         }
+
         /**
          * Class constructor
          */
@@ -31,6 +33,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             add_action('wp_ajax_woo_wallet_order_refund', array($this, 'woo_wallet_order_refund'));
             add_action('wp_ajax_woocommerce_wallet_rated', array($this, 'woocommerce_wallet_rated'));
             add_action('wp_ajax_woo-wallet-user-search', array($this, 'woo_wallet_user_search'));
+            add_action('wp_ajax_woo_wallet_partial_payment_update_session', array($this, 'woo_wallet_partial_payment_update_session'));
         }
 
         /**
@@ -88,10 +91,10 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                     'restock_items' => $restock_refunded_items,
                 ));
                 if (!is_wp_error($refund)) {
-                    $transaction_id = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Wallet refund #', 'woo-wallet'). $order->get_order_number());
+                    $transaction_id = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Wallet refund #', 'woo-wallet') . $order->get_order_number());
                     if (!$transaction_id) {
                         throw new Exception(__('Refund not credited to customer', 'woo-wallet'));
-                    } else{
+                    } else {
                         do_action('woo_wallet_order_refunded', $order, $refund, $transaction_id);
                     }
                 }
@@ -158,6 +161,15 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                 }
             }
             wp_send_json($return);
+        }
+
+        public function woo_wallet_partial_payment_update_session() {
+            if (isset($_POST['checked']) && $_POST['checked'] == 'true') {
+                update_wallet_partial_payment_session(true);
+            } else {
+                update_wallet_partial_payment_session();
+            }
+            wp_die();
         }
 
     }
