@@ -189,6 +189,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * Do wallet frontend load functions.
          */
         public function woo_wallet_frontend_loaded() {
+            // reset partial payment session
+            if (!is_ajax()) {
+                update_wallet_partial_payment_session();
+            }
             /**
              * Process wallet recharge.
              */
@@ -462,15 +466,16 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
             }
         }
+
         /**
          * Unset Fee tax for partial amount
          * @param array $fee_taxes
          * @param object $fee
          * @return array
          */
-        public function woocommerce_cart_totals_get_fees_from_cart_taxes($fee_taxes, $fee){
-            if('_via_wallet_partial_payment' === $fee->object->id){
-               $fee_taxes = array(); 
+        public function woocommerce_cart_totals_get_fees_from_cart_taxes($fee_taxes, $fee) {
+            if ('_via_wallet_partial_payment' === $fee->object->id) {
+                $fee_taxes = array();
             }
             return $fee_taxes;
         }
@@ -480,7 +485,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return NULL
          */
         public function woocommerce_review_order_after_order_total() {
-            if (apply_filters('woo_wallet_disable_partial_payment', (is_full_payment_through_wallet() && !is_enable_wallet_partial_payment()))) {
+            if (apply_filters('woo_wallet_disable_partial_payment', (is_full_payment_through_wallet() || is_wallet_rechargeable_cart()))) {
                 return;
             }
             wp_enqueue_style('dashicons');

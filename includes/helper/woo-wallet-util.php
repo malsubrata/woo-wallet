@@ -42,15 +42,27 @@ if (!function_exists('is_wallet_rechargeable_cart')) {
 
 }
 
+if (!function_exists('get_woowallet_cart_total')) {
+
+    function get_woowallet_cart_total() {
+        $cart_total = 0;
+        if (sizeof(wc()->cart->cart_contents) > 0) {
+            $cart_total = wc()->cart->get_subtotal('edit') + wc()->cart->get_taxes_total() + wc()->cart->get_shipping_total('edit') - wc()->cart->get_discount_total();
+        }
+        return apply_filters('woowallet_cart_total', $cart_total);
+    }
+
+}
+
 if (!function_exists('is_enable_wallet_partial_payment')) {
 
     function is_enable_wallet_partial_payment() {
         $is_enable = false;
-        $cart_total = wc()->cart->get_subtotal('edit') + wc()->cart->get_taxes_total() + wc()->cart->get_shipping_total('edit') - wc()->cart->get_discount_total();
+        $cart_total = get_woowallet_cart_total();
         if ((wc()->session->get('is_wallet_partial_payment', false) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && $cart_total > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')) {
             $is_enable = true;
         }
-        return $is_enable;
+        return apply_filters('is_enable_wallet_partial_payment', $is_enable);
     }
 
 }
@@ -443,8 +455,8 @@ if (!function_exists('is_full_payment_through_wallet')) {
      */
     function is_full_payment_through_wallet() {
         $is_valid_payment_through_wallet = true;
-        $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), '');
-        if (wc()->cart && ($current_wallet_balance < wc()->cart->get_total('') || is_wallet_rechargeable_cart())) {
+        $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit');
+        if (sizeof(wc()->cart->cart_contents) > 0 && ($current_wallet_balance < get_woowallet_cart_total() || is_wallet_rechargeable_cart())) {
             $is_valid_payment_through_wallet = false;
         }
         return apply_filters('is_valid_payment_through_wallet', $is_valid_payment_through_wallet);
