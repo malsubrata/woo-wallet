@@ -1,10 +1,10 @@
 === WooCommerce Wallet - credit, cashback, refund system ===
-Contributors: subratamal, bappa1995
+Contributors: subratamal, eruditiontec
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -40,6 +40,8 @@ With this extension, the customers won't have to fill in the payment details eve
 - Supports WooCommerce Subscriptions.
 - Supports WC Marketplace.
 - Supports Dokan Multivendor Marketplace.
+
+> Take a step forward and try our [demo](http://demo.woowallet.in/my-account/).
 
 = Workflow of WooCommerce Wallet plugin =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
@@ -123,57 +125,18 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 8. WooCommerce refund.
 
 == Changelog ==
+= 1.2.1 -2018-08-15 =
+* Add - Screen option at transaction details page.
+* Tweak - Partial payment using WooCommerce fee.
+
 = 1.2.0 - 2018-07-26 =
 * Add - Extension page.
 * Fix - Refund using default WooCommerce refund function.
 * Dev - details variable in email.
 * Dev - Added filter `woo_wallet_rest_check_permissions`, `woo_wallet_process_cashback_status`, `woo_wallet_wc_price_args`.
 
-= 1.1.10 - 2018-06-28 =
-* Add - Wallet transfer charge.
-* Dev - Created class instance.
-
-= 1.1.9 - 2018-05-30 =
-* Fix - Cashback calculation.
-
-= 1.1.8 - 2018-05-28 =
-* Add - Settings option to choose order status for processing cashback.
-* Add - Filters in my wallet page and wallet icon constant.
-* Add - Filter `woo_wallet_order_refunded`.
-* Add - Support for WooCommerce 3.4.
-* Add - Support for cashback setup from dokan dashboard.
-* Fix - Payment gateway available check.
-* Fix - Order cancellation hook.
-* Fix - Cashback calculation added support for third party WooCommerce add-on. 
-
-= 1.1.7 - 2018-05-03 =
-* Add - Filter `woo_wallet_restrict_other_from_add_to_cart`, `woo_wallet_disable_partial_payment`.
-* Add - Wallet endpoint to WooCommerce endpoints menu option.
-* Add - Wallet balance column to user table.
-* Add - Decimal support for number field.
-* Tweak - Wallet cashback logic.
-* Dev - Added `deleted` column to transaction table.
-* Fix - Wallet payment method.
-* Fix - number format.
-* Fix - Variable product cashback calculation.
-
-= 1.1.6 - 2018-04-11 =
-* Feature - REST API.
-* Feature - Auto transfer commission for dokan marketplace.
-* Add - DataTable language support.
-* Fix - Is array checking for transient option.
-* Fix - Date format for different language support.
-* Fix - Use of get_order_number instead of get_id to display order number.
-
-= 1.1.5 - 2018-03-26 =
-* Feature - Display cashback amount in admin order page.
-* Fix - User search in admin balance details page.
-* Fix - Typos in localization strings #4
-* Fix - Partial payment and cashback issue upon order cancellation.
-* Updated - Language file.
-
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.1 =
+= 1.2 =

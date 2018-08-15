@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.2.1 -2018-08-15 =
+* Add - Screen option at transaction details page.
+* Tweak - Partial payment using WooCommerce fee.
+
 = 1.2.0 - 2018-07-26 =
 * Add - Extension page.
 * Fix - Refund using default WooCommerce refund function.
