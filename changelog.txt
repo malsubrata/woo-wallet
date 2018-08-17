@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.2.2 - 2018-08-17 =
+* Fix - Partial payment issue.
+
 = 1.2.1 -2018-08-15 =
 * Add - Screen option at transaction details page.
 * Tweak - Partial payment using WooCommerce fee.

@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -125,7 +125,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 8. WooCommerce refund.
 
 == Changelog ==
-= 1.2.1 -2018-08-15 =
+= 1.2.2 - 2018-08-17 =
+* Fix - Partial payment issue.
+
+= 1.2.1 - 2018-08-15 =
 * Add - Screen option at transaction details page.
 * Tweak - Partial payment using WooCommerce fee.
 
