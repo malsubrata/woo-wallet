@@ -441,7 +441,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @since 1.2.1
          */
         public function woo_wallet_add_partial_payment_fee() {
-            $parial_payment_amount = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'), 'NULL');
+            $parial_payment_amount = apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'));
             $fee = array(
                 'id' => '_via_wallet_partial_payment',
                 'name' => __('Via wallet'),

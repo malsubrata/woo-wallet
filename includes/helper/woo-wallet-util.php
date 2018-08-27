@@ -59,7 +59,7 @@ if (!function_exists('is_enable_wallet_partial_payment')) {
     function is_enable_wallet_partial_payment() {
         $is_enable = false;
         $cart_total = get_woowallet_cart_total();
-        if ( ( (!is_null(wc()->session) && wc()->session->get('is_wallet_partial_payment', false)) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && $cart_total > woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit')) {
+        if ( ( (!is_null(wc()->session) && wc()->session->get('is_wallet_partial_payment', false)) || 'on' === woo_wallet()->settings_api->get_option('is_auto_deduct_for_partial_payment', '_wallet_settings_general')) && $cart_total > apply_filters('woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance(get_current_user_id(), 'edit'))) {
             $is_enable = true;
         }
         return apply_filters('is_enable_wallet_partial_payment', $is_enable);
