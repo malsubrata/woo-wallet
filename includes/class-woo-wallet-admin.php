@@ -84,7 +84,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * init admin menu
          */
         public function admin_menu() {
-            $woo_wallet_menu_page_hook = add_menu_page(__('WooWallet', 'woo-wallet'), __('WooWallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet', array($this, 'wallet_page'), WOO_WALLET_ICON, 59);
+            $woo_wallet_menu_page_hook = add_menu_page(__('WooWallet', 'woo-wallet'), __('WooWallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet', array($this, 'wallet_page'), '', 59);
             add_action("load-$woo_wallet_menu_page_hook", array($this, 'add_woo_wallet_details'));
             $woo_wallet_menu_page_hook_add = add_submenu_page('', __('Woo Wallet', 'woo-wallet'), __('Woo Wallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-add', array($this, 'add_balance_to_user_wallet'));
             add_action("load-$woo_wallet_menu_page_hook_add", array($this, 'add_woo_wallet_add_balance_option'));
@@ -127,9 +127,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 );
                 wp_localize_script('woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer);
             }
-            if (in_array($screen_id, array('toplevel_page_woo-wallet'))) {
-                wp_enqueue_style('woo_wallet_admin_styles');
-            }
+            wp_enqueue_style('woo_wallet_admin_styles');
         }
 
         /**
@@ -141,7 +139,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 <h2><?php _e('Users wallet details', 'woo-wallet'); ?></h2>
                 <form id="posts-filter" method="post">
                     <?php $this->balance_details_table->search_box(__('Search Users', 'woo-wallet'), 'search_id'); ?>
-            <?php $this->balance_details_table->display(); ?>
+                    <?php $this->balance_details_table->display(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -156,7 +154,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $user_id = filter_input(INPUT_GET, 'user_id');
             ?>
             <div class="wrap">
-            <?php settings_errors(); ?>
+                <?php settings_errors(); ?>
                 <h2><?php _e('Adjust Balance', 'woo-wallet'); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg(array('page' => 'woo-wallet'), admin_url('admin.php')); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
                 <p>
                     <?php
@@ -195,7 +193,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     </table>
                     <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
                     <?php wp_nonce_field('wc-wallet-admin-add-balance', 'wc-wallet-admin-add-balance'); ?>
-            <?php submit_button(); ?>
+                    <?php submit_button(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -216,7 +214,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     echo woo_wallet()->wallet->get_wallet_balance($user_id);
                     ?></p>
                 <form id="posts-filter" method="get">
-            <?php $this->transaction_details_table->display(); ?>
+                    <?php $this->transaction_details_table->display(); ?>
                 </form>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
@@ -288,9 +286,9 @@ if (!class_exists('Woo_Wallet_Admin')) {
             $this->transaction_details_table = new Woo_Wallet_Transaction_Details();
             $this->transaction_details_table->prepare_items();
         }
-        
-        public function set_wallet_screen_options($screen_option, $option, $value){
-            if('transactions_per_page' === $option){
+
+        public function set_wallet_screen_options($screen_option, $option, $value) {
+            if ('transactions_per_page' === $option) {
                 $screen_option = $value;
             }
             return $screen_option;
@@ -363,7 +361,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <td class="label"><?php _e('Cashback', 'woo-wallet'); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                <?php echo wc_price($total_cashback_amount, array('currency' => $order->get_currency())); ?>
+                        <?php echo wc_price($total_cashback_amount, array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <?php
@@ -375,14 +373,14 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <td class="label"><?php _e('Via wallet', 'woo-wallet'); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
+                        <?php echo wc_price(get_post_meta($order_id, '_via_wallet_payment', true), array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <tr>
                     <td class="label"><?php printf(__('Via %s', 'woo-wallet'), $order->get_payment_method_title()); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
+                        <?php echo wc_price($via_other_gateway, array('currency' => $order->get_currency())); ?>
                     </td>
                 </tr>
                 <?php
@@ -571,7 +569,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function manage_users_custom_column($value, $column_name, $user_id) {
             if ($column_name === 'current_wallet_balance') {
-                return sprintf('<a href="%s" title="%s">%s</a>', admin_url('?page=woo-wallet-transactions&user_id='. $user_id), __('View details', 'woo-wallet'), woo_wallet()->wallet->get_wallet_balance($user_id));
+                return sprintf('<a href="%s" title="%s">%s</a>', admin_url('?page=woo-wallet-transactions&user_id=' . $user_id), __('View details', 'woo-wallet'), woo_wallet()->wallet->get_wallet_balance($user_id));
             }
             return $value;
         }
