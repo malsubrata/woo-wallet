@@ -84,7 +84,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          * init admin menu
          */
         public function admin_menu() {
-            $woo_wallet_menu_page_hook = add_menu_page(__('WooWallet', 'woo-wallet'), __('WooWallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet', array($this, 'wallet_page'), '', 59);
+            $woo_wallet_menu_page_hook = add_menu_page('WooWallet', 'WooWallet', 'manage_woocommerce', 'woo-wallet', array($this, 'wallet_page'), '', 59);
             add_action("load-$woo_wallet_menu_page_hook", array($this, 'add_woo_wallet_details'));
             $woo_wallet_menu_page_hook_add = add_submenu_page('', __('Woo Wallet', 'woo-wallet'), __('Woo Wallet', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-add', array($this, 'add_balance_to_user_wallet'));
             add_action("load-$woo_wallet_menu_page_hook_add", array($this, 'add_woo_wallet_add_balance_option'));
@@ -152,6 +152,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
          */
         public function add_balance_to_user_wallet() {
             $user_id = filter_input(INPUT_GET, 'user_id');
+            $currency = apply_filters('woo_wallet_user_currency', '', $user_id);
             ?>
             <div class="wrap">
                 <?php settings_errors(); ?>
@@ -166,7 +167,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                     <table class="form-table">
                         <tbody>
                             <tr>
-                                <th scope="row"><label for="balance_amount"><?php echo __('Amount', 'woo-wallet') . ' (' . get_woocommerce_currency_symbol() . ')'; ?></label></th>
+                                <th scope="row"><label for="balance_amount"><?php echo __('Amount', 'woo-wallet') . ' (' . get_woocommerce_currency_symbol($currency) . ')'; ?></label></th>
                                 <td>
                                     <input type="number" step="0.01" name="balance_amount" class="regular-text" />
                                     <p class="description"><?php _e('Enter Amount', 'woo-wallet'); ?></p>
@@ -250,7 +251,7 @@ if (!class_exists('Woo_Wallet_Admin')) {
                 $payment_type = filter_input(INPUT_POST, 'payment_type');
                 $description = filter_input(INPUT_POST, 'payment_description');
                 if ($user_id != NULL && !empty($user_id) && $amount != NULL && !empty($amount)) {
-                    $amount = number_format($amount, 2, '.', '');
+                    $amount = apply_filters('woo_wallet_addjust_balance_amount', number_format($amount, 2, '.', ''), $user_id);
                     if ('credit' === $payment_type) {
                         $transaction_id = woo_wallet()->wallet->credit($user_id, $amount, $description);
                     } else if ('debit' === $payment_type) {

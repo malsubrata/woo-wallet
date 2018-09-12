@@ -331,7 +331,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function add_woo_wallet_product_price_to_cart_item_data($cart_item_data, $product_id) {
             $product = wc_get_product($product_id);
             if (isset($_POST['woo_wallet_balance_to_add']) && $product) {
-                $recharge_amount = round($_POST['woo_wallet_balance_to_add'], 2);
+                $recharge_amount = apply_filters('woo_wallet_rechargeable_amount', round($_POST['woo_wallet_balance_to_add'], 2));
                 $cart_item_data['recharge_amount'] = $recharge_amount;
             }
             return $cart_item_data;
