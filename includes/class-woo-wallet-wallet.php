@@ -52,12 +52,12 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 'thousand_separator' => wc_get_price_thousand_separator(),
                 'decimals' => wc_get_price_decimals(),
                 'price_format' => get_woocommerce_price_format(),
-            ), $this->user_id);
+                    ), $this->user_id);
             if ($this->user_id) {
-                $resualt = $wpdb->get_row("SELECT balance, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id = {$this->user_id} ORDER BY transaction_id DESC");
-                if ($resualt) {
-                    $this->wallet_balance = apply_filters('woo_wallet_current_balance', $resualt->balance, $this->user_id);
-                }
+                $credit_amount = array_sum(wp_list_pluck(get_wallet_transactions(array('user_id' => $this->user_id, 'where' => array(array('key' => 'type', 'value' => 'credit')))), 'amount'));
+                $debit_amount = array_sum(wp_list_pluck(get_wallet_transactions(array('user_id' => $this->user_id, 'where' => array(array('key' => 'type', 'value' => 'debit')))), 'amount'));
+                $balance = $credit_amount - $debit_amount;
+                $this->wallet_balance = apply_filters('woo_wallet_current_balance', $balance, $this->user_id);
             }
             return 'view' === $context ? wc_price($this->wallet_balance, $args) : number_format($this->wallet_balance, wc_get_price_decimals(), '.', '');
         }
@@ -152,6 +152,9 @@ if (!class_exists('Woo_Wallet_Wallet')) {
                 $transaction_id = $this->debit($order->get_customer_id(), $partial_payment_amount, __('For order payment #', 'woo-wallet') . $order->get_order_number());
                 if ($transaction_id) {
                     $order->add_order_note(sprintf(__('%s paid through wallet', 'woo-wallet'), wc_price($partial_payment_amount)));
+                    $order_total = $order->get_total('edit') + $partial_payment_amount;
+                    $order->set_total($order_total);
+                    $order->save();
                     update_wallet_transaction_meta($transaction_id, '_partial_payment', true, $order->get_customer_id());
                     update_post_meta($order_id, '_partial_pay_through_wallet_compleate', $transaction_id);
                     do_action('woo_wallet_partial_payment_completed', $transaction_id, $order);
