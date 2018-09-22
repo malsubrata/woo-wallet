@@ -13,6 +13,12 @@ if (!class_exists('Woo_Wallet_Dokan')) {
          * @since 1.1.10
          */
         protected static $_instance = null;
+        /**
+         * Dokan withdrawal method ID.
+         * @var string
+         * @since 1.2.3 
+         */
+        private static $method_id = 'woo_wallet';
 
         /**
          * Main instance
@@ -24,7 +30,9 @@ if (!class_exists('Woo_Wallet_Dokan')) {
             }
             return self::$_instance;
         }
-
+        /**
+         * Class constructor
+         */
         public function __construct() {
             add_filter('dokan_withdraw_methods', array($this, 'load_withdraw_method'));
             add_filter('dokan_get_seller_active_withdraw_methods', array($this, 'dokan_get_seller_active_withdraw_methods'));
@@ -33,6 +41,7 @@ if (!class_exists('Woo_Wallet_Dokan')) {
                 add_action('dokan_product_edit_after_options', array($this, 'dokan_product_edit_after_options'));
                 add_action('dokan_product_updated', array($this, 'dokan_product_updated'));
             }
+            add_action('dokan_withdraw_status_updated', array($this, 'dokan_withdraw_status_updated'), 10, 3);
         }
 
         /**
@@ -41,7 +50,7 @@ if (!class_exists('Woo_Wallet_Dokan')) {
          * @return array
          */
         public function load_withdraw_method($methods) {
-            $methods['woo_wallet'] = array(
+            $methods[self::$method_id] = array(
                 'title' => __('Wallet', 'woo-wallet'),
                 'callback' => '__return_false'
             );
@@ -57,8 +66,8 @@ if (!class_exists('Woo_Wallet_Dokan')) {
         public function dokan_get_seller_active_withdraw_methods($active_payment_methods) {
             $options = get_option('dokan_withdraw', array());
             $withdraw_methods = !empty($options['withdraw_methods']) ? $options['withdraw_methods'] : array();
-            if (array_key_exists('woo_wallet', $withdraw_methods)) {
-                $active_payment_methods[] = 'woo_wallet';
+            if (array_key_exists(self::$method_id, $withdraw_methods)) {
+                $active_payment_methods[] = self::$method_id;
             }
             return $active_payment_methods;
         }
@@ -73,7 +82,7 @@ if (!class_exists('Woo_Wallet_Dokan')) {
             $order = wc_get_order($order_id);
             $options = get_option('dokan_withdraw', array());
             $withdraw_methods = !empty($options['withdraw_methods']) ? $options['withdraw_methods'] : array();
-            if (!array_key_exists('woo_wallet', $withdraw_methods)) {
+            if (!array_key_exists(self::$method_id, $withdraw_methods)) {
                 return;
             }
             if (!in_array('wc-' . $order->get_status('edit'), dokan_withdraw_get_active_order_status())) {
@@ -152,7 +161,7 @@ if (!class_exists('Woo_Wallet_Dokan')) {
                     $data = array(
                         'date' => current_time('mysql'),
                         'status' => 1,
-                        'method' => 'woo_wallet',
+                        'method' => self::$method_id,
                         'notes' => sprintf(__('Order %d payment Auto paid via Wallet', 'woo-wallet'), $withdraw_data['order_id']),
                         'ip' => $IP
                     );
@@ -160,15 +169,20 @@ if (!class_exists('Woo_Wallet_Dokan')) {
                     $data = array_merge($data, $withdraw_data);
                     $transaction_id = woo_wallet()->wallet->credit($data['user_id'], $data['amount'], __('Commission received for order id ', 'woo-wallet') . $data['order_id']);
                     if ($transaction_id) {
-                        update_wallet_transaction_meta($transaction_id, '_type', 'vendor_commission', $data['user_id']);
                         $withdraw->insert_withdraw($data);
+                        update_wallet_transaction_meta($transaction_id, '_dokan_withdrawal_id', $wpdb->insert_id);
+                        update_wallet_transaction_meta($transaction_id, '_type', 'vendor_commission', $data['user_id']);
                         // update on vendor-balance table
                         $wpdb->update($wpdb->prefix . 'dokan_vendor_balance', array('credit' => $data['amount']), array('trn_id' => $data['order_id'], 'trn_type' => 'dokan_orders'), array('%f'), array('%d', '%s'));
                     }
                 }
             }
         }
-
+        /**
+         * Dokan cashback settings form.
+         * @global WP_Post Object $post
+         * @param Post ID $post_id
+         */
         public function dokan_product_edit_after_options($post_id) {
             // REMOVE IF DOKAN MERGE PULL REQUEST
             global $post;
@@ -196,31 +210,62 @@ if (!class_exists('Woo_Wallet_Dokan')) {
 
                     <div class="dokan-form-group content-half-part">
                         <label for="_cashback_type" class="form-label"><?php _e('Cashback type', 'woo-wallet'); ?></label>
-            <?php
-            dokan_post_input_box($post_id, '_cashback_type', array('options' => array(
-                    'percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')
-                )), 'select');
-            ?>
+                        <?php
+                        dokan_post_input_box($post_id, '_cashback_type', array('options' => array(
+                                'percent' => __('Percentage', 'woo-wallet'), 'fixed' => __('Fixed', 'woo-wallet')
+                            )), 'select');
+                        ?>
                     </div>
 
                     <div class="dokan-form-group content-half-part">
                         <label for="_cashback_amount" class="form-label"><?php _e('Cashback Amount', 'woo-wallet'); ?></label>
                         <div class="dokan-input-group">
                             <span class="dokan-input-group-addon"><?php echo get_woocommerce_currency_symbol(); ?></span>
-            <?php dokan_post_input_box($post_id, '_cashback_amount', array('class' => 'dokan-product-sales-price', 'placeholder' => __('0.00', 'woo-wallet')), 'number'); ?>
+                            <?php dokan_post_input_box($post_id, '_cashback_amount', array('class' => 'dokan-product-sales-price', 'placeholder' => __('0.00', 'woo-wallet')), 'number'); ?>
                         </div>
                     </div>
                 </div>
             </div>
             <?php
         }
-
+        /**
+         * Update product meta
+         * @param INT $post_id
+         */
         public function dokan_product_updated($post_id) {
             if (isset($_POST['_cashback_type'])) {
                 update_post_meta($post_id, '_cashback_type', esc_attr($_POST['_cashback_type']));
             }
             if (isset($_POST['_cashback_amount'])) {
                 update_post_meta($post_id, '_cashback_amount', sanitize_text_field($_POST['_cashback_amount']));
+            }
+        }
+        /**
+         * Auto credit wallet upon approval of dokan withdrawal.
+         * @global Object $wpdb
+         * @param string $status
+         * @param int $user_id
+         * @param int $row_id
+         * @return null
+         */
+        public function dokan_withdraw_status_updated($status, $user_id, $row_id) {
+            global $wpdb;
+            $resualt = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->dokan_withdraw} WHERE id = %d", $row_id));
+            if($resualt->method != self::$method_id){
+                return;
+            }
+            $wallet_transaction = $wpdb->get_row($wpdb->prepare("SELECT transactions.transaction_id FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions INNER JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id WHERE transaction_meta.meta_key = %s AND transaction_meta.meta_value = %d", '_dokan_withdrawal_id', $row_id));
+            if (1 === $status) {
+                if ($wallet_transaction && isset($wallet_transaction->transaction_id)) {
+                    update_wallet_transaction($wallet_transaction->transaction_id, $user_id, array('deleted' => 0), array('%d'));
+                } else {
+                    $transaction_id = woo_wallet()->wallet->credit($user_id, $resualt->amount, __('Withdrawal request #' . $row_id));
+                    update_wallet_transaction_meta($transaction_id, '_dokan_withdrawal_id', $row_id);
+                }
+            } else {
+                if ($wallet_transaction && isset($wallet_transaction->transaction_id)) {
+                    update_wallet_transaction($wallet_transaction->transaction_id, $user_id, array('deleted' => 1), array('%d'));
+                }
             }
         }
 
