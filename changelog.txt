@@ -1,4 +1,11 @@
 *** Changelog ***
+= 1.2.3 -2018-09-24 =
+* Fix- Partial payment.
+* Fix - Dokan withdrawal.
+* Add - Dokan auto withdrawal.
+* Add - Wallet icon file.
+* Add - Wallet actions (Admin can now set action for wallet credit).
+
 = 1.2.2 - 2018-08-17 =
 * Fix - Partial payment issue.
 

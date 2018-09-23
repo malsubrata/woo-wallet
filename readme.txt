@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -125,6 +125,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 8. WooCommerce refund.
 
 == Changelog ==
+= 1.2.3 -2018-09-24 =
+* Fix- Partial payment.
+* Fix - Dokan withdrawal.
+* Add - Dokan auto withdrawal.
+* Add - Wallet icon file.
+* Add - Wallet actions (Admin can now set action for wallet credit).
+
 = 1.2.2 - 2018-08-17 =
 * Fix - Partial payment issue.
 

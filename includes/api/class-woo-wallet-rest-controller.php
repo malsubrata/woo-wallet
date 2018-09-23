@@ -29,7 +29,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
         register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>[\d]+)', array(
             'args' => array(
                 'id' => array(
-                    'description' => __('Unique identifier for the resource.', 'woocommerce'),
+                    'description' => __('Unique identifier for the resource.', 'woo-wallet'),
                     'type' => 'integer',
                 ),
             ),
@@ -53,7 +53,7 @@ class WOO_Wallet_REST_Controller extends WP_REST_Controller {
         register_rest_route($this->namespace, '/current_balance/(?P<id>[\d]+)', array(
             'args' => array(
                 'id' => array(
-                    'description' => __('Unique identifier for the resource.', 'woocommerce'),
+                    'description' => __('Unique identifier for the resource.', 'woo-wallet'),
                     'type' => 'integer',
                 ),
             ),

@@ -16,14 +16,14 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
     }
 
     public function get_columns() {
-        return array(
+        return apply_filters('woo_wallet_balance_details_columns', array(
             'id' => __('ID', 'woo-wallet'),
             'username' => __('Username', 'woo-wallet'),
             'name' => __('Name', 'woo-wallet'),
             'email' => __('Email', 'woo-wallet'),
             'balance' => __('Remaining balance', 'woo-wallet'),
             'actions' => __('Actions', 'woo-wallet'),
-        );
+        ));
     }
 
     /**
@@ -78,7 +78,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
      */
     private function table_data() {
         $data = array();
-        $args = array(
+        $args = apply_filters('woo_wallet_balance_details_args', array(
             'blog_id' => $GLOBALS['blog_id'],
             'role' => '',
             'role__in' => array(),
@@ -98,7 +98,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'count_total' => false,
             'fields' => 'all',
             'who' => '',
-        );
+        ));
         $users = get_users($args);
 
         foreach ($users as $key => $user) {
