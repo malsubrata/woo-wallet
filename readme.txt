@@ -127,6 +127,8 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 == Changelog ==
 = 1.2.4 - 2018-09-24 =
 * Fix - Fatal error on WordPress Menu page.
+* Fix - Hide partial payment option for guest user.
+* Fix - Remaining balance display at email template.
 
 = 1.2.3 -2018-09-24 =
 * Fix - Partial payment.
