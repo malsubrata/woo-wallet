@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.2.4 - 2018-09-24 =
+* Fix - Fatal error on WordPress Menu page.
+
 = 1.2.3 -2018-09-24 =
 * Fix- Partial payment.
 * Fix - Dokan withdrawal.
