@@ -29,7 +29,7 @@ if (!function_exists('is_wallet_rechargeable_cart')) {
      */
     function is_wallet_rechargeable_cart() {
         $is_wallet_rechargeable_cart = false;
-        if (sizeof(wc()->cart->get_cart()) > 0 && get_wallet_rechargeable_product()) {
+        if (!is_null(wc()->cart) && sizeof(wc()->cart->get_cart()) > 0 && get_wallet_rechargeable_product()) {
             foreach (wc()->cart->get_cart() as $key => $cart_item) {
                 if ($cart_item['product_id'] == get_wallet_rechargeable_product()->get_id()) {
                     $is_wallet_rechargeable_cart = true;
