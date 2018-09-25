@@ -32,21 +32,53 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
      * @return Void
      */
     public function prepare_items() {
+        $usersearch = isset($_REQUEST['s']) ? wp_unslash(trim($_REQUEST['s'])) : '';
+        $users_per_page = $this->get_items_per_page('users_per_page', 15);
+        $paged = $this->get_pagenum();
         $columns = $this->get_columns();
         $hidden = $this->get_hidden_columns();
         $sortable = $this->get_sortable_columns();
-        $data = $this->table_data();
-        usort($data, array(&$this, 'sort_data'));
-        $perPage = $this->get_items_per_page('users_per_page', 15);
-        $currentPage = $this->get_pagenum();
-        $totalItems = count($data);
-        $this->set_pagination_args(array(
-            'total_items' => $totalItems,
-            'per_page' => $perPage
-        ));
-        $data = array_slice($data, (($currentPage - 1) * $perPage), $perPage);
+        $args = array(
+            'blog_id' => $GLOBALS['blog_id'],
+            'number' => $users_per_page,
+            'offset' => ( $paged - 1 ) * $users_per_page,
+            'include' => wp_get_users_with_no_role($this->site_id),
+            'search' => $usersearch,
+            'fields' => 'all_with_meta'
+        );
+
+        if ('' !== $args['search']) {
+            $args['search'] = '*' . $args['search'] . '*';
+        }
+        if (isset($_REQUEST['orderby'])) {
+            $args['orderby'] = $_REQUEST['orderby'];
+        }
+
+        if (isset($_REQUEST['order'])) {
+            $args['order'] = $_REQUEST['order'];
+        }
+
+        $args = apply_filters('woo_wallet_users_list_table_query_args', $args);
+
+        // Query the user IDs for this page
+        $wp_user_search = new WP_User_Query($args);
+        $data = array();
+        foreach ($wp_user_search->get_results() as $user) {
+            $data[] = array(
+                'id' => $user->ID,
+                'username' => $user->data->user_login,
+                'name' => $user->data->display_name,
+                'email' => $user->data->user_email,
+                'balance' => woo_wallet()->wallet->get_wallet_balance($user->ID),
+                'actions' => ''
+            );
+        }
         $this->_column_headers = array($columns, $hidden, $sortable);
         $this->items = $data;
+        $this->set_pagination_args(array(
+            'total_items' => $wp_user_search->get_total(),
+            'per_page' => $users_per_page,
+        ));
     }
 
     /**
@@ -69,49 +101,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'balance' => array('balance', false),
         );
         return apply_filters('woo_wallet_balance_details_sortable_columns', $sortable_columns);
-    }
-
-    /**
-     * Get the table data
-     *
-     * @return Array
-     */
-    private function table_data() {
-        $data = array();
-        $args = apply_filters('woo_wallet_balance_details_args', array(
-            'blog_id' => $GLOBALS['blog_id'],
-            'role' => '',
-            'role__in' => array(),
-            'role__not_in' => array(),
-            'meta_key' => '',
-            'meta_value' => '',
-            'meta_compare' => '',
-            'meta_query' => array(),
-            'date_query' => array(),
-            'include' => array(),
-            'exclude' => array(),
-            'orderby' => 'login',
-            'order' => 'ASC',
-            'offset' => '',
-            'search' => isset($_POST['s']) ? '*' . $_POST['s'] . '*' : '',
-            'number' => '',
-            'count_total' => false,
-            'fields' => 'all',
-            'who' => '',
-        ));
-        $users = get_users($args);
-
-        foreach ($users as $key => $user) {
-            $data[] = array(
-                'id' => $user->ID,
-                'username' => $user->data->user_login,
-                'name' => $user->data->display_name,
-                'email' => $user->data->user_email,
-                'balance' => woo_wallet()->wallet->get_wallet_balance($user->ID),
-                'actions' => ''
-            );
-        }
-        return $data;
     }
 
     /**

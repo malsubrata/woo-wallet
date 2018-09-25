@@ -6,6 +6,14 @@ if (!class_exists('WP_List_Table')) {
 
 class Woo_Wallet_Transaction_Details extends WP_List_Table {
 
+    /**
+     * Total number of found users for the current query
+     *
+     * @since 3.1.0
+     * @var int
+     */
+    private $total_count = 0;
+
     public function __construct() {
         parent::__construct(array(
             'singular' => 'transaction',
@@ -35,17 +43,18 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
         $columns = $this->get_columns();
         $hidden = $this->get_hidden_columns();
         $sortable = $this->get_sortable_columns();
-        $data = $this->table_data();
+
         $perPage = $this->get_items_per_page('transactions_per_page', 10);
         $currentPage = $this->get_pagenum();
-        $totalItems = count($data);
-        $this->set_pagination_args(array(
-            'total_items' => $totalItems,
-            'per_page' => $perPage
-        ));
-        $data = array_slice($data, (($currentPage - 1) * $perPage), $perPage);
+
+        $data = $this->table_data(($currentPage - 1) * $perPage, $perPage);
         $this->_column_headers = array($columns, $hidden, $sortable);
         $this->items = $data;
+
+        $this->set_pagination_args(array(
+            'total_items' => $this->total_count,
+            'per_page' => $perPage
+        ));
     }
 
     /**
@@ -71,7 +80,8 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
      *
      * @return Array
      */
-    private function table_data() {
+    private function table_data($lower = 0, $uper = 10) {
+        global $wpdb;
         $data = array();
         $user_id = filter_input(INPUT_GET, 'user_id');
         if ($user_id == NULL) {
@@ -84,8 +94,9 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
             'thousand_separator' => wc_get_price_thousand_separator(),
             'decimals' => wc_get_price_decimals(),
             'price_format' => get_woocommerce_price_format(),
-        ), $user_id);
-        $transactions = get_wallet_transactions(array('user_id' => $user_id));
+                ), $user_id);
+        $transactions = get_wallet_transactions(array('user_id' => $user_id, 'limit' => $lower . ',' . $uper));
+        $this->total_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id={$user_id}");
         if (!empty($transactions) && is_array($transactions)) {
             foreach ($transactions as $key => $transaction) {
                 $data[] = array(
