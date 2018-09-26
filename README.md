@@ -1,4 +1,4 @@
-# WooCommerce Wallet
+# WooCommerce Wallet [![WP compatibility](https://plugintests.com/plugins/woo-wallet/wp-badge.svg)](https://plugintests.com/plugins/woo-wallet/latest) [![PHP compatibility](https://plugintests.com/plugins/woo-wallet/php-badge.svg)](https://plugintests.com/plugins/woo-wallet/latest)
 
 Welcome to the WooCommerce Wallet repository on GitHub. Here you can browse the source, look at open issues and keep track of development.
 
