@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.2.5 - 2018-09-27 =
+* Fix - Resolved performance issue.
+* Dev - Removed WOO_WALLET_ICON constant.
+
 = 1.2.4 - 2018-09-24 =
 * Fix - Fatal error on WordPress Menu page.
 * Fix - Hide partial payment option for guest user.
