@@ -123,10 +123,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 6. Admin adjust wallet balance.
 7. WooCommerce wallet payment gateway.
 8. WooCommerce refund.
+9. Wallet actions.
 
 == Changelog ==
 = 1.2.5 - 2018-09-27 =
 * Fix - Resolved performance issue.
+* Add - Wallet REST API with WooCommerce endpoint.
 * Dev - Removed WOO_WALLET_ICON constant.
 
 = 1.2.4 - 2018-09-24 =
