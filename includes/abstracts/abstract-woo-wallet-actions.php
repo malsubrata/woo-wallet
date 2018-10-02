@@ -63,7 +63,7 @@ abstract class WooWalletAction extends WC_Settings_API {
     }
 
     public function admin_options() {
-        if (!empty($this->get_post_data())) {
+        if ($this->get_post_data()) {
             parent::process_admin_options();
             add_settings_error($this->id, '200', __('Your settings have been saved.', 'woo-wallet'), 'updated');
         }

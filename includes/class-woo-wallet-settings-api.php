@@ -387,6 +387,32 @@ if (!class_exists('Woo_Wallet_Settings_API')):
 
             echo $html;
         }
+        
+        /**
+         * Displays a file upload field for a settings field
+         *
+         * @param array   $args settings field args
+         */
+        function callback_attachment($args) {
+
+            $value = esc_attr($this->get_option($args['id'], $args['section'], $args['std']));
+            $size = isset($args['size']) && !is_null($args['size']) ? $args['size'] : 'regular';
+            $id = $args['section'] . '[' . $args['id'] . ']';
+            $label = isset($args['options']['button_label']) ? $args['options']['button_label'] : __('Choose File', 'woo-wallet');
+            $uploader_title = isset($args['options']['uploader_title']) ? $args['options']['uploader_title'] : __('Select', 'woo-wallet');
+            $uploader_button_text = isset($args['options']['uploader_button_text']) ? $args['options']['uploader_button_text'] : __('Select', 'woo-wallet');
+            $attachment_src = WC()->plugin_url() . '/assets/images/placeholder.png';
+            if($value){
+                $attachment_src = wp_get_attachment_url($value);
+            }
+            $html = '';
+            $html .= '<img class="wpsa-attachment-image" src="'.$attachment_src.'" width="75" />';
+            $html .= sprintf('<input type="hidden" class="%1$s-text wpsa-attachment-id" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value);
+            $html .= '<input type="button" class="button wpsa-attachment" data-uploader_title="'.$uploader_title.'" data-uploader_button_text="'.$uploader_button_text.'" value="' . $label . '" />';
+            $html .= $this->get_field_description($args);
+
+            echo $html;
+        }
 
         /**
          * Displays a password field for a settings field

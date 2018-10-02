@@ -104,6 +104,17 @@ if (!class_exists('Woo_Wallet_Settings')):
                         'desc' => __('Enter wallet rechargeable product title', 'woo-wallet'),
                         'type' => 'text',
                         'default' => $this->get_rechargeable_product_title()
+                    ),
+                    array(
+                        'name' => 'product_image',
+                        'label' => __('Rechargeable Product Image', 'woo-wallet'),
+                        'desc' => __('Choose wallet rechargeable product image', 'woo-wallet'),
+                        'type' => 'attachment',
+                        'options' => array(
+                            'button_label' => __('Set product image', 'woo-wallet'),
+                            'uploader_title' => __('Product image', 'woo-wallet'),
+                            'uploader_button_text' => __('Set product image', 'woo-wallet')
+                        )
                     )), $this->get_wc_tax_options(), array(
                     array(
                         'name' => 'min_topup_amount',
@@ -379,6 +390,13 @@ if (!class_exists('Woo_Wallet_Settings')):
             if ($old_value['_tax_status'] != $value['_tax_status'] || $old_value['_tax_class'] != $value['_tax_class']) {
                 $this->set_rechargeable_tax_status($value['_tax_status'], $value['_tax_class']);
             }
+
+            /**
+             * Save product image
+             */
+            if ($old_value['product_image'] != $value['product_image']) {
+                $this->set_rechargeable_product_image($value['product_image']);
+            }
         }
 
         /**
@@ -405,6 +423,20 @@ if (!class_exists('Woo_Wallet_Settings')):
             if ($wallet_product) {
                 $wallet_product->set_tax_status($_tax_status);
                 $wallet_product->set_tax_class($_tax_class);
+                return $wallet_product->save();
+            }
+            return false;
+        }
+        
+        /**
+         * Set rechargeable product image
+         * @param int $attachment_id
+         * @return boolean | int 
+         */
+        public function set_rechargeable_product_image($attachment_id) {
+            $wallet_product = get_wallet_rechargeable_product();
+            if ($wallet_product) {
+                $wallet_product->set_image_id($attachment_id);
                 return $wallet_product->save();
             }
             return false;

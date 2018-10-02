@@ -67,6 +67,29 @@ jQuery(function ($) {
                 // Finally, open the modal
                 file_frame.open();
             });
+            $('.wpsa-attachment').on('click', function (event) {
+                event.preventDefault();
+
+                var self = $(this);
+
+                // Create the media frame.
+                var file_frame = wp.media.frames.file_frame = wp.media({
+                    title: self.data('uploader_title'),
+                    button: {
+                        text: self.data('uploader_button_text')
+                    },
+                    multiple: false
+                });
+
+                file_frame.on('select', function () {
+                    var attachment = file_frame.state().get('selection').first().toJSON();
+                    self.prev('.wpsa-attachment-id').val(attachment.id).change();
+                    self.parent('td').find('.wpsa-attachment-image').attr('src', attachment.url);
+                });
+
+                // Finally, open the modal
+                file_frame.open();
+            });
         },
         settings_page_init : function (){
             $('#_wallet_settings_general-_tax_status').on('change', function () {
