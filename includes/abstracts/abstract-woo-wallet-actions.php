@@ -1,6 +1,6 @@
 <?php
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
@@ -43,7 +43,7 @@ abstract class WooWalletAction extends WC_Settings_API {
      * @return string
      */
     public function get_action_title() {
-        return apply_filters('woo_wallet_gateway_action_title', $this->action_title, $this);
+        return apply_filters( 'woo_wallet_gateway_action_title', $this->action_title, $this );
     }
 
     /**
@@ -55,7 +55,7 @@ abstract class WooWalletAction extends WC_Settings_API {
     }
 
     public function get_action_description() {
-        return apply_filters('woo_wallet_action_description', $this->description, $this);
+        return apply_filters( 'woo_wallet_action_description', $this->description, $this );
     }
 
     public function is_enabled() {
@@ -63,15 +63,15 @@ abstract class WooWalletAction extends WC_Settings_API {
     }
 
     public function admin_options() {
-        if ($this->get_post_data()) {
+        if ( $this->get_post_data() ) {
             parent::process_admin_options();
-            add_settings_error($this->id, '200', __('Your settings have been saved.', 'woo-wallet'), 'updated');
+            add_settings_error( $this->id, '200', __( 'Your settings have been saved.', 'woo-wallet' ), 'updated' );
         }
-        echo '<h2>' . esc_html($this->get_action_title());
-        wc_back_link(__('Return to actions', 'woo-wallet'), admin_url('admin.php?page=woo-wallet-actions'));
+        echo '<h2>' . esc_html( $this->get_action_title() );
+        wc_back_link( __( 'Return to actions', 'woo-wallet' ), admin_url( 'admin.php?page=woo-wallet-actions' ) );
         settings_errors();
         echo '</h2>';
-        echo wp_kses_post(wpautop($this->get_action_description()));
+        echo wp_kses_post( wpautop( $this->get_action_description() ) );
         parent::admin_options();
     }
 
@@ -80,7 +80,7 @@ abstract class WooWalletAction extends WC_Settings_API {
      */
     public function init_settings() {
         parent::init_settings();
-        $this->enabled = !empty($this->settings['enabled']) && 'yes' === $this->settings['enabled'] ? 'yes' : 'no';
+        $this->enabled = ! empty( $this->settings['enabled'] ) && 'yes' === $this->settings['enabled'] ? 'yes' : 'no';
     }
 
 }

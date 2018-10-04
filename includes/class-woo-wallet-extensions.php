@@ -5,7 +5,7 @@
  *
  * @author Subrata Mal
  */
-if (!class_exists('Woo_Wallet_Extensions_Settings')):
+if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
 
     class Woo_Wallet_Extensions_Settings {
         /* setting api object */
@@ -16,19 +16,19 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
          * Class constructor
          * @param object $settings_api
          */
-        public function __construct($settings_api) {
+        public function __construct( $settings_api) {
             $this->settings_api = $settings_api;
-            add_action('admin_init', array($this, 'plugin_settings_page_init'));
-            add_action('admin_menu', array($this, 'admin_menu'), 65);
-            add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
-            add_action('woo_wallet_form_bottom__wallet_settings_extensions_general', array($this, 'display_extensions'));
+            add_action( 'admin_init', array( $this, 'plugin_settings_page_init' ) );
+            add_action( 'admin_menu', array( $this, 'admin_menu' ), 65);
+            add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+            add_action( 'woo_wallet_form_bottom__wallet_settings_extensions_general', array( $this, 'display_extensions' ) );
         }
 
         /**
          * wc wallet menu
          */
         public function admin_menu() {
-            add_submenu_page('woo-wallet', __('Extensions', 'woo-wallet'), __('Extensions', 'woo-wallet'), 'manage_woocommerce', 'woo-wallet-extensions', array($this, 'plugin_page'));
+            add_submenu_page( 'woo-wallet', __( 'Extensions', 'woo-wallet' ), __( 'Extensions', 'woo-wallet' ), 'manage_woocommerce', 'woo-wallet-extensions', array( $this, 'plugin_page' ) );
         }
 
         /**
@@ -36,13 +36,13 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
          */
         public function plugin_settings_page_init() {
             //set the settings
-            $this->settings_api->set_sections($this->get_settings_sections());
-            foreach ($this->get_settings_sections() as $section) {
-                if (method_exists($this, "update_option_{$section['id']}_callback")) {
-                    add_action("update_option_{$section['id']}", array($this, "update_option_{$section['id']}_callback"), 10, 3);
+            $this->settings_api->set_sections( $this->get_settings_sections() );
+            foreach ( $this->get_settings_sections() as $section) {
+                if (method_exists( $this, "update_option_{$section['id']}_callback" ) ) {
+                    add_action( "update_option_{$section['id']}", array( $this, "update_option_{$section['id']}_callback" ), 10, 3);
                 }
             }
-            $this->settings_api->set_fields($this->get_settings_fields());
+            $this->settings_api->set_fields( $this->get_settings_fields() );
             //initialize settings
             $this->settings_api->admin_init();
         }
@@ -53,21 +53,21 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
         public function admin_enqueue_scripts() {
             $screen = get_current_screen();
             $screen_id = $screen ? $screen->id : '';
-            $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
-            wp_register_script('woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
-            if (in_array($screen_id, array('woowallet_page_woo-wallet-extensions'))) {
-                wp_enqueue_style('dashicons');
-                wp_enqueue_style('wp-color-picker');
-                wp_enqueue_style('woo_wallet_admin_styles');
-                wp_add_inline_style('woo_wallet_admin_styles', 'tr.licence_key_nonce{ display:none; }');
+            $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+            wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION);
+            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-extensions' ) ) ) {
+                wp_enqueue_style( 'dashicons' );
+                wp_enqueue_style( 'wp-color-picker' );
+                wp_enqueue_style( 'woo_wallet_admin_styles' );
+                wp_add_inline_style( 'woo_wallet_admin_styles', 'tr.licence_key_nonce{ display:none; }' );
                 wp_enqueue_media();
-                wp_enqueue_script('wp-color-picker');
-                wp_enqueue_script('jquery');
-                wp_enqueue_script('woo-wallet-admin-settings');
+                wp_enqueue_script( 'wp-color-picker' );
+                wp_enqueue_script( 'jquery' );
+                wp_enqueue_script( 'woo-wallet-admin-settings' );
                 $localize_param = array(
                     'screen_id' => $screen_id
                 );
-                wp_localize_script('woo-wallet-admin-settings', 'woo_wallet_admin_settings_param', $localize_param);
+                wp_localize_script( 'woo-wallet-admin-settings', 'woo_wallet_admin_settings_param', $localize_param);
             }
         }
 
@@ -79,11 +79,11 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
             $sections = array(
                 array(
                     'id' => '_wallet_settings_extensions_general',
-                    'title' => __('Extensions', 'woo-wallet'),
+                    'title' => __( 'Extensions', 'woo-wallet' ),
                     'icon' => 'dashicons-admin-plugins',
                 )
             );
-            return apply_filters('woo_wallet_extensions_settings_sections', $sections);
+            return apply_filters( 'woo_wallet_extensions_settings_sections', $sections);
         }
 
         /**
@@ -94,7 +94,7 @@ if (!class_exists('Woo_Wallet_Extensions_Settings')):
         public function get_settings_fields() {
             $settings_fields = array(
             );
-            return apply_filters('woo_wallet_extensions_settings_filds', $settings_fields);
+            return apply_filters( 'woo_wallet_extensions_settings_filds', $settings_fields);
         }
 
         /**

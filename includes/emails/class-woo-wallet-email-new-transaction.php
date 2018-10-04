@@ -1,24 +1,24 @@
 <?php
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
+if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
 
     class Woo_Wallet_Email_New_Transaction extends WC_Email {
         public $type;
         public $amount = 0;
         public $details;
         public function __construct() {
-            $this->id = 'new_wallet_transaction';
-            $this->title = __('New wallet transaction', 'woo-wallet');
-            $this->description = __('New wallet transaction emails are sent to user when a wallet transaction received.', 'woo-wallet');
-            $this->template_html = 'emails/user-new-transaction.php';
+            $this->id             = 'new_wallet_transaction';
+            $this->title          = __( 'New wallet transaction', 'woo-wallet' );
+            $this->description    = __( 'New wallet transaction emails are sent to user when a wallet transaction received.', 'woo-wallet' );
+            $this->template_html  = 'emails/user-new-transaction.php';
             $this->template_plain = 'emails/plain/user-new-transaction.php';
-            $this->template_base = WOO_WALLET_ABSPATH . 'templates/';
-            $this->placeholders = array(
-                '{site_title}' => $this->get_blogname(),
+            $this->template_base  = WOO_WALLET_ABSPATH . 'templates/';
+            $this->placeholders   = array(
+                '{site_title}'       => $this->get_blogname(),
                 '{transaction_date}' => '',
             );
 
@@ -33,7 +33,7 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @return string
          */
         public function get_default_subject() {
-            return __('Your {site_title} wallet transaction from {transaction_date}', 'woo-wallet');
+            return __( 'Your {site_title} wallet transaction from {transaction_date}', 'woo-wallet' );
         }
 
         /**
@@ -43,7 +43,7 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @return string
          */
         public function get_default_heading() {
-            return __('Thank you for using wallet', 'woo-wallet');
+            return __( 'Thank you for using wallet', 'woo-wallet' );
         }
 
         /**
@@ -52,24 +52,24 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @param int $order_id The order ID.
          * @param WC_Order $order Order object.
          */
-        public function trigger($user_id, $amount, $type, $details) {
+        public function trigger( $user_id, $amount, $type, $details ) {
             $this->setup_locale();
             
-            if ($user_id) {
-                $user = new WP_User($user_id);
+            if ( $user_id ) {
+                $user = new WP_User( $user_id );
             }
             
-            if (is_a($user, 'WP_User')) {
-                $this->object = $user;
-                $this->type = $type;
-                $this->amount = $amount;
-                $this->details = $details;
-                $this->recipient = $user->user_email;
-                $this->placeholders['{transaction_date}'] = date('M d, Y');
+            if ( is_a( $user, 'WP_User' ) ) {
+                $this->object                             = $user;
+                $this->type                               = $type;
+                $this->amount                             = $amount;
+                $this->details                            = $details;
+                $this->recipient                          = $user->user_email;
+                $this->placeholders['{transaction_date}'] = date( 'M d, Y' );
             }
 
-            if ($this->is_enabled() && $this->get_recipient()) {
-                $this->send($this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments());
+            if ( $this->is_enabled() && $this->get_recipient() ) {
+                $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
             }
             $this->restore_locale();
         }
@@ -81,15 +81,15 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @return string
          */
         public function get_content_html() {
-            return wc_get_template_html($this->template_html, array(
-                'user' => $this->object,
-                'type' => $this->type,
-                'amount' => $this->amount,
-                'details' => $this->details,
+            return wc_get_template_html( $this->template_html, array(
+                'user'          => $this->object,
+                'type'          => $this->type,
+                'amount'        => $this->amount,
+                'details'       => $this->details,
                 'email_heading' => $this->get_heading(),
                 'sent_to_admin' => false,
-                'plain_text' => false,
-                'email' => $this), 'woo-wallet', $this->template_base);
+                'plain_text'    => false,
+                'email'         => $this ), 'woo-wallet', $this->template_base );
         }
 
         /**
@@ -99,15 +99,15 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
          * @return string
          */
         public function get_content_plain() {
-            return wc_get_template_html($this->template_plain, array(
-                'user' => $this->object,
-                'type' => $this->type,
-                'amount' => $this->amount,
-                'details' => $this->details,
+            return wc_get_template_html( $this->template_plain, array(
+                'user'          => $this->object,
+                'type'          => $this->type,
+                'amount'        => $this->amount,
+                'details'       => $this->details,
                 'email_heading' => $this->get_heading(),
                 'sent_to_admin' => false,
-                'plain_text' => true,
-                'email' => $this), 'woo-wallet', $this->template_base);
+                'plain_text'    => true,
+                'email' => $this ), 'woo-wallet', $this->template_base );
         }
 
         /**
@@ -116,37 +116,37 @@ if (!class_exists('Woo_Wallet_Email_New_Transaction')) {
         public function init_form_fields() {
             $this->form_fields = array(
                 'enabled' => array(
-                    'title' => __('Enable/Disable', 'woo-wallet'),
-                    'type' => 'checkbox',
-                    'label' => __('Enable this email notification', 'woo-wallet'),
+                    'title'   => __( 'Enable/Disable', 'woo-wallet' ),
+                    'type'    => 'checkbox',
+                    'label'   => __( 'Enable this email notification', 'woo-wallet' ),
                     'default' => 'yes',
                 ),
                 'subject' => array(
-                    'title' => __('Subject', 'woo-wallet'),
-                    'type' => 'text',
-                    'desc_tip' => true,
+                    'title'       => __( 'Subject', 'woo-wallet' ),
+                    'type'        => 'text',
+                    'desc_tip'    => true,
                     /* translators: %s: list of placeholders */
-                    'description' => sprintf(__('Available placeholders: %s', 'woo-wallet'), '<code>{site_title}, {transaction_date}</code>'),
+                    'description' => sprintf( __( 'Available placeholders: %s', 'woo-wallet' ), '<code>{site_title}, {transaction_date}</code>' ),
                     'placeholder' => $this->get_default_subject(),
-                    'default' => '',
+                    'default'     => '',
                 ),
                 'heading' => array(
-                    'title' => __('Email heading', 'woo-wallet'),
-                    'type' => 'text',
-                    'desc_tip' => true,
+                    'title'       => __( 'Email heading', 'woo-wallet' ),
+                    'type'        => 'text',
+                    'desc_tip'    => true,
                     /* translators: %s: list of placeholders */
-                    'description' => sprintf(__('Available placeholders: %s', 'woo-wallet'), '<code>{site_title}, {transaction_date}</code>'),
+                    'description' => sprintf( __( 'Available placeholders: %s', 'woo-wallet' ), '<code>{site_title}, {transaction_date}</code>' ),
                     'placeholder' => $this->get_default_heading(),
-                    'default' => '',
+                    'default'     => '',
                 ),
                 'email_type' => array(
-                    'title' => __('Email type', 'woo-wallet'),
-                    'type' => 'select',
-                    'description' => __('Choose which format of email to send.', 'woo-wallet'),
-                    'default' => 'html',
-                    'class' => 'email_type wc-enhanced-select',
-                    'options' => $this->get_email_type_options(),
-                    'desc_tip' => true,
+                    'title'       => __( 'Email type', 'woo-wallet' ),
+                    'type'        => 'select',
+                    'description' => __( 'Choose which format of email to send.', 'woo-wallet' ),
+                    'default'     => 'html',
+                    'class'       => 'email_type wc-enhanced-select',
+                    'options'     => $this->get_email_type_options(),
+                    'desc_tip'    => true,
                 ),
             );
         }
