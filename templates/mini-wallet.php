@@ -14,12 +14,14 @@
  * @author 	Subrata Mal
  * @version     1.0.8
  */
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
-$title = __('Current wallet balance', 'woo-wallet');
-$menu_item = '<li class="right"><a class="woo-wallet-menu-contents" href="' . esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) . '" title="' . $title . '">';
+
+$title      = __( 'Current wallet balance', 'woo-wallet' );
+$menu_item  = '<li class="right"><a class="woo-wallet-menu-contents" href="' . esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ) . '" title="' . $title . '">';
 $menu_item .= '<span class="woo-wallet-icon-wallet"></span>';
-$menu_item .= woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
+$menu_item .= woo_wallet()->wallet->get_wallet_balance( get_current_user_id() );
 $menu_item .= '</a></li>';
+
 echo $menu_item;
