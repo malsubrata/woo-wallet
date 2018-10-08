@@ -36,6 +36,15 @@ class Action_Daily_Visits extends WooWalletAction {
                 'default'     => '10',
                 'desc_tip'    => true
             ),
+            'exclude_role' => array(
+                'title'       => __( 'Exclude user role', 'woo-wallet' ),
+                'description' => __( 'This option lets you limit which user role you want to exclude.', 'woo-wallet' ),
+                'type'        => 'multiselect',
+                'class'       => 'wc-enhanced-select',
+                'css'         => 'min-width: 350px;',
+                'desc_tip'    => true,
+                'options'     => $this->get_editable_role_options()
+            ),
             'description' => array(
                 'title'       => __( 'Description', 'woo-wallet' ),
                 'type'        => 'textarea',
@@ -46,12 +55,26 @@ class Action_Daily_Visits extends WooWalletAction {
         );
     }
     
+    public function get_editable_role_options(){
+        $role_options = array();
+        $editable_roles = array_reverse( wp_roles()->roles );
+        foreach ( $editable_roles as $role => $details ) {
+            $name = translate_user_role($details['name'] );
+            $role_options[$role] = $name;
+	}
+        return $role_options;
+    }
+    
     public function woo_wallet_site_visit_credit() {
         if ( !$this->is_enabled() || ! is_user_logged_in() ) {
             return;
         }
 
         $user_id = get_current_user_id();
+        $user = new WP_User($user_id);
+        if( !array_diff( $user->roles, (array) $this->settings['exclude_role'] ) ){
+            return;
+        }
         if ( isset( $_COOKIE['woo_wallet_site_visit_' . $user_id] ) ) {
             return;
         }
