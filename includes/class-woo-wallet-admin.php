@@ -68,6 +68,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_filter( 'manage_users_custom_column', array( $this, 'manage_users_custom_column' ), 10, 3);
             add_filter( 'set-screen-option', array( $this, 'set_wallet_screen_options' ), 10, 3);
             add_filter( 'woocommerce_screen_ids', array( $this, 'woocommerce_screen_ids_callback' ) );
+            add_action('woocommerce_after_order_fee_item_name', array($this, 'woocommerce_after_order_fee_item_name_callback'), 10, 2);
         }
 
         /**
@@ -661,6 +662,23 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             $screen_ids[] = 'woowallet_page_woo-wallet-actions';
             return $screen_ids;
         }
+        /**
+         * Add refund button to WooCommerce order page.
+         * @param int $item_id
+         * @param Object $item
+         */
+        public function woocommerce_after_order_fee_item_name_callback( $item_id, $item ){
+            if('via_wallet' != strtolower(str_replace(' ', '_', $item->get_name('edit')))){
+                return;
+            }
+            $order_id = filter_input(INPUT_GET, 'post');
+            if ( 'via_wallet' === strtolower(str_replace(' ', '_', $item->get_name('edit'))) && get_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true) ) {
+                echo '<small class="refunded">' . __('Refunded', 'woo-wallet') . '</small>';
+            } else{
+                echo '<button type="button" class="button refund-partial-payment">'.__( 'Refund', 'woo-wallet').'</button>';
+            }
+        }
+
     }
 
 }

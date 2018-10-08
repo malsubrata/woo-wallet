@@ -34,6 +34,27 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             add_action( 'wp_ajax_woocommerce_wallet_rated', array( $this, 'woocommerce_wallet_rated' ) );
             add_action( 'wp_ajax_woo-wallet-user-search', array( $this, 'woo_wallet_user_search' ) );
             add_action( 'wp_ajax_woo_wallet_partial_payment_update_session', array( $this, 'woo_wallet_partial_payment_update_session' ) );
+            add_action('wp_ajax_woo_wallet_refund_partial_payment', array($this, 'woo_wallet_refund_partial_payment'));
+        }
+        /**
+         * Wallet partial payment refund.
+         */
+        public function woo_wallet_refund_partial_payment(){
+            if ( !current_user_can( 'edit_shop_orders' ) ) {
+                wp_die(-1 );
+            }
+            $response = array('success' => false);
+            $order_id = absint( filter_input(INPUT_POST, 'order_id') );
+            $order = wc_get_order($order_id);
+            $partial_payment_amount = get_order_partial_payment_amount($order_id);
+            $transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $partial_payment_amount, __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number() );
+            if($transaction_id){
+                $response['success'] = true;
+                $order->add_order_note(sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $partial_payment_amount ) ));
+                update_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true);
+                update_post_meta($order_id, '_partial_payment_refund_id', $transaction_id);
+            }
+            wp_send_json($response);
         }
 
         /**

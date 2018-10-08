@@ -152,9 +152,6 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 $transaction_id = $this->debit( $order->get_customer_id(), $partial_payment_amount, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number() );
                 if ( $transaction_id ) {
                     $order->add_order_note(sprintf( __( '%s paid through wallet', 'woo-wallet' ), wc_price( $partial_payment_amount ) ) );
-                    $order_total = $order->get_total( 'edit' ) + $partial_payment_amount;
-                    $order->set_total( $order_total );
-                    $order->save();
                     update_wallet_transaction_meta( $transaction_id, '_partial_payment', true, $order->get_customer_id() );
                     update_post_meta( $order_id, '_partial_pay_through_wallet_compleate', $transaction_id );
                     do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $order );

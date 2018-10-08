@@ -167,3 +167,7 @@ p.woo-wallet-field-container {
     margin-bottom: 1em;
     border-radius: 3px;
 }
+.woocommerce-MyAccount-navigation > ul li.woocommerce-MyAccount-navigation-link--woo-wallet a::before {
+    font-family: 'woowallet' !important;
+    content: "\e900";
+}
