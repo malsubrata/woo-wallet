@@ -217,7 +217,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
             'order'      => 'DESC',
             'join_type'  => 'INNER',
             'limit'      => '',
-            'nocache'    => false
+            'nocache'    => is_multisite() ? true : false
         );
         $args = apply_filters( 'woo_wallet_transactions_query_args', $args );
         $args = wp_parse_args( $args, $default_args );
