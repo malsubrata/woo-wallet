@@ -444,7 +444,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
             $parial_payment_amount = apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
             $fee = array(
                 'id' => '_via_wallet_partial_payment',
-                'name' => __( 'Via wallet' ),
+                'name' => __( 'Via wallet', 'woo-wallet' ),
                 'amount' => (float) -1 * $parial_payment_amount,
                 'taxable' => false,
                 'tax_class' => '',
@@ -645,13 +645,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
          */
         public function woocommerce_cart_get_total( $total ) {
             if ( is_user_logged_in() ) {
-                foreach (WC()->cart->get_applied_coupons() as $code) {
-                    $coupon = new WC_Coupon( $code);
-                    $_is_coupon_cashback = get_post_meta( $coupon->get_id(), '_is_coupon_cashback', true );
-                    if ( 'yes' === $_is_coupon_cashback) {
-                        $total += WC()->cart->get_coupon_discount_amount( $code, WC()->cart->display_cart_ex_tax);
-                    }
-                }
+                $total += get_woowallet_coupon_cashback_amount();
             }
             return $total;
         }

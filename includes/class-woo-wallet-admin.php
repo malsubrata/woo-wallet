@@ -668,11 +668,17 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          * @param Object $item
          */
         public function woocommerce_after_order_fee_item_name_callback( $item_id, $item ){
-            if('via_wallet' != strtolower(str_replace(' ', '_', $item->get_name('edit')))){
+            global $post, $thepostid;
+            
+            if( !is_partial_payment_order_item( $item_id, $item) ){
                 return;
             }
-            $order_id = filter_input(INPUT_GET, 'post');
-            if ( 'via_wallet' === strtolower(str_replace(' ', '_', $item->get_name('edit'))) && get_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true) ) {
+            if ( ! is_int( $thepostid ) ) {
+                    $thepostid = $post->ID;
+            }
+            
+            $order_id = $thepostid;
+            if ( get_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true) ) {
                 echo '<small class="refunded">' . __('Refunded', 'woo-wallet') . '</small>';
             } else{
                 echo '<button type="button" class="button refund-partial-payment">'.__( 'Refund', 'woo-wallet').'</button>';

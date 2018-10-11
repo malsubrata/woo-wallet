@@ -163,6 +163,8 @@ final class WooWallet {
         add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
 
         add_filter( 'woocommerce_reports_get_order_report_query', array( $this, 'woocommerce_reports_get_order_report_query' ) );
+        
+        add_action( 'woocommerce_new_order_item', array( $this, 'woocommerce_new_order_item' ), 10, 2 );
 
         add_rewrite_endpoint( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ), EP_PAGES);
         add_rewrite_endpoint( get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions' ), EP_PAGES);
@@ -171,7 +173,9 @@ final class WooWallet {
             update_option( '_wallet_enpoint_added', true );
         }
     }
-
+    /**
+     * Load WooCommerce dependent class file.
+     */
     public function woocommerce_loaded_callback() {
         include_once WOO_WALLET_ABSPATH . 'includes/abstracts/abstract-woo-wallet-actions.php';
         require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-actions.php';
@@ -187,7 +191,11 @@ final class WooWallet {
         $rest_controller = new WOO_Wallet_REST_Controller();
         $rest_controller->register_routes();
     }
-
+    /**
+     * Add settings link to plugin list.
+     * @param array $links
+     * @return array
+     */
     public function plugin_action_links( $links) {
         $action_links = array(
             'settings' => '<a href="' . admin_url( 'admin.php?page=woo-wallet-settings' ) . '" aria-label="' . esc_attr__( 'View Wallet settings', 'woo-wallet' ) . '">' . esc_html__( 'Settings', 'woo-wallet' ) . '</a>',
@@ -241,7 +249,9 @@ final class WooWallet {
         }
         return $query;
     }
-
+    /**
+     * Load marketplace supported file.
+     */
     public function add_marketplace_support() {
         if (class_exists( 'WCMp' ) ) {
             include_once( WOO_WALLET_ABSPATH . 'includes/marketplace/wc-merketplace/class-woo-wallet-wcmp-gateway.php' );
@@ -249,6 +259,16 @@ final class WooWallet {
         }
         if (class_exists( 'WeDevs_Dokan' ) ) {
             include_once( WOO_WALLET_ABSPATH . 'includes/marketplace/dokan/class-woo-wallet-dokan.php' );
+        }
+    }
+    /**
+     * Store fee key to order item meta.
+     * @param Int $item_id
+     * @param WC_Order_Item_Fee $item
+     */
+    public function woocommerce_new_order_item($item_id, $item){
+        if ( $item->get_type() == 'fee' ) {
+            update_metadata( 'order_item', $item_id, '_legacy_fee_key', $item->legacy_fee_key );
         }
     }
 
