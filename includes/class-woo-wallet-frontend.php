@@ -53,7 +53,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
             add_action( 'woocommerce_checkout_create_order_coupon_item', array( $this, 'convert_coupon_to_cashbak_if' ), 10, 4);
             add_action( 'woocommerce_shop_loop_item_title', array( $this, 'display_cashback' ), 15);
             add_action( 'woocommerce_before_single_product_summary', array( $this, 'display_cashback' ), 15);
-
+            
+            add_filter('woocommerce_coupon_is_valid', array($this, 'woo_wallet_is_valid_cashback_coupon'), 100, 2);
             add_filter( 'woocommerce_coupon_message', array( $this, 'update_woocommerce_coupon_message_as_cashback' ), 10, 3);
             add_filter( 'woocommerce_cart_totals_coupon_label', array( $this, 'change_coupon_label' ), 10, 2 );
             add_filter( 'woocommerce_cart_get_total', array( $this, 'woocommerce_cart_get_total' ) );
@@ -162,10 +163,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
          * @param array $items
          * @return array
          */
-        public function woo_wallet_menu_items( $items) {
+        public function woo_wallet_menu_items( $items ) {
             unset( $items['edit-account'] );
             unset( $items['customer-logout'] );
-            $items[get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' )] = apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) );
+            $items['woo-wallet'] = apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) );
             $items['edit-account'] = __( 'Account details', 'woo-wallet' );
             $items['customer-logout'] = __( 'Logout', 'woo-wallet' );
             return $items;
@@ -449,7 +450,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
                 'taxable' => false,
                 'tax_class' => '',
             );
-            if ( is_enable_wallet_partial_payment() ) {
+            if ( is_enable_wallet_partial_payment() && $parial_payment_amount ) {
                 wc()->cart->fees_api()->add_fee( $fee);
             } else {
                 $all_fees = wc()->cart->fees_api()->get_fees();
@@ -605,6 +606,21 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
                     }
                 }
             }
+        }
+        /**
+         * Check if user logged in for cashback coupon.
+         * @param boolean $is_valid
+         * @param WC_Coupon $coupon
+         * @return boolean
+         */
+        public function woo_wallet_is_valid_cashback_coupon($is_valid, $coupon){
+            $_is_coupon_cashback = get_post_meta( $coupon->get_id(), '_is_coupon_cashback', true );
+            if ( 'yes' === $_is_coupon_cashback ) {
+                if ( !is_user_logged_in() ) {
+                    $is_valid = false;
+                }
+            }
+            return $is_valid;
         }
 
         /**

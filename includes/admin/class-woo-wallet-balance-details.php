@@ -42,7 +42,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'blog_id' => $GLOBALS['blog_id'],
             'number'  => $users_per_page,
             'offset'  => ( $paged - 1 ) * $users_per_page,
-            'include' => wp_get_users_with_no_role( $GLOBALS['blog_id'] ),
             'search'  => $usersearch,
             'fields'  => 'all_with_meta'
         );
