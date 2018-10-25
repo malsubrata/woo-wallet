@@ -72,7 +72,7 @@ class Action_Daily_Visits extends WooWalletAction {
 
         $user_id = get_current_user_id();
         $user = new WP_User($user_id);
-        if( !array_diff( $user->roles, (array) $this->settings['exclude_role'] ) ){
+        if( isset( $this->settings['exclude_role'] ) && !array_diff( $user->roles, (array) $this->settings['exclude_role'] ) ){
             return;
         }
         if ( isset( $_COOKIE['woo_wallet_site_visit_' . $user_id] ) ) {
