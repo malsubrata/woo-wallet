@@ -262,6 +262,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                                     <p class="description"><?php _e( 'Select payment type', 'woo-wallet' ); ?></p>
                                 </td>
                             </tr>
+                            <?php do_action('woo_wallet_after_payment_type_field') ?>
                             <tr>
                                 <th scope="row"><label for="payment_description"><?php _e( 'Description', 'woo-wallet' ); ?></label></th>
                                 <td>
@@ -272,7 +273,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                         </tbody>
                     </table>
                     <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
-                    <?php wp_nonce_field( 'wc-wallet-admin-add-balance', 'wc-wallet-admin-add-balance' ); ?>
+                    <?php wp_nonce_field( 'woo-wallet-admin-adjust-balance', 'woo-wallet-admin-adjust-balance' ); ?>
                     <?php submit_button(); ?>
                 </form>
                 <div id="ajax-response"></div>
@@ -322,7 +323,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          * Handel admin add wallet balance
          */
         public function add_woo_wallet_add_balance_option() {
-            if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['wc-wallet-admin-add-balance'] ) && wp_verify_nonce( $_POST['wc-wallet-admin-add-balance'], 'wc-wallet-admin-add-balance' ) ) {
+            if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['woo-wallet-admin-adjust-balance'] ) && wp_verify_nonce( $_POST['woo-wallet-admin-adjust-balance'], 'woo-wallet-admin-adjust-balance' ) ) {
                 $transaction_id = NULL;
                 $message = '';
                 $user_id = filter_input(INPUT_POST, 'user_id' );
@@ -345,6 +346,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 if ( !$transaction_id ) {
                     add_settings_error( '', '102', $message);
                 } else {
+                    do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
                     wp_safe_redirect(add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ) );
                     exit();
                 }

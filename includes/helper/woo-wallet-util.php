@@ -344,6 +344,24 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 
 }
 
+if(!function_exists('get_wallet_transaction_type')){
+    /**
+     * Return transaction type by transaction id
+     * @since 1.2.7
+     * @global object $wpdb
+     * @param int $transaction_id
+     * @return type(string) | false
+     */
+    function get_wallet_transaction_type($transaction_id){
+        global $wpdb;
+        $transaction = $wpdb->get_row("SELECT type FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = {$transaction_id}");
+        if( $transaction ){
+            return $transaction->type;
+        }
+        return false;
+    }
+}
+
 if ( ! function_exists( 'update_wallet_transaction' ) ) {
 
     function update_wallet_transaction( $transaction_id, $user_id, $data = array(), $format = NULL ) {
