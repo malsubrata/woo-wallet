@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
 
     class Woo_Wallet_Email_New_Transaction extends WC_Email {
+        public $transaction_id;
         public $type;
         public $amount = 0;
         public $details;
@@ -49,29 +50,32 @@ if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
         /**
          * Trigger the sending of this email.
          *
-         * @param int $order_id The order ID.
-         * @param WC_Order $order Order object.
+         * @param int $transaction_id.
          */
-        public function trigger( $user_id, $amount, $type, $details ) {
-            $this->setup_locale();
+        public function trigger( $transaction_id ) {
             
-            if ( $user_id ) {
-                $user = new WP_User( $user_id );
-            }
-            
-            if ( is_a( $user, 'WP_User' ) ) {
-                $this->object                             = $user;
-                $this->type                               = $type;
-                $this->amount                             = $amount;
-                $this->details                            = $details;
-                $this->recipient                          = $user->user_email;
-                $this->placeholders['{transaction_date}'] = date( 'M d, Y' );
-            }
+            $transaction = get_wallet_transaction( $transaction_id );
+            if ( $transaction ) {
+                $this->setup_locale();
 
-            if ( $this->is_enabled() && $this->get_recipient() ) {
-                $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
+                $user = new WP_User( $transaction->user_id );
+
+                if ( is_a( $user, 'WP_User' ) ) {
+                    $this->object = $user;
+                    $this->transaction_id = $transaction->transaction_id;
+                    $this->type = $transaction->type;
+                    $this->amount = $transaction->amount;
+                    $this->details = $transaction->details;
+                    $this->recipient = $user->user_email;
+                    $this->placeholders['{transaction_date}'] = date('M d, Y');
+
+                    if ( $this->is_enabled() && $this->get_recipient() ) {
+                        $this->send($this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments());
+                    }
+                }
+                $this->restore_locale();
             }
-            $this->restore_locale();
+            
         }
 
         /**
@@ -83,6 +87,7 @@ if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
         public function get_content_html() {
             return wc_get_template_html( $this->template_html, array(
                 'user'          => $this->object,
+                'transaction_id' => $this->transaction_id,
                 'type'          => $this->type,
                 'amount'        => $this->amount,
                 'details'       => $this->details,
@@ -101,6 +106,7 @@ if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
         public function get_content_plain() {
             return wc_get_template_html( $this->template_plain, array(
                 'user'          => $this->object,
+                'transaction_id' => $this->transaction_id,
                 'type'          => $this->type,
                 'amount'        => $this->amount,
                 'details'       => $this->details,

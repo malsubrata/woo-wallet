@@ -205,9 +205,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
             if ( $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", apply_filters( 'woo_wallet_transactions_args', array( 'blog_id' => $GLOBALS['blog_id'], 'user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details ), array( '%d', '%d', '%s', '%f', '%f', '%s', '%s' ) ) ) ) {
                 $transaction_id = $wpdb->insert_id;
                 clear_woo_wallet_cache( $this->user_id );
-                $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
-                $email_admin->trigger( $this->user_id, $amount, $type, $details );
                 do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type);
+                $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
+                $email_admin->trigger( $transaction_id );
                 return $transaction_id;
             }
             return false;
