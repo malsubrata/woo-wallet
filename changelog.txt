@@ -1,4 +1,12 @@
 *** Changelog ***
+= 1.2.7 - 2018-11-08 =
+* Fix - Cache issue for WP multisite.
+* Fix - Translation issue.
+* Fix - Partial payment amount calculation when cash-back coupon applied.
+* Fix - User details page issue.
+* Fix - Role checking issue.
+* Fix - Email parameters.
+
 = 1.2.6 - 2018-10-09 =
 * Add - Admin now can set rechargeable product image via settings page.
 * Add - Partial payment amount refund option.

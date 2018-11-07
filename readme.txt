@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 4.9
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -126,6 +126,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.2.7 - 2018-11-08 =
+* Fix - Cache issue for WP multisite.
+* Fix - Translation issue.
+* Fix - Partial payment amount calculation when cash-back coupon applied.
+* Fix - User details page issue.
+* Fix - Role checking issue.
+* Fix - Email parameters.
+
 = 1.2.6 - 2018-10-09 =
 * Add - Admin now can set rechargeable product image via settings page.
 * Add - Partial payment amount refund option.
