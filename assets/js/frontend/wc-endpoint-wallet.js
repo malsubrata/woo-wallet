@@ -3,6 +3,7 @@
 jQuery(function ($) {
     $('#wc-wallet-transaction-details').DataTable(
             {
+                responsive: true,
                 searching: false,
                 order: [[0, 'desc']],
                 language: {

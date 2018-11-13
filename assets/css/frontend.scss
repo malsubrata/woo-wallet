@@ -171,3 +171,6 @@ p.woo-wallet-field-container {
     font-family: 'woowallet' !important;
     content: "\e900";
 }
+#wc-wallet-transaction-details.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before, table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>th:first-child:before{
+    line-height: 19px !important;
+}
