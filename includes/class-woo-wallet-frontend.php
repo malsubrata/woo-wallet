@@ -714,7 +714,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
                 if ( isset( $_GET['wallet_action'] ) && ! empty( $_GET['wallet_action'] ) ) {
                     if ( 'view_transactions' === $_GET['wallet_action'] ) {
                         woo_wallet()->get_template( 'wc-endpoint-wallet-transactions.php' );
-                    } else if (in_array( $_GET['wallet_action'], array( 'add', 'transfer' ) ) ) {
+                    } else if (in_array( $_GET['wallet_action'], apply_filters('woo_wallet_endpoint_actions', array( 'add', 'transfer' ) ) ) ) {
                         woo_wallet()->get_template( 'wc-endpoint-wallet.php' );
                     }
                     do_action( 'woo_wallet_shortcode_action', $_GET['wallet_action'] );

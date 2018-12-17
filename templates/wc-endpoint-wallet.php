@@ -81,8 +81,8 @@ do_action( 'woo_wallet_before_my_wallet_content' );
                         <input type="submit" class="button" name="woo_wallet_transfer_fund" value="<?php _e( 'Proceed to transfer', 'woo-wallet' ); ?>" />
                     </p>
                 </form>
-                <?php do_action( 'woo_wallet_menu_content' ); ?>
             <?php } ?> 
+            <?php do_action( 'woo_wallet_menu_content' ); ?>
         <?php } else if ( apply_filters( 'woo_wallet_is_enable_transaction_details', true ) ) { ?>
             <?php $transactions = get_wallet_transactions( array( 'limit' => apply_filters( 'woo_wallet_transactions_count', 10 ) ) ); ?>
             <?php if ( ! empty( $transactions ) ) { ?>

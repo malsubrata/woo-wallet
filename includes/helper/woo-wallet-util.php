@@ -70,7 +70,7 @@ if ( ! function_exists( 'get_woowallet_cart_total' ) ) {
      */
     function get_woowallet_cart_total() {
         $cart_total = 0;
-        if ( is_array( wc()->cart->cart_contents) && sizeof( wc()->cart->cart_contents) > 0 ) {
+        if ( !is_admin() && is_array( wc()->cart->cart_contents) && sizeof( wc()->cart->cart_contents) > 0 ) {
             $cart_total = wc()->cart->get_subtotal( 'edit' ) + wc()->cart->get_taxes_total() + wc()->cart->get_shipping_total( 'edit' ) - wc()->cart->get_discount_total() + get_woowallet_coupon_cashback_amount();
         }
         return apply_filters( 'woowallet_cart_total', $cart_total );
@@ -535,7 +535,7 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
     function is_full_payment_through_wallet() {
         $is_valid_payment_through_wallet = true;
         $current_wallet_balance          = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
-        if ( ( is_array( wc()->cart->cart_contents) && sizeof( wc()->cart->cart_contents) > 0 ) && ( $current_wallet_balance < get_woowallet_cart_total() || is_wallet_rechargeable_cart() ) ) {
+        if ( !is_admin && ( is_array( wc()->cart->cart_contents) && sizeof( wc()->cart->cart_contents) > 0 ) && ( $current_wallet_balance < get_woowallet_cart_total() || is_wallet_rechargeable_cart() ) ) {
             $is_valid_payment_through_wallet = false;
         }
         return apply_filters( 'is_valid_payment_through_wallet', $is_valid_payment_through_wallet );

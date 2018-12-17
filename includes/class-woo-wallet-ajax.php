@@ -53,6 +53,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
                 $order->add_order_note(sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $partial_payment_amount ) ));
                 update_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true);
                 update_post_meta($order_id, '_partial_payment_refund_id', $transaction_id);
+                add_action('woo_wallet_partial_order_refunded', $order_id, $transaction_id);
             }
             wp_send_json($response);
         }
