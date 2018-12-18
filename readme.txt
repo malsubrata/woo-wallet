@@ -3,8 +3,8 @@ Contributors: subratamal, eruditiontec
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 4.9
-Stable tag: 1.2.7
+Tested up to: 5.0
+Stable tag: 1.2.8
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -126,6 +126,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.2.8 - 2018-12-19 =
+* Fix - Datatable responsive issue.
+* Add - WP 5.0 compatibility.
+
 = 1.2.7 - 2018-11-08 =
 * Fix - Cache issue for WP multisite.
 * Fix - Translation issue.
