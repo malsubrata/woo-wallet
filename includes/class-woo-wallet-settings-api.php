@@ -188,6 +188,20 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ):
 
             echo $html;
         }
+        
+        /**
+         * Render a hidden random field
+         *
+         * @param array   $args settings field args
+         */
+        function callback_rand($args) {
+            $value = rand();
+            $type = 'hidden';
+
+            $html = sprintf('<input type="%1$s" id="%2$s-%3$s" name="%2$s[%3$s]" value="%4$s"/>', $type, $args['section'], $args['id'], $value);
+
+            echo $html;
+        }
 
         /**
          * Displays a url field for a settings field
