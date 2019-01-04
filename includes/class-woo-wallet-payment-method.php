@@ -15,6 +15,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             'products',
             'refunds',
             'subscriptions',
+            'multiple_subscriptions',
             'subscription_cancellation',
             'subscription_suspension',
             'subscription_reactivation',
