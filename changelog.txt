@@ -1,4 +1,9 @@
 *** Changelog ***
+= 1.2.9 - 2019-01-08 =
+* Add - Support for WooCommerce Multivendor Marketplace by WC Lovers.
+* Fix - Daily visit credit with transient.
+* Add - Support for multiple subscriptions.
+
 = 1.2.8 - 2018-12-19 =
 * Fix - Datatable responsive issue.
 * Add - WP 5.0 compatibility.

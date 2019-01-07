@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.0
-Stable tag: 1.2.8
+Stable tag: 1.2.9
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -38,6 +38,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - Support WordPress Multisite Network
 - Supports multiple languages translations.
 - Supports WooCommerce Subscriptions.
+- Supports WooCommerce Multivendor Marketplace by WC Lovers.
 - Supports WC Marketplace.
 - Supports Dokan Multivendor Marketplace.
 
@@ -126,6 +127,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.2.9 - 2019-01-08 =
+* Add - Support for WooCommerce Multivendor Marketplace by WC Lovers.
+* Fix - Daily visit credit with transient.
+* Add - Support for multiple subscriptions.
+
 = 1.2.8 - 2018-12-19 =
 * Fix - Datatable responsive issue.
 * Add - WP 5.0 compatibility.
