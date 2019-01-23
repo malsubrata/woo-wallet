@@ -21,10 +21,15 @@ final class WooWallet {
     public $settings_api = null;
 
     /**
-     * wallet instance
+     * wallet instance.
      * @var Woo_Wallet_Wallet 
      */
     public $wallet = null;
+    /**
+     * Cashback instance.
+     * @var Woo_Wallet_Cashback 
+     */
+    public $cashback = null;
     /**
      * Wallet REST API
      * @var WooWallet_API 
@@ -101,10 +106,16 @@ final class WooWallet {
         include_once( WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-util.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-update-functions.php' );
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-install.php' );
+        
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings-api.php' );
         $this->settings_api = new Woo_Wallet_Settings_API();
+        
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-wallet.php' );
         $this->wallet = new Woo_Wallet_Wallet();
+        
+        include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-cashback.php' );
+        $this->cashback = new Woo_Wallet_Cashback();
+        
         if ( $this->is_request( 'admin' ) ) {
             include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php' );
             include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-extensions.php' );

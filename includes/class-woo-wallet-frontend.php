@@ -414,14 +414,15 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * Cashback notice
          */
         public function woocommerce_before_cart_table() {
-            if (get_wallet_cashback_amount() && !is_wallet_rechargeable_cart()) :
+            if (woo_wallet()->cashback->calculate_cashback() && !is_wallet_rechargeable_cart()) :
                 ?>
                 <div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
                     <?php
+                    $cashback_amount = woo_wallet()->cashback->calculate_cashback();
                     if (is_user_logged_in()) {
-                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet'), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet'), wc_price($cashback_amount)), $cashback_amount);
                     } else {
-                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price(get_wallet_cashback_amount())), get_wallet_cashback_amount());
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price($cashback_amount)), $cashback_amount);
                     }
                     ?>
                 </div>
@@ -436,8 +437,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @param Object $order
          */
         public function woocommerce_checkout_order_processed($order_id, $posted_data, $order) {
-            if (get_wallet_cashback_amount() && !is_wallet_rechargeable_order(wc_get_order($order_id)) && is_user_logged_in()) {
-                update_post_meta($order_id, '_wallet_cashback', get_wallet_cashback_amount());
+            $cashback_amount = woo_wallet()->cashback->calculate_cashback();
+            if ($cashback_amount && !is_wallet_rechargeable_order(wc_get_order($order_id)) && is_user_logged_in()) {
+                update_post_meta($order_id, '_wallet_cashback', $cashback_amount);
             }
         }
 

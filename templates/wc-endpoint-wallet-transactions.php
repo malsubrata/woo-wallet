@@ -24,21 +24,25 @@ do_action( 'woo_wallet_before_transaction_details_content' );
 <table id="wc-wallet-transaction-details" class="table">
     <thead>
         <tr>
+            <?php do_action('woo_wallet_before_transaction_table_th'); ?>
             <th><?php _e( 'ID', 'woo-wallet' ); ?></th>
             <th><?php _e( 'Credit', 'woo-wallet' ); ?></th>
             <th><?php _e( 'Debit', 'woo-wallet' ); ?></th>
             <th><?php _e( 'Details', 'woo-wallet' ); ?></th>
             <th><?php _e( 'Date', 'woo-wallet' ); ?></th>
+            <?php do_action('woo_wallet_after_transaction_table_th'); ?>
         </tr>
     </thead>
     <tbody>
         <?php foreach ( $transactions as $key => $transaction ) : ?>
         <tr>
+            <?php do_action('woo_wallet_before_transaction_table_items', $transaction); ?>
             <td><?php echo $transaction->transaction_id; ?></td>
             <td><?php echo $transaction->type == 'credit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ) ) : ' - '; ?></td>
             <td><?php echo $transaction->type == 'debit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ) ) : ' - '; ?></td>
             <td><?php echo $transaction->details; ?></td>
             <td><?php echo wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ); ?></td>
+            <?php do_action('woo_wallet_after_transaction_table_items', $transaction); ?>
         </tr>
         <?php endforeach; ?>
     </tbody>

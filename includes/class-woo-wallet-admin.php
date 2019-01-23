@@ -69,6 +69,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_filter( 'set-screen-option', array( $this, 'set_wallet_screen_options' ), 10, 3);
             add_filter( 'woocommerce_screen_ids', array( $this, 'woocommerce_screen_ids_callback' ) );
             add_action('woocommerce_after_order_fee_item_name', array($this, 'woocommerce_after_order_fee_item_name_callback'), 10, 2);
+            add_action('woocommerce_new_order', array($this, 'woocommerce_new_order'));
+            add_filter( 'woocommerce_order_actions', array( $this, 'woocommerce_order_actions' ));
+            add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback'));
         }
 
         /**
@@ -686,7 +689,33 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 echo '<button type="button" class="button refund-partial-payment">'.__( 'Refund', 'woo-wallet').'</button>';
             }
         }
+        /**
+         * Admin new order add cashback.
+         * @param int $order_id
+         */
+        public function woocommerce_new_order($order_id){
+            woo_wallet()->cashback->calculate_cashback(false, $order_id, true);
+        }
 
+        /**
+         * Add order action for recalculate order cashback
+         * @param array $order_actions
+         * @return array
+         */
+        public function woocommerce_order_actions($order_actions){
+            $order_actions['recalculate_order_cashback'] = __( 'Recalculate order cashback', 'woo-wallet');
+            return $order_actions;
+        }
+        /**
+         * Recalculate and send order cashback.
+         * @param WC_Order $order
+         */
+        public function recalculate_order_cashback($order){
+            woo_wallet()->cashback->calculate_cashback(false, $order->get_id(), true);
+            if (in_array($order->get_status(), apply_filters('wallet_cashback_order_status', woo_wallet()->settings_api->get_option('process_cashback_status', '_wallet_settings_credit', array('processing', 'completed'))))) {
+                woo_wallet()->wallet->wallet_cashback($order->get_id());
+            }
+        }
     }
 
 }
