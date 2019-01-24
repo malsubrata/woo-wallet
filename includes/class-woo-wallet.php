@@ -116,6 +116,8 @@ final class WooWallet {
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-cashback.php' );
         $this->cashback = new Woo_Wallet_Cashback();
         
+        include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-widgets.php' );
+        
         if ( $this->is_request( 'admin' ) ) {
             include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php' );
             include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-extensions.php' );
@@ -144,6 +146,7 @@ final class WooWallet {
         register_activation_hook(WOO_WALLET_PLUGIN_FILE, array( 'Woo_Wallet_Install', 'install' ) );
         add_filter( 'plugin_action_links_' . plugin_basename(WOO_WALLET_PLUGIN_FILE), array( $this, 'plugin_action_links' ) );
         add_action( 'init', array( $this, 'init' ), 5);
+        add_action( 'widgets_init', array($this, 'woo_wallet_widget_init') );
         add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
         add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
         do_action( 'woo_wallet_init' );
@@ -184,6 +187,13 @@ final class WooWallet {
             update_option( '_wallet_enpoint_added', true );
         }
     }
+    /**
+     * WooWallet init widget
+     */
+    public function woo_wallet_widget_init(){
+        register_widget('Woo_Wallet_Topup');
+    }
+
     /**
      * Load WooCommerce dependent class file.
      */

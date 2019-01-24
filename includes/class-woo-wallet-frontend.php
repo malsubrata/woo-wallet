@@ -201,22 +201,20 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             /**
              * Process wallet recharge.
              */
-            if (isset($_POST['woo_add_to_wallet'])) {
-                if (isset($_POST['woo_wallet_balance_to_add']) && !empty($_POST['woo_wallet_balance_to_add'])) {
-                    $is_valid = $this->is_valid_wallet_recharge_amount($_POST['woo_wallet_balance_to_add']);
-                    if ($is_valid['is_valid']) {
-                        add_filter('woocommerce_add_cart_item_data', array($this, 'add_woo_wallet_product_price_to_cart_item_data'), 10, 2);
-                        $product = get_wallet_rechargeable_product();
-                        if ($product) {
-                            wc()->cart->empty_cart();
-                            wc()->cart->add_to_cart($product->get_id());
-                            $redirect_url = apply_filters('woo_wallet_redirect_to_checkout_after_added_amount', true) ? wc_get_checkout_url() : wc_get_cart_url();
-                            wp_safe_redirect($redirect_url);
-                            exit();
-                        }
-                    } else {
-                        wc_add_notice($is_valid['message'], 'error');
+            if (isset($_POST['woo_wallet_balance_to_add']) && !empty($_POST['woo_wallet_balance_to_add'])) {
+                $is_valid = $this->is_valid_wallet_recharge_amount($_POST['woo_wallet_balance_to_add']);
+                if ($is_valid['is_valid']) {
+                    add_filter('woocommerce_add_cart_item_data', array($this, 'add_woo_wallet_product_price_to_cart_item_data'), 10, 2);
+                    $product = get_wallet_rechargeable_product();
+                    if ($product) {
+                        wc()->cart->empty_cart();
+                        wc()->cart->add_to_cart($product->get_id());
+                        $redirect_url = apply_filters('woo_wallet_redirect_to_checkout_after_added_amount', true) ? wc_get_checkout_url() : wc_get_cart_url();
+                        wp_safe_redirect($redirect_url);
+                        exit();
                     }
+                } else {
+                    wc_add_notice($is_valid['message'], 'error');
                 }
             }
             /**
