@@ -69,19 +69,18 @@ class Action_Daily_Visits extends WooWalletAction {
         if ( !$this->is_enabled() || ! is_user_logged_in() ) {
             return;
         }
-
+        $user_ip = WC_Geolocation::get_ip_address();
         $user_id = get_current_user_id();
         $user = new WP_User($user_id);
         if( isset( $this->settings['exclude_role'] ) && !array_diff( $user->roles, (array) $this->settings['exclude_role'] ) ){
             return;
         }
-        if ( isset( $_COOKIE['woo_wallet_site_visit_' . $user_id] ) || get_transient('woo_wallet_site_visit_' . $user_id)) {
+        if ( get_transient('woo_wallet_site_visit_' . $user_id ) || get_transient('woo_wallet_site_visit_' . $user_id . $user_ip)) {
             return;
         }
         
         if ( ! headers_sent() && did_action( 'wp_loaded' ) ) {
-            wc_setcookie( 'woo_wallet_site_visit_' . $user_id, 1, time() + DAY_IN_SECONDS );
-            set_transient('woo_wallet_site_visit_' . $user_id, true, DAY_IN_SECONDS);
+            set_transient('woo_wallet_site_visit_' . $user_id. $user_ip, true, DAY_IN_SECONDS);
         }
         
         if ( $this->settings['amount'] && apply_filters( 'woo_wallet_site_visit_credit', true ) ) {

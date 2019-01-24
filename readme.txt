@@ -5,7 +5,7 @@ Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.0
 Stable tag: 1.2.9
-Donate link: https://www.paypal.me/SubrataMal941
+Donate link: https://www.paypal.me/eruditiontec
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
