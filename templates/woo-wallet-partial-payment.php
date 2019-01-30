@@ -40,7 +40,8 @@ if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partia
                     return $(this).prop('title');
                 }
             });
-            $('body').on('change', '.partial_pay_through_wallet', function () {
+            $(document).on('change', '.partial_pay_through_wallet', function (event) {
+                event.stopImmediatePropagation();
                 var data = {
                     action: 'woo_wallet_partial_payment_update_session',
                     checked: $(this).is(':checked')
@@ -51,4 +52,4 @@ if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partia
             });
         });
     </script>
-<?php } ?>
+<?php }
