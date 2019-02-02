@@ -4,8 +4,8 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.0
-Stable tag: 1.2.9
-Donate link: https://www.paypal.me/eruditiontec
+Stable tag: 1.3.0
+Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -15,7 +15,7 @@ A powerful, extendable WooCommerce wallet system which support payment, partial 
 
 WooCommerce Wallet plugin allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
-[youtube https://www.youtube.com/watch?v=WBCBfdGe6OI]
+[youtube https://www.youtube.com/watch?v=Fnpp8qxAWBw]
 
 = Use case of WooCommerce Wallet plugin =
 With this extension, the customers won't have to fill in the payment details every time. They can simply log in and pay for products using the wallet money. The customers will also get the advantage for earning cashback using the wallet money. The admin can process refund to the customer wallet. 
@@ -127,6 +127,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.0 - 2019-02-02 = 
+* Add - Now cashback will be credited if admin create order for customer.
+* Add - Added wallet top-up widget.
+* Fix - Disable partial payment if user balance is zero.
+* Fix - Multiple ajax call for partial payment.
+* Fix - Delete transaction records upon deletion of user.
+* Tweak - Daily visit.
+
 = 1.2.9 - 2019-01-08 =
 * Add - Support for WooCommerce Multivendor Marketplace by WC Lovers.
 * Fix - Daily visit credit with transient.
@@ -186,4 +194,4 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Upgrade Notice ==
 
-= 1.2 =
+= 1.3 =

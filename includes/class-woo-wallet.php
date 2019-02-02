@@ -67,7 +67,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define( 'WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/' );
         $this->define( 'WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE) );
-        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.2.9' );
+        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.0' );
     }
 
     /**
@@ -186,6 +186,8 @@ final class WooWallet {
             flush_rewrite_rules();
             update_option( '_wallet_enpoint_added', true );
         }
+        
+        add_action('deleted_user', array($this, 'delete_user_transaction_records'));
     }
     /**
      * WooWallet init widget
@@ -294,6 +296,11 @@ final class WooWallet {
         if ( $item->get_type() == 'fee' ) {
             update_metadata( 'order_item', $item_id, '_legacy_fee_key', $item->legacy_fee_key );
         }
+    }
+    
+    public function delete_user_transaction_records($id){
+        global $wpdb;
+        $wpdb->query($wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ));
     }
 
     /**

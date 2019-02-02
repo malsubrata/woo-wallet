@@ -1,4 +1,12 @@
 *** Changelog ***
+= 1.3.0 - 2019-02-02 = 
+* Add - Now cashback will be credited if admin create order for customer.
+* Add - Added wallet top-up widget.
+* Fix - Disable partial payment if user balance is zero.
+* Fix - Multiple ajax call for partial payment.
+* Fix - Delete transaction records upon deletion of user.
+* Tweak - Daily visit.
+
 = 1.2.9 - 2019-01-08 =
 * Add - Support for WooCommerce Multivendor Marketplace by WC Lovers.
 * Fix - Daily visit credit with transient.
