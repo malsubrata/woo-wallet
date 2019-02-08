@@ -451,25 +451,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 </tr>
                 <?php
             }
-            if ( get_post_meta( $order_id, '_via_wallet_payment', true ) ) {
-                $via_other_gateway = get_post_meta( $order->get_id(), '_original_order_amount', true ) - get_post_meta( $order->get_id(), '_via_wallet_payment', true );
-                ?>
-                <tr>
-                    <td class="label"><?php _e( 'Via wallet', 'woo-wallet' ); ?>:</td>
-                    <td width="1%"></td>
-                    <td class="via-wallet">
-                        <?php echo wc_price( get_post_meta( $order_id, '_via_wallet_payment', true ), array( 'currency' => $order->get_currency() ) ); ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="label"><?php printf( __( 'Via %s', 'woo-wallet' ), $order->get_payment_method_title() ); ?>:</td>
-                    <td width="1%"></td>
-                    <td class="via-wallet">
-                        <?php echo wc_price( $via_other_gateway, array( 'currency' => $order->get_currency() ) ); ?>
-                    </td>
-                </tr>
-                <?php
-            }
         }
 
         /**

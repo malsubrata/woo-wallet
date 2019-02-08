@@ -162,9 +162,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
         public function process_cancelled_order( $order_id ) {
             $order = wc_get_order( $order_id );
             /** credit partial payment amount * */
-            if ( get_post_meta( $order_id, '_via_wallet_payment', true ) && get_post_meta( $order_id, '_partial_pay_through_wallet_compleate', true ) ) {
-                $this->credit( $order->get_customer_id(), get_post_meta( $order_id, '_via_wallet_payment', true ), sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ) );
-                $order->add_order_note(sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), wc_price( get_post_meta( $order_id, '_via_wallet_payment', true ) ) ) );
+            $partial_payment_amount = get_order_partial_payment_amount( $order_id );
+            if ( $partial_payment_amount && get_post_meta( $order_id, '_partial_pay_through_wallet_compleate', true ) ) {
+                $this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ) );
+                $order->add_order_note(sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
                 delete_post_meta( $order_id, '_partial_pay_through_wallet_compleate' );
             }
 

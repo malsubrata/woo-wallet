@@ -49,7 +49,6 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             add_action('woocommerce_checkout_order_processed', array($this, 'woocommerce_checkout_order_processed'), 30, 3);
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));
-            add_action('woocommerce_get_order_item_totals', array($this, 'woocommerce_get_order_item_totals'), 10, 2);
             add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
             add_action('woocommerce_shop_loop_item_title', array($this, 'display_cashback'), 15);
             add_action('woocommerce_before_single_product_summary', array($this, 'display_cashback'), 15);
@@ -492,25 +491,6 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_enqueue_style('woo-wallet-payment-jquery-ui');
             wp_enqueue_script('jquery-ui-tooltip');
             woo_wallet()->get_template('woo-wallet-partial-payment.php');
-        }
-
-        /**
-         * Add wallet withdrawal amount to thank you page
-         * @param array $total_rows
-         * @param Object $order
-         * @return array
-         */
-        public function woocommerce_get_order_item_totals($total_rows, $order) {
-            if (!get_post_meta($order->get_id(), '_via_wallet_payment', true)) {
-                return $total_rows;
-            }
-            $via_other_gateway = get_post_meta($order->get_id(), '_original_order_amount', true) - get_post_meta($order->get_id(), '_via_wallet_payment', true);
-            $order_total = $total_rows['order_total'];
-            unset($total_rows['order_total']);
-            $total_rows['via_wallet'] = array('label' => __('Via wallet:', 'woo-wallet'), 'value' => wc_price(get_post_meta($order->get_id(), '_via_wallet_payment', true), array('currency' => $order->get_currency())));
-            $total_rows['via_other_gateway'] = array('label' => sprintf(__('Via %s:', 'woo-wallet'), $order->get_payment_method_title()), 'value' => wc_price($via_other_gateway, array('currency' => $order->get_currency())));
-            $total_rows['order_total'] = $order_total;
-            return $total_rows;
         }
 
         /**
