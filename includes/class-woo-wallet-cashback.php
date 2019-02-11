@@ -89,7 +89,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                 case 'product':
                     if (sizeof(wc()->cart->get_cart()) > 0) {
                         foreach (wc()->cart->get_cart() as $key => $cart_item) {
-                            $product_id = $cart_item['product_id'];
+                            $product_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : $cart_item['product_id'];
                             $product = wc_get_product($product_id);
                             $qty = $cart_item['quantity'];
                             $cashback_amount += self::get_product_cashback_amount($product, $qty);

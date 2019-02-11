@@ -280,6 +280,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     $amount = $_POST['woo_wallet_transfer_amount'];
                 }
                 $note = isset($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : __('Wallet transfer', 'woo-wallet');
+                $note = apply_filters('woo_wallet_transfer_transaction_note', $note, $whom, $amount);
                 $whom = get_userdata($whom);
                 $transfer_charge_type = woo_wallet()->settings_api->get_option('transfer_charge_type', '_wallet_settings_general', 'percent');
                 $transfer_charge_amount = woo_wallet()->settings_api->get_option('transfer_charge_amount', '_wallet_settings_general', 0);
