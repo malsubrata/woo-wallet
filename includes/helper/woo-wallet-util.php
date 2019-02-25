@@ -86,7 +86,7 @@ if ( ! function_exists( 'is_enable_wallet_partial_payment' ) ) {
     function is_enable_wallet_partial_payment() {
         $is_enable = false;
         $cart_total = get_woowallet_cart_total();
-        if ( ! is_wallet_rechargeable_cart() && is_user_logged_in() && ( ( ! is_null( wc()->session) && wc()->session->get( 'is_wallet_partial_payment', false ) ) || 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) && $cart_total > apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
+        if ( ! is_wallet_rechargeable_cart() && is_user_logged_in() && ( ( ! is_null( wc()->session) && wc()->session->get( 'is_wallet_partial_payment', false ) ) || 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) && $cart_total >= apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
             $is_enable = true;
         }
         return apply_filters( 'is_enable_wallet_partial_payment', $is_enable);
@@ -478,6 +478,51 @@ if ( ! function_exists( 'get_total_order_cashback_amount' ) ) {
             }
         }
         return apply_filters( 'woo_wallet_total_order_cashback_amount', $total_cashback_amount );
+    }
+
+}
+
+if (!function_exists('woo_wallet_persistent_cart_update')) {
+    /**
+     * Update WooWallet persistent cart to restore cart after recharge wallet.
+     */
+    function woo_wallet_persistent_cart_update() {
+        if (get_current_user_id() && apply_filters('woo_wallet_persistent_cart_enabled', true)) {
+            update_user_meta(
+                    get_current_user_id(), '_woo_wallet_persistent_cart_' . get_current_blog_id(), 
+                    get_user_meta(get_current_user_id(), '_woocommerce_persistent_cart_' . get_current_blog_id(), true)
+            );
+        }
+    }
+
+}
+
+if (!function_exists('woo_wallet_persistent_cart_destroy')) {
+    /**
+     * Delete WooWallet persistent cart after restoring WooCommerce cart.
+     */
+    function woo_wallet_persistent_cart_destroy() {
+        if (get_current_user_id()) {
+            delete_user_meta(get_current_user_id(), '_woo_wallet_persistent_cart_' . get_current_blog_id());
+        }
+    }
+
+}
+
+if (!function_exists('woo_wallet_get_saved_cart')) {
+
+    function woo_wallet_get_saved_cart() {
+        $saved_cart = array();
+
+        if (apply_filters('woo_wallet_persistent_cart_enabled', true)) {
+            $saved_cart_meta = get_user_meta(get_current_user_id(), '_woo_wallet_persistent_cart_' . get_current_blog_id(), true);
+
+            if (isset($saved_cart_meta['cart'])) {
+                $saved_cart = array_filter((array) $saved_cart_meta['cart']);
+            }
+        }
+
+        return $saved_cart;
     }
 
 }

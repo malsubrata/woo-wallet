@@ -60,6 +60,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_shortcode('woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback');
             add_action('woocommerce_cart_calculate_fees', array($this, 'woo_wallet_add_partial_payment_fee'));
             add_filter('woocommerce_cart_totals_get_fees_from_cart_taxes', array($this, 'woocommerce_cart_totals_get_fees_from_cart_taxes'), 10, 2);
+            add_action('woocommerce_thankyou', array($this, 'restore_woocommerce_cart_items'));
         }
 
         /**
@@ -206,6 +207,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     add_filter('woocommerce_add_cart_item_data', array($this, 'add_woo_wallet_product_price_to_cart_item_data'), 10, 2);
                     $product = get_wallet_rechargeable_product();
                     if ($product) {
+                        woo_wallet_persistent_cart_update();
                         wc()->cart->empty_cart();
                         wc()->cart->add_to_cart($product->get_id());
                         $redirect_url = apply_filters('woo_wallet_redirect_to_checkout_after_added_amount', true) ? wc_get_checkout_url() : wc_get_cart_url();
@@ -707,7 +709,15 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
             }
         }
-
+        
+        public function restore_woocommerce_cart_items($order_id){
+            $saved_cart = woo_wallet_get_saved_cart();
+            foreach ($saved_cart as $cart_item_key => $restore_item){
+                wc()->cart->add_to_cart($restore_item['product_id'], $restore_item['quantity'], $restore_item['variation_id'], $restore_item['variation']);
+            }
+            wc()->cart->calculate_totals();
+            woo_wallet_persistent_cart_destroy();
+        }
     }
 
 }

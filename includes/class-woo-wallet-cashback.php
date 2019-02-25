@@ -85,11 +85,14 @@ if (!class_exists('Woo_Wallet_Cashback')) {
          */
         private static function calculate_cashback_form_cart() {
             $cashback_amount = 0;
+            if(is_wallet_rechargeable_cart()){
+                return $cashback_amount;
+            }
             switch (self::$cashback_rule) {
                 case 'product':
                     if (sizeof(wc()->cart->get_cart()) > 0) {
                         foreach (wc()->cart->get_cart() as $key => $cart_item) {
-                            $product_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : $cart_item['product_id'];
+                            $product_id = $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'];
                             $product = wc_get_product($product_id);
                             $qty = $cart_item['quantity'];
                             $cashback_amount += self::get_product_cashback_amount($product, $qty);
@@ -99,7 +102,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                 case 'product_cat':
                     if (sizeof(wc()->cart->get_cart()) > 0) {
                         foreach (wc()->cart->get_cart() as $key => $cart_item) {
-                            $product_id = $cart_item['product_id'];
+                            $product_id = $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'];
                             $product = wc_get_product($product_id);
                             $qty = $cart_item['quantity'];
                             $cashback_amount += self::get_product_category_wise_cashback_amount($product, $qty);
@@ -132,7 +135,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
         private static function calculate_cashback_form_order($order_id = 0) {
             $cashback_amount = 0;
             $order = wc_get_order($order_id);
-            if (!$order) {
+            if (!$order || is_wallet_rechargeable_order($order)) {
                 return $cashback_amount;
             }
             switch (self::$cashback_rule) {

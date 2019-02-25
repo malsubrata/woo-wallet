@@ -3,7 +3,7 @@ Contributors: subratamal
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.0
+Tested up to: 5.1
 Stable tag: 1.3.1
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
@@ -42,7 +42,7 @@ With this extension, the customers won't have to fill in the payment details eve
 - Supports WC Marketplace.
 - Supports Dokan Multivendor Marketplace.
 
-> Take a step forward and try our [demo](http://demo.woowallet.in/my-account/).
+> Take a step forward and try our [demo](https://demo.woowallet.in/my-account/).
 
 = Workflow of WooCommerce Wallet plugin =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
@@ -100,7 +100,7 @@ Yes, WooCommerce Wallet plugin is fully compatible with Wordpress multisite.
 
 = Where can I get support or talk to other users? =
 
-If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at m.subrata1991@gmail.com.
+If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at support@woowallet.in.
 
 = Where can I report bugs or contribute to the project? =
 
@@ -137,61 +137,6 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 * Fix - Multiple ajax call for partial payment.
 * Fix - Delete transaction records upon deletion of user.
 * Tweak - Daily visit.
-
-= 1.2.9 - 2019-01-08 =
-* Add - Support for WooCommerce Multivendor Marketplace by WC Lovers.
-* Fix - Daily visit credit with transient.
-* Add - Support for multiple subscriptions.
-
-= 1.2.8 - 2018-12-19 =
-* Fix - Datatable responsive issue.
-* Add - WP 5.0 compatibility.
-
-= 1.2.7 - 2018-11-08 =
-* Fix - Cache issue for WP multisite.
-* Fix - Translation issue.
-* Fix - Partial payment amount calculation when cash-back coupon applied.
-* Fix - User details page issue.
-* Fix - Role checking issue.
-* Fix - Email parameters.
-
-= 1.2.6 - 2018-10-09 =
-* Add - Admin now can set rechargeable product image via settings page.
-* Add - Partial payment amount refund option.
-* Add - Wallet icon at WooCommerce my-account menu.
-* Add - Exclude role option for daily visit action.
-* Fix - WPCS updates and code cleanup for easier readability #20.
-* Fix - Order total amount for partial payment.
-
-= 1.2.5 - 2018-09-27 =
-* Fix - Resolved performance issue.
-* Add - Wallet REST API with WooCommerce endpoint.
-* Dev - Removed WOO_WALLET_ICON constant.
-
-= 1.2.4 - 2018-09-24 =
-* Fix - Fatal error on WordPress Menu page.
-* Fix - Hide partial payment option for guest user.
-* Fix - Remaining balance display at email template.
-
-= 1.2.3 -2018-09-24 =
-* Fix - Partial payment.
-* Fix - Dokan withdrawal.
-* Add - Dokan auto withdrawal.
-* Add - Wallet icon file.
-* Add - Wallet actions (Admin can now set action for wallet credit).
-
-= 1.2.2 - 2018-08-17 =
-* Fix - Partial payment issue.
-
-= 1.2.1 - 2018-08-15 =
-* Add - Screen option at transaction details page.
-* Tweak - Partial payment using WooCommerce fee.
-
-= 1.2.0 - 2018-07-26 =
-* Add - Extension page.
-* Fix - Refund using default WooCommerce refund function.
-* Dev - details variable in email.
-* Dev - Added filter `woo_wallet_rest_check_permissions`, `woo_wallet_process_cashback_status`, `woo_wallet_wc_price_args`.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 

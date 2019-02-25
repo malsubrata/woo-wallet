@@ -136,7 +136,7 @@ module.exports = function (grunt) {
                 domainPath: 'languages',
                 potHeaders: {
                     'report-msgid-bugs-to': 'https://github.com/malsubrata/woo-wallet/issues',
-                    'language-team': 'WooWallet <m.subrata1991@gmail.com>',
+                    'language-team': 'WooWallet <admin@woowallet.in>',
                     'last-translator': 'Subrata Mal<m.subrata1991@gmail.com>'
                 }
             },
