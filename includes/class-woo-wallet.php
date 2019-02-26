@@ -67,7 +67,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define( 'WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/' );
         $this->define( 'WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE) );
-        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.1' );
+        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.2' );
     }
 
     /**
@@ -300,7 +300,9 @@ final class WooWallet {
     
     public function delete_user_transaction_records($id){
         global $wpdb;
-        $wpdb->query($wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ));
+        if( apply_filters('woo_wallet_delete_transaction_records', true) ){
+            $wpdb->query($wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ));
+        }
     }
 
     /**

@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.1
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -127,6 +127,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.2 - 2019-02-27 =
+* Add - Now cart items will be restored after successful wallet top-up.
+* Fix - Partial payment issues.
+* Fix - Cashback calculation for variable product.
+* Fix - Transaction date issue.
+* Fix - Order by balance column in WooWallet balance details table.
+* Tweak - Cashback logic.
+
 = 1.3.1 - 2019-02-04 =
 * Fix - Cashback issue.
 

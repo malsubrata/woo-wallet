@@ -510,7 +510,10 @@ if (!function_exists('woo_wallet_persistent_cart_destroy')) {
 }
 
 if (!function_exists('woo_wallet_get_saved_cart')) {
-
+    /**
+     * Get saved WooWallet cart items.
+     * @return array
+     */
     function woo_wallet_get_saved_cart() {
         $saved_cart = array();
 
