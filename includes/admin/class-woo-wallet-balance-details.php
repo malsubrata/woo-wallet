@@ -56,6 +56,18 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         if ( isset( $_REQUEST['order'] ) ) {
             $args['order'] = $_REQUEST['order'];
         }
+        
+        if (isset($args['orderby'])) {
+            if ('balance' === $args['orderby']) {
+                $args = array_merge(
+                        $args, array(
+                            // phpcs:ignore WordPress.VIP.SlowDBQuery.slow_db_query_meta_key
+                            'meta_key' => '_current_woo_wallet_balance',
+                            'orderby' => 'meta_value_num',
+                        )
+                );
+            }
+        }
 
         $args = apply_filters( 'woo_wallet_users_list_table_query_args', $args );
 
@@ -96,8 +108,9 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
      */
     public function get_sortable_columns() {
         $sortable_columns = array(
-            'username' => array( 'username', false ),
+            'username' => array( 'login', false ),
             'balance'  => array( 'balance', false ),
+            'email' => array( 'email', false ),
         );
         return apply_filters( 'woo_wallet_balance_details_sortable_columns', $sortable_columns );
     }

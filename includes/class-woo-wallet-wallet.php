@@ -58,6 +58,8 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 $debit_amount = array_sum(wp_list_pluck( get_wallet_transactions( array( 'user_id' => $this->user_id, 'where' => array( array( 'key' => 'type', 'value' => 'debit' ) ) ) ), 'amount' ) );
                 $balance = $credit_amount - $debit_amount;
                 $this->wallet_balance = apply_filters( 'woo_wallet_current_balance', $balance, $this->user_id );
+                /* This code will be removed in version 1.3.5 */
+                update_user_meta($this->user_id, '_current_woo_wallet_balance', $this->wallet_balance);
             }
             return 'view' === $context ? wc_price( $this->wallet_balance, $args ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
         }
@@ -205,6 +207,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
             }
             if ( $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", apply_filters( 'woo_wallet_transactions_args', array( 'blog_id' => $GLOBALS['blog_id'], 'user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details, 'date' => current_time('mysql') ), array( '%d', '%d', '%s', '%f', '%f', '%s', '%s', '%s' ) ) ) ) {
                 $transaction_id = $wpdb->insert_id;
+                update_user_meta($this->user_id, '_current_woo_wallet_balance', $balance);
                 clear_woo_wallet_cache( $this->user_id );
                 do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type);
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
