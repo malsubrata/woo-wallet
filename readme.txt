@@ -134,6 +134,7 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 * Fix - Transaction date issue.
 * Fix - Order by balance column in WooWallet balance details table.
 * Tweak - Cashback logic.
+* Tweak - Wallet funds transfer description.
 
 = 1.3.1 - 2019-02-04 =
 * Fix - Cashback issue.

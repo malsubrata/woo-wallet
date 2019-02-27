@@ -38,8 +38,8 @@ do_action( 'woo_wallet_before_transaction_details_content' );
         <tr>
             <?php do_action('woo_wallet_before_transaction_table_items', $transaction); ?>
             <td><?php echo $transaction->transaction_id; ?></td>
-            <td><?php echo $transaction->type == 'credit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ) ) : ' - '; ?></td>
-            <td><?php echo $transaction->type == 'debit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ) ) : ' - '; ?></td>
+            <td><?php echo $transaction->type == 'credit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - '; ?></td>
+            <td><?php echo $transaction->type == 'debit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - '; ?></td>
             <td><?php echo $transaction->details; ?></td>
             <td><?php echo wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ); ?></td>
             <?php do_action('woo_wallet_after_transaction_table_items', $transaction); ?>

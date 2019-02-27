@@ -75,7 +75,7 @@ $is_rendred_from_myaccount = wc_post_content_has_shortcode( 'woo-wallet' ) ? fal
                     </p>
                     <p class="woo-wallet-field-container form-row form-row-wide">
                         <label for="woo_wallet_transfer_note"><?php _e( 'What\'s this for', 'woo-wallet' ); ?></label>
-                        <textarea name="woo_wallet_transfer_note" required=""></textarea>
+                        <textarea name="woo_wallet_transfer_note"></textarea>
                     </p>
                     <p class="woo-wallet-field-container form-row">
                         <?php wp_nonce_field( 'woo_wallet_transfer', 'woo_wallet_transfer' ); ?>
@@ -96,7 +96,7 @@ $is_rendred_from_myaccount = wc_post_content_has_shortcode( 'woo-wallet' ) ? fal
                             </div>
                             <div class="woo-wallet-transaction-type-<?php echo $transaction->type; ?>"><?php
                                 echo $transaction->type == 'credit' ? '+' : '-';
-                                echo wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ) );
+                                echo wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) );
                                 ?></div>
                         </li>
                     <?php endforeach; ?>

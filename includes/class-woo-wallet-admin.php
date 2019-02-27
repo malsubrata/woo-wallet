@@ -200,7 +200,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 $order_localizer = array(
                     'order_id' => $post->ID,
                     'payment_method' => $order->get_payment_method( 'edit' ),
-                    'default_price' => wc_price(0 ),
+                    'default_price' => wc_price( 0 ),
                     'is_refundable' => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && $order->get_payment_method( 'edit' ) != 'wallet' ) && $order->get_customer_id( 'edit' ), $order ),
                     'i18n' => array(
                         'refund' => __( 'Refund', 'woo-wallet' ),
@@ -446,7 +446,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                     <td class="label"><?php _e( 'Cashback', 'woo-wallet' ); ?>:</td>
                     <td width="1%"></td>
                     <td class="via-wallet">
-                        <?php echo wc_price( $total_cashback_amount, array( 'currency' => $order->get_currency() ) ); ?>
+                        <?php echo wc_price( $total_cashback_amount, woo_wallet_wc_price_args($order->get_customer_id()) ); ?>
                     </td>
                 </tr>
                 <?php

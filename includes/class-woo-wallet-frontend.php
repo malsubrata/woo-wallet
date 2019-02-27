@@ -244,19 +244,19 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 if ($min_topup_amount && $amount < $min_topup_amount) {
                     $response = array(
                         'is_valid' => false,
-                        'message' => sprintf(__('The minimum amount needed for wallet top up is %s', 'woo-wallet'), wc_price($min_topup_amount))
+                        'message' => sprintf(__('The minimum amount needed for wallet top up is %s', 'woo-wallet'), wc_price($min_topup_amount, woo_wallet_wc_price_args()))
                     );
                 }
                 if ($max_topup_amount && $amount > $max_topup_amount) {
                     $response = array(
                         'is_valid' => false,
-                        'message' => sprintf(__('Wallet top up amount should be less than %s', 'woo-wallet'), wc_price($max_topup_amount))
+                        'message' => sprintf(__('Wallet top up amount should be less than %s', 'woo-wallet'), wc_price($max_topup_amount, woo_wallet_wc_price_args()))
                     );
                 }
                 if ($min_topup_amount && $max_topup_amount && ( $amount < $min_topup_amount || $amount > $max_topup_amount )) {
                     $response = array(
                         'is_valid' => false,
-                        'message' => sprintf(__('Wallet top up amount should be between %s and %s', 'woo-wallet'), wc_price($min_topup_amount), wc_price($max_topup_amount))
+                        'message' => sprintf(__('Wallet top up amount should be between %s and %s', 'woo-wallet'), wc_price($min_topup_amount, woo_wallet_wc_price_args()), wc_price($max_topup_amount, woo_wallet_wc_price_args()))
                     );
                 }
             } else {
@@ -281,9 +281,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 if (isset($_POST['woo_wallet_transfer_amount'])) {
                     $amount = $_POST['woo_wallet_transfer_amount'];
                 }
-                $note = isset($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : __('Wallet transfer', 'woo-wallet');
-                $note = apply_filters('woo_wallet_transfer_transaction_note', $note, $whom, $amount);
                 $whom = get_userdata($whom);
+                $current_user_obj = get_userdata(get_current_user_id());
+                $credit_note = isset($_POST['woo_wallet_transfer_note']) && !empty($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : sprintf(__('Wallet funds recived from %s', 'woo-wallet'), $current_user_obj->user_email);
+                $debit_note = sprintf(__('Wallet funds transfer to %s', 'woo-wallet'), $whom->user_email);
+                $credit_note = apply_filters('woo_wallet_transfer_credit_transaction_note', $credit_note, $whom, $amount);
+                $debit_note = apply_filters('woo_wallet_transfer_debit_transaction_note', $debit_note, $whom, $amount);
+                
                 $transfer_charge_type = woo_wallet()->settings_api->get_option('transfer_charge_type', '_wallet_settings_general', 'percent');
                 $transfer_charge_amount = woo_wallet()->settings_api->get_option('transfer_charge_amount', '_wallet_settings_general', 0);
                 $transfer_charge = 0;
@@ -308,9 +312,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     );
                 }
 
-                if ($credit_transaction_id = woo_wallet()->wallet->credit($whom->ID, $credit_amount, $note)) {
+                if ($credit_transaction_id = woo_wallet()->wallet->credit($whom->ID, $credit_amount, $credit_note)) {
                     do_action('woo_wallet_transfer_amount_credited', $credit_transaction_id, $whom->ID, get_current_user_id());
-                    $debit_transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $note);
+                    $debit_transaction_id = woo_wallet()->wallet->debit(get_current_user_id(), $debit_amount, $debit_note);
                     do_action('woo_wallet_transfer_amount_debited', $debit_transaction_id, get_current_user_id(), $whom->ID);
                     update_wallet_transaction_meta($debit_transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id());
                     $response = array(
@@ -420,9 +424,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     <?php
                     $cashback_amount = woo_wallet()->cashback->calculate_cashback();
                     if (is_user_logged_in()) {
-                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet'), wc_price($cashback_amount)), $cashback_amount);
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet'), wc_price($cashback_amount, woo_wallet_wc_price_args())), $cashback_amount);
                     } else {
-                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price($cashback_amount)), $cashback_amount);
+                        echo apply_filters('woo_wallet_cashback_notice_text', sprintf(__('Please <a href="%s">log in</a> to avail %s cashback from this order.', 'woo-wallet'), esc_url(get_permalink(get_option('woocommerce_myaccount_page_id'))), wc_price($cashback_amount, woo_wallet_wc_price_args())), $cashback_amount);
                     }
                     ?>
                 </div>
@@ -552,7 +556,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                         if ('percent' === $cashback_type) {
                             echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
                         } else {
-                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount, woo_wallet_wc_price_args()) . __(' Cashback', 'woo-wallet') . '</span>';
                         }
                     }
                 } else if ('product_cat' === woo_wallet()->settings_api->get_option('cashback_rule', '_wallet_settings_credit', 'cart')) {
@@ -590,7 +594,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                         if ('percent' === $cashback_type) {
                             echo '<span class="on-woo-wallet-cashback">' . $cashback_amount . '% ' . __('Cashback', 'woo-wallet') . '</span>';
                         } else {
-                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount) . __(' Cashback', 'woo-wallet') . '</span>';
+                            echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount, woo_wallet_wc_price_args()) . __(' Cashback', 'woo-wallet') . '</span>';
                         }
                     }
                 }
