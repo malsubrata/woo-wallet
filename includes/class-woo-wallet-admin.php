@@ -72,6 +72,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_action('woocommerce_new_order', array($this, 'woocommerce_new_order'));
             add_filter( 'woocommerce_order_actions', array( $this, 'woocommerce_order_actions' ));
             add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback'));
+            
+            add_action( 'admin_notices', array( $this, 'show_promotions' ) );
         }
 
         /**
@@ -697,6 +699,110 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 woo_wallet()->wallet->wallet_cashback($order->get_id());
             }
         }
+        
+        public function show_promotions() {
+            if ( !current_user_can('manage_options') ) {
+                return;
+            }
+            if( get_option('_woo_wallet_promotion_dismissed') ){
+                return;
+            }
+            ?>
+            <div class="notice woo-wallet-promotional-notice">
+                <div class="thumbnail">
+                    <img src="//plugins.svn.wordpress.org/woo-wallet/assets/icon-256x256.png" alt="Obtain Superpowers to get the best out of WooWallet" class="">
+                </div>
+                <div class="content">
+                    <h2 class=""><?php _e('Obtain Superpowers to get the best out of WooWallet', 'woo-wallet'); ?></h2>
+                    <p><?php _e('Use superpowers to stand above the crowd. our high-octane add-ons are designed to boost your store wallet features.', 'woo-wallet'); ?></p>
+                    <a href="https://woowallet.in/extensions/?utm_source=woo-wallet-plugin&amp;utm_medium=banner&amp;utm_content=add-on&amp;utm_campaign=extensions" class="button button-primary promo-btn" target="_blank"><?php _e('Learn More', 'woo-wallet'); ?> →</a>
+                </div>
+                <span class="prmotion-close-icon dashicons dashicons-no-alt"></span>
+                <div class="clear"></div>
+            </div>
+            <style>
+                .woo-wallet-promotional-notice {
+                    padding: 20px;
+                    box-sizing: border-box;
+                    position: relative;
+                }
+
+                .woo-wallet-promotional-notice .prmotion-close-icon{
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    cursor: pointer;
+                }
+
+                .woo-wallet-promotional-notice .thumbnail {
+                    width: 9.3%;
+                    float: left;
+                }
+
+                .woo-wallet-promotional-notice .thumbnail img{
+                    width: 100%;
+                    height: auto;
+                    box-shadow: 0px 0px 25px #bbbbbb;
+                    margin-right: 20px;
+                    box-sizing: border-box;
+                    border-radius: 10px;
+                }
+
+                .woo-wallet-promotional-notice .content {
+                    float:left;
+                    margin-left: 20px;
+                    width: 75%;
+                }
+
+                .woo-wallet-promotional-notice .content h2 {
+                    margin: 3px 0px 5px;
+                    font-size: 17px;
+                    font-weight: bold;
+                    color: #555;
+                    line-height: 25px;
+                }
+
+                .woo-wallet-promotional-notice .content p {
+                    font-size: 14px;
+                    text-align: justify;
+                    color: #666;
+                    margin-bottom: 10px;
+                }
+
+                .woo-wallet-promotional-notice .content a {
+                    border: none;
+                    box-shadow: none;
+                    height: 31px;
+                    line-height: 30px;
+                    border-radius: 3px;
+                    background: #a46396;
+                    text-shadow: none;
+                    padding: 0px 20px;
+                    text-align: center;
+                }
+
+            </style>
+            <script type='text/javascript'>
+                jQuery(document).ready(function($){
+                    $('body').on('click', '.woo-wallet-promotional-notice span.prmotion-close-icon', function(e) {
+                        e.preventDefault();
+
+                        var self = $(this);
+
+                        wp.ajax.send( 'woo-wallet-dismiss-promotional-notice', {
+                            data: {
+                                nonce: '<?php echo esc_attr( wp_create_nonce( 'woo_wallet_admin' ) ); ?>'
+                            },
+                            complete: function( resp ) {
+                                self.closest('.woo-wallet-promotional-notice').fadeOut(200);
+                            }
+                        } );
+                    });
+                });
+            </script>
+            <?php
+        }
+
     }
 
 }

@@ -35,6 +35,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             add_action( 'wp_ajax_woo-wallet-user-search', array( $this, 'woo_wallet_user_search' ) );
             add_action( 'wp_ajax_woo_wallet_partial_payment_update_session', array( $this, 'woo_wallet_partial_payment_update_session' ) );
             add_action('wp_ajax_woo_wallet_refund_partial_payment', array($this, 'woo_wallet_refund_partial_payment'));
+            add_action('wp_ajax_woo-wallet-dismiss-promotional-notice', array($this, 'woo_wallet_dismiss_promotional_notice'));
         }
         /**
          * Wallet partial payment refund.
@@ -193,7 +194,19 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             }
             wp_die();
         }
+        
+        public function woo_wallet_dismiss_promotional_notice(){
+            $post_data = wp_unslash( $_POST );
+            if ( ! current_user_can( 'manage_options' ) ) {
+                wp_send_json_error( __( 'You have no permission to do that', 'woo-wallet' ) );
+            }
 
+            if ( ! wp_verify_nonce( $post_data['nonce'], 'woo_wallet_admin' ) ) {
+                wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
+            }
+            update_option('_woo_wallet_promotion_dismissed', true);
+            wp_send_json_success();
+        }
     }
 
 }
