@@ -9,6 +9,13 @@ jQuery(function ($) {
             // Switches option sections
             $('.group').hide();
             var activewwtab = '';
+            var url = new URL(location.href);
+            var tab = url.searchParams.get('activewwtab');
+            if (tab) {
+                if (typeof (localStorage) !== undefined) {
+                    localStorage.setItem('activewwtab', '#' + tab);
+                }
+            }
             if (typeof (localStorage) !== undefined) {
                 activewwtab = localStorage.getItem('activewwtab');
             }
@@ -91,7 +98,7 @@ jQuery(function ($) {
                 file_frame.open();
             });
         },
-        settings_page_init : function (){
+        settings_page_init: function () {
             $('#_wallet_settings_general-_tax_status').on('change', function () {
                 if ($(this).val() === 'taxable') {
                     $('._tax_class').show();
@@ -99,11 +106,11 @@ jQuery(function ($) {
                     $('._tax_class').hide();
                 }
             }).change();
-            $('#wcwp-_wallet_settings_general-is_enable_wallet_transfer').on('change', function(){
+            $('#wcwp-_wallet_settings_general-is_enable_wallet_transfer').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('.transfer_charge_type').show();
                     $('.transfer_charge_amount').show();
-                } else{
+                } else {
                     $('.transfer_charge_type').hide();
                     $('.transfer_charge_amount').hide();
                 }
@@ -152,7 +159,7 @@ jQuery(function ($) {
         }
     };
     settings.init();
-    if(woo_wallet_admin_settings_param.screen_id === 'woowallet_page_woo-wallet-settings'){
+    if (woo_wallet_admin_settings_param.screen_id === 'woowallet_page_woo-wallet-settings') {
         settings.settings_page_init();
     }
 });
