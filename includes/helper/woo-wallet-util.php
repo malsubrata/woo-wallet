@@ -126,11 +126,11 @@ if ( ! function_exists( 'get_order_partial_payment_amount' ) ) {
             $line_items_fee = $order->get_items( 'fee' );
             foreach ( $line_items_fee as $item_id => $item ) {
                 if(is_partial_payment_order_item($item_id, $item)){
-                    $via_wallet += $item->get_total( 'edit' );
+                    $via_wallet += $item->get_total( 'edit' ) + $item->get_total_tax( 'edit' );
                 }
             }
         }
-        return abs( $via_wallet );
+        return apply_filters('woo_wallet_order_partial_payment_amount', wc_format_decimal(abs( $via_wallet ), wc_get_price_decimals()), $order_id);
     }
 
 }

@@ -51,6 +51,7 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 
 = Premium extensions =
 
+- [WooWallet Coupons](https://woowallet.in/product/woo-wallet-coupons/)
 - [WooWallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
 - [WooWallet Importer](https://woowallet.in/product/woo-wallet-importer/)
 
