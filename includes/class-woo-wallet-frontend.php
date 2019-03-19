@@ -61,6 +61,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_cart_calculate_fees', array($this, 'woo_wallet_add_partial_payment_fee'));
             add_filter('woocommerce_cart_totals_get_fees_from_cart_taxes', array($this, 'woocommerce_cart_totals_get_fees_from_cart_taxes'), 10, 2);
             add_action('woocommerce_thankyou', array($this, 'restore_woocommerce_cart_items'));
+            add_filter('woo_wallet_is_enable_transfer', array($this, 'woo_wallet_is_enable_transfer'));
         }
 
         /**
@@ -281,9 +282,10 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 if (isset($_POST['woo_wallet_transfer_amount'])) {
                     $amount = $_POST['woo_wallet_transfer_amount'];
                 }
+                $whom = apply_filters('woo_wallet_transfer_user_id', $whom);
                 $whom = get_userdata($whom);
                 $current_user_obj = get_userdata(get_current_user_id());
-                $credit_note = isset($_POST['woo_wallet_transfer_note']) && !empty($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : sprintf(__('Wallet funds recived from %s', 'woo-wallet'), $current_user_obj->user_email);
+                $credit_note = isset($_POST['woo_wallet_transfer_note']) && !empty($_POST['woo_wallet_transfer_note']) ? $_POST['woo_wallet_transfer_note'] : sprintf(__('Wallet funds received from %s', 'woo-wallet'), $current_user_obj->user_email);
                 $debit_note = sprintf(__('Wallet funds transfer to %s', 'woo-wallet'), $whom->user_email);
                 $credit_note = apply_filters('woo_wallet_transfer_credit_transaction_note', $credit_note, $whom, $amount);
                 $debit_note = apply_filters('woo_wallet_transfer_debit_transaction_note', $debit_note, $whom, $amount);
@@ -721,6 +723,13 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             wc()->cart->calculate_totals();
             woo_wallet_persistent_cart_destroy();
+        }
+        
+        public function woo_wallet_is_enable_transfer($is_enable){
+            if('on' != woo_wallet()->settings_api->get_option( 'is_enable_wallet_transfer', '_wallet_settings_general', 'on' )){
+                $is_enable = false;
+            }
+            return $is_enable;
         }
     }
 
