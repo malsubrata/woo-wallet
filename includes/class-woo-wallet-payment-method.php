@@ -115,7 +115,7 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args($order->get_customer_id()) ) ), 'error' );
             return;
         }
-        $wallet_response = woo_wallet()->wallet->debit( get_current_user_id(), $order->get_total( '' ), __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number() );
+        $wallet_response = woo_wallet()->wallet->debit( get_current_user_id(), $order->get_total( 'woo_wallet_order_payment_description' ), apply_filters('', __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), $order) );
 
         // Reduce stock levels
         wc_reduce_stock_levels( $order_id );

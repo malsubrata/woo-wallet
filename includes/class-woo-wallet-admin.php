@@ -260,9 +260,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                             <tr>
                                 <th scope="row"><label for="payment_type"><?php _e( 'Type', 'woo-wallet' ); ?></label></th>
                                 <td>
+                                    <?php $payment_types = apply_filters('woo_wallet_adjust_balance_payment_type', array('credit' => __( 'Credit', 'woo-wallet' ), 'debit' => __( 'Debit', 'woo-wallet' ))); ?>
                                     <select class="regular-text" name="payment_type" id="payment_type">
-                                        <option value="credit"><?php _e( 'Credit', 'woo-wallet' ); ?></option>
-                                        <option value="debit"><?php _e( 'Debit', 'woo-wallet' ); ?></option>
+                                        <?php foreach ($payment_types as $key => $value) : ?>
+                                        <option value="<?php echo $key ?>"><?php echo $value; ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <p class="description"><?php _e( 'Select payment type', 'woo-wallet' ); ?></p>
                                 </td>
@@ -295,10 +297,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             ?>
             <div class="wrap">
                 <h2><?php _e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
-                <p><?php
-                    _e( 'Current wallet balance: ', 'woo-wallet' );
-                    echo woo_wallet()->wallet->get_wallet_balance( $user_id );
-                    ?></p>
+                <p><?php _e( 'Current wallet balance: ', 'woo-wallet' ); echo woo_wallet()->wallet->get_wallet_balance( $user_id ); ?></p>
+                <?php do_action('before_woo_wallet_transaction_details_page', $user_id); ?>
                 <form id="posts-filter" method="get">
                     <?php $this->transaction_details_table->display(); ?>
                 </form>
