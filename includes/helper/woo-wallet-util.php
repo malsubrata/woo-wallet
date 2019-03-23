@@ -149,7 +149,7 @@ if ( ! function_exists( 'get_order_partial_payment_amount' ) ) {
                 }
             }
         }
-        return apply_filters('woo_wallet_order_partial_payment_amount', wc_format_decimal(abs( $via_wallet ), wc_get_price_decimals()), $order_id);
+        return apply_filters('woo_wallet_order_partial_payment_amount', abs( $via_wallet ), $order_id);
     }
 
 }
