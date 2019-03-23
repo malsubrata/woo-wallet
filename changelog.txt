@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.3.4 - 2019-03-23 =
+* Added - Compatibility with WooCommerce Germanized plugin.
+* Add - Empty datatable info translation string
+* Add - Fee amount in woowallet cart total function.
+* Fix - Wallet transfer menu issue.
+
 = 1.3.3 - 2019-03-04 =
 * Fix - Plugin dependencies file.
 

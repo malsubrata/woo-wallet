@@ -10,6 +10,7 @@ jQuery(function ($) {
                     emptyTable: wallet_param.i18n.emptyTable,
                     lengthMenu: wallet_param.i18n.lengthMenu,
                     info: wallet_param.i18n.info,
+                    infoEmpty : wallet_param.i18n.infoEmpty,
                     paginate: wallet_param.i18n.paginate
                 }
             }

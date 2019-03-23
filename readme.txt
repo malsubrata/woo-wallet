@@ -1,10 +1,10 @@
 === WooCommerce Wallet - credit, cashback, refund system ===
-Contributors: subratamal
+Contributors: subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.1
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -54,6 +54,7 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 - [WooWallet Coupons](https://woowallet.in/product/woo-wallet-coupons/)
 - [WooWallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
 - [WooWallet Importer](https://woowallet.in/product/woo-wallet-importer/)
+- [WooWallet AffiliateWP](https://woowallet.in/product/woowallet-affiliatewp/)
 
 = Translator Contributors =
 - [#fa_IR](https://translate.wordpress.org/locale/fa/default/wp-plugins/woo-wallet) - [@rahimvaziri](https://wordpress.org/support/users/rahimvaziri/)
@@ -65,7 +66,6 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 
 * PHP version 5.2.4 or greater (PHP 5.6 or greater is recommended)
 * MySQL version 5.0 or greater (MySQL 5.6 or greater is recommended)
-* Some payment gateways require fsockopen support (for IPN access)
 * WordPress 4.4+
 * WooCommerce 3.0+
 
@@ -128,6 +128,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.4 - 2019-03-23 =
+* Added - Compatibility with WooCommerce Germanized plugin.
+* Add - Empty datatable info translation string
+* Add - Fee amount in woowallet cart total function.
+* Fix - Wallet transfer menu issue.
+
 = 1.3.3 - 2019-03-04 =
 * Fix - Plugin dependencies file.
 

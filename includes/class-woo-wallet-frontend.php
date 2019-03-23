@@ -137,6 +137,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     'emptyTable' => __('No transactions available', 'woo-wallet'),
                     'lengthMenu' => sprintf(__('Show %s entries', 'woo-wallet'), '_MENU_'),
                     'info' => sprintf(__('Showing %1s to %2s of %3s entries', 'woo-wallet'), '_START_', '_END_', '_TOTAL_'),
+                    'infoEmpty' => __('Showing 0 to 0 of 0 entries', 'woo-wallet'),
                     'paginate' => array(
                         'first' => __('First', 'woo-wallet'),
                         'last' => __('Last', 'woo-wallet'),
