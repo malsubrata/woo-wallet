@@ -119,7 +119,9 @@ class Action_Referrals extends WooWalletAction {
             add_action('woo_wallet_menu_content', array($this, 'referral_content'));
             add_filter('woo_wallet_endpoint_actions', array($this, 'woo_wallet_endpoint_actions'));
             $this->init_referrals();
-            $this->init_referral_visit();
+            if( !is_ajax() ){
+                $this->init_referral_visit();
+            }
             add_action('user_register', array($this, 'woo_wallet_referring_signup'));
         }
     }
@@ -173,7 +175,7 @@ class Action_Referrals extends WooWalletAction {
         $referral_visit_amount = $this->settings['referring_visitors_amount'];
         if ($referral_visit_amount && $this->get_referral_user()) {
             $referral_user = $this->get_referral_user();
-            if(isset($_COOKIE['woo_wallet_referral_visit_credited_'. $referral_user->ID]) || is_ajax()){
+            if(isset($_COOKIE['woo_wallet_referral_visit_credited_'. $referral_user->ID])){
                 return;
             }
             $limit = $this->settings['referring_visitors_limit_duration'];
