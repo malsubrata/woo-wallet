@@ -28,8 +28,6 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
                 return;
             }
 
-            $this->rest_api_includes();
-
             // Init REST API routes.
             add_action( 'rest_api_init', array( $this, 'register_rest_routes' ), 10 );
         }
@@ -49,6 +47,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
          * @since 1.2.5
          */
         public function register_rest_routes() {
+            $this->rest_api_includes();
             $controllers = array(
                 // v2 controllers.
                 'WC_REST_Woo_Wallet_Controller'

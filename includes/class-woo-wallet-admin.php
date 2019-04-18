@@ -253,7 +253,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                             <tr>
                                 <th scope="row"><label for="balance_amount"><?php echo __( 'Amount', 'woo-wallet' ) . ' ( ' . get_woocommerce_currency_symbol( $currency) . ' )'; ?></label></th>
                                 <td>
-                                    <input type="number" step="0.01" name="balance_amount" class="regular-text" />
+                                    <input type="number" step="any" name="balance_amount" class="regular-text" />
                                     <p class="description"><?php _e( 'Enter Amount', 'woo-wallet' ); ?></p>
                                 </td>
                             </tr>
@@ -570,8 +570,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          * Display product category wise cashback field.
          */
         public function edit_product_cat_cashback_field( $term) {
-            $cashback_type = get_woocommerce_term_meta( $term->term_id, '_woo_cashback_type', true );
-            $cashback_amount = get_woocommerce_term_meta( $term->term_id, '_woo_cashback_amount', true );
+            $cashback_type = get_term_meta( $term->term_id, '_woo_cashback_type', true );
+            $cashback_amount = get_term_meta( $term->term_id, '_woo_cashback_amount', true );
             ?>
             <tr class="form-field">
                 <th scope="row" valign="top"><?php _e( 'Cashback type', 'woo-wallet' ); ?></th>
@@ -598,10 +598,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function save_product_cashback_field( $term_id, $tt_id = '', $taxonomy = '' ) {
             if ( 'product_cat' === $taxonomy) {
                 if ( isset( $_POST['woo_product_cat_cashback_type'] ) ) {
-                    update_woocommerce_term_meta( $term_id, '_woo_cashback_type', esc_attr( $_POST['woo_product_cat_cashback_type'] ) );
+                    update_term_meta( $term_id, '_woo_cashback_type', esc_attr( $_POST['woo_product_cat_cashback_type'] ) );
                 }
                 if ( isset( $_POST['woo_product_cat_cashback_amount'] ) ) {
-                    update_woocommerce_term_meta( $term_id, '_woo_cashback_amount', sanitize_text_field( $_POST['woo_product_cat_cashback_amount'] ) );
+                    update_term_meta( $term_id, '_woo_cashback_amount', sanitize_text_field( $_POST['woo_product_cat_cashback_amount'] ) );
                 }
             }
         }

@@ -50,8 +50,6 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 $debit_amount = array_sum(wp_list_pluck( get_wallet_transactions( array( 'user_id' => $this->user_id, 'where' => array( array( 'key' => 'type', 'value' => 'debit' ) ) ) ), 'amount' ) );
                 $balance = $credit_amount - $debit_amount;
                 $this->wallet_balance = apply_filters( 'woo_wallet_current_balance', $balance, $this->user_id );
-                /* This code will be removed in version 1.3.5 */
-                update_user_meta($this->user_id, '_current_woo_wallet_balance', $this->wallet_balance);
             }
             return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args($this->user_id) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
         }

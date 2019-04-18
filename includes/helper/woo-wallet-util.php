@@ -160,7 +160,9 @@ if ( ! function_exists( 'update_wallet_partial_payment_session' ) ) {
      * @param boolean $set
      */
     function update_wallet_partial_payment_session( $set = false ) {
-        wc()->session->set( 'is_wallet_partial_payment', $set );
+        if(!is_null(wc()->session)){
+            wc()->session->set( 'is_wallet_partial_payment', $set );
+        }
     }
 
 }

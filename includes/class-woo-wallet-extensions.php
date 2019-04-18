@@ -116,6 +116,9 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                 div#_wallet_settings_extensions_general h2 {
                     display: none;
                 }
+                .wc_addons_wrap .addons-column{
+                    padding: 0 !important;
+                }
             </style>
             <div class="addons-featured">
                 <div class="addons-banner-block">
@@ -124,7 +127,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                     <div class="addons-banner-block-items">
                         <div class="addons-banner-block-item">
                             <div class="addons-banner-block-item-icon">
-                                <img class="addons-img" src="https://d30y9cdsu7xlg0.cloudfront.net/png/691726-200.png">
+                                <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208810/WooWallet%20Extensions/Wallet-Withdrawl_01.jpg">
                             </div>
                             <div class="addons-banner-block-item-content">
                                 <h3>WooWallet Withdrawal</h3>
@@ -135,7 +138,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                         </div>
                         <div class="addons-banner-block-item">
                             <div class="addons-banner-block-item-icon">
-                                <img class="addons-img" src="https://d30y9cdsu7xlg0.cloudfront.net/png/24574-200.png">
+                                <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208810/WooWallet%20Extensions/Wallet-Importer_01.jpg">
                             </div>
                             <div class="addons-banner-block-item-content">
                                 <h3>WooWallet Importer</h3>
@@ -144,7 +147,37 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                                     From: $15		</a>
                             </div>
                         </div>
+                        <div class="addons-banner-block-item">
+                            <div class="addons-banner-block-item-icon">
+                                <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208812/WooWallet%20Extensions/woowallet-coupons.png">
+                            </div>
+                            <div class="addons-banner-block-item-content">
+                                <h3>WooWallet Coupons</h3>
+                                <p>WooWallet Coupons add-on is the coupon system of WooWallet. Coupons are a great way to offer rewards to your customers, coupons to be automatically redeemed to the customer's wallet if its restrictions are met.</p>
+                                <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-coupons/">
+                                    From: $39		</a>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                <div class="addons-column-section">
+                    <div class="addons-column">
+                        <div class="addons-column-block">
+                            <h1>Integrate with third party add-ons.</h1>
+                            <div class="addons-column-block-item">
+                                <div class="addons-column-block-item-icon">
+                                    <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208814/WooWallet%20Extensions/affiliatewp-woo-wallet.png">
+                                </div>
+                                <div class="addons-column-block-item-content">
+                                    <h3>WooWallet AffiliateWP</h3>
+                                    <a class="addons-button addons-button-solid" href="https://woowallet.in/product/woowallet-affiliatewp/">
+                                        From: $15		</a>
+                                    <p>Pay AffiliateWP referrals as WooWallet credit.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="addons-column"></div>
                 </div>
             </div>
             <?php

@@ -6,11 +6,11 @@
  * Description: The leading wallet plugin with partial payment, refunds, cashbacks and what not!
  * Author: Subrata Mal
  * Author URI: https://woowallet.in/
- * Version: 1.3.4
+ * Version: 1.3.5
  * Requires at least: 4.4
  * Tested up to: 5.1
  * WC requires at least: 3.0
- * WC tested up to: 3.5
+ * WC tested up to: 3.6
  * 
  * Text Domain: woo-wallet
  * Domain Path: /languages/

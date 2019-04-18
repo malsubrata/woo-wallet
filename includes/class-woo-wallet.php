@@ -67,7 +67,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define( 'WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/' );
         $this->define( 'WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE) );
-        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.4' );
+        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.5' );
     }
 
     /**
@@ -266,7 +266,7 @@ final class WooWallet {
      */
     public function woocommerce_reports_get_order_report_query( $query ) {
         $rechargable_orders = get_wallet_rechargeable_orders();
-        if ( ! empty( $rechargable_orders) ) {
+        if ( ! empty( $rechargable_orders) && apply_filters('woo_wallet_exclude_wallet_rechargeable_orders_from_report', true) ) {
             $exclude_orders = implode( ', ', $rechargable_orders);
             $query['where'] .= " AND posts.ID NOT IN ({$exclude_orders})";
         }

@@ -569,8 +569,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     $cashback_type = 'percent';
                     if (!empty($term_ids)) {
                         foreach ($term_ids as $term_id) {
-                            $category_wise_cashback_type = get_woocommerce_term_meta($term_id, '_woo_cashback_type', true);
-                            $category_wise_cashback_amount = get_woocommerce_term_meta($term_id, '_woo_cashback_amount', true);
+                            $category_wise_cashback_type = get_term_meta($term_id, '_woo_cashback_type', true);
+                            $category_wise_cashback_amount = get_term_meta($term_id, '_woo_cashback_amount', true);
                             if ($category_wise_cashback_type && $category_wise_cashback_amount) {
                                 if ('percent' === $category_wise_cashback_type) {
                                     $cashback_subtotal = $product->get_price() * ( $category_wise_cashback_amount / 100 );

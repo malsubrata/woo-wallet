@@ -49,7 +49,7 @@ class WOO_Wallet_Actions {
             'Action_New_Registration',
             'Action_Product_Review',
             'Action_Daily_Visits',
-//            'Action_Referrals'
+            'Action_Referrals'
         ) );
         foreach ( $load_actions as $action) {
             $load_action = is_string( $action) ? new $action() : $action;

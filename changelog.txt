@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.3.5 - 2019-04-18 =
+* Add - Support for WC version 3.6.
+* Add - Referral action.
+* Fix - `wc_format_decimal` function use in partial payment.
+* Remove - Deprecated WC functions.
+
 = 1.3.4 - 2019-03-23 =
 * Added - Compatibility with WooCommerce Germanized plugin.
 * Add - Empty datatable info translation string
