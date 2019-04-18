@@ -173,7 +173,7 @@ class Action_Referrals extends WooWalletAction {
         $referral_visit_amount = $this->settings['referring_visitors_amount'];
         if ($referral_visit_amount && $this->get_referral_user()) {
             $referral_user = $this->get_referral_user();
-            if(isset($_COOKIE['woo_wallet_referral_visit_credited_'. $referral_user->ID])){
+            if(isset($_COOKIE['woo_wallet_referral_visit_credited_'. $referral_user->ID]) || is_ajax()){
                 return;
             }
             $limit = $this->settings['referring_visitors_limit_duration'];
