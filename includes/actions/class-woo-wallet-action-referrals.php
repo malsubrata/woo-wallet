@@ -119,9 +119,7 @@ class Action_Referrals extends WooWalletAction {
             add_action('woo_wallet_menu_content', array($this, 'referral_content'));
             add_filter('woo_wallet_endpoint_actions', array($this, 'woo_wallet_endpoint_actions'));
             $this->init_referrals();
-            if( !is_ajax() ){
-                $this->init_referral_visit();
-            }
+            add_action( 'wp', array( $this, 'init_referral_visit' ), 105 );
             add_action('user_register', array($this, 'woo_wallet_referring_signup'));
         }
     }
