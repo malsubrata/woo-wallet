@@ -191,13 +191,13 @@ class Action_Referrals extends WooWalletAction {
                         }
                         set_transient('woo_wallet_referral_visit_' . $referral_user->ID, $woo_wallet_referral_visit_count + 1, $transiant_duration);
                         woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
-                        update_user_meta($referral_user->ID, '_woo_wallet_referal_visitor_count', $referral_visitor_count+ 1);
+                        update_user_meta($referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount);
                     }
                 }
             } else{
                 woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
-                update_user_meta($referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count+ 1);
+                update_user_meta($referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount);
             }
             wc_setcookie('woo_wallet_referral_visit_credited_' . $referral_user->ID, true, time() + DAY_IN_SECONDS);
@@ -223,13 +223,13 @@ class Action_Referrals extends WooWalletAction {
                         }
                         set_transient('woo_wallet_referral_signup_' . $referral_user->ID, $woo_wallet_referral_signup_count + 1, $transiant_duration);
                         woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
-                        update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count+ 1);
+                        update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
                     }
                 }
             } else{
                 woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
-                update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count+ 1);
+                update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
             }
         }
