@@ -159,7 +159,7 @@ jQuery(function ($) {
         }
     };
     settings.init();
-    if (woo_wallet_admin_settings_param.screen_id === 'woowallet_page_woo-wallet-settings') {
+    if (woo_wallet_admin_settings_param.screen_id === 'woowallet_page_woo-wallet-settings' || woo_wallet_admin_settings_param.screen_id === 'terawallet_page_woo-wallet-settings') {
         settings.settings_page_init();
     }
 });

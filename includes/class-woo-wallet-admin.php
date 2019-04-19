@@ -91,7 +91,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          * init admin menu
          */
         public function admin_menu() {
-            $woo_wallet_menu_page_hook = add_menu_page( 'WooWallet', 'WooWallet', 'manage_woocommerce', 'woo-wallet', array( $this, 'wallet_page' ), '', 59);
+            $woo_wallet_menu_page_hook = add_menu_page( 'TeraWallet', 'TeraWallet', 'manage_woocommerce', 'woo-wallet', array( $this, 'wallet_page' ), '', 59);
             add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
             $woo_wallet_menu_page_hook_add = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), 'manage_woocommerce', 'woo-wallet-add', array( $this, 'add_balance_to_user_wallet' ) );
             add_action( "load-$woo_wallet_menu_page_hook_add", array( $this, 'add_woo_wallet_add_balance_option' ) );
@@ -105,7 +105,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function plugin_actions_page() {
             $screen = get_current_screen();
             $wallet_actions = new WOO_Wallet_Actions();
-            if ( $screen->id == 'woowallet_page_woo-wallet-actions' && isset( $_GET['action'] ) && isset( $wallet_actions->actions[$_GET['action']] ) ) {
+            if ( in_array($screen->id, array('woowallet_page_woo-wallet-actions', 'terawallet_page_woo-wallet-actions')) && isset( $_GET['action'] ) && isset( $wallet_actions->actions[$_GET['action']] ) ) {
                 $this->display_action_settings();
             } else {
                 $this->display_actions_table();
@@ -487,7 +487,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 return $footer_text;
             }
             $current_screen = get_current_screen();
-            $woo_wallet_pages = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-add', 'admin_page_woo-wallet-transactions', 'woowallet_page_woo-wallet-settings', 'woowallet_page_woo-wallet-actions', 'woowallet_page_woo-wallet-extensions' );
+            $woo_wallet_pages = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-add', 'admin_page_woo-wallet-transactions', 'woowallet_page_woo-wallet-settings', 'woowallet_page_woo-wallet-actions', 'woowallet_page_woo-wallet-extensions', 'terawallet_page_woo-wallet-settings' );
             if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages) ) {
                 if ( !get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
                     $footer_text = sprintf(
@@ -648,6 +648,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          */
         public function woocommerce_screen_ids_callback( $screen_ids ) {
             $screen_ids[] = 'woowallet_page_woo-wallet-actions';
+            $screen_ids[] = 'terawallet_page_woo-wallet-actions';
             return $screen_ids;
         }
         /**
@@ -710,10 +711,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             ?>
             <div class="notice woo-wallet-promotional-notice">
                 <div class="thumbnail">
-                    <img src="//plugins.svn.wordpress.org/woo-wallet/assets/icon-256x256.png" alt="Obtain Superpowers to get the best out of WooWallet" class="">
+                    <img src="//plugins.svn.wordpress.org/woo-wallet/assets/icon-256x256.png" alt="Obtain Superpowers to get the best out of TeraWallet" class="">
                 </div>
                 <div class="content">
-                    <h2 class=""><?php _e('Obtain Superpowers to get the best out of WooWallet', 'woo-wallet'); ?></h2>
+                    <h2 class=""><?php _e('Obtain Superpowers to get the best out of TeraWallet', 'woo-wallet'); ?></h2>
                     <p><?php _e('Use superpowers to stand above the crowd. our high-octane add-ons are designed to boost your store wallet features.', 'woo-wallet'); ?></p>
                     <a href="https://woowallet.in/extensions/?utm_source=woo-wallet-plugin&amp;utm_medium=banner&amp;utm_content=add-on&amp;utm_campaign=extensions" class="button button-primary promo-btn" target="_blank"><?php _e('Learn More', 'woo-wallet'); ?> →</a>
                 </div>

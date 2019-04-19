@@ -55,7 +55,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
             $screen_id = $screen ? $screen->id : '';
             $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
             wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION);
-            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-extensions' ) ) ) {
+            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-extensions', 'terawallet_page_woo-wallet-extensions' ) ) ) {
                 wp_enqueue_style( 'dashicons' );
                 wp_enqueue_style( 'wp-color-picker' );
                 wp_enqueue_style( 'woo_wallet_admin_styles' );
@@ -122,7 +122,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
             </style>
             <div class="addons-featured">
                 <div class="addons-banner-block">
-                    <h1>Obtain Superpowers to get the best out of WooWallet </h1>
+                    <h1>Obtain Superpowers to get the best out of TeraWallet </h1>
                     <p>These power boosting extensions can unlock the ultimate potential for your site.</p>
                     <div class="addons-banner-block-items">
                         <div class="addons-banner-block-item">
@@ -130,8 +130,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                                 <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208810/WooWallet%20Extensions/Wallet-Withdrawl_01.jpg">
                             </div>
                             <div class="addons-banner-block-item-content">
-                                <h3>WooWallet Withdrawal</h3>
-                                <p>Let your users withdraw their WooWallet balance to bank and other digital accounts like PayPal with this awesome addon.</p>
+                                <h3>Wallet Withdrawal</h3>
+                                <p>Let your users withdraw their Wallet balance to bank and other digital accounts like PayPal with this awesome addon.</p>
                                 <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-withdrawal/">
                                     From: $49		</a>
                             </div>
@@ -141,8 +141,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                                 <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208810/WooWallet%20Extensions/Wallet-Importer_01.jpg">
                             </div>
                             <div class="addons-banner-block-item-content">
-                                <h3>WooWallet Importer</h3>
-                                <p>WooWallet importer addon enables you to modify the WooWallet balances of multiple or all users with just one CSV import, hassle free.</p>
+                                <h3>Wallet Importer</h3>
+                                <p>Wallet importer addon enables you to modify the Wallet balances of multiple or all users with just one CSV import, hassle free.</p>
                                 <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-importer/">
                                     From: $15		</a>
                             </div>
@@ -152,8 +152,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                                 <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208812/WooWallet%20Extensions/woowallet-coupons.png">
                             </div>
                             <div class="addons-banner-block-item-content">
-                                <h3>WooWallet Coupons</h3>
-                                <p>WooWallet Coupons add-on is the coupon system of WooWallet. Coupons are a great way to offer rewards to your customers, coupons to be automatically redeemed to the customer's wallet if its restrictions are met.</p>
+                                <h3>Wallet Coupons</h3>
+                                <p>Wallet Coupons add-on is the coupon system of Wallet. Coupons are a great way to offer rewards to your customers, coupons to be automatically redeemed to the customer's wallet if its restrictions are met.</p>
                                 <a target="_blank" class="addons-button addons-button-solid" href="https://woowallet.in/product/woo-wallet-coupons/">
                                     From: $39		</a>
                             </div>
@@ -169,10 +169,10 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                                     <img class="addons-img" src="https://res.cloudinary.com/subrata91/image/upload/v1554208814/WooWallet%20Extensions/affiliatewp-woo-wallet.png">
                                 </div>
                                 <div class="addons-column-block-item-content">
-                                    <h3>WooWallet AffiliateWP</h3>
+                                    <h3>Wallet AffiliateWP</h3>
                                     <a class="addons-button addons-button-solid" href="https://woowallet.in/product/woowallet-affiliatewp/">
                                         From: $15		</a>
-                                    <p>Pay AffiliateWP referrals as WooWallet credit.</p>
+                                    <p>Pay AffiliateWP referrals as Wallet credit.</p>
                                 </div>
                             </div>
                         </div>

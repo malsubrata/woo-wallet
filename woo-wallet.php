@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Plugin Name: WooCommerce Wallet
+ * Plugin Name: TeraWallet
  * Plugin URI: https://wordpress.org/plugins/woo-wallet/
- * Description: The leading wallet plugin with partial payment, refunds, cashbacks and what not!
- * Author: Subrata Mal
- * Author URI: https://woowallet.in/
- * Version: 1.3.5
+ * Description: The leading wallet plugin for WooCommerce with partial payment, refunds, cashbacks and what not!
+ * Author: WCBeginner
+ * Author URI: https://wcbeginner.com/
+ * Version: 1.3.6
  * Requires at least: 4.4
  * Tested up to: 5.1
  * WC requires at least: 3.0

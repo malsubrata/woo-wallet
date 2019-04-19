@@ -14,7 +14,7 @@ class Woo_Wallet_Topup extends WP_Widget {
     public function __construct() {
         $widget_ops = array(
             'classname' => 'widget_wallet_topup',
-            'description' => __('WooWallet top-up form for your site.', 'woo-wallet'),
+            'description' => __('TeraWallet top-up form for your site.', 'woo-wallet'),
             'customize_selective_refresh' => true,
         );
         parent::__construct('woo-wallet-topup', _x('Wallet Top-up', 'Wallet Top-up widget', 'woo-wallet'), $widget_ops);

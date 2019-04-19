@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.3.6 - 2019-04-19 =
+* Updated - Plugin name change.
+
 = 1.3.5 - 2019-04-18 =
 * Add - Support for WC version 3.6.
 * Add - Referral action.

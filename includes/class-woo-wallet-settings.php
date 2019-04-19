@@ -54,7 +54,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
             $screen_id = $screen ? $screen->id : '';
             $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
             wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION);
-            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-settings' ) ) ) {
+            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-settings', 'terawallet_page_woo-wallet-settings' ) ) ) {
                 wp_enqueue_style( 'dashicons' );
                 wp_enqueue_style( 'wp-color-picker' );
                 wp_enqueue_style( 'woo_wallet_admin_styles' );

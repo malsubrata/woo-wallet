@@ -1,10 +1,10 @@
-=== WooCommerce Wallet - credit, cashback, refund system ===
-Contributors: subratamal, moumitaadak
-Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, woocommerce wallet, wc wallet, woocommerce credits
+=== TeraWallet ===
+Contributors: wcbeginner, subratamal, moumitaadak
+Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.1
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -13,14 +13,14 @@ A powerful, extendable WooCommerce wallet system which support payment, partial 
 
 == Description ==
 
-WooCommerce Wallet plugin allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
+TeraWallet allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
 [youtube https://www.youtube.com/watch?v=Fnpp8qxAWBw]
 
-= Use case of WooCommerce Wallet plugin =
+= Use case of TeraWallet =
 With this extension, the customers won't have to fill in the payment details every time. They can simply log in and pay for products using the wallet money. The customers will also get the advantage for earning cashback using the wallet money. The admin can process refund to the customer wallet. 
 
-= Features of WooCommerce Wallet plugin =
+= Features of TeraWallet =
 - Wallet system works just like any other payment method.
 - Set wallet system payment method title for the front-end.
 - The customers can use various payment methods to add money.
@@ -44,17 +44,17 @@ With this extension, the customers won't have to fill in the payment details eve
 
 > Take a step forward and try our [demo](https://demo.woowallet.in/my-account/).
 
-= Workflow of WooCommerce Wallet plugin =
+= Workflow of TeraWallet =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
 Now for enable cashback rules, navigate to WooWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
 On the front-end, the customers can log in to the store and go to wallet page from My Account. Enter the amount to add and then complete the checkout process just like any other product purchase.
 
 = Premium extensions =
 
-- [WooWallet Coupons](https://woowallet.in/product/woo-wallet-coupons/)
-- [WooWallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
-- [WooWallet Importer](https://woowallet.in/product/woo-wallet-importer/)
-- [WooWallet AffiliateWP](https://woowallet.in/product/woowallet-affiliatewp/)
+- [Wallet Coupons](https://woowallet.in/product/woo-wallet-coupons/)
+- [Wallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
+- [Wallet Importer](https://woowallet.in/product/woo-wallet-importer/)
+- [Wallet AffiliateWP](https://woowallet.in/product/woowallet-affiliatewp/)
 
 = Translator Contributors =
 - [#fa_IR](https://translate.wordpress.org/locale/fa/default/wp-plugins/woo-wallet) - [@rahimvaziri](https://wordpress.org/support/users/rahimvaziri/)
@@ -128,6 +128,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.6 - 2019-04-19 =
+* Updated - Plugin name change.
+
 = 1.3.5 - 2019-04-18 =
 * Add - Support for WC version 3.6.
 * Add - Referral action.

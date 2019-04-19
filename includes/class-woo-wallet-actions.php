@@ -82,7 +82,7 @@ class WOO_Wallet_Actions {
         $suffix = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '' : '.min';
         // Register scripts
         wp_register_script('woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/assets/js/admin/admin-actions' . $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
-        if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-actions' ) ) ) {
+        if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-actions', 'terawallet_page_woo-wallet-actions' ) ) ) {
             wp_enqueue_script('woo_wallet_admin_actions');
         }
     }
