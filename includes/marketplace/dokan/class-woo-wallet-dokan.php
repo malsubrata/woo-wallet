@@ -103,7 +103,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
             }
             foreach ( $all_orders as $tmp_order) {
                 $tmp_order_id = dokan_get_prop( $tmp_order, 'id' );
-                $seller_id    = get_post_field( 'post_author', $tmp_order_id );
+                $seller_id    = dokan_get_seller_id_by_order( $tmp_order_id );
                 $do_order     = $this->get_dokan_order( $tmp_order_id, $seller_id );
                 // in-case we can't find the order
                 if ( ! $do_order ) {

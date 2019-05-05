@@ -229,6 +229,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     wc_add_notice($response['message'], 'error');
                 } else {
                     wc_add_notice($response['message']);
+                    $location = esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) );
+                    wp_safe_redirect($location);
+                    exit();
                 }
             }
         }
@@ -302,6 +305,14 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 $transfer_charge = apply_filters('woo_wallet_transfer_charge_amount', $transfer_charge, $whom);
                 $credit_amount = apply_filters('woo_wallet_transfer_credit_amount', $amount, $whom);
                 $debit_amount = apply_filters('woo_wallet_transfer_debit_amount', $amount + $transfer_charge, $whom);
+                if ( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ) ) {
+                    if ( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ) > $amount) {
+                        return array(
+                            'is_valid' => false,
+                            'message' => sprintf( __('Minimum transfer amount is %s', 'woo-wallet'), wc_price( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ) ) )
+                        );
+                    }
+                }
                 if (!$whom) {
                     return array(
                         'is_valid' => false,
@@ -322,7 +333,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     update_wallet_transaction_meta($debit_transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id());
                     $response = array(
                         'is_valid' => true,
-                        'message' => __('Amount transferred successfully!!', 'woo-wallet')
+                        'message' => __('Amount transferred successfully!', 'woo-wallet')
                     );
                 }
             } else {

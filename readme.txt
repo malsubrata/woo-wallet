@@ -1,4 +1,4 @@
-=== TeraWallet ===
+=== TeraWallet - For WooCommerce ===
 Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
@@ -12,6 +12,7 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.html
 A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
 
 == Description ==
+> We are pleased to inform you that we have changed the plugin name, WooWallet is now TeraWallet.
 
 TeraWallet allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
@@ -128,6 +129,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.7 - 2019-05-05 =
+* Add - Minimum transfer limit.
+* Fix - Dokan withdrawal issue.
+
 = 1.3.6 - 2019-04-19 =
 * Updated - Plugin name change.
 

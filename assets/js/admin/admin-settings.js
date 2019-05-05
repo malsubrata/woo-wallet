@@ -108,11 +108,9 @@ jQuery(function ($) {
             }).change();
             $('#wcwp-_wallet_settings_general-is_enable_wallet_transfer').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('.transfer_charge_type').show();
-                    $('.transfer_charge_amount').show();
+                    $('.min_transfer_amount, .transfer_charge_type, .transfer_charge_amount').show();
                 } else {
-                    $('.transfer_charge_type').hide();
-                    $('.transfer_charge_amount').hide();
+                    $('.min_transfer_amount, .transfer_charge_type, .transfer_charge_amount').hide();
                 }
             }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_gateway_charge').on('change', function () {

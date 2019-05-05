@@ -336,7 +336,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 $payment_type = filter_input(INPUT_POST, 'payment_type' );
                 $description = filter_input(INPUT_POST, 'payment_description' );
                 if ( $user_id != NULL && ! empty( $user_id ) && $amount != NULL && ! empty( $amount ) ) {
-                    $amount = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, 2, '.', '' ), $user_id );
+                    $amount = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
                     if ( 'credit' === $payment_type) {
                         $transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description);
                     } else if ( 'debit' === $payment_type) {

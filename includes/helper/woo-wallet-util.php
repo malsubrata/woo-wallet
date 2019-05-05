@@ -196,7 +196,7 @@ if ( ! function_exists( 'get_wallet_rechargeable_product' ) ) {
      */
     function get_wallet_rechargeable_product() {
         Woo_Wallet_Install::cteate_product_if_not_exist();
-        return wc_get_product( get_option( '_woo_wallet_recharge_product' ) );
+        return wc_get_product(apply_filters( 'woo_wallet_rechargeable_product_id', get_option( '_woo_wallet_recharge_product' ) ) );
     }
 
 }
@@ -335,7 +335,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         if ( ! empty( $after) || ! empty( $before) ) {
             $after           = empty( $after) ? '0000-00-00' : $after;
             $before          = empty( $before) ? current_time( 'mysql', 1 ) : $before;
-            $query['where'] .= " AND `date` BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) and STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' )";
+            $query['where'] .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ))";
         }
 
         if ( $order_by) {

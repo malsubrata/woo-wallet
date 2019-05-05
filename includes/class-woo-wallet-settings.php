@@ -144,6 +144,13 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                         'default' => 'on'
                     ),
                     array(
+                        'name' => 'min_transfer_amount',
+                        'label' => __( 'Minimum Transfer Amount', 'woo-wallet' ),
+                        'desc' => __( 'Enter minimum transfer amount', 'woo-wallet' ),
+                        'type' => 'number',
+                        'step' => '0.01'
+                    ),
+                    array(
                         'name' => 'transfer_charge_type',
                         'label' => __( 'Transfer charge type', 'woo-wallet' ),
                         'desc' => __( 'Select transfer charge type percentage or fixed', 'woo-wallet' ),

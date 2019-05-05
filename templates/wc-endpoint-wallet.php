@@ -84,7 +84,7 @@ $menu_items = apply_filters('woo_wallet_nav_menu_items', array(
                     </p>
                     <p class="woo-wallet-field-container form-row form-row-wide">
                         <label for="woo_wallet_transfer_amount"><?php _e( 'Amount', 'woo-wallet' ); ?></label>
-                        <input type="number" step="0.01" name="woo_wallet_transfer_amount" required=""/>
+                        <input type="number" step="0.01" min="<?php echo woo_wallet()->settings_api->get_option('min_transfer_amount', '_wallet_settings_general', 0); ?>" name="woo_wallet_transfer_amount" required=""/>
                     </p>
                     <p class="woo-wallet-field-container form-row form-row-wide">
                         <label for="woo_wallet_transfer_note"><?php _e( 'What\'s this for', 'woo-wallet' ); ?></label>
