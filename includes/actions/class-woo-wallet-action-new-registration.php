@@ -21,7 +21,7 @@ class Action_New_Registration extends WooWalletAction {
      */
     public function init_form_fields() {
 
-        $this->form_fields = array(
+        $this->form_fields = apply_filters('woo_wallet_action_new_registration_form_fields', array(
             'enabled' => array(
                 'title'   => __( 'Enable/Disable', 'woo-wallet' ),
                 'type'    => 'checkbox',
@@ -42,13 +42,16 @@ class Action_New_Registration extends WooWalletAction {
                 'default'     => __( 'Balance credited for becoming a member.', 'woo-wallet' ),
                 'desc_tip'    => true,
             )
-        );
+        ));
     }
     
     public function woo_wallet_new_user_registration_credit( $user_id ){
         if ( $this->is_enabled() && $this->settings['amount'] && apply_filters( 'woo_wallet_new_user_registration_credit', true, $user_id ) ){
             $amount = apply_filters( 'woo_wallet_new_user_registration_credit_amount', $this->settings['amount'], $user_id );
-            woo_wallet()->wallet->credit( $user_id, $amount, sanitize_textarea_field( $this->settings['description'] ) );
+            $transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, sanitize_textarea_field( $this->settings['description'] ) );
+            if($transaction_id){
+                do_action('woo_wallet_action_new_registration_credited', $transaction_id, $user_id, $this);
+            }
         }
     }
 
