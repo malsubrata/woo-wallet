@@ -75,14 +75,14 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         $wp_user_search = new WP_User_Query( $args );
         $data = array();
         foreach ( $wp_user_search->get_results() as $user) {
-            $data[] = array(
+            $data[] = apply_filters('woo_wallet_balance_details_list_table_item_data', array(
                 'id'       => $user->ID,
                 'username' => $user->data->user_login,
                 'name'     => $user->data->display_name,
                 'email'    => $user->data->user_email,
                 'balance'  => woo_wallet()->wallet->get_wallet_balance( $user->ID ),
                 'actions'  => ''
-            );
+            ), $user);
         }
         $this->_column_headers = array( $columns, $hidden, $sortable );
         $this->items           = $data;
@@ -134,7 +134,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             case 'actions':
                 return '<p><a href="' . add_query_arg( array( 'page' => 'woo-wallet-add', 'user_id' => $item['id'] ), admin_url( 'admin.php' ) ) . '" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="' . add_query_arg( array( 'page' => 'woo-wallet-transactions', 'user_id' => $item['id'] ), admin_url( 'admin.php' ) ) . '"></a></p>';
             default:
-                return print_r( $item, true );
+                return apply_filters('woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item);
         }
     }
 
