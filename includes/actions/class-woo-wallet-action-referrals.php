@@ -147,7 +147,7 @@ class Action_Referrals extends WooWalletAction {
 
     public function init_referrals() {
         if (isset($_GET[$this->referral_handel]) && !empty($_GET[$this->referral_handel])) {
-            if (!headers_sent() && did_action('wp_loaded')) {
+            if (!headers_sent() && did_action('wp_loaded') ) {
                 wc_setcookie('woo_wallet_referral', $_GET[$this->referral_handel], time() + DAY_IN_SECONDS);
             }
         }
@@ -164,7 +164,7 @@ class Action_Referrals extends WooWalletAction {
             if ($user->ID === get_current_user_id()) {
                 return false;
             }
-            return $user;
+            return apply_filters('woo_wallet_referral_user', $user, $this);
         }
         return false;
     }
@@ -190,21 +190,23 @@ class Action_Referrals extends WooWalletAction {
                             $transiant_duration = MONTH_IN_SECONDS;
                         }
                         set_transient('woo_wallet_referral_visit_' . $referral_user->ID, $woo_wallet_referral_visit_count + 1, $transiant_duration);
-                        woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
+                        $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount);
+                        do_action('woo_wallet_after_referral_visit', $transaction_id, $this);
                     }
                 }
             } else{
-                woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
+                $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description']);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount);
+                do_action('woo_wallet_after_referral_visit', $transaction_id, $this);
             }
             wc_setcookie('woo_wallet_referral_visit_credited_' . $referral_user->ID, true, time() + DAY_IN_SECONDS);
         }
     }
     
-    public function woo_wallet_referring_signup(){
+    public function woo_wallet_referring_signup($user_id){
         $referral_signup_amount = $this->settings['referring_signups_amount'];
         if ($referral_signup_amount && $this->get_referral_user()) {
             $referral_user = $this->get_referral_user();
@@ -222,15 +224,17 @@ class Action_Referrals extends WooWalletAction {
                             $transiant_duration = MONTH_IN_SECONDS;
                         }
                         set_transient('woo_wallet_referral_signup_' . $referral_user->ID, $woo_wallet_referral_signup_count + 1, $transiant_duration);
-                        woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
+                        $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
                         update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
+                        do_action('woo_wallet_after_referral_signup', $transaction_id, $user_id, $this);
                     }
                 }
             } else{
-                woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
+                $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
                 update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
+                do_action('woo_wallet_after_referral_signup', $transaction_id, $user_id, $this);
             }
         }
     }

@@ -345,7 +345,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         if ( $limit) {
             $query['limit'] = "LIMIT {$limit}";
         }
-
+        $wpdb->hide_errors();
         $query          = apply_filters( 'woo_wallet_transactions_query', $query );
         $query          = implode( ' ', $query );
         $query_hash     = md5( $user_id . $query );
