@@ -222,6 +222,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             <div class="wrap">
                 <h2><?php _e( 'Users wallet details', 'woo-wallet' ); ?></h2>
                 <?php do_action('woo_wallet_before_balance_details_table'); ?>
+                <?php $this->balance_details_table->views(); ?>
                 <form id="posts-filter" method="post">
                     <?php $this->balance_details_table->search_box( __( 'Search Users', 'woo-wallet' ), 'search_id' ); ?>
                     <?php $this->balance_details_table->display(); ?>

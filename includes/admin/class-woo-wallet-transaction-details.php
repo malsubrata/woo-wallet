@@ -56,6 +56,15 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
             'per_page'    => $perPage
         ) );
     }
+    
+    /**
+    * Output 'no users' message.
+    *
+    * @since 3.1.0
+    */
+    public function no_items() {
+        _e( 'No transactions found.', 'woo-wallet' );
+    }
 
     /**
      * Define which columns are hidden
