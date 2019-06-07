@@ -3,8 +3,8 @@ Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.1
-Stable tag: 1.3.6
+Tested up to: 5.2
+Stable tag: 1.3.8
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.8 - 2019-06-07 =
+* Add - Role wise filter in wallet transaction page.
+* Add - Hooks and Filters.
+
 = 1.3.7 - 2019-05-05 =
 * Add - Minimum transfer limit.
 * Fix - Dokan withdrawal issue.

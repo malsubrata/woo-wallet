@@ -51,7 +51,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));
             add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
             add_action('woocommerce_shop_loop_item_title', array($this, 'display_cashback'), 15);
-            add_action('woocommerce_before_single_product_summary', array($this, 'display_cashback'), 15);
+            add_action('woocommerce_single_product_summary', array($this, 'display_cashback'), 15);
 
             add_filter('woocommerce_coupon_is_valid', array($this, 'woo_wallet_is_valid_cashback_coupon'), 100, 2);
             add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);

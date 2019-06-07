@@ -67,7 +67,7 @@ final class WooWallet {
     private function define_constants() {
         $this->define( 'WOO_WALLET_ABSPATH', dirname(WOO_WALLET_PLUGIN_FILE) . '/' );
         $this->define( 'WOO_WALLET_PLUGIN_FILE', plugin_basename(WOO_WALLET_PLUGIN_FILE) );
-        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.7' );
+        $this->define( 'WOO_WALLET_PLUGIN_VERSION', '1.3.8' );
     }
 
     /**

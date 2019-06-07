@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.3.8 - 2019-06-07 =
+* Add - Role wise filter in wallet transaction page.
+* Add - Hooks and Filters.
+
 = 1.3.7 - 2019-05-05 =
 * Add - Minimum transfer limit.
 * Fix - Dokan withdrawal issue.
