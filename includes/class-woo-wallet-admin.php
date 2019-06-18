@@ -45,9 +45,12 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10 );
             add_action( 'admin_menu', array( $this, 'admin_menu' ), 50 );
             if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'on' ) && 'product' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
-                add_action( 'woocommerce_product_write_panel_tabs', array( $this, 'woocommerce_product_write_panel_tabs' ) );
+                add_filter('woocommerce_product_data_tabs', array($this, 'woocommerce_product_data_tabs'));
                 add_action( 'woocommerce_product_data_panels', array( $this, 'woocommerce_product_data_panels' ) );
                 add_action( 'save_post_product', array( $this, 'save_post_product' ) );
+                
+                add_action('woocommerce_variation_options_pricing', array($this, 'woocommerce_variation_options_pricing'), 10, 3);
+                add_action('woocommerce_save_product_variation', array($this, 'woocommerce_save_product_variation'), 10, 2);
             }
             add_action( 'woocommerce_admin_order_totals_after_tax', array( $this, 'add_wallet_payment_amount' ), 10, 1 );
 
@@ -382,16 +385,18 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             }
             return $screen_option;
         }
-
+        
         /**
-         * add wallet tab to product page
+         * add wallet cashback tab to product page
          */
-        public function woocommerce_product_write_panel_tabs() {
-            ?>
-            <li class="wallet_tab">
-                <a href="#wallet_data_tabs"> &nbsp;<?php _e( 'Cashback', 'woo-wallet' ); ?></a>
-            </li>
-            <?php
+        public function woocommerce_product_data_tabs($tabs){
+            $tabs['wallet_cashback'] = array(
+                'label'    => __( 'Cashback', 'woo-wallet' ),
+                'target'   => 'wallet_cashback_product_data',
+                'class'    => array( 'hide_if_variable' ),
+                'priority' => 80,
+            );
+            return $tabs;
         }
 
         /**
@@ -401,7 +406,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function woocommerce_product_data_panels() {
             global $post;
             ?>
-            <div id="wallet_data_tabs" class="panel woocommerce_options_panel">
+            <div id="wallet_cashback_product_data" class="panel woocommerce_options_panel">
                 <?php
                 woocommerce_wp_select( array(
                     'id' => 'wcwp_cashback_type',
@@ -435,6 +440,46 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             if ( isset( $_POST['wcwp_cashback_amount'] ) ) {
                 update_post_meta( $post_ID, '_cashback_amount', sanitize_text_field( $_POST['wcwp_cashback_amount'] ) );
             }
+        }
+        /**
+         * Add cashback option for variable product.
+         * @param int $loop
+         * @param array $variation_data
+         * @param object $variation
+         */
+        public function woocommerce_variation_options_pricing($loop, $variation_data, $variation){
+            woocommerce_wp_select( array(
+                'id' => 'variable_cashback_type[' . $loop . ']',
+                'name' => 'variable_cashback_type[' . $loop . ']',
+                'label' => __( 'Cashback type', 'woo-wallet' ),
+                'options' => array( 'percent' => __( 'Percentage', 'woo-wallet' ), 'fixed' => __( 'Fixed', 'woo-wallet' ) ),
+                'value' => get_post_meta( $variation->ID, '_cashback_type', true ),
+                'wrapper_class' => 'form-row form-row-first',
+            ) );
+            woocommerce_wp_text_input( array(
+                'id' => 'variable_cashback_amount[' . $loop . ']',
+                'name' => 'variable_cashback_amount[' . $loop . ']',
+                'type' => 'number',
+                'data_type' => 'decimal',
+                'custom_attributes' => array(
+                        'step' => '1',
+                        'min' => '0'
+                    ),
+                'label' => __( 'Cashback Amount', 'woo-wallet' ),
+                'value' => get_post_meta( $variation->ID, '_cashback_amount', true ),
+                'wrapper_class' => 'form-row form-row-last',
+            ) );
+        }
+        /**
+         * Save cashback option for variable product.
+         * @param int $variation_id
+         * @param int $i
+         */
+        public function woocommerce_save_product_variation($variation_id, $i){
+            $cashback_type = isset( $_POST['variable_cashback_type'][ $i ] ) ? wc_clean( wp_unslash( $_POST['variable_cashback_type'][ $i ] ) ) : null;
+            $cashback_amount = isset( $_POST['variable_cashback_amount'][ $i ] ) ? wc_clean( wp_unslash( $_POST['variable_cashback_amount'][ $i ] ) ) : null;
+            update_post_meta($variation_id, '_cashback_type', esc_attr($cashback_type));
+            update_post_meta($variation_id, '_cashback_amount', esc_attr($cashback_amount));
         }
 
         /**

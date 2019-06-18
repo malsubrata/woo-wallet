@@ -142,7 +142,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                 case 'product':
                     if (sizeof($order->get_items()) > 0) {
                         foreach ($order->get_items() as $item_id => $item) {
-                            $product_id = $item->get_product_id();
+                            $product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
                             $product = wc_get_product($product_id);
                             $qty = $item->get_quantity();
                             $cashback_amount += self::get_product_cashback_amount($product, $qty);
@@ -152,7 +152,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                 case 'product_cat':
                     if (sizeof($order->get_items()) > 0) {
                         foreach ($order->get_items() as $item_id => $item) {
-                            $product_id = $item->get_product_id();
+                            $product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
                             $product = wc_get_product($product_id);
                             $qty = $item->get_quantity();
                             $cashback_amount += self::get_product_category_wise_cashback_amount($product, $qty);
@@ -186,6 +186,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
          * @return float
          */
         public static function get_product_cashback_amount($product, $qty = 1) {
+            self::init_cashback_settings();
             $cashback_amount = 0;
             $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
             $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
@@ -229,6 +230,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
          * @return float
          */
         public static function get_product_category_wise_cashback_amount($product, $qty = 1) {
+            self::init_cashback_settings();
             $cashback_amount = 0;
             $term_ids = $product->get_category_ids('edit');
             $category_wise_cashback_amounts = array();

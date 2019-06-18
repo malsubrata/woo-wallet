@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.2
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.9 - 2019-06-18 =
+* New - Now admin can configure cashback for variable products.
+
 = 1.3.8 - 2019-06-07 =
 * Add - Role wise filter in wallet transaction page.
 * Add - Hooks and Filters.
