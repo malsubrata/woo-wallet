@@ -7,13 +7,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
     class Woo_Wallet_Wallet {
-        /* WordPress user id */
-
+        /**
+         * WordPress user ID.
+         * @var INT 
+         */
         public $user_id = 0;
-        /* user wallet balance */
+        /**
+         * Wallet balance.
+         * @var float 
+         */
         public $wallet_balance = 0;
-        /* Wallet balance meta key */
-        public $meta_key = '_woo_wallet_balance';
+        /**
+         * Current wallet balance meta key.
+         * @var string 
+         */
+        public $meta_key = '_current_woo_wallet_balance';
 
         /*
          * Class constructor
@@ -183,6 +191,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
          */
         private function recode_transaction( $amount, $type, $details ) {
             global $wpdb;
+            if(!$this->user_id){
+                return;
+            }
             if ( $amount < 0 ) {
                 $amount = 0;
             }
@@ -197,7 +208,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
             }
             if ( $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", apply_filters( 'woo_wallet_transactions_args', array( 'blog_id' => $GLOBALS['blog_id'], 'user_id' => $this->user_id, 'type' => $type, 'amount' => $amount, 'balance' => $balance, 'currency' => get_woocommerce_currency(), 'details' => $details, 'date' => current_time('mysql') ), array( '%d', '%d', '%s', '%f', '%f', '%s', '%s', '%s' ) ) ) ) {
                 $transaction_id = $wpdb->insert_id;
-                update_user_meta($this->user_id, '_current_woo_wallet_balance', $balance);
+                update_user_meta($this->user_id, $this->meta_key, $balance);
                 clear_woo_wallet_cache( $this->user_id );
                 do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type);
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
