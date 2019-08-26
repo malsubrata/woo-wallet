@@ -77,6 +77,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback'));
             
             add_action( 'admin_notices', array( $this, 'show_promotions' ) );
+            add_filter( 'woocommerce_settings_pages', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
         }
 
         /**
@@ -85,8 +86,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function admin_init() {
             if (version_compare(WC_VERSION, '3.4', '<' ) ) {
                 add_filter( 'woocommerce_account_settings', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
-            } else {
-                add_filter( 'woocommerce_settings_pages', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
             }
         }
 
