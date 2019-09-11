@@ -46,7 +46,10 @@ class Woo_Wallet_Topup extends WP_Widget {
                 $min_amount = woo_wallet()->settings_api->get_option('min_topup_amount', '_wallet_settings_general', 0);
                 $max_amount = woo_wallet()->settings_api->get_option('max_topup_amount', '_wallet_settings_general', '');
                 ?>
-                <input type="number" step="0.01" min="<?php echo $min_amount; ?>" max="<?php echo $max_amount; ?>" name="woo_wallet_balance_to_add" id="woo_wallet_balance_to_add" class="woo-wallet-balance-to-add input-text" placeholder="<?php _e('Enter amount', 'woo-wallet'); ?>" required="" />
+                <p>
+                    <input type="number" style="max-width: 70%;" step="0.01" min="<?php echo $min_amount; ?>" max="<?php echo $max_amount; ?>" name="woo_wallet_balance_to_add" id="woo_wallet_balance_to_add" class="woo-wallet-balance-to-add input-text" placeholder="<?php _e('Enter amount', 'woo-wallet'); ?>" required="" />
+                    <input type="submit" class="button" value="<?php _e('Add', 'woo-wallet'); ?>" />
+                </p>
                 <?php wp_nonce_field('woo_wallet_topup', 'woo_wallet_topup'); ?>
             </div>
         </form>

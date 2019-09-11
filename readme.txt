@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.2
-Stable tag: 1.3.9
+Stable tag: 1.3.10
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.10 - 2019-09-11 =
+* Add - Submit button at Wallet Top-Up widget.
+* Fix - Cashback calculation issue for product category.
+* Fix - Partial payment template.
+* Fix - WooCommerce endpoint save issue.
+* Tweak - Alter database column amount and balance.
+
 = 1.3.9 - 2019-06-18 =
 * New - Now admin can configure cashback for variable products.
 

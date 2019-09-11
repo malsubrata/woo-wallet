@@ -212,7 +212,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     add_filter('woocommerce_add_cart_item_data', array($this, 'add_woo_wallet_product_price_to_cart_item_data'), 10, 2);
                     $product = get_wallet_rechargeable_product();
                     if ($product) {
-                        woo_wallet_persistent_cart_update();
+                        if(!is_wallet_rechargeable_cart()){
+                            woo_wallet_persistent_cart_update();
+                        }
                         wc()->cart->empty_cart();
                         wc()->cart->add_to_cart($product->get_id());
                         $redirect_url = apply_filters('woo_wallet_redirect_to_checkout_after_added_amount', true) ? wc_get_checkout_url() : wc_get_cart_url();
@@ -312,7 +314,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     if ( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ) > $amount) {
                         return array(
                             'is_valid' => false,
-                            'message' => sprintf( __('Minimum transfer amount is %s', 'woo-wallet'), wc_price( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ) ) )
+                            'message' => sprintf( __('Minimum transfer amount is %s', 'woo-wallet'), wc_price( woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ), woo_wallet_wc_price_args() ) )
                         );
                     }
                 }
@@ -688,7 +690,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function restore_woocommerce_cart_items($order_id){
             $saved_cart = woo_wallet_get_saved_cart();
             foreach ($saved_cart as $cart_item_key => $restore_item){
-                wc()->cart->add_to_cart($restore_item['product_id'], $restore_item['quantity'], $restore_item['variation_id'], $restore_item['variation']);
+                wc()->cart->cart_contents[ $cart_item_key ]         = $restore_item;
+		wc()->cart->cart_contents[ $cart_item_key ]['data'] = wc_get_product( $restore_item['variation_id'] ? $restore_item['variation_id'] : $restore_item['product_id'] );
+                do_action( 'woocommerce_cart_item_restored', $cart_item_key, wc()->cart );
             }
             wc()->cart->calculate_totals();
             woo_wallet_persistent_cart_destroy();

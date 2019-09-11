@@ -42,7 +42,7 @@ $referring_earning = get_user_meta($user_id, '_woo_wallet_referring_earning', tr
             <tr>
                 <td><?php echo $referring_visitor; ?></td>
                 <td><?php echo $referring_signup; ?></td>
-                <td><?php echo wc_price($referring_earning); ?></td>
+                <td><?php echo wc_price($referring_earning, woo_wallet_wc_price_args()); ?></td>
             </tr>
         </tbody>
     </table>

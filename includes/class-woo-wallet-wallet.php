@@ -116,6 +116,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 update_post_meta( $order_id, '_wc_wallet_purchase_credited', true );
                 update_post_meta( $order_id, '_wallet_payment_transaction_id', $transaction_id );
                 update_wallet_transaction_meta( $transaction_id, '_wc_wallet_purchase_gateway_charge', $charge_amount, $order->get_customer_id() );
+                update_wallet_transaction_meta( $transaction_id, '_type', 'credit_purchase', $order->get_customer_id() );
                 do_action( 'woo_wallet_credit_purchase_completed', $transaction_id, $order );
             }
         }
