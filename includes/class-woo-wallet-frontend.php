@@ -55,10 +55,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
 
             add_filter('woocommerce_coupon_is_valid', array($this, 'woo_wallet_is_valid_cashback_coupon'), 100, 2);
+            add_filter('woocommerce_coupon_error', array($this, 'cashback_coupon_error'), 100, 3);
             add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);
             add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
             add_filter('woocommerce_cart_get_total', array($this, 'woocommerce_cart_get_total'));
             add_shortcode('woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback');
+            add_shortcode('mini-wallet', __CLASS__ . '::mini_wallet_shortcode_callback');
             add_action('woocommerce_cart_calculate_fees', array($this, 'woo_wallet_add_partial_payment_fee'));
             add_filter('woocommerce_cart_totals_get_fees_from_cart_taxes', array($this, 'woocommerce_cart_totals_get_fees_from_cart_taxes'), 10, 2);
             add_action('woocommerce_thankyou', array($this, 'restore_woocommerce_cart_items'));
@@ -589,6 +591,23 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             return $is_valid;
         }
+        
+        /**
+         * Return invalid coupon message.
+         * @param string $error_message
+         * @param int $error_code
+         * @param WC_Coupon $coupon
+         * @return string
+         */
+        public function cashback_coupon_error($error_message, $error_code, $coupon){
+            $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
+            if ('yes' === $_is_coupon_cashback) {
+                if (!is_user_logged_in()) {
+                    $error_message = __('Please login to apply cashback coupon.', 'woo-wallet');
+                }
+            }
+            return $error_message;
+        }
 
         /**
          * 
@@ -655,6 +674,14 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public static function woo_wallet_shortcode_callback($atts) {
             return self::shortcode_wrapper(array('Woo_Wallet_Frontend', 'woo_wallet_shortcode_output'), $atts);
         }
+        /**
+         * Mini Wallet shortcode
+         * @param array $atts
+         * @return string Shortcode output
+         */
+        public static function mini_wallet_shortcode_callback($atts){
+            return self::shortcode_wrapper(array('Woo_Wallet_Frontend', 'mini_wallet_shortcode_output'), $atts);
+        }
 
         /**
          * Wallet shortcode output
@@ -686,7 +713,23 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 }
             }
         }
-        
+        /**
+         * Mini wallet shortcode output.
+         * @param array $atts
+         */
+        public static function mini_wallet_shortcode_output($atts){
+            $title = __('Current wallet balance', 'woo-wallet');
+            $mini_wallet = '<a class="woo-wallet-menu-contents" href="' . esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'))) . '" title="' . $title . '">';
+            $mini_wallet .= '<span class="woo-wallet-icon-wallet"></span> ';
+            $mini_wallet .= woo_wallet()->wallet->get_wallet_balance(get_current_user_id());
+            $mini_wallet .= '</a>';
+            echo $mini_wallet;
+        }
+
+        /**
+         * Restore cart items after wallet top-up.
+         * @param int $order_id
+         */
         public function restore_woocommerce_cart_items($order_id){
             $saved_cart = woo_wallet_get_saved_cart();
             foreach ($saved_cart as $cart_item_key => $restore_item){

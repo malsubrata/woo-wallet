@@ -270,7 +270,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                         $cashback_amount += $category_wise_cashback_amount;
                     }
                 } else {
-                    $cashback_amount += self::$global_cashbak_type;
+                    $cashback_amount += self::$global_cashbak_amount;
                 }
             }
 

@@ -1,4 +1,9 @@
 *** Changelog ***
+= 1.3.11 - 2019-11-13 =
+* Add - Mini wallet shortcode.
+* Fix - Cashback amount for product cart rule.
+* Fix - Wallet endpoint issue for shortcode.
+
 = 1.3.10 - 2019-09-11 =
 * Add - Submit button at Wallet Top-Up widget.
 * Fix - Cashback calculation issue for product category.

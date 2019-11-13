@@ -23,17 +23,17 @@ $is_rendred_from_myaccount = wc_post_content_has_shortcode( 'woo-wallet' ) ? fal
 $menu_items = apply_filters('woo_wallet_nav_menu_items', array(
     'top_up' => array(
         'title' => apply_filters( 'woo_wallet_account_topup_menu_title', __( 'Wallet topup', 'woo-wallet' ) ),
-        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'add', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'add', get_permalink()),
+        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'add', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'add'),
         'icon' => 'dashicons dashicons-plus-alt'
     ),
     'transfer' => array(
         'title' => apply_filters('woo_wallet_account_transfer_amount_menu_title', __('Wallet transfer', 'woo-wallet')),
-        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'transfer', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'transfer', get_permalink()),
+        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'transfer', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'transfer'),
         'icon' => 'dashicons dashicons-randomize'
     ),
     'transaction_details' => array(
         'title' => apply_filters('woo_wallet_account_transaction_menu_title', __('Transactions', 'woo-wallet')),
-        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'))) : add_query_arg('wallet_action', 'view_transactions', get_permalink()),
+        'url' => $is_rendred_from_myaccount ? esc_url(wc_get_account_endpoint_url(get_option('woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions'))) : add_query_arg('wallet_action', 'view_transactions'),
         'icon' => 'dashicons dashicons-list-view'
     )
 ), $is_rendred_from_myaccount);
