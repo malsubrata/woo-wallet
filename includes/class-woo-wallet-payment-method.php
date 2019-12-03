@@ -21,7 +21,9 @@ class Woo_Gateway_Wallet_payment extends WC_Payment_Gateway {
             'subscription_reactivation',
             'subscription_amount_changes',
             'subscription_date_changes',
-            'subscription_payment_method_change'
+            'subscription_payment_method_change',
+            'subscription_payment_method_change_customer',
+            'subscription_payment_method_change_admin',
         );
         // Load the settings
         $this->init_form_fields();
