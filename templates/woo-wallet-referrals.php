@@ -27,7 +27,16 @@ $referring_visitor = get_user_meta($user_id, '_woo_wallet_referring_visitor', tr
 $referring_signup = get_user_meta($user_id, '_woo_wallet_referring_signup', true) ? get_user_meta($user_id, '_woo_wallet_referring_signup', true) : 0;
 $referring_earning = get_user_meta($user_id, '_woo_wallet_referring_earning', true) ? get_user_meta($user_id, '_woo_wallet_referring_earning', true) : 0;
 ?>
-<span><?php _e('Your referral URL is:', 'woo-wallet'); ?> <b><?php echo $referral_url; ?></b></span>
+<span>
+    <?php _e('Your referral URL is:', 'woo-wallet'); ?> 
+    <input type="text" readonly="" id="referral_url" value="<?php echo $referral_url; ?>" /> 
+    <div class="referral-tooltip">
+        <button onclick="referralTooltip()" onmouseout="referralTooltipOutFunc()">
+            <span class="referral-tooltiptext" id="referral_tooltip"><?php _e('Copy to clipboard', 'woo-wallet'); ?></span>
+            <?php _e('Copy', 'woo-wallet'); ?>
+        </button>
+    </div>
+</span>
 <h3><?php _e('Statistics', 'woo-wallet'); ?></h3>
 <div class="woo_wallet_referral_statistics_container">
     <table class="woo_wallet_referral_statistics_table">
@@ -70,4 +79,58 @@ $referring_earning = get_user_meta($user_id, '_woo_wallet_referring_earning', tr
         padding: 0.3em 1em;
         max-width: 100%;
     }
+
+    .referral-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .referral-tooltip .referral-tooltiptext {
+        visibility: hidden;
+        width: 140px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 150%;
+        left: 50%;
+        margin-left: -75px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .referral-tooltip .referral-tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+    }
+
+    .referral-tooltip:hover .referral-tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
 </style>
+<script type="text/javascript">
+    function referralTooltip() {
+        var copyText = document.getElementById("referral_url");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+
+        var tooltip = document.getElementById("referral_tooltip");
+        tooltip.innerHTML = "<?php _e('Copied', 'woo-wallet'); ?>";
+    }
+
+    function referralTooltipOutFunc() {
+        var tooltip = document.getElementById("referral_tooltip");
+        tooltip.innerHTML = "<?php _e('Copy to clipboard', 'woo-wallet'); ?>";
+    }
+</script>
