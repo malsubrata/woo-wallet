@@ -213,7 +213,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 clear_woo_wallet_cache( $this->user_id );
                 do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type);
                 $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
-                $email_admin->trigger( $transaction_id );
+                if( !is_null( $email_admin ) ){
+                    $email_admin->trigger( $transaction_id );
+                }
                 return $transaction_id;
             }
             return false;

@@ -24,14 +24,14 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
     }
 
     public function get_columns() {
-        return array(
+        return apply_filters('manage_woo_wallet_transactions_columns', array(
             'transaction_id' => __( 'ID', 'woo-wallet' ),
             'name'           => __( 'Name', 'woo-wallet' ),
             'type'           => __( 'Type', 'woo-wallet' ),
             'amount'         => __( 'Amount', 'woo-wallet' ),
             'details'        => __( 'Details', 'woo-wallet' ),
             'date'           => __( 'Date', 'woo-wallet' )
-        );
+        ));
     }
 
     /**
@@ -131,7 +131,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
             case 'date':
                 return $item[$column_name];
             default:
-                return print_r( $item, true );
+                return apply_filters('woo_wallet_transaction_details_column_default', print_r( $item, true ), $column_name, $item);
         }
     }
 

@@ -600,10 +600,12 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return string
          */
         public function cashback_coupon_error($error_message, $error_code, $coupon){
-            $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
-            if ('yes' === $_is_coupon_cashback) {
-                if (!is_user_logged_in()) {
-                    $error_message = __('Please login to apply cashback coupon.', 'woo-wallet');
+            if( is_a( $coupon, 'WC_Coupon' ) ){
+                $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
+                if ('yes' === $_is_coupon_cashback) {
+                    if (!is_user_logged_in()) {
+                        $error_message = __('Please login to apply cashback coupon.', 'woo-wallet');
+                    }
                 }
             }
             return $error_message;
