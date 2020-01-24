@@ -450,11 +450,27 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
      * @return boolean
      */
     function is_full_payment_through_wallet() {
-        $is_valid_payment_through_wallet = true;
-        $current_wallet_balance          = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
-        if ( !is_admin() && ( is_array( wc()->cart->cart_contents) && sizeof( wc()->cart->cart_contents) > 0 ) && ( $current_wallet_balance < get_woowallet_cart_total() || is_wallet_rechargeable_cart() ) ) {
-            $is_valid_payment_through_wallet = false;
+        $is_valid_payment_through_wallet = false;
+        $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
+        $total = 0;
+        if(WC()->cart){
+            $order_id = absint( get_query_var( 'order-pay' ) );
+
+            // Gets order total from "pay for order" page.
+            if ( 0 < $order_id ) {
+                    $order = wc_get_order( $order_id );
+                    $total = (float) $order->get_total();
+
+            // Gets order total from cart/checkout.
+            } elseif ( 0 < WC()->cart->total ) {
+                    $total = (float) get_woowallet_cart_total();
+            }
         }
+        
+        if(!is_admin() && $current_wallet_balance >= $total && ( !is_wallet_rechargeable_cart() || !is_wallet_rechargeable_order($order))){
+            $is_valid_payment_through_wallet = true;
+        }
+        
         return apply_filters( 'is_valid_payment_through_wallet', $is_valid_payment_through_wallet );
     }
 
