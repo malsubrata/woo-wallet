@@ -188,7 +188,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                         'label' => __( 'Cashback Rule', 'woo-wallet' ),
                         'desc' => __( 'Select Cashback Rule cart or product wise', 'woo-wallet' ),
                         'type' => 'select',
-                        'options' => array( 'cart' => __( 'Cart wise', 'woo-wallet' ), 'product' => __( 'Product wise', 'woo-wallet' ), 'product_cat' => __( 'Product category wise', 'woo-wallet' ) ),
+                        'options' => apply_filters('woo_wallet_cashback_rules', array( 'cart' => __( 'Cart wise', 'woo-wallet' ), 'product' => __( 'Product wise', 'woo-wallet' ), 'product_cat' => __( 'Product category wise', 'woo-wallet' ) ) ),
                         'size' => 'regular-text wc-enhanced-select'
                     ),
                     array(
