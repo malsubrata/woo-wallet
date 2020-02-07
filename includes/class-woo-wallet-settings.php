@@ -27,7 +27,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
          * wc wallet menu
          */
         public function admin_menu() {
-            add_submenu_page( 'woo-wallet', __( 'Settings', 'woo-wallet' ), __( 'Settings', 'woo-wallet' ), 'manage_woocommerce', 'woo-wallet-settings', array( $this, 'plugin_page' ) );
+            add_submenu_page( 'woo-wallet', __( 'Settings', 'woo-wallet' ), __( 'Settings', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-settings', array( $this, 'plugin_page' ) );
         }
 
         /**

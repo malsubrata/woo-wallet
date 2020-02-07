@@ -44,3 +44,10 @@ function woo_wallet_update_1310_db_column() {
         $wpdb->query( "ALTER TABLE {$table_name} MODIFY COLUMN `balance` decimal(16,8);" );
     }
 }
+function woo_wallet_update_1312_db_column() {
+    global $wpdb;
+    $table_name = $wpdb->base_prefix.'woo_wallet_transactions';
+    if ( $table_name === $wpdb->get_var( "SHOW TABLES LIKE '$table_name'" ) && !$wpdb->get_var( "SHOW COLUMNS FROM `{$table_name}` LIKE 'created_by';" ) ) {
+        $wpdb->query( "ALTER TABLE {$table_name} ADD `created_by` BIGINT UNSIGNED NOT NULL DEFAULT 1;" );
+    }
+}

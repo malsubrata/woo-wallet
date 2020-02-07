@@ -1,14 +1,14 @@
-# Copyright (C) 2019 WCBeginner
+# Copyright (C) 2020 WCBeginner
 # This file is distributed under the same license as the TeraWallet package.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.3.11\n"
+"Project-Id-Version: TeraWallet 1.3.12\n"
 "Report-Msgid-Bugs-To: https://github.com/malsubrata/woo-wallet/issues\n"
-"POT-Creation-Date: 2019-11-13 17:19:45+00:00\n"
+"POT-Creation-Date: 2020-02-07 00:40:59+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2019-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2020-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Subrata Mal<m.subrata1991@gmail.com>\n"
 "Language-Team: WooWallet <admin@woowallet.in>\n"
 "X-Generator: grunt-wp-i18n 1.0.3\n"
@@ -33,7 +33,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-new-registration.php:26
 #: includes/actions/class-woo-wallet-action-product-review.php:27
 #: includes/actions/class-woo-wallet-action-referrals.php:32
-#: includes/class-woo-wallet-payment-method.php:55
+#: includes/class-woo-wallet-payment-method.php:57
 #: includes/emails/class-woo-wallet-email-new-transaction.php:125
 msgid "Enable/Disable"
 msgstr ""
@@ -73,7 +73,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-referrals.php:93
 #: includes/class-woo-wallet-admin.php:148
 #: includes/class-woo-wallet-admin.php:278
-#: includes/class-woo-wallet-payment-method.php:69
+#: includes/class-woo-wallet-payment-method.php:71
 msgid "Description"
 msgstr ""
 
@@ -145,7 +145,7 @@ msgid "Enable credit for referrals."
 msgstr ""
 
 #: includes/actions/class-woo-wallet-action-referrals.php:38
-#: templates/woo-wallet-referrals.php:36
+#: templates/woo-wallet-referrals.php:45
 msgid "Referring Visitors"
 msgstr ""
 
@@ -179,7 +179,7 @@ msgid "Balance credited for referring a visitor"
 msgstr ""
 
 #: includes/actions/class-woo-wallet-action-referrals.php:69
-#: templates/woo-wallet-referrals.php:37
+#: templates/woo-wallet-referrals.php:46
 msgid "Referring Signups"
 msgstr ""
 
@@ -519,22 +519,22 @@ msgstr ""
 msgid "Recalculate order cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:763
+#: includes/class-woo-wallet-admin.php:766
 msgid "Obtain Superpowers to get the best out of TeraWallet"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:764
+#: includes/class-woo-wallet-admin.php:767
 msgid ""
 "Use superpowers to stand above the crowd. our high-octane add-ons are "
 "designed to boost your store wallet features."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:765
+#: includes/class-woo-wallet-admin.php:768
 msgid "Learn More"
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:51 includes/class-woo-wallet-ajax.php:117
-#: includes/class-woo-wallet-payment-method.php:148
+#: includes/class-woo-wallet-payment-method.php:150
 msgid "Wallet refund #"
 msgstr ""
 
@@ -547,7 +547,7 @@ msgid "Invalid refund amount"
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:119
-#: includes/class-woo-wallet-payment-method.php:150
+#: includes/class-woo-wallet-payment-method.php:152
 msgid "Refund not credited to customer"
 msgstr ""
 
@@ -684,23 +684,23 @@ msgstr ""
 msgid " Cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:606
+#: includes/class-woo-wallet-frontend.php:607
 msgid "Please login to apply cashback coupon."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:623
+#: includes/class-woo-wallet-frontend.php:625
 msgid "Coupon code applied successfully as cashback."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:638
+#: includes/class-woo-wallet-frontend.php:640
 msgid "Cashback: %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:721 templates/mini-wallet.php:21
+#: includes/class-woo-wallet-frontend.php:723 templates/mini-wallet.php:21
 msgid "Current wallet balance"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:44
+#: includes/class-woo-wallet-payment-method.php:46
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:55
 #: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp.php:36
 #: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp.php:41
@@ -708,62 +708,62 @@ msgstr ""
 msgid "Wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:45
+#: includes/class-woo-wallet-payment-method.php:47
 msgid "Have your customers pay with wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:56
+#: includes/class-woo-wallet-payment-method.php:58
 msgid "Enable wallet payments"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:62
+#: includes/class-woo-wallet-payment-method.php:64
 msgid "Title"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:64
+#: includes/class-woo-wallet-payment-method.php:66
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:65
+#: includes/class-woo-wallet-payment-method.php:67
 msgid "Wallet payment"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:71
+#: includes/class-woo-wallet-payment-method.php:73
 msgid "Payment method description that the customer will see on your checkout."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:72
-#: includes/class-woo-wallet-payment-method.php:79
+#: includes/class-woo-wallet-payment-method.php:74
+#: includes/class-woo-wallet-payment-method.php:81
 msgid "Pay with wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:76
+#: includes/class-woo-wallet-payment-method.php:78
 msgid "Instructions"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:78
+#: includes/class-woo-wallet-payment-method.php:80
 msgid "Instructions that will be added to the thank you page."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:95
+#: includes/class-woo-wallet-payment-method.php:97
 msgid " | Current Balance: <strong>%s</strong>"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:115
+#: includes/class-woo-wallet-payment-method.php:117
 msgid "Payment error: "
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:115
+#: includes/class-woo-wallet-payment-method.php:117
 msgid "Your wallet balance is low. Please add %s to proceed with this transaction."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:118
-#: includes/class-woo-wallet-payment-method.php:166
+#: includes/class-woo-wallet-payment-method.php:120
+#: includes/class-woo-wallet-payment-method.php:168
 #: includes/class-woo-wallet-wallet.php:153
 msgid "For order payment #"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:170
+#: includes/class-woo-wallet-payment-method.php:172
 msgid "Insufficient funds in customer wallet"
 msgstr ""
 
@@ -1255,16 +1255,28 @@ msgid ""
 "other payment method"
 msgstr ""
 
-#: templates/woo-wallet-referrals.php:30
+#: templates/woo-wallet-referrals.php:31
 msgid "Your referral URL is:"
 msgstr ""
 
-#: templates/woo-wallet-referrals.php:31
+#: templates/woo-wallet-referrals.php:35 templates/woo-wallet-referrals.php:134
+msgid "Copy to clipboard"
+msgstr ""
+
+#: templates/woo-wallet-referrals.php:36
+msgid "Copy"
+msgstr ""
+
+#: templates/woo-wallet-referrals.php:40
 msgid "Statistics"
 msgstr ""
 
-#: templates/woo-wallet-referrals.php:38
+#: templates/woo-wallet-referrals.php:47
 msgid "Total Earnings"
+msgstr ""
+
+#: templates/woo-wallet-referrals.php:129
+msgid "Copied"
 msgstr ""
 
 #. Plugin Name of the plugin/theme

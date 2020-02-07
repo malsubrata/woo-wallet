@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.3
-Stable tag: 1.3.11
+Stable tag: 1.3.12
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,16 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.12 - 2020-02-07 =
+* Add - Mini wallet RTL support.
+* Add - Support for WooCommerce subscription payment method change.
+* Add - Copy to clipboard function in referral URL.
+* Fix - Cashback recalculation function.
+* Fix - Loading issue in wallet transfer searchbox.
+* Tweak - `is_full_payment_through_wallet` function.
+* Dev - Added `woo_wallet_cashback_rules` filter.
+* Dev - Added `created_by` database column to `woo_wallet_transactions` table.
+
 = 1.3.11 - 2019-11-13 =
 * Add - Mini wallet shortcode.
 * Fix - Cashback amount for product cart rule.

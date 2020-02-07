@@ -585,3 +585,14 @@ if (!function_exists('woo_wallet_wc_price_args')) {
     }
 
 }
+
+if(!function_exists('get_wallet_user_capability')){
+    /**
+     * Wallet user admin capability.
+     * @return string
+     */
+    function get_wallet_user_capability(){
+        return apply_filters('woo_wallet_user_capability', 'manage_woocommerce');
+    }
+    
+}

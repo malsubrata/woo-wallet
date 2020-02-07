@@ -38,7 +38,7 @@ jQuery(function ($) {
             url: wallet_param.ajax_url,
             dataType: 'json',
             type: 'POST',
-            quietMillis: 50,
+            delay: 250,
             data: function (term) {
                 return {
                     action: 'woo-wallet-user-search',
