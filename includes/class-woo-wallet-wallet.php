@@ -168,6 +168,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 $this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ) );
                 $order->add_order_note(sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
                 delete_post_meta( $order_id, '_partial_pay_through_wallet_compleate' );
+                update_post_meta($order_id, '_woo_wallet_partial_payment_refunded', true);
             }
 
             /** debit cashback amount * */

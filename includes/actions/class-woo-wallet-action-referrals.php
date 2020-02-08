@@ -127,7 +127,7 @@ class Action_Referrals extends WooWalletAction {
     public function add_referral_nav_menu($nav_menu, $is_rendred_from_myaccount) {
         $nav_menu['referrals'] = array(
             'title' => apply_filters('woo_wallet_account_referrals_menu_title', __('Referrals', 'woo-wallet')),
-            'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'referrals', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'referrals', get_permalink()),
+            'url' => $is_rendred_from_myaccount ? esc_url(wc_get_endpoint_url(get_option('woocommerce_woo_wallet_endpoint', 'woo-wallet'), 'referrals', wc_get_page_permalink('myaccount'))) : add_query_arg('wallet_action', 'referrals'),
             'icon' => 'dashicons dashicons-groups'
         );
         return $nav_menu;

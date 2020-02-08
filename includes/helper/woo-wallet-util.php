@@ -9,11 +9,13 @@ if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
      */
     function is_wallet_rechargeable_order( $order ) {
         $is_wallet_rechargeable_order = false;
-        foreach ( $order->get_items( 'line_item' ) as $item ) {
-            $product_id = $item['product_id'];
-            if ( $product_id == get_wallet_rechargeable_product()->get_id() ) {
-                $is_wallet_rechargeable_order = true;
-                break;
+        if( $order instanceof WC_Order){
+            foreach ( $order->get_items( 'line_item' ) as $item ) {
+                $product_id = $item['product_id'];
+                if ( $product_id == get_wallet_rechargeable_product()->get_id() ) {
+                    $is_wallet_rechargeable_order = true;
+                    break;
+                }
             }
         }
         return apply_filters( 'woo_wallet_is_wallet_rechargeable_order', $is_wallet_rechargeable_order, $order );
