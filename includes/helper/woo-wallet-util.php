@@ -469,8 +469,12 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
             }
         }
         
-        if(!is_admin() && $current_wallet_balance >= $total && ( !is_wallet_rechargeable_cart() || !is_wallet_rechargeable_order($order))){
+        if(!is_admin() && $current_wallet_balance >= $total && ( !is_wallet_rechargeable_cart() )){
             $is_valid_payment_through_wallet = true;
+        }
+        
+        if($order_id && is_wallet_rechargeable_order($order)){
+            $is_valid_payment_through_wallet = false;
         }
         
         return apply_filters( 'is_valid_payment_through_wallet', $is_valid_payment_through_wallet );
