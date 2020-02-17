@@ -17,7 +17,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
     public function get_columns() {
         return apply_filters( 'woo_wallet_balance_details_columns', array(
-			'cb'	   => __('cb', 'woo-wallet'),
             'id'       => __( 'ID', 'woo-wallet' ),
             'username' => __( 'Username', 'woo-wallet' ),
             'name'     => __( 'Name', 'woo-wallet' ),
@@ -96,7 +95,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             'total_items' => $wp_user_search->get_total(),
             'per_page'    => $users_per_page,
         ) );
-		$this->process_bulk_actions();
     }
     /**
     * Output 'no users' message.
@@ -131,7 +129,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         $avail_roles =& $users_of_blog['avail_roles'];
         unset( $users_of_blog );
 
-        $current_link_attributes = empty( $role ) ? ' class="current" aria-current="page"' : '';
+		$current_link = ( !empty($_REQUEST['role']) ? $_REQUEST['role'] : 'all');
+        $current_link_attributes = ($current_link === 'all') ? ' class="current" aria-current="page"' : '';
 
         $role_links        = array();
         $role_links['all'] = "<a href='$url'$current_link_attributes>" . sprintf( _nx( 'All <span class="count">(%s)</span>', 'All <span class="count">(%s)</span>', $total_users, 'users' ), number_format_i18n( $total_users ) ) . '</a>';
@@ -139,12 +138,9 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             if ( ! isset( $avail_roles[ $this_role ] ) ) {
                     continue;
             }
-
-            $current_link_attributes = '';
-
-            if ( $this_role === $role ) {
-                    $current_link_attributes = ' class="current" aria-current="page"';
-            }
+			
+			$current_link_attributes = '';
+			$current_link_attributes = ($current_link == $this_role ? ' class="current" aria-current="page"' : '');
 
             $name = translate_user_role( $name );
             /* translators: User role name with count */
@@ -178,7 +174,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
     *                      or below the table ("bottom").
     */
     protected function extra_tablenav( $which ) {
-		echo("<label class='alignleft actions bulkactions'>Amount: <input name='amount[]' type='text' id='amount'></input></label>");
         do_action('woo_wallet_users_list_extra_tablenav', $which);
     }
     
@@ -224,9 +219,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
                 return $item[$column_name];
             case 'actions':
                 return '<p><a href="' . add_query_arg( array( 'page' => 'woo-wallet-add', 'user_id' => $item['id'] ), admin_url( 'admin.php' ) ) . '" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="' . add_query_arg( array( 'page' => 'woo-wallet-transactions', 'user_id' => $item['id'] ), admin_url( 'admin.php' ) ) . '"></a></p>';
-            case 'cb':
-				return '<input type="checkbox" />';
-			default:
+            default:
                 return apply_filters('woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item);
         }
     }
@@ -254,50 +247,5 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         }
         return -$result;
     }
-	
-	function column_cb($item) {
-		return sprintf(
-            '<input type="checkbox" name="users[]" value="%s" />', $item['id']
-        );  
-	}
-	
-	function process_bulk_actions() {
-		
-		if(isset( $_POST['amount'] )) {
-			$amount = max($_POST['amount'][0], $_POST['amount'][1]);
-		}
-		
-		if ( 'credit' === $this -> current_action() ) {
-			$credit_ids = esc_sql( $_POST['users'] );
-			foreach ( $credit_ids as $id ) {
-				
-				$request = new WP_REST_Request( 'POST', '/wp/v2/wallet/'. $id );
-				$request->set_param('type', 'credit');
-				$request->set_param('amount', intval($amount));
-				$response = rest_do_request( $request );
-			}
-			header("Refresh: 0");
-		}
-		
-		if ( 'debit' === $this -> current_action() ) {
-			$credit_ids = esc_sql( $_POST['users'] );
-			foreach ( $credit_ids as $id ) {
-				$request = new WP_REST_Request( 'POST', '/wp/v2/wallet/'. $id );
-				$request->set_param('type', 'debit');
-				$request->set_param('amount', intval($amount));
-				$response = rest_do_request( $request );
-			}
-			header("Refresh: 0");
-		}
-		
-	}
-	
-	function get_bulk_actions() {
-		$actions = array(
-			'credit' => 'Credit',
-			'debit' => 'Debit'
-		);
-		return $actions;
-	}
-	
+
 }
