@@ -129,7 +129,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
         $avail_roles =& $users_of_blog['avail_roles'];
         unset( $users_of_blog );
 
-        $current_link_attributes = empty( $role ) ? ' class="current" aria-current="page"' : '';
+		$current_link = ( !empty($_REQUEST['role']) ? $_REQUEST['role'] : 'all');
+        $current_link_attributes = ($current_link === 'all') ? ' class="current" aria-current="page"' : '';
 
         $role_links        = array();
         $role_links['all'] = "<a href='$url'$current_link_attributes>" . sprintf( _nx( 'All <span class="count">(%s)</span>', 'All <span class="count">(%s)</span>', $total_users, 'users' ), number_format_i18n( $total_users ) ) . '</a>';
@@ -137,12 +138,9 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             if ( ! isset( $avail_roles[ $this_role ] ) ) {
                     continue;
             }
-
-            $current_link_attributes = '';
-
-            if ( $this_role === $role ) {
-                    $current_link_attributes = ' class="current" aria-current="page"';
-            }
+			
+			$current_link_attributes = '';
+			$current_link_attributes = ($current_link == $this_role ? ' class="current" aria-current="page"' : '');
 
             $name = translate_user_role( $name );
             /* translators: User role name with count */
