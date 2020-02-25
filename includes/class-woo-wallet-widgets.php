@@ -30,6 +30,9 @@ class Woo_Wallet_Topup extends WP_Widget {
      * @param array $instance Settings for the current Search widget instance.
      */
     public function widget($args, $instance) {
+        if(!is_user_logged_in()){
+            return;
+        }
         $title = !empty($instance['title']) ? $instance['title'] : '';
 
         /** This filter is documented in wp-includes/widgets/class-wp-widget-pages.php */
