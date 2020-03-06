@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the TeraWallet package.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.3.12\n"
+"Project-Id-Version: TeraWallet 1.3.14\n"
 "Report-Msgid-Bugs-To: https://github.com/malsubrata/woo-wallet/issues\n"
-"POT-Creation-Date: 2020-02-07 00:40:59+00:00\n"
+"POT-Creation-Date: 2020-03-06 15:03:20+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -47,6 +47,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-product-review.php:33
 #: includes/actions/class-woo-wallet-action-referrals.php:44
 #: includes/actions/class-woo-wallet-action-referrals.php:75
+#: includes/admin/class-woo-wallet-balance-details.php:183
 #: includes/admin/class-woo-wallet-transaction-details.php:31
 #: includes/class-woo-wallet-admin.php:258 templates/wc-endpoint-wallet.php:86
 msgid "Amount"
@@ -71,6 +72,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-product-review.php:40
 #: includes/actions/class-woo-wallet-action-referrals.php:62
 #: includes/actions/class-woo-wallet-action-referrals.php:93
+#: includes/admin/class-woo-wallet-balance-details.php:184
 #: includes/class-woo-wallet-admin.php:148
 #: includes/class-woo-wallet-admin.php:278
 #: includes/class-woo-wallet-payment-method.php:71
@@ -203,46 +205,74 @@ msgstr ""
 msgid "Usernames as referral ID"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:20
+#: includes/admin/class-woo-wallet-balance-details.php:21
+msgid "cb"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:22
 #: includes/admin/class-woo-wallet-transaction-details.php:28
 #: templates/wc-endpoint-wallet-transactions.php:28
 msgid "ID"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:21
+#: includes/admin/class-woo-wallet-balance-details.php:23
 msgid "Username"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:22
+#: includes/admin/class-woo-wallet-balance-details.php:24
 #: includes/admin/class-woo-wallet-transaction-details.php:29
 msgid "Name"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:23
+#: includes/admin/class-woo-wallet-balance-details.php:25
 msgid "Email"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:24
+#: includes/admin/class-woo-wallet-balance-details.php:26
 msgid "Remaining balance"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:25
+#: includes/admin/class-woo-wallet-balance-details.php:27
 #: includes/class-woo-wallet-admin.php:102
 msgid "Actions"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:105
+#: includes/admin/class-woo-wallet-balance-details.php:109
 msgid "No users found."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:149
-#: includes/admin/class-woo-wallet-balance-details.php:163
+#: includes/admin/class-woo-wallet-balance-details.php:152
+#: includes/admin/class-woo-wallet-balance-details.php:166
 #. translators: User role name with count
 msgid "%1$s <span class=\"count\">(%2$s)</span>"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:161
+#: includes/admin/class-woo-wallet-balance-details.php:164
 msgid "No role"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:305
+#: includes/admin/class-woo-wallet-transaction-details.php:106
+#: includes/class-woo-wallet-admin.php:267
+#: templates/wc-endpoint-wallet-transactions.php:29
+msgid "Credit"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:306
+#: includes/admin/class-woo-wallet-transaction-details.php:106
+#: includes/class-woo-wallet-admin.php:267
+#: templates/wc-endpoint-wallet-transactions.php:30
+msgid "Debit"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:307
+msgid "Delete Log"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-balance-details.php:320
+msgid ""
+"You are about to delete transaction records from database for selected "
+"users."
 msgstr ""
 
 #: includes/admin/class-woo-wallet-transaction-details.php:30
@@ -262,18 +292,6 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-transaction-details.php:66
 msgid "No transactions found."
-msgstr ""
-
-#: includes/admin/class-woo-wallet-transaction-details.php:106
-#: includes/class-woo-wallet-admin.php:267
-#: templates/wc-endpoint-wallet-transactions.php:29
-msgid "Credit"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-transaction-details.php:106
-#: includes/class-woo-wallet-admin.php:267
-#: templates/wc-endpoint-wallet-transactions.php:30
-msgid "Debit"
 msgstr ""
 
 #: includes/api/class-wc-rest-woo-wallet-controller.php:44
@@ -1034,7 +1052,7 @@ msgstr ""
 msgid "Wallet amount %s has been credited to customer upon cancellation"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:177
+#: includes/class-woo-wallet-wallet.php:178
 msgid "Cashback for #%s has been debited upon cancellation"
 msgstr ""
 
@@ -1042,15 +1060,15 @@ msgstr ""
 msgid "TeraWallet top-up form for your site."
 msgstr ""
 
-#: includes/class-woo-wallet-widgets.php:50 templates/wc-endpoint-wallet.php:65
+#: includes/class-woo-wallet-widgets.php:53 templates/wc-endpoint-wallet.php:65
 msgid "Enter amount"
 msgstr ""
 
-#: includes/class-woo-wallet-widgets.php:51 templates/wc-endpoint-wallet.php:72
+#: includes/class-woo-wallet-widgets.php:54 templates/wc-endpoint-wallet.php:72
 msgid "Add"
 msgstr ""
 
-#: includes/class-woo-wallet-widgets.php:71
+#: includes/class-woo-wallet-widgets.php:74
 msgid "Title:"
 msgstr ""
 
@@ -1301,7 +1319,7 @@ msgstr ""
 msgid "https://wcbeginner.com/"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:135
+#: includes/admin/class-woo-wallet-balance-details.php:141
 msgctxt "users"
 msgid "All <span class=\"count\">(%s)</span>"
 msgid_plural "All <span class=\"count\">(%s)</span>"

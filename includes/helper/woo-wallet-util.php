@@ -293,6 +293,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
             'order'      => 'DESC',
             'join_type'  => 'INNER',
             'limit'      => '',
+            'include_deleted' => false,
             'nocache'    => is_multisite() ? true : false
         );
         $args = apply_filters( 'woo_wallet_transactions_query_args', $args );
@@ -309,7 +310,9 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         $query['join'] = implode( ' ', $joins );
 
         $query['where']  = "WHERE transactions.user_id = {$user_id}";
-        $query['where'] .= " AND transactions.deleted = 0";
+        if(!$include_deleted){
+            $query['where'] .= " AND transactions.deleted = 0";
+        }
 
         if ( ! empty( $where_meta ) ) {
             foreach ( $where_meta as $value ) {
@@ -601,4 +604,25 @@ if(!function_exists('get_wallet_user_capability')){
         return apply_filters('woo_wallet_user_capability', 'manage_woocommerce');
     }
     
+}
+
+if(!function_exists('delete_user_wallet_transactions')){
+    function delete_user_wallet_transactions($user_id, $force_delete = false){
+        global $wpdb;
+        if(!$force_delete){
+            $update = $wpdb->update( "{$wpdb->base_prefix}woo_wallet_transactions", array('deleted' => 1), array( 'user_id' => $user_id ), array('%d'), array( '%d' ) );
+            if ( $update ) {
+                clear_woo_wallet_cache( $user_id );
+            }
+        } else{
+            $user_wallet_transactions = get_wallet_transactions(array('user_id' => $user_id, 'include_deleted' => true));
+            if($user_wallet_transactions){
+                foreach ($user_wallet_transactions as $transaction){
+                    $wpdb->delete("{$wpdb->base_prefix}woo_wallet_transactions", array('transaction_id' => $transaction->transaction_id));
+                    $wpdb->delete("{$wpdb->base_prefix}woo_wallet_transaction_meta", array('transaction_id' => $transaction->transaction_id));
+                }
+            }
+            clear_woo_wallet_cache( $user_id );
+        }
+    }
 }
