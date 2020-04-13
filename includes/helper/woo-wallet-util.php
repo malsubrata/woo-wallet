@@ -458,6 +458,7 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
         $is_valid_payment_through_wallet = false;
         $current_wallet_balance = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
         $total = 0;
+        $order_id = null;
         if(WC()->cart){
             $order_id = absint( get_query_var( 'order-pay' ) );
 

@@ -74,7 +74,7 @@ class Action_Referrals extends WooWalletAction {
             'referring_signups_amount' => array(
                 'title' => __('Amount', 'woo-wallet'),
                 'type' => 'price',
-                'description' => __('Enter amount which will be credited to the user wallet for daily visits.', 'woo-wallet'),
+                'description' => __('Enter amount which will be credited to the user wallet for referring a user.', 'woo-wallet'),
                 'default' => '10',
                 'desc_tip' => true
             ),

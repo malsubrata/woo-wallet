@@ -67,7 +67,7 @@ if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
                     $this->amount = $transaction->amount;
                     $this->details = $transaction->details;
                     $this->recipient = $user->user_email;
-                    $this->placeholders['{transaction_date}'] = date('M d, Y');
+                    $this->placeholders['{transaction_date}'] = date_i18n( wc_date_format() );
 
                     if ( $this->is_enabled() && $this->get_recipient() ) {
                         $this->send($this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments());
