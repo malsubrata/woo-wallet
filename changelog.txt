@@ -1,4 +1,9 @@
 *** Changelog ***
+= 1.3.15 - 2020-04-22 =
+* Add - AJAX datatable on wallet transaction details page.
+* Add - Custom field in WP nav menu setting to display wallet icon and amount instead of menu title.
+* Notice - Mini wallet display location settings will be removed on next update use WooCommerce endpoint menu item instead.
+
 = 1.3.14 - 2020-03-07 =
 * Add - Bulk credit debit option for admin #46.
 * Fix - Current link attributes in wallet details page #45.

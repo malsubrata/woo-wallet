@@ -3,8 +3,8 @@ Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.3
-Stable tag: 1.3.14
+Tested up to: 5.4
+Stable tag: 1.3.15
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.15 - 2020-04-22 =
+* Add - AJAX datatable on wallet transaction details page.
+* Add - Custom field in WP nav menu setting to display wallet icon and amount instead of menu title.
+* Notice - Mini wallet display location settings will be removed on next update use WooCommerce endpoint menu item instead.
+
 = 1.3.14 - 2020-03-07 =
 * Add - Bulk credit debit option for admin #46.
 * Fix - Current link attributes in wallet details page #45.

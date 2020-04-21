@@ -100,7 +100,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             <p class="field-wallet-icon wallet-icon">
                 <label for="show-wallet-icon-amount-<?php echo $item_id; ?>">
                     <input type="checkbox" <?php checked(get_post_meta($item_id, '_show_wallet_icon_amount', true)); ?> id="edit-menu-item-wallet-icon-<?php echo $item_id; ?>" name="show-wallet-icon-amount-<?php echo $item_id; ?>"/>
-                    <span class="description"><?php _e('Display wallet icon and amount insted of menu navigation label?', 'woo-wallet'); ?></span>
+                    <span class="description"><?php _e('Display wallet icon and amount instead of menu navigation label?', 'woo-wallet'); ?></span>
                 </label>
             </p>
             <?php
