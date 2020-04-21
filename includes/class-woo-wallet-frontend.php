@@ -135,6 +135,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             wp_register_script('wc-endpoint-wallet', woo_wallet()->plugin_url() . '/assets/js/frontend/wc-endpoint-wallet' . $suffix . '.js', array('jquery', 'jquery-datatables-script'), WOO_WALLET_PLUGIN_VERSION);
             $wallet_localize_param = array(
                 'ajax_url' => admin_url('admin-ajax.php'),
+                'transaction_table_nonce' => wp_create_nonce('woo-wallet-transactions'),
                 'search_by_user_email' => apply_filters('woo_wallet_user_search_exact_match', true),
                 'i18n' => array(
                     'emptyTable' => __('No transactions available', 'woo-wallet'),
@@ -150,16 +151,21 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     'non_valid_email_text' => __('Please enter a valid email address', 'woo-wallet'),
                     'no_resualt' => __('No results found', 'woo-wallet'),
                     'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet'),
-                    'searching' => __('Searching…', 'woo-wallet')
+                    'searching' => __('Searching…', 'woo-wallet'),
+                    'processing' => __('Processing...', 'woo-wallet'),
+                    'search' => __('Search by date:', 'woo-wallet'),
+                    'placeholder' => __('yyyy-mm-dd', 'woo-wallet')
                 )
             );
             wp_localize_script('wc-endpoint-wallet', 'wallet_param', $wallet_localize_param);
             wp_enqueue_style('woo-wallet-style');
             if (is_account_page()) {
+                wp_enqueue_style('woo-wallet-payment-jquery-ui');
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('select2');
                 wp_enqueue_style('jquery-datatables-style');
                 wp_enqueue_style('jquery-datatables-responsive-style');
+                wp_enqueue_script('jquery-ui-datepicker');
                 wp_enqueue_script('selectWoo');
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('jquery-datatables-responsive-script');
@@ -695,6 +701,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 wc_get_template('myaccount/form-login.php');
                 echo '</div>';
             } else {
+                wp_enqueue_style('woo-wallet-payment-jquery-ui');
                 wp_enqueue_style('dashicons');
                 wp_enqueue_style('select2');
                 wp_enqueue_style('jquery-datatables-style');
@@ -702,6 +709,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 wp_enqueue_script('jquery-datatables-script');
                 wp_enqueue_script('jquery-datatables-responsive-script');
                 wp_enqueue_script('selectWoo');
+                wp_enqueue_script('jquery-ui-datepicker');
                 wp_enqueue_script('wc-endpoint-wallet');
                 if (isset($_GET['wallet_action']) && !empty($_GET['wallet_action'])) {
                     if ('view_transactions' === $_GET['wallet_action']) {

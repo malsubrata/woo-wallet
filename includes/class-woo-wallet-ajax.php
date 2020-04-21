@@ -36,6 +36,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             add_action( 'wp_ajax_woo_wallet_partial_payment_update_session', array( $this, 'woo_wallet_partial_payment_update_session' ) );
             add_action('wp_ajax_woo_wallet_refund_partial_payment', array($this, 'woo_wallet_refund_partial_payment'));
             add_action('wp_ajax_woo-wallet-dismiss-promotional-notice', array($this, 'woo_wallet_dismiss_promotional_notice'));
+            add_action('wp_ajax_draw_wallet_transaction_details_table', array($this, 'draw_wallet_transaction_details_table'));
         }
         /**
          * Wallet partial payment refund.
@@ -206,6 +207,49 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             }
             update_option('_woo_wallet_promotion_dismissed', true);
             wp_send_json_success();
+        }
+        /**
+         * Send wallet transaction AJAX response.
+         */
+        public function draw_wallet_transaction_details_table(){
+            check_ajax_referer('woo-wallet-transactions', 'security');
+            $start = isset($_POST['start']) ? $_POST['start'] : 0;
+            $length = isset($_POST['length']) ? $_POST['length'] : 10;
+            $search = $_POST['search'];
+            $args = array(
+                'limit' => "$start, $length"
+            );
+            if($search['value'] && !empty($search['value']) ){
+                $args['where'] = array(
+                    array(
+                        'key' => 'date',
+                        'value' => $search['value'].'%',
+                        'operator' => 'LIKE'
+                    )
+                );
+            }
+            $transactions = get_wallet_transactions($args);
+            unset($args['limit']);
+            $recordsTotal = get_wallet_transactions_count(get_current_user_id());
+            
+            $response = array(
+                'draw' => $_POST['draw'],
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => count(get_wallet_transactions($args)),
+                'data' => array()
+            );
+            if($transactions){
+                foreach ($transactions as $transaction ){
+                    $response['data'][] = array(
+                        'id' => $transaction->transaction_id,
+                        'credit' => $transaction->type === 'credit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - ',
+                        'debit' => $transaction->type === 'debit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - ',
+                        'details' => $transaction->details,
+                        'date' => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() )
+                    );
+                }
+            }
+            wp_send_json($response);
         }
     }
 

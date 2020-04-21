@@ -107,13 +107,13 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
                 $do_order     = $this->get_dokan_order( $tmp_order_id, $seller_id );
                 // in-case we can't find the order
                 if ( ! $do_order ) {
-                    throw new Exception( __( 'Something went wrong and the order can not be processed!', 'dokan' ) );
+                    throw new Exception( __( 'Something went wrong and the order can not be processed!', 'woo-wallet' ) );
                 }
                 $fee             = floatval( $do_order->order_total ) - floatval( $do_order->net_amount );
                 $order_total     = round( $do_order->order_total, 2 );
                 $application_fee = round( $fee, 2 );
                 if ( $do_order->order_total == 0 ) {
-                    $tmp_order->add_order_note(sprintf( __( 'Order %s payment completed', 'dokan' ), $tmp_order->get_order_number() ) );
+                    $tmp_order->add_order_note(sprintf( __( 'Order %s payment completed', 'woo-wallet' ), $tmp_order->get_order_number() ) );
                     continue;
                 }
                 //data array for withdraw
@@ -200,7 +200,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
             <div class="dokan-cashback-options dokan-edit-row dokan-clearfix" style="margin-bottom: 20px;">
                 <div class="dokan-section-heading" data-togglehandler="dokan_cashback_options">
                     <h2><i class="fa fa-cog" aria-hidden="true"></i> <?php _e( 'Cashback Options', 'woo-wallet' ); ?></h2>
-                    <p><?php _e( 'Set product cashback options', 'dokan-lite' ); ?></p>
+                    <p><?php _e( 'Set product cashback options', 'woo-wallet' ); ?></p>
                     <a href="#" class="dokan-section-toggle">
                         <i class="fa fa-sort-desc fa-flip-vertical" aria-hidden="true"></i>
                     </a>
@@ -261,7 +261,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
                 if ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {
                     update_wallet_transaction( $wallet_transaction->transaction_id, $user_id, array( 'deleted' => 0 ), array( '%d' ) );
                 } else {
-                    $transaction_id = woo_wallet()->wallet->credit( $user_id, $resualt->amount, __( 'Withdrawal request #' . $row_id ) );
+                    $transaction_id = woo_wallet()->wallet->credit( $user_id, $resualt->amount, __( 'Withdrawal request #', 'woo-wallet') . $row_id );
                     update_wallet_transaction_meta( $transaction_id, '_dokan_withdrawal_id', $row_id );
                 }
             } else {

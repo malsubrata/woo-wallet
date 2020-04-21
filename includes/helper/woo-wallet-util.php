@@ -370,6 +370,32 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 
 }
 
+if (!function_exists('get_wallet_transactions_count')) {
+    /**
+     * Get wallet transactions count.
+     * @global object $wpdb
+     * @param int|null $user_id
+     * @param bool $include_deleted
+     * @return int total count of transactions.
+     */
+    function get_wallet_transactions_count($user_id = null, $include_deleted = false) {
+        global $wpdb;
+        $sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions";
+        if($user_id){
+            $sql .= " WHERE user_id=$user_id";
+        }
+        if(!$include_deleted){
+            if($user_id){
+                $sql .= " AND deleted=0";
+            } else{
+                $sql .= "WHERE deleted=0";
+            }
+        }
+        return $wpdb->get_var( $sql );
+    }
+
+}
+
 if(!function_exists('get_wallet_transaction')){
     function get_wallet_transaction($transaction_id){
         global $wpdb;

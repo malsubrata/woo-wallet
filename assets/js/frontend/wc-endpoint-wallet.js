@@ -1,17 +1,45 @@
 /* global wallet_param */
 
 jQuery(function ($) {
-    $('#wc-wallet-transaction-details').DataTable(
+    var transactionDetailsDataTable = $('#wc-wallet-transaction-details').DataTable(
             {
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: wallet_param.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action : 'draw_wallet_transaction_details_table',
+                        security: wallet_param.transaction_table_nonce
+                    }
+                },
+                columns: [
+                    { data: 'id', orderable: false },
+                    { data: 'credit', orderable: false },
+                    { data: 'debit', orderable: false },
+                    { data: 'details', orderable: false },
+                    { data: 'date', orderable: false }
+                ],
                 responsive: true,
-                searching: false,
-                order: [[0, 'desc']],
+                searching: true,
                 language: {
                     emptyTable: wallet_param.i18n.emptyTable,
                     lengthMenu: wallet_param.i18n.lengthMenu,
                     info: wallet_param.i18n.info,
                     infoEmpty : wallet_param.i18n.infoEmpty,
-                    paginate: wallet_param.i18n.paginate
+                    paginate: wallet_param.i18n.paginate,
+                    processing : wallet_param.i18n.processing,
+                    search: wallet_param.i18n.search
+                },
+                initComplete: function() {
+                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').attr('placeholder', wallet_param.i18n.placeholder);
+                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').datepicker( {
+                        dateFormat: 'yy-mm-dd',
+                        maxDate: new Date(),
+                        onSelect : function (dateText){
+                            transactionDetailsDataTable.search(dateText).draw();
+                        }
+                    });
                 }
             }
     );

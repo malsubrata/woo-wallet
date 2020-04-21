@@ -41,7 +41,7 @@ class WC_REST_Woo_Wallet_Controller extends WC_REST_Controller {
         register_rest_route( $this->namespace, '/' . $this->rest_base . '/(?P<id>[\d]+)', array(
             'args' => array(
                 'id' => array(
-                    'description' => __( 'Unique identifier for the resource.', 'woocommerce' ),
+                    'description' => __( 'Unique identifier for the resource.', 'woo-wallet' ),
                     'type'        => 'integer',
                 ),
             ),
@@ -148,7 +148,7 @@ class WC_REST_Woo_Wallet_Controller extends WC_REST_Controller {
      */
     public function get_items_permissions_check( $request ) {
         if ( ! apply_filters( 'woo_wallet_rest_check_permissions', current_user_can( 'manage_woocommerce' ), 'read', $request ) ) {
-            return new WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'woocommerce' ), array( 'status' => rest_authorization_required_code() ) );
+            return new WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'woo-wallet' ), array( 'status' => rest_authorization_required_code() ) );
         }
 
         return true;
