@@ -78,6 +78,32 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             
             add_action( 'admin_notices', array( $this, 'show_promotions' ) );
             add_filter( 'woocommerce_settings_pages', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
+            
+            add_action('wp_nav_menu_item_custom_fields', array($this, 'wp_nav_menu_item_custom_fields'));
+            add_filter('wp_update_nav_menu_item', array($this, 'wp_update_nav_menu_item'), 10, 2);
+        }
+        
+        public function wp_update_nav_menu_item($menu_id, $menu_item_db_id){
+            if (isset($_POST["show-wallet-icon-amount-$menu_item_db_id"]) && 'on' === $_POST["show-wallet-icon-amount-$menu_item_db_id"]) {
+                update_post_meta($menu_item_db_id, '_show_wallet_icon_amount', true);
+            } else {
+                delete_post_meta($menu_item_db_id, '_show_wallet_icon_amount');
+            }
+        }
+
+        public function wp_nav_menu_item_custom_fields($item_id){
+            $menu_post = get_post($item_id);
+            if ('my-wallet' != $menu_post->post_name) {
+                return;
+            }
+            ?>
+            <p class="field-wallet-icon wallet-icon">
+                <label for="show-wallet-icon-amount-<?php echo $item_id; ?>">
+                    <input type="checkbox" <?php checked(get_post_meta($item_id, '_show_wallet_icon_amount', true)); ?> id="edit-menu-item-wallet-icon-<?php echo $item_id; ?>" name="show-wallet-icon-amount-<?php echo $item_id; ?>"/>
+                    <span class="description"><?php _e('Display wallet icon and amount insted of menu navigation label?', 'woo-wallet'); ?></span>
+                </label>
+            </p>
+            <?php
         }
 
         /**

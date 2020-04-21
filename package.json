@@ -25,7 +25,7 @@
   "homepage": "https://github.com/malsubrata/woo-wallet#readme",
   "devDependencies": {
     "autoprefixer": "^8.1.0",
-    "grunt": "^1.0.2",
+    "grunt": "^1.1.0",
     "grunt-checktextdomain": "^1.0.1",
     "grunt-contrib-clean": "^1.1.0",
     "grunt-contrib-concat": "^1.0.1",
@@ -40,6 +40,6 @@
     "grunt-shell": "^2.1.0",
     "grunt-stylelint": "^0.9.0",
     "grunt-wp-i18n": "^1.0.2",
-    "stylelint": "^13.0.0"
+    "stylelint": "^13.3.3"
   }
 }

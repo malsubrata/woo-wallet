@@ -21,28 +21,5 @@ $transactions = get_wallet_transactions();
 do_action( 'woo_wallet_before_transaction_details_content' );
 ?>
 <p><?php _e( 'Current balance :', 'woo-wallet' ); ?> <?php echo woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ); ?> <a href="<?php echo is_account_page() ? esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ) : get_permalink(); ?>"><span class="dashicons dashicons-editor-break"></span></a></p>
-<table id="wc-wallet-transaction-details" class="table">
-    <thead>
-        <tr>
-            <?php do_action('woo_wallet_before_transaction_table_th'); ?>
-            <th><?php _e( 'ID', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Credit', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Debit', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Details', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Date', 'woo-wallet' ); ?></th>
-            <?php do_action('woo_wallet_after_transaction_table_th'); ?>
-        </tr>
-    </thead>
-    <tfoot>
-        <tr>
-            <?php do_action('woo_wallet_before_transaction_table_th'); ?>
-            <th><?php _e( 'ID', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Credit', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Debit', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Details', 'woo-wallet' ); ?></th>
-            <th><?php _e( 'Date', 'woo-wallet' ); ?></th>
-            <?php do_action('woo_wallet_after_transaction_table_th'); ?>
-        </tr>
-    </tfoot>
-</table>
+<table id="wc-wallet-transaction-details" class="table"></table>
 <?php do_action( 'woo_wallet_after_transaction_details_content' );

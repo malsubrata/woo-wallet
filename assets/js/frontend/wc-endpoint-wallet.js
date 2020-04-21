@@ -13,13 +13,7 @@ jQuery(function ($) {
                         security: wallet_param.transaction_table_nonce
                     }
                 },
-                columns: [
-                    { data: 'id', orderable: false },
-                    { data: 'credit', orderable: false },
-                    { data: 'debit', orderable: false },
-                    { data: 'details', orderable: false },
-                    { data: 'date', orderable: false }
-                ],
+                columns: wallet_param.columns,
                 responsive: true,
                 searching: true,
                 language: {

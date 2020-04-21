@@ -240,13 +240,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
             );
             if($transactions){
                 foreach ($transactions as $transaction ){
-                    $response['data'][] = array(
+                    $response['data'][] = apply_filters('woo_wallet_transactons_datatable_row_data', array(
                         'id' => $transaction->transaction_id,
                         'credit' => $transaction->type === 'credit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - ',
                         'debit' => $transaction->type === 'debit' ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ) : ' - ',
                         'details' => $transaction->details,
                         'date' => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() )
-                    );
+                    ), $transaction);
                 }
             }
             wp_send_json($response);
