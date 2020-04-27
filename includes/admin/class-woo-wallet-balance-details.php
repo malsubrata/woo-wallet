@@ -19,12 +19,12 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
     public function get_columns() {
         return apply_filters('woo_wallet_balance_details_columns', array(
             'cb' => __('cb', 'woo-wallet'),
-            'id' => __('ID', 'woo-wallet'),
             'username' => __('Username', 'woo-wallet'),
             'name' => __('Name', 'woo-wallet'),
             'email' => __('Email', 'woo-wallet'),
             'balance' => __('Remaining balance', 'woo-wallet'),
             'actions' => __('Actions', 'woo-wallet'),
+            'id' => __('ID', 'woo-wallet')
         ));
     }
 

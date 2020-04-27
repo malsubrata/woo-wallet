@@ -159,6 +159,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     'emptyTable' => __('No transactions available', 'woo-wallet'),
                     'lengthMenu' => sprintf(__('Show %s entries', 'woo-wallet'), '_MENU_'),
                     'info' => sprintf(__('Showing %1s to %2s of %3s entries', 'woo-wallet'), '_START_', '_END_', '_TOTAL_'),
+                    'infoFiltered' => sprintf(__('(filtered from %1s total entries)', 'woo-wallet'), '_MAX_'),
                     'infoEmpty' => __('Showing 0 to 0 of 0 entries', 'woo-wallet'),
                     'paginate' => array(
                         'first' => __('First', 'woo-wallet'),
@@ -168,6 +169,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     ),
                     'non_valid_email_text' => __('Please enter a valid email address', 'woo-wallet'),
                     'no_resualt' => __('No results found', 'woo-wallet'),
+                    'zeroRecords' => __('No matching records found', 'woo-wallet'),
                     'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet'),
                     'searching' => __('Searching…', 'woo-wallet'),
                     'processing' => __('Processing...', 'woo-wallet'),

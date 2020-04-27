@@ -25,12 +25,12 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 
     public function get_columns() {
         return apply_filters('manage_woo_wallet_transactions_columns', array(
-            'transaction_id' => __( 'ID', 'woo-wallet' ),
             'name'           => __( 'Name', 'woo-wallet' ),
             'type'           => __( 'Type', 'woo-wallet' ),
             'amount'         => __( 'Amount', 'woo-wallet' ),
             'details'        => __( 'Details', 'woo-wallet' ),
-            'date'           => __( 'Date', 'woo-wallet' )
+            'date'           => __( 'Date', 'woo-wallet' ),
+            'transaction_id' => __( 'ID', 'woo-wallet' )
         ));
     }
 

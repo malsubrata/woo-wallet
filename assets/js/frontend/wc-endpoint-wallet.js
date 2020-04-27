@@ -18,9 +18,11 @@ jQuery(function ($) {
                 searching: true,
                 language: {
                     emptyTable: wallet_param.i18n.emptyTable,
+                    zeroRecords: wallet_param.i18n.zeroRecords,
                     lengthMenu: wallet_param.i18n.lengthMenu,
                     info: wallet_param.i18n.info,
                     infoEmpty : wallet_param.i18n.infoEmpty,
+                    infoFiltered: wallet_param.i18n.infoFiltered,
                     paginate: wallet_param.i18n.paginate,
                     processing : wallet_param.i18n.processing,
                     search: wallet_param.i18n.search
