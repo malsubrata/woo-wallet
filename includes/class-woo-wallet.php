@@ -177,6 +177,9 @@ final class WooWallet {
         add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
 
         add_filter( 'woocommerce_reports_get_order_report_query', array( $this, 'woocommerce_reports_get_order_report_query' ) );
+        add_filter('woocommerce_analytics_revenue_query_args', array($this, 'remove_wallet_rechargable_order_from_analytics'));
+        add_filter('woocommerce_analytics_orders_stats_query_args', array($this, 'remove_wallet_rechargable_order_from_analytics'));
+        add_filter('woocommerce_analytics_orders_query_args', array($this, 'remove_wallet_rechargable_order_from_analytics'));
         
         add_action( 'woocommerce_new_order_item', array( $this, 'woocommerce_new_order_item' ), 10, 2 );
 
@@ -271,6 +274,18 @@ final class WooWallet {
             $query['where'] .= " AND posts.ID NOT IN ({$exclude_orders})";
         }
         return $query;
+    }
+    /**
+     * Exclude rechargable orders from admin analytics
+     * @param array $query_vars
+     * @return array
+     */
+    public function remove_wallet_rechargable_order_from_analytics($query_vars){
+        if(get_wallet_rechargeable_product() && apply_filters('woo_wallet_exclude_wallet_rechargeable_orders_from_report', true)){
+            $query_vars['product_excludes'][] = get_wallet_rechargeable_product()->get_id();
+        }
+
+        return $query_vars;
     }
     /**
      * Load marketplace supported file.

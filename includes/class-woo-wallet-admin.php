@@ -81,8 +81,41 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             
             add_action('wp_nav_menu_item_custom_fields', array($this, 'wp_nav_menu_item_custom_fields'));
             add_filter('wp_update_nav_menu_item', array($this, 'wp_update_nav_menu_item'), 10, 2);
+            add_action('woocommerce_after_dashboard_status_widget', array($this, 'add_wallet_topup_report'));
         }
-        
+
+        /**
+         * Add Total wallet top-up amount 
+         * to WooCommerce Status report widget.
+         */
+        public function add_wallet_topup_report() {
+            if (current_user_can('view_woocommerce_reports')) {
+                $wallet_recharge_order_ids = get_wallet_rechargeable_orders( array( 'date_query' => array( 'after' => strtotime( date( 'Y-m-01', current_time( 'timestamp' ) ) ) ) ) );
+                $top_up_amount = 0;
+                foreach ($wallet_recharge_order_ids as $order_id){
+                    $order = wc_get_order($order_id);
+                    $recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
+                    if($charge_amount = get_post_meta($order_id, '_wc_wallet_purchase_gateway_charge', true)){
+                        $recharge_amount -= $charge_amount;
+                    }
+                    $top_up_amount += $recharge_amount;
+                }
+                ?>
+                <li class="sales-this-month">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-reports&tab=orders&range=month')); ?>">
+                <?php
+                printf(
+                        /* translators: %s: wallet top-up */
+                        esc_html__('%s wallet top-up this month', 'woo-wallet'),
+                        '<strong>' . wc_price($top_up_amount) . '</strong>'
+                ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+                ?>
+                    </a>
+                </li>
+                <?php
+            }
+        }
+
         public function wp_update_nav_menu_item($menu_id, $menu_item_db_id){
             if (isset($_POST["show-wallet-icon-amount-$menu_item_db_id"]) && 'on' === $_POST["show-wallet-icon-amount-$menu_item_db_id"]) {
                 update_post_meta($menu_item_db_id, '_show_wallet_icon_amount', true);

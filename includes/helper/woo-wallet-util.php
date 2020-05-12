@@ -175,8 +175,8 @@ if ( ! function_exists( 'get_wallet_rechargeable_orders' ) ) {
      * Return wallet rechargeable order id 
      * @return array
      */
-    function get_wallet_rechargeable_orders() {
-        $args = array(
+    function get_wallet_rechargeable_orders( $args = array() ) {
+        $default_args = array(
             'posts_per_page'   => -1,
             'meta_key'         => '_wc_wallet_purchase_credited',
             'meta_value'       => true,
@@ -184,6 +184,7 @@ if ( ! function_exists( 'get_wallet_rechargeable_orders' ) ) {
             'post_status'      => array( 'completed', 'processing', 'on-hold' ),
             'suppress_filters' => true
         );
+        $args = wp_parse_args( $args, $default_args );
         $orders = get_posts( $args );
         return wp_list_pluck( $orders, 'ID' );
     }
