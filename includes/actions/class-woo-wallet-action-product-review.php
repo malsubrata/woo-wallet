@@ -55,6 +55,7 @@ class Action_Product_Review extends WooWalletAction {
             if ( $this->settings['amount'] && $product && apply_filters( 'woo_wallet_product_review_credit', true, $commentdata ) ) {
                 $transaction_id = woo_wallet()->wallet->credit( $commentdata['user_id'], $this->settings['amount'], sanitize_textarea_field( $this->settings['description'] ) );
                 update_comment_meta( $comment_ID, 'wallet_transaction_id', $transaction_id );
+                do_action('woo_wallet_after_product_review', $transaction_id, $comment_ID);
             }
         }
     }
@@ -67,6 +68,7 @@ class Action_Product_Review extends WooWalletAction {
         if ( $this->settings['amount'] && $product && apply_filters( 'woo_wallet_product_review_credit', true, $comment ) ) {
             $transaction_id = woo_wallet()->wallet->credit( $comment->user_id, $this->settings['amount'], sanitize_textarea_field( $this->settings['description'] ) );
             update_comment_meta( $comment->comment_ID, 'wallet_transaction_id', $transaction_id );
+            do_action('woo_wallet_after_product_review', $transaction_id, $comment_ID);
         }
     }
 
