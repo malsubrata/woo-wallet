@@ -341,7 +341,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         if ( ! empty( $after) || ! empty( $before) ) {
             $after           = empty( $after) ? '0000-00-00' : $after;
             $before          = empty( $before) ? current_time( 'mysql', 1 ) : $before;
-            $query['where'] .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ))";
+            $query['where'] .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ))";
         }
 
         if ( $order_by) {

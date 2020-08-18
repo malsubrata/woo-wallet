@@ -263,7 +263,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     wc_add_notice($response['message'], 'error');
                 } else {
                     wc_add_notice($response['message']);
-                    $location = esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) );
+                    $location = wp_get_raw_referer() ? wp_get_raw_referer() : esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) );
                     wp_safe_redirect($location);
                     exit();
                 }
