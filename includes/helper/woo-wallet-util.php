@@ -355,16 +355,16 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         $query          = apply_filters( 'woo_wallet_transactions_query', $query );
         $query          = implode( ' ', $query );
         $query_hash     = md5( $user_id . $query );
-        $cached_results = is_array( get_transient( 'woo_wallet_transaction_resualts' ) ) ? get_transient( 'woo_wallet_transaction_resualts' ) : array();
+        $cached_results = is_array( get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) ) ? get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) : array();
 
-        if ( $nocache || ! isset( $cached_results[$user_id][$query_hash] ) ) {
+        if ( $nocache || ! isset( $cached_results[$query_hash] ) ) {
             // Enable big selects for reports
             $wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' );
-            $cached_results[$user_id][$query_hash] = $wpdb->get_results( $query );
-            set_transient( 'woo_wallet_transaction_resualts', $cached_results, DAY_IN_SECONDS );
+            $cached_results[$query_hash] = $wpdb->get_results( $query );
+            set_transient( "woo_wallet_transaction_resualts_{$user_id}", $cached_results, DAY_IN_SECONDS );
         }
 
-        $result = $cached_results[$user_id][$query_hash];
+        $result = $cached_results[$query_hash];
 
         return $result;
     }
@@ -446,14 +446,11 @@ if ( ! function_exists( 'clear_woo_wallet_cache' ) ) {
      * Clear WooCommerce Wallet user transient
      */
     function clear_woo_wallet_cache( $user_id = '' ) {
-        $cached_results = is_array( get_transient( 'woo_wallet_transaction_resualts' ) ) ? get_transient( 'woo_wallet_transaction_resualts' ) : array();
         if ( ! $user_id ) {
             $user_id = get_current_user_id();
         }
-        if ( isset( $cached_results[$user_id] ) ) {
-            unset( $cached_results[$user_id] );
-        }
-        set_transient( 'woo_wallet_transaction_resualts', $cached_results, DAY_IN_SECONDS );
+        
+        delete_transient("woo_wallet_transaction_resualts_{$user_id}");
     }
 
 }

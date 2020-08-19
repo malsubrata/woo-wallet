@@ -9,7 +9,7 @@ jQuery(function ($) {
                     url: wallet_param.ajax_url,
                     type: 'POST',
                     data: {
-                        action : 'draw_wallet_transaction_details_table',
+                        action: 'draw_wallet_transaction_details_table',
                         security: wallet_param.transaction_table_nonce
                     }
                 },
@@ -21,18 +21,18 @@ jQuery(function ($) {
                     zeroRecords: wallet_param.i18n.zeroRecords,
                     lengthMenu: wallet_param.i18n.lengthMenu,
                     info: wallet_param.i18n.info,
-                    infoEmpty : wallet_param.i18n.infoEmpty,
+                    infoEmpty: wallet_param.i18n.infoEmpty,
                     infoFiltered: wallet_param.i18n.infoFiltered,
                     paginate: wallet_param.i18n.paginate,
-                    processing : wallet_param.i18n.processing,
+                    processing: wallet_param.i18n.processing,
                     search: wallet_param.i18n.search
                 },
-                initComplete: function() {
+                initComplete: function () {
                     $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').attr('placeholder', wallet_param.i18n.placeholder);
-                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').datepicker( {
+                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').datepicker({
                         dateFormat: 'yy-mm-dd',
                         maxDate: new Date(),
-                        onSelect : function (dateText){
+                        onSelect: function (dateText) {
                             transactionDetailsDataTable.search(dateText).draw();
                         }
                     });
@@ -50,10 +50,10 @@ jQuery(function ($) {
             noResults: function () {
                 if (wallet_param.search_by_user_email) {
                     return wallet_param.i18n.non_valid_email_text;
-                } 
+                }
                 return wallet_param.i18n.no_resualt;
             },
-            searching: function (){
+            searching: function () {
                 return wallet_param.i18n.searching;
             }
         },
@@ -82,5 +82,13 @@ jQuery(function ($) {
                 };
             }
         }
+    });
+    $('#woo_wallet_transfer_form').submit(function () {
+        // submit more than once return false
+        $(this).submit(function () {
+            return false;
+        });
+        // submit once return true
+        return true;
     });
 });

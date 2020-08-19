@@ -159,7 +159,7 @@ final class WooWallet {
         $this->load_plugin_textdomain();
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payment-method.php' );
         $this->add_marketplace_support();
-        add_filter( 'woocommerce_email_classes', array( $this, 'woocommerce_email_classes' ) );
+        add_filter( 'woocommerce_email_classes', array( $this, 'woocommerce_email_classes' ), 999 );
         add_filter( 'woocommerce_payment_gateways', array( $this, 'load_gateway' ) );
 
         foreach ( apply_filters( 'wallet_credit_purchase_order_status', array( 'processing', 'completed' ) ) as $status) {
