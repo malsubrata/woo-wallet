@@ -503,14 +503,14 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                     'name' => __('Via wallet', 'woo-wallet'),
                     'amount' => (float) -1 * $parial_payment_amount,
                     'taxable' => false,
-                    'tax_class' => '',
+                    'tax_class' => 'non-taxable',
                 );
                 if (is_enable_wallet_partial_payment() && $parial_payment_amount) {
                     wc()->cart->fees_api()->add_fee($fee);
                 } else {
                     $all_fees = wc()->cart->fees_api()->get_fees();
-                    if (isset($all_fees['_via_partial_payment_wallet'])) {
-                        unset($all_fees['_via_partial_payment_wallet']);
+                    if (isset($all_fees['_via_wallet_partial_payment'])) {
+                        unset($all_fees['_via_wallet_partial_payment']);
                         wc()->cart->fees_api()->set_fees($all_fees);
                     }
                 }
@@ -763,13 +763,15 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function restore_woocommerce_cart_items($order_id){
             $saved_cart = woo_wallet_get_saved_cart();
-            foreach ($saved_cart as $cart_item_key => $restore_item){
-                wc()->cart->cart_contents[ $cart_item_key ]         = $restore_item;
-		wc()->cart->cart_contents[ $cart_item_key ]['data'] = wc_get_product( $restore_item['variation_id'] ? $restore_item['variation_id'] : $restore_item['product_id'] );
-                do_action( 'woocommerce_cart_item_restored', $cart_item_key, wc()->cart );
+            if($saved_cart){
+                foreach ($saved_cart as $cart_item_key => $restore_item){
+                    wc()->cart->cart_contents[ $cart_item_key ]         = $restore_item;
+                    wc()->cart->cart_contents[ $cart_item_key ]['data'] = wc_get_product( $restore_item['variation_id'] ? $restore_item['variation_id'] : $restore_item['product_id'] );
+                    do_action( 'woocommerce_cart_item_restored', $cart_item_key, wc()->cart );
+                }
+                wc()->cart->calculate_totals();
+                woo_wallet_persistent_cart_destroy();
             }
-            wc()->cart->calculate_totals();
-            woo_wallet_persistent_cart_destroy();
         }
         
         public function woo_wallet_is_enable_transfer($is_enable){

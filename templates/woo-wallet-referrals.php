@@ -19,9 +19,9 @@ if (!defined('ABSPATH')) {
 $user_id = get_current_user_id();
 $user = new WP_User($user_id);
 $referral_url_by_userid = 'id' === $settings['referal_link'] ? true : false;
-$referral_url = add_query_arg($referral->referral_handel, $user->user_login, site_url('/'));
+$referral_url = add_query_arg($referral->referral_handel, $user->user_login, wc_get_page_permalink('myaccount'));
 if ($referral_url_by_userid) {
-    $referral_url = add_query_arg($referral->referral_handel, $user->ID, site_url('/'));
+    $referral_url = add_query_arg($referral->referral_handel, $user->ID, wc_get_page_permalink('myaccount'));
 }
 $referring_visitor = get_user_meta($user_id, '_woo_wallet_referring_visitor', true) ? get_user_meta($user_id, '_woo_wallet_referring_visitor', true) : 0;
 $referring_signup = get_user_meta($user_id, '_woo_wallet_referring_signup', true) ? get_user_meta($user_id, '_woo_wallet_referring_signup', true) : 0;

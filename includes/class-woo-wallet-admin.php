@@ -281,13 +281,24 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function wallet_page() {
             ?>
             <div class="wrap">
-                <h2><?php _e( 'Users wallet details', 'woo-wallet' ); ?></h2>
+                <h2><?php _e('Users wallet details', 'woo-wallet'); ?></h2>
                 <?php do_action('woo_wallet_before_balance_details_table'); ?>
                 <?php $this->balance_details_table->views(); ?>
                 <form id="posts-filter" method="post">
-                    <?php $this->balance_details_table->search_box( __( 'Search Users', 'woo-wallet' ), 'search_id' ); ?>
+                    <?php $this->balance_details_table->search_box(__('Search Users', 'woo-wallet'), 'search_id'); ?>
                     <?php $this->balance_details_table->display(); ?>
                 </form>
+                <script type="text/javascript">
+                jQuery(function ($) {
+                    $('#search-submit').on('click', function (event){
+                        event.preventDefault();
+                        var search = $('#search_id-search-input').val();
+                        var url = new URL(window.location.href); 
+                        url.searchParams.set('s', search);
+                        window.location.href = url;
+                    });
+                });
+                </script>
                 <div id="ajax-response"></div>
                 <br class="clear"/>
             </div>
