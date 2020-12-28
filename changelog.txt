@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.3.17 - 2020-12-29 =
+* Fix - Fix URL while searching users in balance details page.
+* Fix - Redirect issue in adjust balance page.
+* Fix - Decimal point issue in bulk credit, debit wallet balance.
+* Fix - WooCommerce Analytics report.
+
 = 1.3.16 - 2020-08-26 =
 * Add - New wallet recharge state in dashboard widget.
 * Tweak - Now cashback will be calculated on order total instead of order subtotal.

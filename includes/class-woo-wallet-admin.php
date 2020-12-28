@@ -311,10 +311,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
         public function add_balance_to_user_wallet() {
             $user_id = filter_input(INPUT_GET, 'user_id' );
             $currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
+            $user = new WP_User($user_id);
             ?>
             <div class="wrap">
                 <?php settings_errors(); ?>
-                <h2><?php _e( 'Adjust Balance', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+                <h2><?php echo sprintf(__('Adjust Balance: %1$s (%2$s)', 'woo-wallet'), $user->display_name, $user->user_email); ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
                 <p>
                     <?php
                     _e( 'Current wallet balance: ', 'woo-wallet' );
@@ -426,7 +427,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                     add_settings_error( '', '102', $message);
                 } else {
                     do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
-                    wp_safe_redirect(add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ) );
+                    wp_safe_redirect(add_query_arg(array('page' => 'woo-wallet-transactions', 'user_id' => $user_id), admin_url('admin.php')));
                     exit();
                 }
             }

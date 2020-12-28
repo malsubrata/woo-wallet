@@ -180,7 +180,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
      */
     protected function extra_tablenav($which) {
         if ('top' === $which) {
-            echo(sprintf("<label class='alignleft actions bulkactions'>%s(%s): <input name='amount' type='text' id='amount'></input></label>", __('Amount', 'woo-wallet'), get_woocommerce_currency_symbol()));
+            echo(sprintf("<label class='alignleft actions bulkactions'>%s(%s): <input name='amount' type='number' step='0.01' id='amount'></input></label>", __('Amount', 'woo-wallet'), get_woocommerce_currency_symbol()));
             echo(sprintf("<label class='alignleft actions bulkactions'>%s: <input name='description' type='text' id='description'></input></label>", __('Description', 'woo-wallet')));
         }
         do_action('woo_wallet_users_list_extra_tablenav', $which);
@@ -265,7 +265,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
     private function process_bulk_actions() {
         if ('credit' === $this->current_action() && isset($_POST['users'])) {
             $credit_ids = esc_sql($_POST['users']);
-            $amount = isset($_POST['amount']) ? intval($_POST['amount']) : 0;
+            $amount = isset($_POST['amount']) ? floatval($_POST['amount']) : 0;
             $description = isset($_POST['description']) ? $_POST['description'] : '';
             if ($amount && $credit_ids) {
                 foreach ($credit_ids as $id) {
