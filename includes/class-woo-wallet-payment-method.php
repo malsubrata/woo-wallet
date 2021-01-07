@@ -169,10 +169,10 @@ if(class_exists( 'WC_Payment_Gateway' )){
             $wallet_response = woo_wallet()->wallet->debit( $order->get_customer_id(), $amount_to_charge, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number() );
             if ( $wallet_response) {
                 $order->payment_complete();
+                update_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true );
             } else {
                 $order->add_order_note( __( 'Insufficient funds in customer wallet', 'woo-wallet' ) );
             }
-            update_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true );
         }
     }
 }

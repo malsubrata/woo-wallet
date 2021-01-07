@@ -67,6 +67,18 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('woo_wallet_is_enable_transfer', array($this, 'woo_wallet_is_enable_transfer'));
             
             add_filter('wp_nav_menu_objects', array($this, 'wp_nav_menu_objects'), 10);
+            
+            add_action('woocommerce_order_details_after_order_table', array($this, 'remove_woocommerce_order_again_button_for_wallet_rechargeable_order'), 5);
+        }
+        
+        /**
+         * Remove order again button for wallet rechargeable order.
+         * @param WC_Order $order
+         */
+        public function remove_woocommerce_order_again_button_for_wallet_rechargeable_order($order) {
+            if(is_wallet_rechargeable_order($order)){
+                remove_action('woocommerce_order_details_after_order_table', 'woocommerce_order_again_button');
+            }
         }
         
         public function wp_nav_menu_objects($items){

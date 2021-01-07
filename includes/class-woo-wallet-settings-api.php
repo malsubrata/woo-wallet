@@ -522,12 +522,10 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ):
         function get_option( $option, $section, $default = '' ) {
 
             $options = get_option( $section);
+            
+            $option_value = isset( $options[$option] ) && ! empty( $options[$option] ) ? $options[$option] : $default;
 
-            if ( isset( $options[$option] ) && ! empty( $options[$option] ) ) {
-                return $options[$option];
-            }
-
-            return $default;
+            return apply_filters("woo_wallet_get_option_{$section}_{$option}", $option_value);
         }
 
         /**

@@ -108,7 +108,7 @@ if ( ! class_exists( 'Woo_Wallet_Email_New_Transaction' ) ) {
                 'user'          => $this->object,
                 'transaction_id' => $this->transaction_id,
                 'type'          => $this->type,
-                'amount'        => $this->amount,
+                'amount'        => number_format( $this->amount, wc_get_price_decimals(), '.', '' ),
                 'details'       => $this->details,
                 'email_heading' => $this->get_heading(),
                 'sent_to_admin' => false,
