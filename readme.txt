@@ -3,8 +3,8 @@ Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.6
-Stable tag: 1.3.17
+Tested up to: 5.7
+Stable tag: 1.3.18
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -129,6 +129,14 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.18 - 2021-3-18 =
+* Add - Now admin can see which user make credit / debit transaction.
+* Fix - Cashback recalculation issue.
+* Fix - Debit Round up issue for bulk action.
+* Fix - Removed order again button from wallet rechargeable order details page.
+* Tweak - Now referral bonus will be credited after user purchase something from the store.
+* Dev - Added new filter `woo_wallet_calculate_cashback_on_total` to set cashback on order total or subtotal.
+
 = 1.3.17 - 2020-12-29 =
 * Fix - Fix URL while searching users in balance details page.
 * Fix - Redirect issue in adjust balance page.

@@ -820,7 +820,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 }
             }
         }
-        
+
         public function show_promotions() {
             if ( !current_user_can('manage_options') ) {
                 return;

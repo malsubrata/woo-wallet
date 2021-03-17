@@ -277,7 +277,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
         if ('debit' === $this->current_action() && isset($_POST['users'])) {
             $debit_ids = esc_sql($_POST['users']);
-            $amount = isset($_POST['amount']) ? intval($_POST['amount']) : 0;
+            $amount = isset($_POST['amount']) ? floatval($_POST['amount']) : 0;
             $description = isset($_POST['description']) ? $_POST['description'] : '';
             if ($amount && $debit_ids) {
                 foreach ($debit_ids as $id) {

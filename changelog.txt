@@ -1,4 +1,12 @@
 *** Changelog ***
+= 1.3.18 - 2021-3-18 =
+* Add - Now admin can see which user make credit / debit transaction.
+* Fix - Cashback recalculation issue.
+* Fix - Debit Round up issue for bulk action.
+* Fix - Removed order again button from wallet rechargeable order details page.
+* Tweak - Now referral bonus will be credited after user purchase something from the store.
+* Dev - Added new filter `woo_wallet_calculate_cashback_on_total` to set cashback on order total or subtotal.
+
 = 1.3.17 - 2020-12-29 =
 * Fix - Fix URL while searching users in balance details page.
 * Fix - Redirect issue in adjust balance page.

@@ -29,6 +29,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
             'type'           => __( 'Type', 'woo-wallet' ),
             'amount'         => __( 'Amount', 'woo-wallet' ),
             'details'        => __( 'Details', 'woo-wallet' ),
+            'created_by' => __('Created By', 'woo-wallet'),
             'date'           => __( 'Date', 'woo-wallet' ),
             'transaction_id' => __( 'ID', 'woo-wallet' )
         ));
@@ -106,6 +107,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
                     'type'           => ( 'credit' === $transaction->type) ? __( 'Credit', 'woo-wallet' ) : __( 'Debit', 'woo-wallet' ),
                     'amount'         => wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args($transaction->user_id) ),
                     'details'        => $transaction->details,
+                    'created_by'     => get_user_by('ID', $transaction->created_by) ? '<a href="'.add_query_arg( 'user_id', $transaction->created_by, self_admin_url( 'user-edit.php')).'">'.get_user_by('ID', $transaction->created_by)->display_name . '</a>' : '-',
                     'date'           => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() )
                 );
             }
@@ -128,6 +130,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
             case 'type':
             case 'amount':
             case 'details':
+            case 'created_by':
             case 'date':
                 return $item[$column_name];
             default:
