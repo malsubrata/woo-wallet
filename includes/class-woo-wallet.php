@@ -160,6 +160,7 @@ final class WooWallet {
         include_once( WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payment-method.php' );
         $this->add_marketplace_support();
         add_filter( 'woocommerce_email_classes', array( $this, 'woocommerce_email_classes' ), 999 );
+        add_filter( 'woocommerce_template_directory', array( $this, 'woocommerce_template_directory' ), 10, 2);
         add_filter( 'woocommerce_payment_gateways', array( $this, 'load_gateway' ) );
 
         foreach ( apply_filters( 'wallet_credit_purchase_order_status', array( 'processing', 'completed' ) ) as $status) {
@@ -198,6 +199,13 @@ final class WooWallet {
      */
     public function woo_wallet_widget_init(){
         register_widget('Woo_Wallet_Topup');
+    }
+    
+    public function woocommerce_template_directory($template_dir, $template) {
+        if(in_array($template, array('emails/low-wallet-balance.php', 'emails/user-new-transaction.php'))){
+            $template_dir = 'woo-wallet';
+        }
+        return $template_dir;
     }
 
     /**
@@ -260,6 +268,7 @@ final class WooWallet {
      */
     public function woocommerce_email_classes( $emails) {
         $emails['Woo_Wallet_Email_New_Transaction'] = include WOO_WALLET_ABSPATH . 'includes/emails/class-woo-wallet-email-new-transaction.php';
+        $emails['Woo_Wallet_Email_Low_Wallet_Balance'] = include WOO_WALLET_ABSPATH . 'includes/emails/class-woo-wallet-email-low-wallet-balance.php';
         return $emails;
     }
 

@@ -191,7 +191,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
             self::init_cashback_settings();
             $cashback_amount = 0;
             $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
-            $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? get_post_meta($product->get_id(), '_cashback_amount', true) : 0;
+            $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? floatval(get_post_meta($product->get_id(), '_cashback_amount', true)) : 0;
             if(!$product_price){
                 if ('incl' === get_option( 'woocommerce_tax_display_cart' )) {
                     $product_price = wc_get_price_including_tax($product);

@@ -217,6 +217,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 if( !is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ){
                     $email_admin->trigger( $transaction_id );
                 }
+                $low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
+                if( !is_null( $low_balance_email ) ){
+                    $low_balance_email->trigger( $this->user_id, $type );
+                }
                 return $transaction_id;
             }
             return false;
