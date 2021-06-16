@@ -129,7 +129,16 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                         'desc' => __( 'The maximum amount needed for wallet top up', 'woo-wallet' ),
                         'type' => 'number',
                         'step' => '0.01'
-                    ) ), $this->wp_menu_locations(), array(
+                    ),
+					array(
+                        'name' => 'top_up__wallet_order_status',
+                        'label' => __( 'Top up user wallet on order status:', 'woo-wallet' ),
+                        'desc' => __( 'Select transfer charge type percentage or fixed', 'woo-wallet' ),
+                        'type' => 'select',
+                        'options' => array( 'Processing' , 'Completed',  'Processing & Completed'),
+                        'size' => 'regular-text wc-enhanced-select'
+                    )
+					), $this->wp_menu_locations(), array(
                     array(
                         'name' => 'is_auto_deduct_for_partial_payment',
                         'label' => __( 'Auto deduct wallet balance for partial payment', 'woo-wallet' ),

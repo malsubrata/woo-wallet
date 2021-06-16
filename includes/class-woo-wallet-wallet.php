@@ -101,6 +101,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
             if ( ! is_wallet_rechargeable_order( $order ) ) {
                 return;
             }
+			$top_up__wallet_order_status = woo_wallet()->settings_api->get_option('top_up__wallet_order_status', '_wallet_settings_general');
+            if ( $order->get_status() == 'completed' && $top_up__wallet_order_status == 0 ){
+                return;
+            }
+            if ( $order->get_status() == 'processing' && $top_up__wallet_order_status == 1 ){
+                return;
+            }
             $recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
             if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_credit', 'off' ) ) {
                 $charge_amount = woo_wallet()->settings_api->get_option( $order->get_payment_method(), '_wallet_settings_credit', 0 );
