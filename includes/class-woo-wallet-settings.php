@@ -137,6 +137,14 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                         'type' => 'select',
                         'options' => array( 'Processing' , 'Completed',  'Processing & Completed'),
                         'size' => 'regular-text wc-enhanced-select'
+                    ),
+					array(
+                        'name' => 'wallet_payment_method_order_status',
+                        'label' => __( 'Payment complete on order status:', 'woo-wallet' ),
+                        'desc' => __( 'Select status for order that paid with wallet gateway', 'woo-wallet' ),
+                        'type' => 'select',
+                        'options' => array( 'completed', 'processing'),
+                        'size' => 'regular-text wc-enhanced-select'
                     )
 					), $this->wp_menu_locations(), array(
                     array(
