@@ -131,9 +131,9 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                         'step' => '0.01'
                     ),
 					array(
-                        'name' => 'top_up__wallet_order_status',
+                        'name' => 'top_up_wallet_order_status',
                         'label' => __( 'Top up user wallet on order status:', 'woo-wallet' ),
-                        'desc' => __( 'Select transfer charge type percentage or fixed', 'woo-wallet' ),
+                        'desc' => __( 'Select status for topup wallet order', 'woo-wallet' ),
                         'type' => 'select',
                         'options' => array( 'Processing' , 'Completed',  'Processing & Completed'),
                         'size' => 'regular-text wc-enhanced-select'
