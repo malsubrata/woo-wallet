@@ -132,18 +132,18 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                     ),
 					array(
                         'name' => 'top_up_wallet_order_status',
-                        'label' => __( 'Top up user wallet on order status:', 'woo-wallet' ),
-                        'desc' => __( 'Select status for topup wallet order', 'woo-wallet' ),
+                        'label' => __( 'Top up wallet on order status:', 'woo-wallet' ),
+                        'desc' => __( 'top up the wallet when order status is', 'woo-wallet' ),
                         'type' => 'select',
-                        'options' => array( 'Processing' , 'Completed',  'Processing & Completed'),
+                        'options' => array( 'processing' => __( 'Processing', 'woo-wallet' ), 'completed' => __( 'Completed', 'woo-wallet' ) ),
                         'size' => 'regular-text wc-enhanced-select'
                     ),
 					array(
                         'name' => 'wallet_payment_method_order_status',
-                        'label' => __( 'Payment complete on order status:', 'woo-wallet' ),
+                        'label' => __( 'Wallet payment order status:', 'woo-wallet' ),
                         'desc' => __( 'Select status for order that paid with wallet gateway', 'woo-wallet' ),
                         'type' => 'select',
-                        'options' => array( 'completed', 'processing'),
+                        'options' => array( 'not-set' => __( 'Define by woocommerce', 'woo-wallet' ), 'completed' => __( 'Completed', 'woo-wallet' ), 'processing' => __( 'Processing', 'woo-wallet' ) ),
                         'size' => 'regular-text wc-enhanced-select'
                     )
 					), $this->wp_menu_locations(), array(

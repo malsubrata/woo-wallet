@@ -129,10 +129,12 @@ if(class_exists( 'WC_Payment_Gateway' )){
             if ( $wallet_response) {
                 $order->payment_complete( $wallet_response);
 				
-				$wallet_payment_method_order_status = woo_wallet()->settings_api->get_option('wallet_payment_method_order_status', '_wallet_settings_general', 'completed');
-				$order->update_status($wallet_payment_method_order_status,
-            __('Order status set to ' . $wallet_payment_method_order_status . ' by Woo Wallet',
-                'fsww'));
+				$wallet_payment_method_order_status = woo_wallet()->settings_api->get_option('wallet_payment_method_order_status', '_wallet_settings_general', 'not-set');
+				if ( $wallet_payment_method_order_status != 'not-set'){
+					$order->update_status($wallet_payment_method_order_status,
+					__('Order status set to ' . $wallet_payment_method_order_status . ' by Woo Wallet',
+					'fsww'));
+				}
 				
                 do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response);
             }
