@@ -90,7 +90,7 @@ if(class_exists( 'WC_Payment_Gateway' )){
          * @return boolean
          */
         public function is_available() {
-            return apply_filters( 'woo_wallet_payment_is_available', (parent::is_available() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() ) );
+            return apply_filters( 'woo_wallet_payment_is_available', (parent::is_available() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() && !is_wallet_account_locked() ) );
         }
 
         public function get_icon() {

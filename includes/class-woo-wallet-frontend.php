@@ -226,14 +226,22 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * WooCommerce endpoint contents for wallet 
          */
         public function woo_wallet_endpoint_content() {
-            woo_wallet()->get_template('wc-endpoint-wallet.php');
+            if(is_wallet_account_locked()){
+                woo_wallet()->get_template('no-access.php');
+            } else {
+                woo_wallet()->get_template('wc-endpoint-wallet.php');
+            }
         }
 
         /**
          * WooCommerce endpoint contents for transaction details
          */
         public function woo_wallet_transactions_endpoint_content() {
-            woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+            if(is_wallet_account_locked()){
+                woo_wallet()->get_template('no-access.php');
+            } else {
+                woo_wallet()->get_template('wc-endpoint-wallet-transactions.php');
+            }
         }
 
         /**
@@ -547,7 +555,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return NULL
          */
         public function woocommerce_review_order_after_order_total() {
-            if (apply_filters('woo_wallet_disable_partial_payment', ( is_full_payment_through_wallet() || is_wallet_rechargeable_cart()))) {
+            if (apply_filters('woo_wallet_disable_partial_payment', ( is_full_payment_through_wallet() || is_wallet_rechargeable_cart() || is_wallet_account_locked()))) {
                 return;
             }
             wp_enqueue_style('dashicons');

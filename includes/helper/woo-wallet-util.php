@@ -651,3 +651,17 @@ if(!function_exists('delete_user_wallet_transactions')){
         }
     }
 }
+
+if(!function_exists('is_wallet_account_locked')){
+    /**
+     * Check if user wallet account is locked.
+     * @param int $user_id
+     * @return bool
+     */
+    function is_wallet_account_locked($user_id = ''){
+        if(empty($user_id)){
+            $user_id = get_current_user_id();
+        }
+        return get_user_meta($user_id, '_is_wallet_locked', true);
+    }
+}

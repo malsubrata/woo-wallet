@@ -82,6 +82,44 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             add_action('wp_nav_menu_item_custom_fields', array($this, 'wp_nav_menu_item_custom_fields'));
             add_filter('wp_update_nav_menu_item', array($this, 'wp_update_nav_menu_item'), 10, 2);
             add_action('woocommerce_after_dashboard_status_widget', array($this, 'add_wallet_topup_report'));
+            
+            add_action('edit_user_profile', array($this, 'add_wallet_management_fields'));
+            add_action('show_user_profile', array($this, 'add_wallet_management_fields'));
+        }
+        /**
+         * 
+         * @param WP_User $user
+         */
+        public function add_wallet_management_fields($user) {
+            ?>
+            <h3 class="heading"><?php _e('Wallet Management', 'woo-wallet'); ?></h3>
+            <table class="form-table">
+                <tr>
+                    <th><label for="contact"><?php _e('Current wallet balance', 'woo-wallet'); ?></label></th>
+
+                    <td>
+                        <?php echo woo_wallet()->wallet->get_wallet_balance($user->ID); ?>
+                    </td>
+
+                </tr>
+                <tr>
+                    <th><label for="contact"><?php _e('Lock / Unlock', 'woo-wallet'); ?></label></th>
+
+                    <td>
+                        <button type="button" class="button hide-if-no-js lock-unlock-user-wallet" data-user_id="<?php echo $user->ID; ?>" data-type="<?php echo get_user_meta($user->ID, '_is_wallet_locked', true) ? 'unlock' : 'lock'; ?>">
+                            <?php if(get_user_meta($user->ID, '_is_wallet_locked', true)){ ?>
+                                <span class="dashicons dashicons-unlock" style="padding-top: 3px;"></span> <label><?php _e('Unlock', 'woo-wallet'); ?></label>
+                            <?php } else { ?>
+                                <span class="dashicons dashicons-lock" style="padding-top: 3px;"></span> <label><?php _e('Lock', 'woo-wallet'); ?></label>
+                            <?php } ?>
+                        </button>
+                    </td>
+
+                </tr>
+                <?php do_action('after_terawallet_management_fields', $user); ?>
+            </table>
+
+            <?php
         }
 
         /**
@@ -146,6 +184,19 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             if (version_compare(WC_VERSION, '3.4', '<' ) ) {
                 add_filter( 'woocommerce_account_settings', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
             }
+            $this->download_export_file();
+        }
+        /**
+         * Download generated export CSV file.
+         */
+        public function download_export_file() {
+            if (isset($_GET['action'], $_GET['nonce']) && wp_verify_nonce(wp_unslash($_GET['nonce']), 'terawallet-transaction-csv') && 'download_export_csv' === wp_unslash($_GET['action'])) { // WPCS: input var ok, sanitization ok.
+                $exporter = new TeraWallet_CSV_Exporter();
+                if (!empty($_GET['filename'])) { // WPCS: input var ok.
+                    $exporter->set_filename(wp_unslash($_GET['filename'])); // WPCS: input var ok, sanitization ok.
+                }
+                $exporter->export();
+            }
         }
 
         /**
@@ -159,6 +210,13 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
             $woo_wallet_menu_page_hook_view = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
             add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
             add_submenu_page( 'woo-wallet', __( 'Actions', 'woo-wallet' ), __( 'Actions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-actions', array( $this, 'plugin_actions_page' ) );
+            
+            add_submenu_page(null, null, null, get_wallet_user_capability(), 'terawallet-exporter', array($this, 'terawallet_exporter_page'));
+        }
+        
+        public function terawallet_exporter_page() {
+            include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
+            include_once WOO_WALLET_ABSPATH . 'templates/admin/html-exporter.php';
         }
         /**
          * Plugin action settings page 
@@ -273,6 +331,45 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                 wp_localize_script( 'woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer);
             }
             wp_enqueue_style( 'woo_wallet_admin_styles' );
+            
+            // register exporter styles
+            wp_register_style('terawallet-exporter-style', woo_wallet()->plugin_url() . '/assets/css/export.css', array(), WOO_WALLET_PLUGIN_VERSION);
+
+            // register exporter scripts
+            wp_register_script('terawallet-exporter-script', woo_wallet()->plugin_url() . '/assets/js/admin/export'. $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION);
+            wp_localize_script(
+                    'terawallet-exporter-script',
+                    'terawallet_export_params',
+                    array(
+                        'i18n' => array(
+                            'inputTooShort' => __('Please enter 3 or more characters', 'woo-wallet'),
+                            'no_resualt' => __('No results found', 'woo-wallet'),
+                            'searching' => __('Searching…', 'woo-wallet'),
+                        ),
+                        'export_nonce' => wp_create_nonce('terawallet-exporter-script'),
+                        'export_url' => '',
+                        'export_button_title' => __('Export', 'woo-wallet')
+                    )
+            );
+
+            wp_register_script('terawallet_admin', woo_wallet()->plugin_url() . '/assets/js/admin/admin'. $suffix . '.js', array('jquery'), WOO_WALLET_PLUGIN_VERSION, true);
+            wp_localize_script(
+                    'terawallet_admin', 
+                    'terawallet_admin_params', 
+                    apply_filters('terawallet_admin_js_params', array(
+                                'ajax_url' => admin_url('admin-ajax.php'),
+                                'export_url' => add_query_arg(array('page' => 'terawallet-exporter'), admin_url('admin.php')), 
+                                'export_title' => __('Export', 'woo-wallet')
+                            )
+                        )
+                    );
+
+            if (in_array($screen_id, array('admin_page_terawallet-exporter'))) {
+                wp_enqueue_style('select2');
+                wp_enqueue_style('terawallet-exporter-style');
+            }
+            
+            wp_enqueue_script('terawallet_admin');
         }
 
         /**

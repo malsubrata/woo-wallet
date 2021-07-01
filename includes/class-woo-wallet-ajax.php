@@ -39,6 +39,106 @@ if (!class_exists('Woo_Wallet_Ajax')) {
             add_action('wp_ajax_draw_wallet_transaction_details_table', array($this, 'draw_wallet_transaction_details_table'));
 
             add_action('woocommerce_order_after_calculate_totals', array($this, 'recalculate_order_cashback_after_calculate_totals'), 10, 2);
+            
+            add_action('wp_ajax_terawallet_export_user_search', array($this, 'terawallet_export_user_search'));
+            
+            add_action('wp_ajax_terawallet_do_ajax_transaction_export', array($this, 'terawallet_do_ajax_transaction_export'));
+            
+            add_action('wp_ajax_lock_unlock_terawallet', array($this, 'lock_unlock_terawallet'));
+        }
+        
+        public function lock_unlock_terawallet() {
+            $user_id = $_POST['user_id'];
+            $type = $_POST['type'];
+            if('lock' === $type){
+                update_user_meta($user_id, '_is_wallet_locked', true);
+                wp_send_json_success(array('type' => 'unlock', 'text' => __('Unlock', 'woo-wallet')));
+            } else{
+                delete_user_meta($user_id, '_is_wallet_locked');
+                wp_send_json_success(array('type' => 'lock', 'text' => __('Lock', 'woo-wallet')));
+            }
+        }
+        /**
+         * Generate export CSV file.
+         */
+        public function terawallet_do_ajax_transaction_export() {
+            check_ajax_referer('terawallet-exporter-script', 'security');
+            include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
+            $step = isset($_POST['step']) ? absint($_POST['step']) : 1; // WPCS: input var ok, sanitization ok.
+
+            $exporter = new TeraWallet_CSV_Exporter();
+
+            $exporter->set_step($step);
+
+            if (!empty($_POST['selected_columns'])) { // WPCS: input var ok.
+                $exporter->set_columns_to_export(wp_unslash($_POST['selected_columns'])); // WPCS: input var ok, sanitization ok.
+            }
+
+            if (!empty($_POST['selected_users'])) { // WPCS: input var ok.
+                $exporter->set_users_to_export(wp_unslash($_POST['selected_users'])); // WPCS: input var ok, sanitization ok.
+            }
+
+            if (!empty($_POST['start_date'])) {
+                $exporter->set_start_date(wp_unslash($_POST['start_date']));
+            }
+
+            if (!empty($_POST['end_date'])) {
+                $exporter->set_end_date(wp_unslash($_POST['end_date']));
+            }
+
+            if (!empty($_POST['filename'])) { // WPCS: input var ok.
+                $exporter->set_filename(wp_unslash($_POST['filename'])); // WPCS: input var ok, sanitization ok.
+            }
+            $exporter->write_to_csv();
+            $query_args = array(
+                'nonce' => wp_create_nonce('terawallet-transaction-csv'),
+                'action' => 'download_export_csv',
+                'filename' => $exporter->get_filename(),
+            );
+            if ($exporter->get_percent_complete() >= 100) {
+                wp_send_json_success(
+                        array(
+                            'step' => 'done',
+                            'percentage' => 100,
+                            'url' => add_query_arg($query_args, admin_url('admin.php?page=terawallet-exporter')),
+                        )
+                );
+            } else {
+                wp_send_json_success(
+                        array(
+                            'step' => ++$step,
+                            'percentage' => $exporter->get_percent_complete(),
+                            'columns' => '',
+                        )
+                );
+            }
+        }
+
+        /**
+         * Search users for export transactions.
+         */
+        public function terawallet_export_user_search() {
+            $return = array();
+            if (isset($_REQUEST['site_id'])) {
+                $id = absint($_REQUEST['site_id']);
+            } else {
+                $id = get_current_blog_id();
+            }
+
+            $users = get_users(array(
+                'blog_id' => $id,
+                'search' => '*' . $_REQUEST['term'] . '*',
+                'search_columns' => array('user_login', 'user_nicename', 'user_email'),
+            ));
+
+            foreach ($users as $user) {
+                $return[] = array(
+                    /* translators: 1: user_login, 2: user_email */
+                    'label' => sprintf(_x('%1$s (%2$s)', 'user autocomplete result', 'woo-wallet'), $user->user_login, $user->user_email),
+                    'value' => $user->ID,
+                );
+            }
+            wp_send_json($return);
         }
 
         /**

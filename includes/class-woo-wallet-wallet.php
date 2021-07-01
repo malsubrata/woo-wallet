@@ -129,7 +129,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 if ( $transaction_id ) {
                     update_wallet_transaction_meta( $transaction_id, '_type', 'cashback', $order->get_customer_id() );
                     update_post_meta( $order->get_id(), '_general_cashback_transaction_id', $transaction_id );
-                    do_action( 'woo_wallet_general_cashback_credited', $transaction_id );
+                    do_action( 'woo_wallet_general_cashback_credited', $transaction_id, $order );
                 }
             }
             /* Coupon Cashback */
@@ -140,7 +140,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                     if ( $transaction_id ) {
                         update_wallet_transaction_meta( $transaction_id, '_type', 'cashback', $order->get_customer_id() );
                         update_post_meta( $order->get_id(), '_coupon_cashback_transaction_id', $transaction_id );
-                        do_action( 'woo_wallet_coupon_cashback_credited', $transaction_id );
+                        do_action( 'woo_wallet_coupon_cashback_credited', $transaction_id, $order );
                     }
                 }
             }
