@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.7
-Stable tag: 1.3.18
+Stable tag: 1.3.19
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -29,6 +29,9 @@ With this extension, the customers won't have to fill in the payment details eve
 - Customers will earn cashback according to cart price, product or product category wise.
 - Customers can made partial payment.
 - Set cashback amount calculation using fixed or percent method.
+- Admin can export users wallet transactions.
+- Admin can setup low wallet balance notification email.
+- Admin can lock / unlock any user wallet.
 - From the backend, the admin can view the transaction history.
 - Customers receive notification emails for every wallet transaction.
 - The admin can adjust the wallet amount of any customer from the backend.
@@ -129,6 +132,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.19 - 2021-07-02 =
+* Add - Now admin can setup low wallet balance notification email.
+* Add - Admin can export wallet transactions.
+* Add - Admin can lock / unlock user wallet.
+
 = 1.3.18 - 2021-3-18 =
 * Add - Now admin can see which user make credit / debit transaction.
 * Fix - Cashback recalculation issue.
