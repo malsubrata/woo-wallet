@@ -230,7 +230,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
                     'restock_items' => $restock_refunded_items,
                         ));
                 if (!is_wp_error($refund)) {
-                    $transaction_id = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, __('Wallet refund #', 'woo-wallet') . $order->get_order_number());
+                    $transaction_id = woo_wallet()->wallet->credit($order->get_customer_id(), $refund_amount, $refund_reason);
                     if (!$transaction_id) {
                         throw new Exception(__('Refund not credited to customer', 'woo-wallet'));
                     } else {

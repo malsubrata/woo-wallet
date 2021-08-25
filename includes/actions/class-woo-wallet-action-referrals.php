@@ -220,7 +220,7 @@ class Action_Referrals extends WooWalletAction {
 
     public function woo_wallet_referring_signup($user_id) {
         $referral_user = $this->get_referral_user();
-        $referral_signup_amount = apply_filters('woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID);
+        $referral_signup_amount = $this->settings['referring_signups_amount'];
         if ($referral_signup_amount && $this->get_referral_user()) {
             $limit = $this->settings['referring_signups_limit_duration'];
             if ($limit) {
@@ -256,7 +256,7 @@ class Action_Referrals extends WooWalletAction {
         if ($customer_total_spent >= $minimum_spent) {
             $referral_signup_count = get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) : 0;
             $woo_wallet_referring_earning = get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) : 0;
-            $referral_signup_amount = apply_filters('woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID);
+            $referral_signup_amount = apply_filters('woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID, $customer_id);
             $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
             update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
             update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);

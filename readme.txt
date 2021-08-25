@@ -3,7 +3,7 @@ Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.7
+Tested up to: 5.8
 Stable tag: 1.3.19
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
