@@ -119,6 +119,170 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ):
                 .wc_addons_wrap .addons-column{
                     padding: 0 !important;
                 }
+                                .wc_addons_wrap {
+                    max-width: 1200px;
+                }
+                .wc_addons_wrap .addons-featured {
+                    margin: 0;
+                }
+                .wc_addons_wrap .addons-banner-block, .wc_addons_wrap .addons-wcs-banner-block {
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    margin: 0 0 1em 0;
+                    padding: 2em 2em 1em;
+                }
+                .wc_addons_wrap .addons-banner-block p {
+                    margin: 0 0 20px;
+                }
+                .wc_addons_wrap .addons-banner-block-item:nth-child(-n+3) {
+                    display: block;
+                }
+                .wc_addons_wrap .addons-banner-block-item, .wc_addons_wrap .addons-column-block-item {
+                    display: none;
+                }
+                .wc_addons_wrap .addons-banner-block-item {
+                    border: 1px solid #c5c5c5;
+                    border-radius: 3px;
+                    -webkit-box-flex: 1;
+                    flex: 1;
+                    margin: 1em;
+                    min-width: 200px;
+                    width: 30%;
+                }
+
+                .wc_addons_wrap .addons-banner-block-item-icon {
+                    background: #e6e6e6;
+                    height: 143px;
+                }
+                .wc_addons_wrap .addons-banner-block-item-icon, .wc_addons_wrap .addons-column-block-item-icon {
+                    -webkit-box-align: center;
+                    align-items: center;
+                    display: -webkit-box;
+                    display: flex;
+                    -webkit-box-pack: center;
+                    justify-content: center;
+                }
+                .wc_addons_wrap .addons-banner-block-items {
+                    display: -webkit-box;
+                    display: flex;
+                    -webkit-box-orient: horizontal;
+                    -webkit-box-direction: normal;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    justify-content: space-around;
+                    margin: 0 -10px 0 -10px;
+                }
+                .wc_addons_wrap .addons-banner-block img {
+                    height: 62px;
+                }
+                .wc_addons_wrap .addons-banner-block-item-content {
+                    display: -webkit-box;
+                    display: flex;
+                    -webkit-box-orient: vertical;
+                    -webkit-box-direction: normal;
+                    flex-direction: column;
+                    height: 184px;
+                    -webkit-box-pack: justify;
+                    justify-content: space-between;
+                    padding: 24px;
+                }
+                .wc_addons_wrap .addons-banner-block-item-content h3 {
+                    margin-top: 0;
+                }
+                .wc_addons_wrap .addons-banner-block-item-content p {
+                    margin: 0 0 auto;
+                }
+                .wc_addons_wrap .addons-column-section {
+                    display: -webkit-box;
+                    -webkit-box-orient: horizontal;
+                    -webkit-box-direction: normal;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    justify-content: space-around;
+                }
+                .wc_addons_wrap .addons-column {
+                    padding: 0 !important;
+                }
+                .wc_addons_wrap .addons-column-block, .wc_addons_wrap .addons-small-light-block {
+                    background: #fff;
+                }
+                .wc_addons_wrap .addons-column-block, .wc_addons_wrap .addons-small-dark-block, .wc_addons_wrap .addons-small-light-block {
+                    box-sizing: border-box;
+                    border: 1px solid #ddd;
+                    margin: 0 0 1em;
+                    padding: 20px;
+                }
+                .wc_addons_wrap .addons-column-block-item:nth-of-type(-n+3) {
+                    display: -webkit-box;
+                    display: flex;
+                }
+                .wc_addons_wrap .addons-column-block-item {
+                    border-top: 2px solid #f9f9f9;
+                    -webkit-box-orient: horizontal;
+                    -webkit-box-direction: normal;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    -webkit-box-pack: justify;
+                    justify-content: space-between;
+                    margin: 0 -20px;
+                    padding: 20px;
+                }
+
+                .wc_addons_wrap .addons-column-block-item-icon {
+                    background: #e6e6e6;
+                    border: 1px solid #c5c5c5;
+                    height: 100px;
+                    margin: 0 10px 10px 0;
+                    width: 100px;
+                }
+                .wc_addons_wrap .addons-column-block img {
+                    max-height: 50px;
+                    max-width: 50px;
+                }
+
+                .wc_addons_wrap .addons-column-block-item {
+                    border-top: 2px solid #e6e6e6;
+                    -webkit-box-orient: horizontal;
+                    -webkit-box-direction: normal;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    -webkit-box-pack: justify;
+                    justify-content: space-between;
+                    margin: 0 -20px;
+                    padding: 20px;
+                }
+                .wc_addons_wrap .addons-column-block-item-content {
+                    display: -webkit-box;
+                    display: flex;
+                    -webkit-box-flex: 1;
+                    flex: 1;
+                    flex-wrap: wrap;
+                    height: 20%;
+                    -webkit-box-pack: justify;
+                    justify-content: space-between;
+                    min-width: 200px;
+                }
+                .wc_addons_wrap .addons-column-block-item-content a {
+                    float: right;
+                }
+                .wc_addons_wrap .addons-button-solid {
+                    background-color: #674399;
+                    color: #fff;
+                }
+                .wc_addons_wrap .addons-button {
+                    border-radius: 3px;
+                    cursor: pointer;
+                    display: block;
+                    height: 37px;
+                    line-height: 37px;
+                    text-align: center;
+                    text-decoration: none;
+                    width: 124px;
+                }
+                .wc_addons_wrap .addons-column-block-item-content p {
+                    float: left;
+                    width: 100%;
+                }
             </style>
             <div class="addons-featured">
                 <div class="addons-banner-block">

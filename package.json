@@ -36,10 +36,14 @@
     "grunt-phpcs": "^0.4.0",
     "grunt-postcss": "^0.9.0",
     "grunt-rtlcss": "^2.0.1",
-    "grunt-sass": "^2.1.0",
+    "grunt-sass": "^3.1.0",
     "grunt-shell": "^2.1.0",
     "grunt-stylelint": "^0.9.0",
     "grunt-wp-i18n": "^1.0.2",
-    "stylelint": "^13.3.3"
+    "node-sass": "^6.0.1",
+    "stylelint": "^13.13.1"
+  },
+  "dependencies": {
+    "postcss": "^8.3.11"
   }
 }

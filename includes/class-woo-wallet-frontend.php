@@ -69,8 +69,26 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_filter('wp_nav_menu_objects', array($this, 'wp_nav_menu_objects'), 10);
             
             add_action('woocommerce_order_details_after_order_table', array($this, 'remove_woocommerce_order_again_button_for_wallet_rechargeable_order'), 5);
+            
+            add_action('woocommerce_cart_loaded_from_session', array($this, 'woocommerce_cart_loaded_from_session'));
         }
-        
+        /**
+        * Remove wallet rechargeable product from the cart
+        * if another product is added to the cart before.
+        * @param WC_Cart $cart
+        */
+        public function woocommerce_cart_loaded_from_session($cart){
+            if (sizeof($cart->get_cart()) > 1) {
+                foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+                    $product_id = $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'];
+                    if ($product_id === get_wallet_rechargeable_product()->get_id()) {
+                        WC()->cart->remove_cart_item($cart_item_key);
+                    }
+                }
+            }
+        }
+
+
         /**
          * Remove order again button for wallet rechargeable order.
          * @param WC_Order $order
@@ -781,15 +799,17 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * Restore cart items after wallet top-up.
          * @param int $order_id
          */
-        public function restore_woocommerce_cart_items($order_id){
+        public function restore_woocommerce_cart_items(){
             $saved_cart = woo_wallet_get_saved_cart();
             if($saved_cart){
                 foreach ($saved_cart as $cart_item_key => $restore_item){
                     wc()->cart->cart_contents[ $cart_item_key ]         = $restore_item;
                     wc()->cart->cart_contents[ $cart_item_key ]['data'] = wc_get_product( $restore_item['variation_id'] ? $restore_item['variation_id'] : $restore_item['product_id'] );
+                    do_action( 'woocommerce_restore_cart_item', $cart_item_key, wc()->cart );
+                    
                     do_action( 'woocommerce_cart_item_restored', $cart_item_key, wc()->cart );
                 }
-                wc()->cart->calculate_totals();
+                
                 woo_wallet_persistent_cart_destroy();
             }
         }
