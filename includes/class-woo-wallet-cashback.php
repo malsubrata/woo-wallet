@@ -164,7 +164,7 @@ if (!class_exists('Woo_Wallet_Cashback')) {
                     if (woo_wallet()->settings_api->get_option('min_cart_amount', '_wallet_settings_credit', 10) != 0 && $order->get_total('edit') >= woo_wallet()->settings_api->get_option('min_cart_amount', '_wallet_settings_credit', 0)) {
                         if ('percent' === self::$global_cashbak_type) {
                             $total = apply_filters('woo_wallet_calculate_cashback_on_total', true) ? $order->get_total('edit') : $order->get_subtotal();
-                            $percent_cashback_amount = ($order->get_total('edit') * self::$global_cashbak_amount) / 100;
+                            $percent_cashback_amount = ($total * self::$global_cashbak_amount) / 100;
                             if (self::$max_cashbak_amount && $percent_cashback_amount > self::$max_cashbak_amount) {
                                 $cashback_amount += self::$max_cashbak_amount;
                             } else {

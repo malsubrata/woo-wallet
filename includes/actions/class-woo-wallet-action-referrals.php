@@ -252,8 +252,8 @@ class Action_Referrals extends WooWalletAction {
         }
         $referral_user = new WP_User($referral_user_id);
         $customer_total_spent = wc_get_customer_total_spent($customer_id);
-        $minimum_spent = isset($this->settings['referring_signups_limit_duration']) ? $this->settings['referring_signups_limit_duration'] : 0;
-        if ($customer_total_spent >= $minimum_spent) {
+        $minimum_spent = isset($this->settings['referral_order_amount']) ? $this->settings['referral_order_amount'] : 0;
+        if ($order->is_paid() && $customer_total_spent >= $minimum_spent) {
             $referral_signup_count = get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) : 0;
             $woo_wallet_referring_earning = get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) : 0;
             $referral_signup_amount = apply_filters('woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID, $customer_id);
