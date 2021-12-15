@@ -291,7 +291,11 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
             $delete_ids = esc_sql($_POST['users']);
             if ($delete_ids) {
                 foreach ($delete_ids as $id) {
+                    $current_balance = woo_wallet()->wallet->get_wallet_balance($id, 'edit');
                     delete_user_wallet_transactions($id, true);
+                    if($current_balance){
+                        woo_wallet()->wallet->credit($id, $current_balance, __('Balance after deleting transaction logs', 'woo-wallet'));
+                    }
                 }
             }
             header("Refresh: 0");

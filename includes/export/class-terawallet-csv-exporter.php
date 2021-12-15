@@ -173,7 +173,7 @@ class TeraWallet_CSV_Exporter {
         ob_start();
 
         foreach ($columns as $column_id) {
-            $export_row[] = $this->format_data($this->get_default_column_names()[$column_id]);
+            $export_row[] = str_replace(' ', '_', strtolower($this->format_data($this->get_default_column_names()[$column_id])));
         }
 
         fputcsv($buffer, $export_row);

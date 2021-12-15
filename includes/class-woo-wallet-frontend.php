@@ -54,8 +54,6 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             add_action('woocommerce_review_order_after_order_total', array($this, 'woocommerce_review_order_after_order_total'));
             add_action('woocommerce_checkout_create_order_coupon_item', array($this, 'convert_coupon_to_cashbak_if'), 10, 4);
 
-            add_filter('woocommerce_coupon_is_valid', array($this, 'woo_wallet_is_valid_cashback_coupon'), 100, 2);
-            add_filter('woocommerce_coupon_error', array($this, 'cashback_coupon_error'), 100, 3);
             add_filter('woocommerce_coupon_message', array($this, 'update_woocommerce_coupon_message_as_cashback'), 10, 3);
             add_filter('woocommerce_cart_totals_coupon_label', array($this, 'change_coupon_label'), 10, 2);
             add_filter('woocommerce_cart_get_total', array($this, 'woocommerce_cart_get_total'));
@@ -642,41 +640,6 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         }
 
         /**
-         * Check if user logged in for cashback coupon.
-         * @param boolean $is_valid
-         * @param WC_Coupon $coupon
-         * @return boolean
-         */
-        public function woo_wallet_is_valid_cashback_coupon($is_valid, $coupon) {
-            $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
-            if ('yes' === $_is_coupon_cashback) {
-                if (!is_user_logged_in()) {
-                    $is_valid = false;
-                }
-            }
-            return $is_valid;
-        }
-        
-        /**
-         * Return invalid coupon message.
-         * @param string $error_message
-         * @param int $error_code
-         * @param WC_Coupon $coupon
-         * @return string
-         */
-        public function cashback_coupon_error($error_message, $error_code, $coupon){
-            if( is_a( $coupon, 'WC_Coupon' ) ){
-                $_is_coupon_cashback = get_post_meta($coupon->get_id(), '_is_coupon_cashback', true);
-                if ('yes' === $_is_coupon_cashback) {
-                    if (!is_user_logged_in()) {
-                        $error_message = __('Please login to apply cashback coupon.', 'woo-wallet');
-                    }
-                }
-            }
-            return $error_message;
-        }
-
-        /**
          * 
          * @param string $msg
          * @param int $msg_code
@@ -686,7 +649,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function update_woocommerce_coupon_message_as_cashback($msg, $msg_code, $coupon) {
             $coupon_id = $coupon->get_id();
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
-            if (is_user_logged_in() && 'yes' === $_is_coupon_cashback && 200 === $msg_code) {
+            if ( 'yes' === $_is_coupon_cashback && 200 === $msg_code) {
                 $msg = __('Coupon code applied successfully as cashback.', 'woo-wallet');
             }
             return $msg;
@@ -701,7 +664,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         public function change_coupon_label($label, $coupon) {
             $coupon_id = $coupon->get_id();
             $_is_coupon_cashback = get_post_meta($coupon_id, '_is_coupon_cashback', true);
-            if (is_user_logged_in() && 'yes' === $_is_coupon_cashback) {
+            if ( 'yes' === $_is_coupon_cashback ) {
                 $label = sprintf(esc_html__('Cashback: %s', 'woo-wallet'), $coupon->get_code());
             }
             return $label;
@@ -713,9 +676,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return float
          */
         public function woocommerce_cart_get_total($total) {
-            if (is_user_logged_in()) {
-                $total += get_woowallet_coupon_cashback_amount();
-            }
+            $total += get_woowallet_coupon_cashback_amount();
             return $total;
         }
 

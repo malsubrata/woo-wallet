@@ -51,3 +51,14 @@ function woo_wallet_update_1312_db_column() {
         $wpdb->query( "ALTER TABLE {$table_name} ADD `created_by` BIGINT UNSIGNED NOT NULL DEFAULT 1;" );
     }
 }
+
+function woo_wallet_update_1321_db_column() {
+    global $wpdb;
+    $table_name = $wpdb->base_prefix.'woo_wallet_transactions';
+    if ( $table_name === $wpdb->get_var( "SHOW TABLES LIKE '$table_name'" ) && $wpdb->get_var( "SHOW COLUMNS FROM `{$table_name}` LIKE 'amount';" ) ) {
+        $wpdb->query( "ALTER TABLE {$table_name} MODIFY COLUMN `amount` decimal(16,8);" );
+    }
+    if ( $table_name === $wpdb->get_var( "SHOW TABLES LIKE '$table_name'" ) && $wpdb->get_var( "SHOW COLUMNS FROM `{$table_name}` LIKE 'balance';" ) ) {
+        $wpdb->query( "ALTER TABLE {$table_name} MODIFY COLUMN `balance` decimal(16,8);" );
+    }
+}

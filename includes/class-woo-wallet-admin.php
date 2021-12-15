@@ -128,7 +128,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          */
         public function add_wallet_topup_report() {
             if (current_user_can('view_woocommerce_reports')) {
-                $wallet_recharge_order_ids = get_wallet_rechargeable_orders( array( 'date_query' => array( 'after' => strtotime( date( 'Y-m-01', current_time( 'timestamp' ) ) ) ) ) );
+                $wallet_recharge_order_ids = get_wallet_rechargeable_orders( array( 'date_query' => array( 'after' => date('Y-m-01') ) ) );
                 $top_up_amount = 0;
                 foreach ($wallet_recharge_order_ids as $order_id){
                     $order = wc_get_order($order_id);
@@ -203,7 +203,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
          * init admin menu
          */
         public function admin_menu() {
-            $woo_wallet_menu_page_hook = add_menu_page( 'TeraWallet', 'TeraWallet', get_wallet_user_capability(), 'woo-wallet', array( $this, 'wallet_page' ), '', 59);
+            $woo_wallet_menu_page_hook = add_menu_page( __('TeraWallet', 'woo-wallet'), __('TeraWallet', 'woo-wallet'), get_wallet_user_capability(), 'woo-wallet', array( $this, 'wallet_page' ), '', 59);
             add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
             $woo_wallet_menu_page_hook_add = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-add', array( $this, 'add_balance_to_user_wallet' ) );
             add_action( "load-$woo_wallet_menu_page_hook_add", array( $this, 'add_woo_wallet_add_balance_option' ) );

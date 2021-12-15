@@ -51,13 +51,11 @@ if( !function_exists( 'get_woowallet_coupon_cashback_amount' ) ){
      */
     function get_woowallet_coupon_cashback_amount(){
         $coupon_cashback_amount = 0;
-        if ( is_user_logged_in() ) {
-            foreach (WC()->cart->get_applied_coupons() as $code) {
-                $coupon = new WC_Coupon( $code);
-                $_is_coupon_cashback = get_post_meta( $coupon->get_id(), '_is_coupon_cashback', true );
-                if ( 'yes' === $_is_coupon_cashback) {
-                    $coupon_cashback_amount += WC()->cart->get_coupon_discount_amount( $code, WC()->cart->display_cart_ex_tax);
-                }
+        foreach (WC()->cart->get_applied_coupons() as $code) {
+            $coupon = new WC_Coupon( $code);
+            $_is_coupon_cashback = get_post_meta( $coupon->get_id(), '_is_coupon_cashback', true );
+            if ( 'yes' === $_is_coupon_cashback) {
+                $coupon_cashback_amount += WC()->cart->get_coupon_discount_amount( $code, WC()->cart->display_cart_ex_tax);
             }
         }
         return $coupon_cashback_amount;
