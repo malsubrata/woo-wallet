@@ -170,7 +170,7 @@ class Action_Referrals extends WooWalletAction {
             } else {
                 $user = get_user_by('login', $woo_wallet_referral);
             }
-            if ($user->ID === get_current_user_id()) {
+            if ( !$user || $user->ID === get_current_user_id()) {
                 return false;
             }
             return apply_filters('woo_wallet_referral_user', $user, $this);
