@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.3.22 - 2021-12-23 =
+* Fix - Plugin title translation issue.
+
 = 1.3.21 -2021-12-22 =
 * Fix - Exporter column header.
 * Fix - Incorrect wallet top-up this month widget.

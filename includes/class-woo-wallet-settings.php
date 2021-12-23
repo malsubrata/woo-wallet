@@ -54,7 +54,8 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
             $screen_id = $screen ? $screen->id : '';
             $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
             wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION);
-            if (in_array( $screen_id, array( 'woowallet_page_woo-wallet-settings', 'terawallet_page_woo-wallet-settings' ) ) ) {
+            $woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
+            if (in_array( $screen_id, array( "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" ) ) ) {
                 wp_enqueue_style( 'dashicons' );
                 wp_enqueue_style( 'wp-color-picker' );
                 wp_enqueue_style( 'woo_wallet_admin_styles' );
@@ -64,7 +65,8 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ):
                 wp_enqueue_script( 'woo-wallet-admin-settings' );
                 $localize_param = array(
                     'screen_id' => $screen_id,
-                    'gateways' => $this->get_wc_payment_gateways( 'id' )
+                    'gateways' => $this->get_wc_payment_gateways( 'id' ),
+                    'settings_screen_id' => "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings"
                 );
                 wp_localize_script( 'woo-wallet-admin-settings', 'woo_wallet_admin_settings_param', $localize_param);
             }

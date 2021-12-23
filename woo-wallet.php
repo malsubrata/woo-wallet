@@ -6,7 +6,7 @@
  * Description: The leading wallet plugin for WooCommerce with partial payment, refunds, cashbacks and what not!
  * Author: WCBeginner
  * Author URI: https://wcbeginner.com/
- * Version: 1.3.21
+ * Version: 1.3.22
  * Requires at least: 4.4
  * Tested up to: 5.8
  * WC requires at least: 3.0
