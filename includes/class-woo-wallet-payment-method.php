@@ -90,7 +90,10 @@ if(class_exists( 'WC_Payment_Gateway' )){
          * @return boolean
          */
         public function is_available() {
-            return apply_filters( 'woo_wallet_payment_is_available', (parent::is_available() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() && !is_wallet_account_locked() ) );
+            if( is_checkout() ){
+                return apply_filters( 'woo_wallet_payment_is_available', (parent::is_available() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() && !is_wallet_account_locked() ) );
+            }
+            return parent::is_available();
         }
 
         public function get_icon() {
@@ -148,7 +151,8 @@ if(class_exists( 'WC_Payment_Gateway' )){
          */
         public function process_refund( $order_id, $amount = null, $reason = '' ) {
             $order = wc_get_order( $order_id );
-            $transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number() );
+            $refund_reason = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
+            $transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, $refund_reason );
             if ( !$transaction_id ) {
                 throw new Exception( __( 'Refund not credited to customer', 'woo-wallet' ) );
             }

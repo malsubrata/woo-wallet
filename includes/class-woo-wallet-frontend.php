@@ -265,7 +265,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function woo_wallet_frontend_loaded() {
             // reset partial payment session
-            if (!is_ajax()) {
+            if (!wp_doing_ajax()) {
                 update_wallet_partial_payment_session();
             }
             /**
@@ -622,6 +622,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          */
         public function display_cashback() {
             $product = wc_get_product(get_the_ID());
+            if(!$product){
+                return;
+            }
             if($product->has_child()){
                 $product = wc_get_product(current($product->get_children()));
             }
