@@ -37,6 +37,8 @@ if(class_exists( 'WC_Payment_Gateway' )){
             add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
             /* support for woocommerce subscription plugin */
             add_action( 'woocommerce_scheduled_subscription_payment_' . $this->id, array( $this, 'scheduled_subscription_payment' ), 10, 2 );
+            
+            add_action('woocommerce_pre_payment_complete', array($this, 'woocommerce_pre_payment_complete'));
         }
 
         /**
@@ -121,24 +123,43 @@ if(class_exists( 'WC_Payment_Gateway' )){
                 wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args($order->get_customer_id()) ) ), 'error' );
                 return;
             }
-            $wallet_response = woo_wallet()->wallet->debit( get_current_user_id(), $order->get_total( 'edit' ), apply_filters('woo_wallet_order_payment_description', __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), $order) );
 
             // Reduce stock levels
             wc_reduce_stock_levels( $order_id );
 
             // Remove cart
             WC()->cart->empty_cart();
-
-            if ( $wallet_response) {
-                $order->payment_complete( $wallet_response);
-                do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response);
-            }
+            
+            // Complete order payment
+            $order->payment_complete();
 
             // Return thankyou redirect
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url( $order ),
             );
+        }
+        /**
+         * Debit user wallet on WooCommerce payment complete.
+         * @param WC_Order $order_id
+         * @throws Exception
+         */
+        public function woocommerce_pre_payment_complete($order_id) {
+            $order = wc_get_order($order_id);
+            if('wallet' === $order->get_payment_method('edit') && !$order->get_transaction_id('edit') && $order->has_status( apply_filters( 'woocommerce_valid_order_statuses_for_payment_complete', array( 'on-hold', 'pending', 'failed', 'cancelled' ), $order ) )){
+                if ( woo_wallet()->wallet->get_wallet_balance( $order->get_customer_id('edit'), 'edit' ) > $order->get_total( 'edit' ) ) {
+                    $wallet_response = woo_wallet()->wallet->debit( $order->get_customer_id('edit'), $order->get_total( 'edit' ), apply_filters('woo_wallet_order_payment_description', __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), $order) );
+                    if ( $wallet_response) {
+                        $order->set_transaction_id($wallet_response);
+                        do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response);
+                        $order->save();
+                    } else{
+                        throw new Exception(__('Something went wrong with processing payment please try again.', 'woo-wallet'));
+                    }
+                } else{
+                    throw new Exception(__('Insufficient wallet balance', 'woo-wallet'));
+                }
+            }
         }
 
         /**
@@ -170,13 +191,8 @@ if(class_exists( 'WC_Payment_Gateway' )){
             if ( get_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true ) ) {
                 return;
             }
-            $wallet_response = woo_wallet()->wallet->debit( $order->get_customer_id(), $amount_to_charge, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number() );
-            if ( $wallet_response) {
-                $order->payment_complete();
-                update_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true );
-            } else {
-                $order->add_order_note( __( 'Insufficient funds in customer wallet', 'woo-wallet' ) );
-            }
+            $order->payment_complete();
+            update_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true );
         }
     }
 }
