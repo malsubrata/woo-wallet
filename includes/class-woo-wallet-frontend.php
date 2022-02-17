@@ -109,7 +109,7 @@ if (!class_exists('Woo_Wallet_Frontend')) {
         /**
          * Add a new item to a menu
          * @param string $menu
-         * @param array $args
+         * @param object $args
          * @return string
          */
         public function add_wallet_nav_menu($menu, $args) {
@@ -636,10 +636,11 @@ if (!class_exists('Woo_Wallet_Frontend')) {
             }
             $cashback_amount = apply_filters('woo_wallet_product_cashback_amount', $cashback_amount, get_the_ID());
             if($cashback_amount){
-                echo '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount, woo_wallet_wc_price_args()) . __(' Cashback', 'woo-wallet') . '</span>';
+                $cashback_html = '<span class="on-woo-wallet-cashback">' . wc_price($cashback_amount, woo_wallet_wc_price_args()) . __(' Cashback', 'woo-wallet') . '</span>';
             } else{
-                echo '<span class="on-woo-wallet-cashback" style="display:none;"></span>';
+                $cashback_html = '<span class="on-woo-wallet-cashback" style="display:none;"></span>';
             }
+            echo apply_filters('woo_wallet_product_cashback_html', $cashback_html, get_the_ID());
         }
 
         /**

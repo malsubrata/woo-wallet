@@ -124,7 +124,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
         public function wallet_cashback( $order_id ) {
             $order = wc_get_order( $order_id );
             /* General Cashback */
-            if ( apply_filters( 'process_woo_wallet_general_cashback', !get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true ), $order ) && woo_wallet()->cashback->calculate_cashback(false, $order->get_id()) ) {
+            if ( apply_filters( 'process_woo_wallet_general_cashback', !get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true ) && $order->get_customer_id(), $order ) && woo_wallet()->cashback->calculate_cashback(false, $order->get_id()) ) {
                 $transaction_id = $this->credit( $order->get_customer_id(), woo_wallet()->cashback->calculate_cashback(false, $order->get_id()), __( 'Wallet credit through cashback #', 'woo-wallet' ) . $order->get_order_number() );
                 if ( $transaction_id ) {
                     update_wallet_transaction_meta( $transaction_id, '_type', 'cashback', $order->get_customer_id() );
@@ -133,7 +133,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 }
             }
             /* Coupon Cashback */
-            if ( apply_filters( 'process_woo_wallet_coupon_cashback', !get_post_meta( $order->get_id(), '_coupon_cashback_transaction_id', true ), $order ) && get_post_meta( $order->get_id(), '_coupon_cashback_amount', true ) ) {
+            if ( apply_filters( 'process_woo_wallet_coupon_cashback', !get_post_meta( $order->get_id(), '_coupon_cashback_transaction_id', true ) && $order->get_customer_id(), $order ) && get_post_meta( $order->get_id(), '_coupon_cashback_amount', true ) ) {
                 $coupon_cashback_amount = apply_filters( 'woo_wallet_coupon_cashback_amount', get_post_meta( $order->get_id(), '_coupon_cashback_amount', true ), $order );
                 if ( $coupon_cashback_amount ) {
                     $transaction_id = $this->credit( $order->get_customer_id(), $coupon_cashback_amount, __( 'Wallet credit through cashback by applying coupon', 'woo-wallet' ) );

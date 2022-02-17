@@ -3,8 +3,8 @@ Contributors: wcbeginner, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.8
-Stable tag: 1.3.22
+Tested up to: 5.9
+Stable tag: 1.3.23
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -132,6 +132,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.23 - 2022-02-17 =
+* Fix - Compatibility with WooCommerce Subscription plugin.
+* Fix - Referral order amount
+* Fix - Cashback issue for guest user.
+* Add - Support for order created via rest API.
+
 = 1.3.22 - 2021-12-23 =
 * Fix - Plugin title translation issue.
  

@@ -293,6 +293,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
             'join_type'  => 'INNER',
             'limit'      => '',
             'include_deleted' => false,
+            'fields' => 'all', // Support all | all_with_meta
             'nocache'    => is_multisite() ? true : false
         );
         $args = apply_filters( 'woo_wallet_transactions_query_args', $args );
@@ -304,7 +305,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         // Joins
         $joins = array();
         if ( ! empty( $where_meta ) ) {
-            $joins["order_items"] = "{$join_type} JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
+            $joins["transaction_meta"] = "{$join_type} JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
         }
         $query['join'] = implode( ' ', $joins );
 
@@ -358,7 +359,14 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
         if ( $nocache || ! isset( $cached_results[$query_hash] ) ) {
             // Enable big selects for reports
             $wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' );
-            $cached_results[$query_hash] = $wpdb->get_results( $query );
+            $query_resualts = $wpdb->get_results( $query );
+            if('all_with_meta' === $fields){
+                foreach ($query_resualts as $key => $query_resualt){
+                    $meta_sql = $wpdb->prepare( "SELECT transaction_meta.meta_key, transaction_meta.meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta WHERE transaction_id = %d", $query_resualt->transaction_id );
+                    $query_resualts[$key]->meta = $wpdb->get_results( $meta_sql );
+                }
+            }
+            $cached_results[$query_hash] = $query_resualts;
             set_transient( "woo_wallet_transaction_resualts_{$user_id}", $cached_results, DAY_IN_SECONDS );
         }
 

@@ -39,6 +39,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
          */
         private function rest_api_includes() {
             include_once dirname( __FILE__) . '/api/class-wc-rest-woo-wallet-controller.php';
+            include_once dirname( __FILE__) . '/api/Controllers/Version3/class-wc-rest-wallet-controller.php';
         }
 
         /**
@@ -50,7 +51,9 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
             $this->rest_api_includes();
             $controllers = array(
                 // v2 controllers.
-                'WC_REST_Woo_Wallet_Controller'
+                'WC_REST_Woo_Wallet_Controller',
+                // v3 controllers.
+                'WC_REST_TeraWallet_V3_Controller'
             );
             foreach ( $controllers as $controller) {
                 $woo_wallet_api = new $controller();
