@@ -220,8 +220,7 @@ class Action_Referrals extends WooWalletAction {
 
     public function woo_wallet_referring_signup($user_id) {
         $referral_user = $this->get_referral_user();
-        $referral_signup_amount = $this->settings['referring_signups_amount'];
-        if ($referral_signup_amount && $this->get_referral_user()) {
+        if ($this->get_referral_user()) {
             $limit = $this->settings['referring_signups_limit_duration'];
             if ($limit) {
                 $woo_wallet_referral_signup_count = get_transient('woo_wallet_referral_signup_' . $referral_user->ID) ? get_transient('woo_wallet_referral_signup_' . $referral_user->ID) : 0;
@@ -270,11 +269,13 @@ class Action_Referrals extends WooWalletAction {
         $referral_signup_count = get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_signup', true) : 0;
         $woo_wallet_referring_earning = get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) ? get_user_meta($referral_user->ID, '_woo_wallet_referring_earning', true) : 0;
         $referral_signup_amount = apply_filters('woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID, $customer_id, $order_id);
-        $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
-        update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
-        update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
-        update_user_meta($customer_id, '_woo_wallet_referral_signup_credited', true);
-        do_action('woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this);
+        if($referral_signup_amount){
+            $transaction_id = woo_wallet()->wallet->credit($referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description']);
+            update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
+            update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
+            update_user_meta($customer_id, '_woo_wallet_referral_signup_credited', true);
+            do_action('woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this);
+        }
     }
 
 }
