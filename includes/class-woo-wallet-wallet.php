@@ -194,7 +194,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
         private function recode_transaction( $amount, $type, $details ) {
             global $wpdb;
             if(!$this->user_id){
-                return;
+                return false;
+            }
+            if(is_wallet_account_locked($this->user_id)){
+                return false;
             }
             if ( $amount < 0 ) {
                 $amount = 0;

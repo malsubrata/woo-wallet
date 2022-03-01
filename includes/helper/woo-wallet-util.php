@@ -668,6 +668,6 @@ if(!function_exists('is_wallet_account_locked')){
         if(empty($user_id)){
             $user_id = get_current_user_id();
         }
-        return get_user_meta($user_id, '_is_wallet_locked', true);
+        return apply_filters('woo_wallet_is_user_wallet_locked', get_user_meta($user_id, '_is_wallet_locked', true), $user_id);
     }
 }

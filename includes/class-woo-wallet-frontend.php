@@ -230,6 +230,9 @@ if (!class_exists('Woo_Wallet_Frontend')) {
          * @return array
          */
         public function woo_wallet_menu_items($items) {
+            if(is_wallet_account_locked()){
+                return $items;
+            }
             unset($items['edit-account']);
             unset($items['customer-logout']);
             $items['woo-wallet'] = apply_filters('woo_wallet_account_menu_title', __('My Wallet', 'woo-wallet'));
@@ -724,6 +727,8 @@ if (!class_exists('Woo_Wallet_Frontend')) {
                 echo '<div class="woocommerce">';
                 wc_get_template('myaccount/form-login.php');
                 echo '</div>';
+            } else if(is_wallet_account_locked()){
+                woo_wallet()->get_template('no-access.php');
             } else {
                 wp_enqueue_style('woo-wallet-payment-jquery-ui');
                 wp_enqueue_style('dashicons');
