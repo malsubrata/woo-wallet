@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the TeraWallet package.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.3.23\n"
+"Project-Id-Version: TeraWallet 1.3.24\n"
 "Report-Msgid-Bugs-To: https://github.com/malsubrata/woo-wallet/issues\n"
-"POT-Creation-Date: 2022-02-17 06:42:51+00:00\n"
+"POT-Creation-Date: 2022-03-18 03:18:55+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -321,18 +321,48 @@ msgstr ""
 msgid "No transactions found."
 msgstr ""
 
-#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:115
-#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:132
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:57
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:95
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:116
 msgid "User email address"
 msgstr ""
 
-#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:148
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:65
+#: includes/api/class-wc-rest-woo-wallet-controller.php:64
+msgid "Wallet transaction type."
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:69
+#: includes/api/class-wc-rest-woo-wallet-controller.php:68
+msgid "Wallet transaction amount."
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:74
+#: includes/api/class-wc-rest-woo-wallet-controller.php:73
+msgid "Wallet transaction details."
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:124
+msgid "Transactions per page"
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:131
+msgid "Current page"
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:147
 #: includes/api/class-wc-rest-woo-wallet-controller.php:151
 msgid "Sorry, you cannot list resources."
 msgstr ""
 
-#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:159
-#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:170
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:161
+#: includes/api/class-wc-rest-woo-wallet-controller.php:164
+msgid "Sorry, you are not allowed to create resources."
+msgstr ""
+
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:176
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:201
+#: includes/api/Controllers/Version3/class-wc-rest-wallet-controller.php:216
 msgid "Invalid User."
 msgstr ""
 
@@ -341,22 +371,6 @@ msgstr ""
 #: includes/api/class-woo-wallet-rest-controller.php:32
 #: includes/api/class-woo-wallet-rest-controller.php:56
 msgid "Unique identifier for the resource."
-msgstr ""
-
-#: includes/api/class-wc-rest-woo-wallet-controller.php:64
-msgid "Wallet transaction type."
-msgstr ""
-
-#: includes/api/class-wc-rest-woo-wallet-controller.php:68
-msgid "Wallet transaction amount."
-msgstr ""
-
-#: includes/api/class-wc-rest-woo-wallet-controller.php:73
-msgid "Wallet transaction details."
-msgstr ""
-
-#: includes/api/class-wc-rest-woo-wallet-controller.php:164
-msgid "Sorry, you are not allowed to create resources."
 msgstr ""
 
 #. Plugin Name of the plugin/theme
@@ -368,7 +382,7 @@ msgid "Wallet Management"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:98
-#: includes/class-woo-wallet-frontend.php:755 templates/mini-wallet.php:21
+#: includes/class-woo-wallet-frontend.php:760 templates/mini-wallet.php:21
 msgid "Current wallet balance"
 msgstr ""
 
@@ -586,7 +600,7 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:733
 #: includes/class-woo-wallet-admin.php:831
 #: includes/class-woo-wallet-frontend.php:148
-#: includes/class-woo-wallet-frontend.php:235
+#: includes/class-woo-wallet-frontend.php:238
 #: templates/wc-endpoint-wallet.php:44
 msgid "My Wallet"
 msgstr ""
@@ -732,83 +746,83 @@ msgstr ""
 msgid "yyyy-mm-dd"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:236
+#: includes/class-woo-wallet-frontend.php:239
 msgid "Account details"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:237
+#: includes/class-woo-wallet-frontend.php:240
 msgid "Logout"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:322
+#: includes/class-woo-wallet-frontend.php:325
 msgid "The minimum amount needed for wallet top up is %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:328
+#: includes/class-woo-wallet-frontend.php:331
 msgid "Wallet top up amount should be less than %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:334
+#: includes/class-woo-wallet-frontend.php:337
 msgid "Wallet top up amount should be between %s and %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:340
-#: includes/class-woo-wallet-frontend.php:412
+#: includes/class-woo-wallet-frontend.php:343
+#: includes/class-woo-wallet-frontend.php:415
 msgid "Cheatin&#8217; huh?"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:362
+#: includes/class-woo-wallet-frontend.php:365
 msgid "Wallet funds received from %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:363
+#: includes/class-woo-wallet-frontend.php:366
 msgid "Wallet funds transfer to %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:382
+#: includes/class-woo-wallet-frontend.php:385
 msgid "Minimum transfer amount is %s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:389
+#: includes/class-woo-wallet-frontend.php:392
 msgid "Invalid user"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:395
+#: includes/class-woo-wallet-frontend.php:398
 msgid "Entered amount is greater than current wallet amount."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:406
+#: includes/class-woo-wallet-frontend.php:409
 msgid "Amount transferred successfully!"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:474
+#: includes/class-woo-wallet-frontend.php:477
 msgid ""
 "You can not add another product while your cart contains with wallet "
 "rechargeable product."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:507
+#: includes/class-woo-wallet-frontend.php:510
 msgid "Upon placing this order a cashback of %s will be credited to your wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:509
+#: includes/class-woo-wallet-frontend.php:512
 msgid "Please <a href=\"%s\">log in</a> to avail %s cashback from this order."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:539
+#: includes/class-woo-wallet-frontend.php:542
 msgid "Via wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:614
-#: includes/class-woo-wallet-frontend.php:639
+#: includes/class-woo-wallet-frontend.php:617
+#: includes/class-woo-wallet-frontend.php:642
 msgid " Cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:657
+#: includes/class-woo-wallet-frontend.php:660
 msgid "Coupon code applied successfully as cashback."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:672
+#: includes/class-woo-wallet-frontend.php:675
 msgid "Cashback: %s"
 msgstr ""
 

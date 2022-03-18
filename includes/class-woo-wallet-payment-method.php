@@ -147,7 +147,7 @@ if(class_exists( 'WC_Payment_Gateway' )){
         public function woocommerce_pre_payment_complete($order_id) {
             $order = wc_get_order($order_id);
             if('wallet' === $order->get_payment_method('edit') && !$order->get_transaction_id('edit') && $order->has_status( apply_filters( 'woocommerce_valid_order_statuses_for_payment_complete', array( 'on-hold', 'pending', 'failed', 'cancelled' ), $order ) )){
-                if ( woo_wallet()->wallet->get_wallet_balance( $order->get_customer_id('edit'), 'edit' ) > $order->get_total( 'edit' ) ) {
+                if ( woo_wallet()->wallet->get_wallet_balance( $order->get_customer_id('edit'), 'edit' ) >= $order->get_total( 'edit' ) ) {
                     $wallet_response = woo_wallet()->wallet->debit( $order->get_customer_id('edit'), $order->get_total( 'edit' ), apply_filters('woo_wallet_order_payment_description', __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), $order) );
                     if ( $wallet_response) {
                         $order->set_transaction_id($wallet_response);

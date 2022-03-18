@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.3.24 - 2022-03-18 =
+* Fix - Wallet payment process.
+* Fix - Referral signup action.
+* Tweak - Wallet pages will be removed from account page if user is bolocked.
+* Add - REST API V3 [API Docs](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
+
 = 1.3.23 - 2022-02-17 =
 * Fix - Compatibility with WooCommerce Subscription plugin.
 * Fix - Referral order amount

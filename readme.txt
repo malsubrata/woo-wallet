@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 5.9
-Stable tag: 1.3.23
+Stable tag: 1.3.24
 Donate link: https://www.paypal.me/SubrataMal941
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -113,7 +113,7 @@ Bugs can be reported either in our support forum or preferably on the [GitHub re
 
 = Where can I find the REST API documentation? =
 
-You can find the documentation of our [Wallet REST API Docs](https://github.com/malsubrata/woo-wallet/wiki/WooCommerce-Wallet-REST-API).
+You can find the documentation of our [Wallet REST API Docs](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
 
 = This plugin is awesome! Can I contribute? =
 
@@ -132,6 +132,12 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.3.24 - 2022-03-18 =
+* Fix - Wallet payment process.
+* Fix - Referral signup action.
+* Tweak - Wallet pages will be removed from account page if user is bolocked.
+* Add - REST API V3 [API Docs](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
+
 = 1.3.23 - 2022-02-17 =
 * Fix - Compatibility with WooCommerce Subscription plugin.
 * Fix - Referral order amount
