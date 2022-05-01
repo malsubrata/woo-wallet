@@ -216,13 +216,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
                 update_user_meta($this->user_id, $this->meta_key, $balance);
                 clear_woo_wallet_cache( $this->user_id );
                 do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type);
-                $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
-                if( !is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ){
-                    $email_admin->trigger( $transaction_id );
+                if(isset(WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'])) {
+                    $email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
+                    if( !is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ){
+                        $email_admin->trigger( $transaction_id );
+                    }
                 }
-                $low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
-                if( !is_null( $low_balance_email ) ){
-                    $low_balance_email->trigger( $this->user_id, $type );
+                if(isset(WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'])) {
+                    $low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
+                    if( !is_null( $low_balance_email ) ){
+                        $low_balance_email->trigger( $this->user_id, $type );
+                    }
                 }
                 return $transaction_id;
             }
