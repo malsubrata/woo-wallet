@@ -67,7 +67,7 @@ if (!class_exists('Woo_Wallet_Dokan')) {
                     'name' => 'auto_approve_wallet_withdraw',
                     'label' => __('Wallet Withdraw', 'woo-wallet'),
                     'desc' => __('Auto approve wallet withdraw on request', 'woo-wallet'),
-                    'type' => 'checkbox',
+                    'type' => 'switcher',
                     'default' => 'off',
                 ];
             }
@@ -81,7 +81,8 @@ if (!class_exists('Woo_Wallet_Dokan')) {
          */
         public function load_withdraw_method($methods) {
             $methods[self::$method_id] = array(
-                'title' => __('Wallet', 'woo-wallet')
+                'title' => __('Wallet', 'woo-wallet'),
+                'callback' => '__return_false'
             );
 
             return $methods;
