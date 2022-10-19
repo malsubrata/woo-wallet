@@ -47,7 +47,12 @@ if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ){
 if ( ! class_exists( 'WooWallet' ) ) {
     include_once dirname( __FILE__) . '/includes/class-woo-wallet.php';
 }
-
+/**
+ * Returns the main instance of WooWallet.
+ *
+ * @since  1.1.0
+ * @return WooWallet
+ */
 function woo_wallet(){
     return WooWallet::instance();
 }

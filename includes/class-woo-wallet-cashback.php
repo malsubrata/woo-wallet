@@ -190,6 +190,9 @@ if (!class_exists('Woo_Wallet_Cashback')) {
         public static function get_product_cashback_amount($product, $qty = 1, $product_price = 0) {
             self::init_cashback_settings();
             $cashback_amount = 0;
+            if(!$product){
+                return $cashback_amount;
+            }
             $product_wise_cashback_type = get_post_meta($product->get_id(), '_cashback_type', true);
             $product_wise_cashback_amount = get_post_meta($product->get_id(), '_cashback_amount', true) ? floatval(get_post_meta($product->get_id(), '_cashback_amount', true)) : 0;
             if(!$product_price){

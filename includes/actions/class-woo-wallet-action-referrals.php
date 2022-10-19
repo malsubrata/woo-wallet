@@ -274,7 +274,7 @@ class Action_Referrals extends WooWalletAction {
             update_user_meta($referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1);
             update_user_meta($referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount);
             update_user_meta($customer_id, '_woo_wallet_referral_signup_credited', true);
-            do_action('woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this);
+            do_action('woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this, $order_id);
         }
     }
 

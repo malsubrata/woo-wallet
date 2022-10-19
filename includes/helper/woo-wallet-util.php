@@ -66,7 +66,7 @@ if( !function_exists( 'get_woowallet_coupon_cashback_amount' ) ){
 if(!function_exists('get_woo_wallet_cart_fee_total')){
     /**
      * Get total fee amount from cart.
-     * @return number
+     * @return float
      */
     function get_woo_wallet_cart_fee_total(){
         $fee_amount = 0;
