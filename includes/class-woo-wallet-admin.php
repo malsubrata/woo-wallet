@@ -242,8 +242,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                     <?php
                     $wallet_actions->actions[$_GET['action']]->init_settings();
                     $wallet_actions->actions[$_GET['action']]->admin_options();
-                    submit_button();
                     ?>
+                    <p class="submit">
+                        <button name="save" class="button button-primary" type="submit" value="<?php esc_attr_e( 'Save changes', 'woo-wallet' ); ?>"><?php esc_html_e( 'Save changes', 'woo-wallet' ); ?></button>
+                        <?php wp_nonce_field( 'wallet-action-settings' ); ?>
+                    </p>
                 </form>
             </div>
             <?php
@@ -360,7 +363,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
                     apply_filters('terawallet_admin_js_params', array(
                                 'ajax_url' => admin_url('admin-ajax.php'),
                                 'export_url' => add_query_arg(array('page' => 'terawallet-exporter'), admin_url('admin.php')), 
-                                'export_title' => __('Export', 'woo-wallet')
+                                'export_title' => __('Export', 'woo-wallet'),
+                                'lock_unlock_nonce' => wp_create_nonce('lock-unlock-nonce')
                             )
                         )
                     );

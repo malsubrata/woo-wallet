@@ -10,7 +10,8 @@ jQuery(function ($) {
         var data = {
             action : 'lock_unlock_terawallet',
             user_id: $(this).data('user_id'),
-            type: $(this).data('type')
+            type: $(this).data('type'),
+            security : terawallet_admin_params.lock_unlock_nonce
         };
         $.post(terawallet_admin_params.ajax_url, data, function(response){
             if('lock' === response.data.type){

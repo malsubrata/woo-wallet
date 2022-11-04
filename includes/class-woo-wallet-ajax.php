@@ -48,6 +48,7 @@ if (!class_exists('Woo_Wallet_Ajax')) {
         }
         
         public function lock_unlock_terawallet() {
+            check_ajax_referer('lock-unlock-nonce', 'security');
             $user_id = $_POST['user_id'];
             $type = $_POST['type'];
             if('lock' === $type){
@@ -259,7 +260,9 @@ if (!class_exists('Woo_Wallet_Ajax')) {
          * Mark wallet rated.
          */
         public function woocommerce_wallet_rated() {
-            update_option('woocommerce_wallet_admin_footer_text_rated', true);
+            if ( current_user_can('manage_options') ) {
+                update_option('woocommerce_wallet_admin_footer_text_rated', true);
+            }
             die;
         }
 

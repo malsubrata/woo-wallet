@@ -132,6 +132,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.0 - 2022-11-4 =
+* Fix - Plugin CSRF issue.
+* Add - Compatibility with WP 6.1
+
 = 1.3.24 - 2022-03-18 =
 * Fix - Wallet payment process.
 * Fix - Referral signup action.

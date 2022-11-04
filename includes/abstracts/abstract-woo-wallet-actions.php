@@ -64,8 +64,12 @@ abstract class WooWalletAction extends WC_Settings_API {
 
     public function admin_options() {
         if ( $this->get_post_data() ) {
-            parent::process_admin_options();
-            add_settings_error( $this->id, '200', __( 'Your settings have been saved.', 'woo-wallet' ), 'updated' );
+            if(wp_verify_nonce(wp_unslash($_POST['_wpnonce']), 'wallet-action-settings')){
+                parent::process_admin_options();
+                add_settings_error( $this->id, '200', __( 'Your settings have been saved.', 'woo-wallet' ), 'updated' );
+            } else{
+                add_settings_error( $this->id, '200', __( 'Cheatin&#8217; huh?', 'woo-wallet' ), 'error' );
+            }
         }
         echo '<h2>' . esc_html( $this->get_action_title() );
         wc_back_link( __( 'Return to actions', 'woo-wallet' ), admin_url( 'admin.php?page=woo-wallet-actions' ) );

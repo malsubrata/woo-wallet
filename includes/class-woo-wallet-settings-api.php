@@ -573,9 +573,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ):
                             do_action( 'woo_wallet_form_bottom_' . $form['id'], $form);
                             if ( isset( $this->settings_fields[$form['id']] ) ):
                                 ?>
-                                <div style="padding-left: 10px">
-                                    <?php submit_button(); ?>
-                                </div>
+                                <?php submit_button(); ?>
                             <?php endif; ?>
                         </form>
                     </div>

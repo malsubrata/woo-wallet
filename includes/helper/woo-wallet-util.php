@@ -85,7 +85,7 @@ if(!function_exists('get_woo_wallet_cart_fee_total')){
 if ( ! function_exists( 'get_woowallet_cart_total' ) ) {
     /**
      * Get WooCommerce cart total.
-     * @return number
+     * @return float
      */
     function get_woowallet_cart_total() {
         $cart_total = 0;
