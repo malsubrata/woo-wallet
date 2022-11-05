@@ -1,5 +1,4 @@
 <?php
-
 /**
  * WooCommerce wallet Uninstall
  *
@@ -7,14 +6,17 @@
  *
  * @author      Subrata Mal
  * @version 1.0.1
+ *
+ * @package WooWallet
  */
+
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-    exit;
+	exit;
 }
 
 global $wpdb, $wp_version;
 
-// Remove rechargable product 
+// Remove rechargable product.
 wp_delete_post( get_option( '_woo_wallet_recharge_product' ), true );
 delete_option( '_woo_wallet_recharge_product' );
 
@@ -24,14 +26,14 @@ delete_option( '_woo_wallet_recharge_product' );
  * and to ensure only the site owner can perform this action.
  */
 if ( defined( 'WALLET_REMOVE_ALL_DATA' ) && true === WALLET_REMOVE_ALL_DATA ) {
-    // Tables.
-    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transactions" );
-    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transaction_meta" );
+	// Tables.
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transactions" );
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transaction_meta" );
 
-    // Delete options.
-    $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_wallet\_%';" );
-    $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_woo_wallet\_%';" );
+	// Delete options.
+	$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_wallet\_%';" );
+	$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_woo_wallet\_%';" );
 
-    // Clear any cached data that has been removed
-    wp_cache_flush();
+	// Clear any cached data that has been removed.
+	wp_cache_flush();
 }

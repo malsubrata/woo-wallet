@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The Template for mini wallet
  *
@@ -11,17 +10,18 @@
  * happen. When this occurs the version of the template file will be bumped and
  * the readme will list any important changes.
  *
- * @author 	Subrata Mal
+ * @author  Subrata Mal
  * @version     1.0.8
+ * @package WooWallet
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly.
+	exit; // Exit if accessed directly.
 }
-
-$title      = __( 'Current wallet balance', 'woo-wallet' );
-$menu_item  = '<li class="menu-item"><a class="woo-wallet-menu-contents menu-link" href="' . esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ) . '" title="' . $title . '">';
-$menu_item .= '<span dir="rtl" class="woo-wallet-icon-wallet"></span>&nbsp;';
-$menu_item .= woo_wallet()->wallet->get_wallet_balance( get_current_user_id() );
-$menu_item .= '</a></li>';
-
-echo $menu_item;
+?>
+<li class="menu-item">
+	<a href="woo-wallet-menu-contents menu-link" title="<?php echo esc_html_e( 'Current wallet balance', 'woo-wallet' ); ?>" class="<?php echo esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ); ?>">
+		<span dir="rtl" class="woo-wallet-icon-wallet"></span>&nbsp;
+		<?php echo woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	</a>
+</li>

@@ -10,14 +10,16 @@
  * happen. When this occurs the version of the template file will be bumped and
  * the readme will list any important changes.
  *
- * @author 	Subrata Mal
+ * @author  Subrata Mal
  * @version     1.1.8
+ * @package WooWallet
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly.
+	exit; // Exit if accessed directly.
 }
 
 ?>
 <p>
-    <?php _e('Your wallet account is locked please contact site owner for more details.', 'woo-wallet'); ?>
+	<?php esc_html_e( 'Your wallet account is locked please contact site owner for more details.', 'woo-wallet' ); ?>
 </p>

@@ -1,18 +1,17 @@
 === TeraWallet - For WooCommerce ===
-Contributors: wcbeginner, subratamal, moumitaadak
+Contributors: standalonetech, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 5.6
 Requires at least: 4.4
-Tested up to: 5.9
-Stable tag: 1.3.24
-Donate link: https://www.paypal.me/SubrataMal941
+Tested up to: 6.1
+Stable tag: 1.4.0
+Donate link: https://paypal.me/standalonetech
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
 
 == Description ==
-> We are pleased to inform you that we have changed the plugin name, WooWallet is now TeraWallet.
 
 TeraWallet allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
 
@@ -46,19 +45,12 @@ With this extension, the customers won't have to fill in the payment details eve
 - Supports WC Marketplace.
 - Supports Dokan Multivendor Marketplace.
 
-> Take a step forward and try our [demo](https://demo.woowallet.in/my-account/).
+> Take a step forward and try our [demo](https://standalonetech.com/).
 
 = Workflow of TeraWallet =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
 Now for enable cashback rules, navigate to WooWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
 On the front-end, the customers can log in to the store and go to wallet page from My Account. Enter the amount to add and then complete the checkout process just like any other product purchase.
-
-= Premium extensions =
-
-- [Wallet Coupons](https://woowallet.in/product/woo-wallet-coupons/)
-- [Wallet Withdrawal](https://woowallet.in/product/woo-wallet-withdrawal/)
-- [Wallet Importer](https://woowallet.in/product/woo-wallet-importer/)
-- [Wallet AffiliateWP](https://woowallet.in/product/woowallet-affiliatewp/)
 
 = Translator Contributors =
 - [#fa_IR](https://translate.wordpress.org/locale/fa/default/wp-plugins/woo-wallet) - [@rahimvaziri](https://wordpress.org/support/users/rahimvaziri/)
@@ -105,7 +97,7 @@ Yes, WooCommerce Wallet plugin is fully compatible with Wordpress multisite.
 
 = Where can I get support or talk to other users? =
 
-If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at support@woowallet.in.
+If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at support@standalonetech.com.
 
 = Where can I report bugs or contribute to the project? =
 
