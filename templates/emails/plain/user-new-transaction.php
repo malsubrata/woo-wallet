@@ -23,10 +23,10 @@ $remaining = woo_wallet()->wallet->get_wallet_balance( $user->ID, 'edit' );
 echo '= ' . esc_html( $email_heading ) . " =\n\n";
 echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 if ( 'credit' === $type ) {
-	echo esc_html__( 'Thank you for using your wallet.', 'woo-wallet' ) . " {$currency} {$amount} " . esc_html__( 'has been credited to your wallet.', 'woo-wallet' ) . ' ' . esc_html__( 'Current wallet balance is', 'woo-wallet' ) . " {$currency} {$remaining}";
+	echo esc_html__( 'Thank you for using your wallet.', 'woo-wallet' ) . " {$currency} {$amount} " . esc_html__( 'has been credited to your wallet.', 'woo-wallet' ) . ' ' . esc_html__( 'Current wallet balance is', 'woo-wallet' ) . " {$currency} {$remaining}"; // phpcs:ignore
 }
 if ( 'debit' === $type ) {
-	echo esc_html__( 'Thank you for using your wallet.', 'woo-wallet' ) . " {$currency} {$amount} " . esc_html__( 'has been debited from your wallet.', 'woo-wallet' ) . ' ' . esc_html__( 'Current wallet balance is', 'woo-wallet' ) . " {$currency} {$remaining}";
+	echo esc_html__( 'Thank you for using your wallet.', 'woo-wallet' ) . " {$currency} {$amount} " . esc_html__( 'has been debited from your wallet.', 'woo-wallet' ) . ' ' . esc_html__( 'Current wallet balance is', 'woo-wallet' ) . " {$currency} {$remaining}"; // phpcs:ignore
 }
 echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 echo apply_filters( 'woocommerce_email_footer_text', get_option( 'woocommerce_email_footer_text' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

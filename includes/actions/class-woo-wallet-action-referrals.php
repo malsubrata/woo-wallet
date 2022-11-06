@@ -185,7 +185,7 @@ class Action_Referrals extends WooWalletAction {
 	 */
 	public function referral_content() {
 		global $wp;
-		if ( apply_filters( 'woo_wallet_is_enable_referrals', true ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'referrals' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'referrals' === $_GET['wallet_action'] ) ) ) {
+		if ( apply_filters( 'woo_wallet_is_enable_referrals', true ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'referrals' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'referrals' === $_GET['wallet_action'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			woo_wallet()->get_template(
 				'woo-wallet-referrals.php',
 				array(
@@ -201,9 +201,9 @@ class Action_Referrals extends WooWalletAction {
 	 * @return void
 	 */
 	public function init_referrals() {
-		if ( isset( $_GET[ $this->referral_handel ] ) && ! empty( $_GET[ $this->referral_handel ] ) ) {
+		if ( isset( $_GET[ $this->referral_handel ] ) && ! empty( $_GET[ $this->referral_handel ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			if ( ! headers_sent() && did_action( 'wp_loaded' ) ) {
-				wc_setcookie( 'woo_wallet_referral', wp_unslash( $_GET[ $this->referral_handel ] ), time() + DAY_IN_SECONDS );
+				wc_setcookie( 'woo_wallet_referral', wp_unslash( $_GET[ $this->referral_handel ] ), time() + DAY_IN_SECONDS ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 			}
 		}
 	}

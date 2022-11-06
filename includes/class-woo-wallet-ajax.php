@@ -173,7 +173,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function recalculate_order_cashback_after_calculate_totals( $and_taxes, $order ) {
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
-			$transaction_id = get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true );
+			$transaction_id  = get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true );
 			if ( $transaction_id ) {
 				update_wallet_transaction( $transaction_id, $order->get_customer_id(), array( 'amount' => $cashback_amount ), array( '%f' ) );
 			}
@@ -314,8 +314,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					);
 				}
 			} else {
-				if ( isset( $_REQUEST['site_id'] ) ) {
-					$id = absint( $_REQUEST['site_id'] );
+				if ( isset( $_REQUEST['site_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					$id = absint( $_REQUEST['site_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				} else {
 					$id = get_current_blog_id();
 				}

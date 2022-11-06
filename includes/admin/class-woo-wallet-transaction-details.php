@@ -121,7 +121,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 				'limit'   => $lower . ',' . $uper,
 			)
 		);
-		$this->total_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d", $user_id ) );
+		$this->total_count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		if ( ! empty( $transactions ) && is_array( $transactions ) ) {
 			foreach ( $transactions as $key => $transaction ) {
 				$data[] = array(

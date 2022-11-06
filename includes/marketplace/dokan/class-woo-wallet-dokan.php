@@ -135,7 +135,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 			if ( $withdraw->get_method() != self::$method_id ) {
 				return;
 			}
-			$wallet_transaction = $wpdb->get_row( $wpdb->prepare( "SELECT transactions.transaction_id FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions INNER JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id WHERE transaction_meta.meta_key = %s AND transaction_meta.meta_value = %d", '_dokan_withdrawal_id', $withdraw->get_id() ) );
+			$wallet_transaction = $wpdb->get_row( $wpdb->prepare( "SELECT transactions.transaction_id FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions INNER JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id WHERE transaction_meta.meta_key = %s AND transaction_meta.meta_value = %d", '_dokan_withdrawal_id', $withdraw->get_id() ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			if ( 1 === $withdraw->get_status() ) {
 				if ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {
 					update_wallet_transaction( $wallet_transaction->transaction_id, $withdraw->get_user_id(), array( 'deleted' => 0 ), array( '%d' ) );
@@ -185,8 +185,8 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 				if ( isset( $post->ID ) && $post->ID && 'product' === $post->post_type ) {
 					$post_id = $post->ID;
 				}
-				if ( isset( $_GET['product_id'] ) ) {
-					$post_id = intval( $_GET['product_id'] );
+				if ( isset( $_GET['product_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					$post_id = intval( $_GET['product_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				}
 			}
 			// END.

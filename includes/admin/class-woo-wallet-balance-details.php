@@ -57,7 +57,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * Prepare the items for the table to process
 	 */
 	public function prepare_items() {
-		$usersearch     = isset( $_REQUEST['s'] ) ? trim( wp_unslash( $_REQUEST['s'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$usersearch     = isset( $_REQUEST['s'] ) ? trim( wp_unslash( $_REQUEST['s'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$users_per_page = $this->get_items_per_page( 'users_per_page', 15 );
 		$paged          = $this->get_pagenum();
 		$columns        = $this->get_columns();
@@ -74,16 +74,16 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			$args['search'] = '*' . $args['search'] . '*';
 		}
 
-		if ( isset( $_REQUEST['role'] ) ) {
-			$args['role'] = wp_unslash( $_REQUEST['role'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( isset( $_REQUEST['role'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$args['role'] = wp_unslash( $_REQUEST['role'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		}
 
-		if ( isset( $_REQUEST['orderby'] ) ) {
-			$args['orderby'] = wp_unslash( $_REQUEST['orderby'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( isset( $_REQUEST['orderby'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$args['orderby'] = wp_unslash( $_REQUEST['orderby'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		}
 
-		if ( isset( $_REQUEST['order'] ) ) {
-			$args['order'] = wp_unslash( $_REQUEST['order'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( isset( $_REQUEST['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$args['order'] = wp_unslash( $_REQUEST['order'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		}
 		if ( isset( $args['orderby'] ) ) {
 			if ( 'balance' === $args['orderby'] ) {
@@ -151,7 +151,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$avail_roles = & $users_of_blog['avail_roles'];
 		unset( $users_of_blog );
 
-		$current_link            = ( ! empty( $_REQUEST['role'] ) ? wp_unslash( $_REQUEST['role'] ) : 'all' ); //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$current_link            = ( ! empty( $_REQUEST['role'] ) ? wp_unslash( $_REQUEST['role'] ) : 'all' ); //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$current_link_attributes = ( 'all' === $current_link ) ? ' class="current" aria-current="page"' : '';
 
 		$role_links = array();

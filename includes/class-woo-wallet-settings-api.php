@@ -186,7 +186,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -200,7 +200,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			$html = sprintf( '<input type="%1$s" id="%2$s-%3$s" name="%2$s[%3$s]" value="%4$s"/>', $type, $args['section'], $args['id'], $value );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -229,7 +229,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -248,7 +248,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= sprintf( '%1$s</label>', $args['desc'] );
 			$html .= '</fieldset>';
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -271,7 +271,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= $this->get_field_description( $args );
 			$html .= '</fieldset>';
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -293,7 +293,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= $this->get_field_description( $args );
 			$html .= '</fieldset>';
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -324,7 +324,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= sprintf( '</select>' );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -341,7 +341,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<textarea rows="5" cols="55" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]"%4$s>%5$s</textarea>', $size, $args['section'], $args['id'], $placeholder, $value );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -350,7 +350,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_html( $args ) {
-			echo $this->get_field_description( $args ); // WPCS: XSS ok.
+			echo $this->get_field_description( $args ); // phpcs:ignore
 		}
 
 		/**
@@ -379,7 +379,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			echo '</div>';
 
-			echo $this->get_field_description( $args ); // WPCS: XSS ok.
+			echo $this->get_field_description( $args ); // phpcs:ignore
 		}
 
 		/**
@@ -398,7 +398,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= '<input type="button" class="button wpsa-browse" value="' . $label . '" />';
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -424,7 +424,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= '<input type="button" class="button wpsa-attachment" data-uploader_title="' . $uploader_title . '" data-uploader_button_text="' . $uploader_button_text . '" value="' . $label . '" />';
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -440,7 +440,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="password" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -456,7 +456,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="text" class="%1$s-text wp-color-picker-field" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s" data-default-color="%5$s" />', $size, $args['section'], $args['id'], $value, $args['std'] );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
@@ -552,7 +552,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			$html .= '</h2>';
 
-			echo $html; // WPCS: XSS ok.
+			echo $html; // phpcs:ignore
 		}
 
 		/**
