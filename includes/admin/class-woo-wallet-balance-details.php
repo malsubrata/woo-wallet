@@ -276,46 +276,47 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * Process Bulk actions.
 	 */
 	private function process_bulk_actions() {
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		if ( 'credit' === $this->current_action() && isset( $_POST['users'] ) ) {
-			$credit_ids  = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
-			$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
-			$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
-			if ( $amount && $credit_ids ) {
-				foreach ( $credit_ids as $id ) {
-					woo_wallet()->wallet->credit( $id, $amount, $description );
-				}
-			}
-			header( 'Refresh: 0' );
-		}
-
-		if ( 'debit' === $this->current_action() && isset( $_POST['users'] ) ) {
-			$debit_ids   = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
-			$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
-			$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
-			if ( $amount && $debit_ids ) {
-				foreach ( $debit_ids as $id ) {
-					woo_wallet()->wallet->debit( $id, $amount, $description );
-				}
-			}
-			header( 'Refresh: 0' );
-		}
-
-		if ( 'delete_log' === $this->current_action() && isset( $_POST['users'] ) ) {
-			$delete_ids = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
-			if ( $delete_ids ) {
-				foreach ( $delete_ids as $id ) {
-					$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
-					delete_user_wallet_transactions( $id, true );
-					if ( $current_balance ) {
-						woo_wallet()->wallet->credit( $id, $current_balance, __( 'Balance after deleting transaction logs', 'woo-wallet' ) );
+		if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bulk-transactions' ) ) {
+			if ( 'credit' === $this->current_action() && isset( $_POST['users'] ) ) {
+				$credit_ids  = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
+				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+				if ( $amount && $credit_ids ) {
+					foreach ( $credit_ids as $id ) {
+						woo_wallet()->wallet->credit( $id, $amount, $description );
 					}
 				}
+				header( 'Refresh: 0' );
 			}
-			header( 'Refresh: 0' );
+
+			if ( 'debit' === $this->current_action() && isset( $_POST['users'] ) ) {
+				$debit_ids   = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
+				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+				if ( $amount && $debit_ids ) {
+					foreach ( $debit_ids as $id ) {
+						woo_wallet()->wallet->debit( $id, $amount, $description );
+					}
+				}
+				header( 'Refresh: 0' );
+			}
+
+			if ( 'delete_log' === $this->current_action() && isset( $_POST['users'] ) ) {
+				$delete_ids = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+				if ( $delete_ids ) {
+					foreach ( $delete_ids as $id ) {
+						$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
+						delete_user_wallet_transactions( $id, true );
+						if ( $current_balance ) {
+							woo_wallet()->wallet->credit( $id, $current_balance, __( 'Balance after deleting transaction logs', 'woo-wallet' ) );
+						}
+					}
+				}
+				header( 'Refresh: 0' );
+			}
+			// phpcs:enable
+			do_action( 'woo_wallet_balance_details_process_bulk_actions', $this->current_action() );
 		}
-		// phpcs:enable
-		do_action( 'woo_wallet_balance_details_process_bulk_actions', $this->current_action() );
 	}
 	/**
 	 * Get bulk options.
