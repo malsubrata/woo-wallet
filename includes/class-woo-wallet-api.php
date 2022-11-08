@@ -4,14 +4,20 @@
  *
  * @author Subrata Mal <m.subrata1991@gmail.com>
  * @since 1.2.5
+ * @package WooWallet
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 if ( ! class_exists( 'WooWallet_API' ) ) {
-
+	/**
+	 * Wallet API class
+	 */
 	class WooWallet_API {
-
+		/**
+		 * Class constructor.
+		 */
 		public function __construct() {
 			// WP REST API.
 			$this->rest_api_init();

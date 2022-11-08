@@ -1,14 +1,29 @@
 <?php
+/**
+ * Wallet plugin dependency file
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ) {
-
+	/**
+	 * Wallet dependency class.
+	 */
 	class Woo_Wallet_Dependencies {
-
+		/**
+		 * Active plugins veriable
+		 *
+		 * @var array
+		 */
 		private static $active_plugins;
-
+		/**
+		 * Class constructor.
+		 *
+		 * @return void
+		 */
 		public static function init() {
 			self::$active_plugins = (array) get_option( 'active_plugins', array() );
 			if ( is_multisite() ) {
@@ -25,7 +40,7 @@ if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ) {
 			if ( ! self::$active_plugins ) {
 				self::init();
 			}
-			return in_array( 'woocommerce/woocommerce.php', self::$active_plugins ) || array_key_exists( 'woocommerce/woocommerce.php', self::$active_plugins );
+			return in_array( 'woocommerce/woocommerce.php', self::$active_plugins, true ) || array_key_exists( 'woocommerce/woocommerce.php', self::$active_plugins );
 		}
 
 		/**
@@ -46,7 +61,7 @@ if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ) {
 			if ( ! self::$active_plugins ) {
 				self::init();
 			}
-			return in_array( 'woo-wallet/woo-wallet.php', self::$active_plugins ) || array_key_exists( 'woo-wallet/woo-wallet.php', self::$active_plugins );
+			return in_array( 'woo-wallet/woo-wallet.php', self::$active_plugins, true ) || array_key_exists( 'woo-wallet/woo-wallet.php', self::$active_plugins );
 		}
 
 		/**

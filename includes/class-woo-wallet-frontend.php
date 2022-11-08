@@ -843,12 +843,13 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @param array $atts atts.
 		 */
 		public static function mini_wallet_shortcode_output( $atts ) {
-			$title        = __( 'Current wallet balance', 'woo-wallet' );
-			$mini_wallet  = '<a class="woo-wallet-menu-contents" href="' . esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ) . '" title="' . $title . '">';
-			$mini_wallet .= '<span dir="rtl" class="woo-wallet-icon-wallet"></span> ';
-			$mini_wallet .= woo_wallet()->wallet->get_wallet_balance( get_current_user_id() );
-			$mini_wallet .= '</a>';
-			echo $mini_wallet; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			?>
+			<a href="<?php echo esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ); ?>" class="woo-wallet-menu-contents" title="<?php esc_html_e( 'Current wallet balance', 'woo-wallet' ); ?>">
+				<span dir="rtl" class="woo-wallet-icon-wallet"></span>
+				&nbsp;
+				<?php echo woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</a>
+			<?php
 		}
 
 		/**

@@ -253,7 +253,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$screen               = get_current_screen();
 			$wallet_actions       = new WOO_Wallet_Actions();
 			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			if ( in_array( $screen->id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ) ) && isset( $_GET['action'] ) && isset( $wallet_actions->actions[ $_GET['action'] ] ) ) {
+			if ( in_array( $screen->id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) && isset( $_GET['action'] ) && isset( $wallet_actions->actions[ $_GET['action'] ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 				$this->display_action_settings();
 			} else {
 				$this->display_actions_table();
@@ -348,7 +348,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			wp_register_script( 'woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/js/admin/admin-product' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_register_script( 'woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/js/admin/admin-order' . $suffix . '.js', array( 'jquery', 'wc-admin-order-meta-boxes' ), WOO_WALLET_PLUGIN_VERSION, true );
 
-			if ( in_array( $screen_id, array( 'product', 'edit-product' ) ) ) {
+			if ( in_array( $screen_id, array( 'product', 'edit-product' ), true ) ) {
 				wp_enqueue_script( 'woo_wallet_admin_product' );
 				wp_localize_script(
 					'woo_wallet_admin_product',
@@ -362,14 +362,14 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					)
 				);
 			}
-			if ( in_array( $screen_id, array( 'shop_order' ) ) ) {
+			if ( in_array( $screen_id, array( 'shop_order' ), true ) ) {
 				$order = wc_get_order( $post->ID );
 				wp_enqueue_script( 'woo_wallet_admin_order' );
 				$order_localizer = array(
 					'order_id'       => $post->ID,
 					'payment_method' => $order->get_payment_method( 'edit' ),
 					'default_price'  => wc_price( 0 ),
-					'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && $order->get_payment_method( 'edit' ) != 'wallet' ) && $order->get_customer_id( 'edit' ), $order ),
+					'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ), $order ),
 					'i18n'           => array(
 						'refund'     => __( 'Refund', 'woo-wallet' ),
 						'via_wallet' => __( 'to customer wallet', 'woo-wallet' ),
@@ -415,7 +415,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				)
 			);
 
-			if ( in_array( $screen_id, array( 'admin_page_terawallet-exporter' ) ) ) {
+			if ( in_array( $screen_id, array( 'admin_page_terawallet-exporter' ), true ) ) {
 				wp_enqueue_style( 'select2' );
 				wp_enqueue_style( 'terawallet-exporter-style' );
 			}
@@ -815,7 +815,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$current_screen                = get_current_screen();
 			$woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
 			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-add', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-actions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
-			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages ) ) {
+			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages, true ) ) {
 				if ( ! get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
 					$footer_text = sprintf(
 						/* translators: Plugin name */
@@ -1048,7 +1048,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function recalculate_order_cashback( $order ) {
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
-			if ( in_array( $order->get_status(), apply_filters( 'wallet_cashback_order_status', woo_wallet()->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ) ) ) {
+			if ( in_array( $order->get_status(), apply_filters( 'wallet_cashback_order_status', woo_wallet()->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ), true ) ) {
 				woo_wallet()->wallet->wallet_cashback( $order->get_id() );
 				$transaction_id = get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true );
 				if ( $transaction_id ) {

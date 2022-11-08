@@ -203,7 +203,7 @@ class Action_Referrals extends WooWalletAction {
 	public function init_referrals() {
 		if ( isset( $_GET[ $this->referral_handel ] ) && ! empty( $_GET[ $this->referral_handel ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			if ( ! headers_sent() && did_action( 'wp_loaded' ) ) {
-				wc_setcookie( 'woo_wallet_referral', wp_unslash( $_GET[ $this->referral_handel ] ), time() + DAY_IN_SECONDS ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+				wc_setcookie( 'woo_wallet_referral', sanitize_text_field( wp_unslash( $_GET[ $this->referral_handel ] ) ), time() + DAY_IN_SECONDS ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			}
 		}
 	}
@@ -214,7 +214,7 @@ class Action_Referrals extends WooWalletAction {
 	 */
 	public function get_referral_user() {
 		if ( isset( $_COOKIE['woo_wallet_referral'] ) ) {
-			$woo_wallet_referral = wp_unslash( $_COOKIE['woo_wallet_referral'] );
+			$woo_wallet_referral = sanitize_text_field( wp_unslash( $_COOKIE['woo_wallet_referral'] ) );
 			if ( 'id' === $this->settings['referal_link'] ) {
 				$user = get_user_by( 'ID', $woo_wallet_referral );
 			} else {

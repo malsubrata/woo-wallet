@@ -1,4 +1,9 @@
 <?php
+/**
+ * Wallet plugin installation file
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -7,7 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Woo_Wallet_Install Class
  */
 class Woo_Wallet_Install {
-
+	/**
+	 * Version updates
+	 *
+	 * @var array
+	 */
 	private static $db_updates = array(
 		'1.0.8'  => array(
 			'woo_wallet_update_108_db_column',
@@ -28,7 +37,9 @@ class Woo_Wallet_Install {
 			'woo_wallet_update_1321_db_column',
 		),
 	);
-
+	/**
+	 * Class constructor.
+	 */
 	public function __construct() {
 		self::update();
 	}

@@ -4,11 +4,17 @@
  *
  * @author Subrata Mal
  */
+
 if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
-
+	/**
+	 * Wallet extention page class.
+	 */
 	class Woo_Wallet_Extensions_Settings {
-		/* setting api object */
-
+		/**
+		 * Settings API
+		 *
+		 * @var object
+		 */
 		private $settings_api;
 
 		/**
@@ -54,7 +60,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 			$screen    = get_current_screen();
 			$screen_id = $screen ? $screen->id : '';
 			$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION );
+			wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
 			if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-extensions" ), true ) ) {
 				wp_enqueue_style( 'dashicons' );

@@ -1,7 +1,12 @@
 <?php
+/**
+ * Wallet actions file.
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
+	exit; // Exit if accessed directly.
 }
 
 /**
@@ -11,10 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WOO_Wallet_Actions {
 
-	/** @var array Array of action classes. */
+	/**
+	 * Actions variable.
+	 *
+	 * @var array Array of action classes.
+	 */
 	public $actions;
 
 	/**
+	 * Class instance.
+	 *
 	 * @var WOO_Wallet_Actions The single instance of the class
 	 * @since 1.0.0
 	 */
@@ -44,7 +55,11 @@ class WOO_Wallet_Actions {
 		$this->init();
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 	}
-
+	/**
+	 * Init action calss.
+	 *
+	 * @return void
+	 */
 	public function init() {
 		$load_actions = apply_filters(
 			'woo_wallet_actions',
@@ -60,7 +75,11 @@ class WOO_Wallet_Actions {
 			$this->actions[ $load_action->id ] = $load_action;
 		}
 	}
-
+	/**
+	 * Load actions files.
+	 *
+	 * @return void
+	 */
 	public function load_actions() {
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-new-registration.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-product-review.php';
@@ -68,7 +87,11 @@ class WOO_Wallet_Actions {
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-referrals.php';
 		do_action( 'woo_wallet_load_actions' );
 	}
-
+	/**
+	 * Get all available actions.
+	 *
+	 * @return array
+	 */
 	public function get_available_actions() {
 		$actions = array();
 		foreach ( $this->actions as $action ) {
@@ -78,15 +101,19 @@ class WOO_Wallet_Actions {
 		}
 		return $actions;
 	}
-
+	/**
+	 * Load scripts for action page.
+	 *
+	 * @return void
+	 */
 	public function admin_scripts() {
 		$screen    = get_current_screen();
 		$screen_id = $screen ? $screen->id : '';
 		$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		// Register scripts.
-		wp_register_script( 'woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/assets/js/admin/admin-actions' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION );
+		wp_register_script( 'woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/assets/js/admin/admin-actions' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 		$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-		if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ) ) ) {
+		if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) ) {
 			wp_enqueue_script( 'woo_wallet_admin_actions' );
 		}
 	}
