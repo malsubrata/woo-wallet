@@ -112,6 +112,7 @@
             data: function (term) {
                 return {
                     action: 'terawallet_export_user_search',
+                    security: terawallet_export_params.search_user_nonce,
                     autocomplete_field: 'ID',
                     term: term.term
                 };

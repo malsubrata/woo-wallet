@@ -5,9 +5,13 @@
  * @version 1.0.0
  *
  * @author Subrata Mal
+ * @package WooWallet
  */
-if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
+if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
+	/**
+	 * Wallet setting API class.
+	 */
 	class Woo_Wallet_Settings_API {
 
 		/**
@@ -77,7 +81,13 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			return $this;
 		}
-
+		/**
+		 * Add Field to settings page.
+		 *
+		 * @param array $section section.
+		 * @param array $field field.
+		 * @return object
+		 */
 		public function add_field( $section, $field ) {
 			$defaults = array(
 				'name'  => '',
@@ -103,14 +113,11 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		public function admin_init() {
 			// Register settings sections.
 			foreach ( $this->settings_sections as $section ) {
-				if ( false == get_option( $section['id'] ) ) {
+				if ( false === get_option( $section['id'] ) ) {
 					add_option( $section['id'] );
 				}
 
-				if ( isset( $section['desc'] ) && ! empty( $section['desc'] ) ) {
-					$section['desc'] = '<div class="inside">' . $section['desc'] . '</div>';
-					$callback        = create_function( '', 'echo "' . str_replace( '"', '\"', $section['desc'] ) . '";' );
-				} elseif ( isset( $section['callback'] ) ) {
+				if ( isset( $section['callback'] ) ) {
 					$callback = $section['callback'];
 				} else {
 					$callback = null;
@@ -164,12 +171,10 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 */
 		public function get_field_description( $args ) {
 			if ( ! empty( $args['desc'] ) ) {
-				$desc = sprintf( '<p class="description">%s</p>', $args['desc'] );
-			} else {
-				$desc = '';
+				?>
+				<p class="description"><?php echo esc_html( $args['desc'] ); ?></p>
+				<?php
 			}
-
-			return $desc;
 		}
 
 		/**
@@ -178,15 +183,15 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_text( $args ) {
-			$value       = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
+			$value       = $this->get_option( $args['id'], $args['section'], $args['std'] );
 			$size        = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
 			$type        = isset( $args['type'] ) ? $args['type'] : 'text';
-			$placeholder = empty( $args['placeholder'] ) ? '' : ' placeholder="' . $args['placeholder'] . '"';
+			$placeholder = empty( $args['placeholder'] ) ? '' : $args['placeholder'];
 
-			$html  = sprintf( '<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder );
-			$html .= $this->get_field_description( $args );
-
-			echo $html; // phpcs:ignore
+			?>
+			<input type="<?php echo esc_attr( $type ); ?>" class="<?php echo esc_attr( $size ); ?>-text" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_attr( $value ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" />
+			<?php
+			echo esc_html( $this->get_field_description( $args ) );
 		}
 
 		/**
@@ -196,11 +201,9 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 */
 		public function callback_rand( $args ) {
 			$value = wp_rand();
-			$type  = 'hidden';
-
-			$html = sprintf( '<input type="%1$s" id="%2$s-%3$s" name="%2$s[%3$s]" value="%4$s"/>', $type, $args['section'], $args['id'], $value );
-
-			echo $html; // phpcs:ignore
+			?>
+			<input type="hidden" id="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" value="<?php echo esc_html( $value ); ?>" />
+			<?php
 		}
 
 		/**
@@ -218,18 +221,17 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_number( $args ) {
-			$value       = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
+			$value       = $this->get_option( $args['id'], $args['section'], $args['std'] );
 			$size        = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
 			$type        = isset( $args['type'] ) ? $args['type'] : 'number';
-			$placeholder = empty( $args['placeholder'] ) ? '' : ' placeholder="' . $args['placeholder'] . '"';
-			$min         = empty( $args['min'] ) ? ' min="0"' : ' min="' . $args['min'] . '"';
-			$max         = empty( $args['max'] ) ? '' : ' max="' . $args['max'] . '"';
-			$step        = empty( $args['step'] ) ? ' step="0.01"' : ' step="' . $args['step'] . '"';
-
-			$html  = sprintf( '<input type="%1$s" class="%2$s-text" id="%3$s[%4$s]" name="%3$s[%4$s]" value="%5$s"%6$s%7$s%8$s%9$s/>', $type, $size, $args['section'], $args['id'], $value, $placeholder, $min, $max, $step );
-			$html .= $this->get_field_description( $args );
-
-			echo $html; // phpcs:ignore
+			$placeholder = empty( $args['placeholder'] ) ? '' : $args['placeholder'];
+			$min         = empty( $args['min'] ) ? 0 : $args['min'];
+			$max         = empty( $args['max'] ) ? '' : $args['max'];
+			$step        = empty( $args['step'] ) ? '0.01' : $args['step'];
+			?>
+			<input type="<?php echo esc_attr( $type ); ?>" class="<?php echo esc_attr( $size ); ?>-text" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_attr( $value ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" min="<?php echo esc_attr( $min ); ?>" max="<?php echo esc_attr( $max ); ?>" step="<?php echo esc_attr( $step ); ?>"/>
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -248,7 +250,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= sprintf( '%1$s</label>', $args['desc'] );
 			$html .= '</fieldset>';
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -271,7 +273,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= $this->get_field_description( $args );
 			$html .= '</fieldset>';
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -293,7 +295,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= $this->get_field_description( $args );
 			$html .= '</fieldset>';
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -324,7 +326,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= sprintf( '</select>' );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -341,7 +343,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<textarea rows="5" cols="55" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]"%4$s>%5$s</textarea>', $size, $args['section'], $args['id'], $placeholder, $value );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -350,7 +352,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_html( $args ) {
-			echo $this->get_field_description( $args ); // phpcs:ignore
+			echo $this->get_field_description( $args );
 		}
 
 		/**
@@ -379,7 +381,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			echo '</div>';
 
-			echo $this->get_field_description( $args ); // phpcs:ignore
+			echo $this->get_field_description( $args );
 		}
 
 		/**
@@ -398,7 +400,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= '<input type="button" class="button wpsa-browse" value="' . $label . '" />';
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -424,7 +426,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html .= '<input type="button" class="button wpsa-attachment" data-uploader_title="' . $uploader_title . '" data-uploader_button_text="' . $uploader_button_text . '" value="' . $label . '" />';
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -440,7 +442,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="password" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -456,7 +458,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$html  = sprintf( '<input type="text" class="%1$s-text wp-color-picker-field" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s" data-default-color="%5$s" />', $size, $args['section'], $args['id'], $value, $args['std'] );
 			$html .= $this->get_field_description( $args );
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**
@@ -552,7 +554,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			$html .= '</h2>';
 
-			echo $html; // phpcs:ignore
+			echo $html;
 		}
 
 		/**

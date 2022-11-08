@@ -226,6 +226,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			$wallet_localize_param = array(
 				'ajax_url'                => admin_url( 'admin-ajax.php' ),
 				'transaction_table_nonce' => wp_create_nonce( 'woo-wallet-transactions' ),
+				'search_user_nonce'       => wp_create_nonce( 'search-user' ),
 				'search_by_user_email'    => apply_filters( 'woo_wallet_user_search_exact_match', true ),
 				'i18n'                    => array(
 					'emptyTable'           => __( 'No transactions available', 'woo-wallet' ),

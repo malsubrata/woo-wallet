@@ -214,10 +214,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Download generated export CSV file.
 		 */
 		public function download_export_file() {
-			if ( isset( $_GET['action'], $_GET['nonce'] ) && wp_verify_nonce( wp_unslash( $_GET['nonce'] ), 'terawallet-transaction-csv' ) && 'download_export_csv' === wp_unslash( $_GET['action'] ) ) { // WPCS: input var ok, sanitization ok.
+			if ( isset( $_GET['action'], $_GET['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'terawallet-transaction-csv' ) && 'download_export_csv' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 				$exporter = new TeraWallet_CSV_Exporter();
-				if ( ! empty( $_GET['filename'] ) ) { // WPCS: input var ok.
-					$exporter->set_filename( wp_unslash( $_GET['filename'] ) ); // WPCS: input var ok, sanitization ok.
+				if ( ! empty( $_GET['filename'] ) ) {
+					$exporter->set_filename( sanitize_text_field( wp_unslash( $_GET['filename'] ) ) );
 				}
 				$exporter->export();
 			}
@@ -394,6 +394,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'searching'     => __( 'Searching…', 'woo-wallet' ),
 					),
 					'export_nonce'        => wp_create_nonce( 'terawallet-exporter-script' ),
+					'search_user_nonce'   => wp_create_nonce( 'search-user' ),
 					'export_url'          => '',
 					'export_button_title' => __( 'Export', 'woo-wallet' ),
 				)
@@ -573,7 +574,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				$amount         = filter_input( INPUT_POST, 'balance_amount' );
 				$payment_type   = filter_input( INPUT_POST, 'payment_type' );
 				$description    = filter_input( INPUT_POST, 'payment_description' );
-				if ( $user_id != null && ! empty( $user_id ) && $amount != null && ! empty( $amount ) ) { // phpcs:ignore
+				if ( null !== $user_id && ! empty( $user_id ) && null !== $amount && ! empty( $amount ) ) {
 					$amount = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
 					if ( 'credit' === $payment_type ) {
 						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description );

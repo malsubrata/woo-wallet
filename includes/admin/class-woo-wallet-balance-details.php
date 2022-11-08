@@ -10,7 +10,9 @@
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
-
+/**
+ * Wallet transaction details wp table class.
+ */
 class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 	/**
@@ -57,7 +59,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * Prepare the items for the table to process
 	 */
 	public function prepare_items() {
-		$usersearch     = isset( $_REQUEST['s'] ) ? trim( wp_unslash( $_REQUEST['s'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+		$usersearch     = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$users_per_page = $this->get_items_per_page( 'users_per_page', 15 );
 		$paged          = $this->get_pagenum();
 		$columns        = $this->get_columns();
@@ -74,23 +76,16 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			$args['search'] = '*' . $args['search'] . '*';
 		}
 
-		if ( isset( $_REQUEST['role'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$args['role'] = wp_unslash( $_REQUEST['role'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
-		}
+		$args['role']    = isset( $_GET['role'] ) ? sanitize_text_field( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$args['orderby'] = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$args['order']   = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
-		if ( isset( $_REQUEST['orderby'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$args['orderby'] = wp_unslash( $_REQUEST['orderby'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
-		}
-
-		if ( isset( $_REQUEST['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$args['order'] = wp_unslash( $_REQUEST['order'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
-		}
 		if ( isset( $args['orderby'] ) ) {
 			if ( 'balance' === $args['orderby'] ) {
 				$args = array_merge(
 					$args,
 					array(
-						'meta_key' => '_current_woo_wallet_balance', // @codingStandardsIgnoreLine
+						'meta_key' => '_current_woo_wallet_balance', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 						'orderby'  => 'meta_value_num',
 					)
 				);
@@ -277,8 +272,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	private function process_bulk_actions() {
 		if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bulk-transactions' ) ) {
-			if ( 'credit' === $this->current_action() && isset( $_POST['users'] ) ) {
-				$credit_ids  = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+			if ( 'credit' === $this->current_action() ) {
+				$credit_ids  = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
 				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $credit_ids ) {
@@ -289,8 +284,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				header( 'Refresh: 0' );
 			}
 
-			if ( 'debit' === $this->current_action() && isset( $_POST['users'] ) ) {
-				$debit_ids   = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+			if ( 'debit' === $this->current_action() ) {
+				$debit_ids   = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
 				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $debit_ids ) {
@@ -301,8 +296,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				header( 'Refresh: 0' );
 			}
 
-			if ( 'delete_log' === $this->current_action() && isset( $_POST['users'] ) ) {
-				$delete_ids = esc_sql( wp_unslash( $_POST['users'] ) ); // phpcs:ignore
+			if ( 'delete_log' === $this->current_action() ) {
+				$delete_ids = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				if ( $delete_ids ) {
 					foreach ( $delete_ids as $id ) {
 						$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
@@ -314,7 +309,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				}
 				header( 'Refresh: 0' );
 			}
-			// phpcs:enable
+
 			do_action( 'woo_wallet_balance_details_process_bulk_actions', $this->current_action() );
 		}
 	}

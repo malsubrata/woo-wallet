@@ -1,10 +1,17 @@
 <?php
+/**
+ * Plugin ajax file
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
-
+	/**
+	 * Plugin Ajax class
+	 */
 	class Woo_Wallet_Ajax {
 
 		/**
@@ -140,17 +147,15 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * Search users for export transactions.
 		 */
 		public function terawallet_export_user_search() {
-			$return = array();
-			if ( isset( $_REQUEST['site_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				$id = absint( $_REQUEST['site_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			} else {
-				$id = get_current_blog_id();
-			}
+			check_ajax_referer( 'search-user', 'security' );
+			$term    = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+			$return  = array();
+			$blog_id = isset( $_POST['site_id'] ) ? sanitize_text_field( wp_unslash( $_POST['site_id'] ) ) : get_current_blog_id();
 
 			$users = get_users(
 				array(
-					'blog_id'        => $id,
-					'search'         => '*' . sanitize_text_field( wp_unslash( $_REQUEST['term'] ) ) . '*', // phpcs:ignore
+					'blog_id'        => $blog_id,
+					'search'         => '*' . $term . '*',
 					'search_columns' => array( 'user_login', 'user_nicename', 'user_email' ),
 				)
 			);
@@ -305,8 +310,9 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * Search users
 		 */
 		public function woo_wallet_user_search() {
+			check_ajax_referer( 'search-user', 'security' );
 			$return = array();
-			$term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+			$term   = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
 			if ( apply_filters( 'woo_wallet_user_search_exact_match', true ) ) {
 				$user = get_user_by( apply_filters( 'woo_wallet_user_search_by', 'email' ), $term );
 				if ( $user && wp_get_current_user()->user_email !== $user->user_email ) {
@@ -357,12 +363,11 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * @return void
 		 */
 		public function woo_wallet_dismiss_promotional_notice() {
-			$post_data = wp_unslash( $_POST );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error( __( 'You have no permission to do that', 'woo-wallet' ) );
 			}
 
-			if ( ! wp_verify_nonce( $post_data['nonce'], 'woo_wallet_admin' ) ) {
+			if ( isset( $_POST['nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
 				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
 			}
 			update_option( '_woo_wallet_promotion_dismissed', true );

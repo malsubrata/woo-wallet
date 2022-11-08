@@ -66,6 +66,7 @@ jQuery(function ($) {
             data: function (term) {
                 return {
                     action: 'woo-wallet-user-search',
+                    security: wallet_param.search_user_nonce,
                     autocomplete_field: 'ID',
                     term: term.term
                 };

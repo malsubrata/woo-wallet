@@ -61,7 +61,7 @@ class Action_Product_Review extends WooWalletAction {
 	 * @param array $commentdata commentdata.
 	 */
 	public function new_product_review( $comment_id, $comment_approved, $commentdata ) {
-		if ( 'product' === get_post_type( absint( $commentdata['comment_post_ID'] ) ) ) { // WPCS: input var ok, CSRF ok.
+		if ( 'product' === get_post_type( absint( $commentdata['comment_post_ID'] ) ) ) {
 			if ( ! $this->is_enabled() || 1 !== $commentdata['comment_approved'] || get_comment_meta( $comment_id, 'wallet_transaction_id', true ) || get_post_meta( $commentdata['comment_post_ID'], "_woo_wallet_comment_commission_received_{$commentdata['user_id']}", true ) ) {
 				return;
 			}
