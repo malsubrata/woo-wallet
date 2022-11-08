@@ -240,17 +240,16 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_checkbox( $args ) {
-
 			$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
-
-			$html  = '<fieldset>';
-			$html .= sprintf( '<label for="wcwp-%1$s[%2$s]">', $args['section'], $args['id'] );
-			$html .= sprintf( '<input type="hidden" name="%1$s[%2$s]" value="off" />', $args['section'], $args['id'] );
-			$html .= sprintf( '<input type="checkbox" class="checkbox" id="wcwp-%1$s-%2$s" name="%1$s[%2$s]" value="on" %3$s />', $args['section'], $args['id'], checked( $value, 'on', false ) );
-			$html .= sprintf( '%1$s</label>', $args['desc'] );
-			$html .= '</fieldset>';
-
-			echo $html;
+			?>
+			<fieldset>
+				<label for="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>">
+				<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>" value="off" />
+				<input type="checkbox" class="checkbox" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="on" <?php checked( $value, 'on', true ); ?> />
+				<?php echo esc_html( $args['desc'] ); ?>
+				</label>
+			</fieldset>
+			<?php
 		}
 
 		/**
@@ -259,21 +258,23 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_multicheck( $args ) {
-
 			$value = $this->get_option( $args['id'], $args['section'], $args['std'] );
-			$html  = '<fieldset>';
-			$html .= sprintf( '<input type="hidden" name="%1$s[%2$s]" value="" />', $args['section'], $args['id'] );
-			foreach ( $args['options'] as $key => $label ) {
-				$checked = isset( $value[ $key ] ) ? $value[ $key ] : '0';
-				$html   .= sprintf( '<label for="%1$s[%2$s][%3$s]">', $args['section'], $args['id'], $key );
-				$html   .= sprintf( '<input type="checkbox" class="checkbox" id="wcwp-%1$s[%2$s][%3$s]" name="%1$s[%2$s][%3$s]" value="%3$s" %4$s />', $args['section'], $args['id'], $key, checked( $checked, $key, false ) );
-				$html   .= sprintf( '%1$s</label><br>', $label );
-			}
-
-			$html .= $this->get_field_description( $args );
-			$html .= '</fieldset>';
-
-			echo $html;
+			?>
+			<fieldset>
+				<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="" />
+				<?php
+				foreach ( $args['options'] as $key => $label ) {
+					$checked = isset( $value[ $key ] ) ? $value[ $key ] : '0';
+					?>
+						<label for="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $key ); ?>]">
+							<input type="checkbox" class="checkbox" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $key ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $key ); ?>" <?php checked( $checked, $key, true ); ?> />
+							<?php echo esc_html( $label ); ?>
+						</label><br>
+					<?php
+				}
+				?>
+			</fieldset>
+			<?php
 		}
 
 		/**
@@ -284,18 +285,21 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		public function callback_radio( $args ) {
 
 			$value = $this->get_option( $args['id'], $args['section'], $args['std'] );
-			$html  = '<fieldset>';
-
-			foreach ( $args['options'] as $key => $label ) {
-				$html .= sprintf( '<label for="wcwp-%1$s[%2$s][%3$s]">', $args['section'], $args['id'], $key );
-				$html .= sprintf( '<input type="radio" class="radio" id="wcwp-%1$s[%2$s][%3$s]" name="%1$s[%2$s]" value="%3$s" %4$s />', $args['section'], $args['id'], $key, checked( $value, $key, false ) );
-				$html .= sprintf( '%1$s</label><br>', $label );
-			}
-
-			$html .= $this->get_field_description( $args );
-			$html .= '</fieldset>';
-
-			echo $html;
+			?>
+			<fieldset>
+				<?php
+				foreach ( $args['options'] as $key => $label ) {
+					?>
+					<label for="wcwp-<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $key ); ?>]">
+						<input type="radio" class="radio" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $key ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php esc_attr( $value ); ?>" <?php checked( $value, $key, true ); ?> />
+						<?php echo esc_html( $label ); ?>
+					</label><br>
+					<?php
+				}
+				$this->get_field_description( $args );
+				?>
+			</fieldset>
+			<?php
 		}
 
 		/**
@@ -306,27 +310,33 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		public function callback_select( $args ) {
 
 			$size     = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular-text';
-			$multiple = ! empty( $args['multiple'] ) ? ' multiple="true"' : '';
-			if ( $multiple ) {
-				$value = $this->get_option( $args['id'], $args['section'], $args['std'] );
-				$html  = sprintf( '<select class="%1$s" name="%2$s[%3$s][]" id="%2$s-%3$s" %4$s>', $size, $args['section'], $args['id'], $multiple );
-			} else {
-				$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
-				$html  = sprintf( '<select class="%1$s" name="%2$s[%3$s]" id="%2$s-%3$s">', $size, $args['section'], $args['id'] );
-			}
+			$multiple = ! empty( $args['multiple'] ) ? true : false;
+			$value    = $this->get_option( $args['id'], $args['section'], $args['std'] );
 
+			if ( $multiple ) {
+				?>
+				<select class="<?php echo esc_attr( $size ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>][]" id="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" multiple="true">
+				<?php
+			} else {
+				?>
+				<select class="<?php echo esc_attr( $size ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" id="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>">
+				<?php
+			}
 			foreach ( $args['options'] as $key => $label ) {
 				if ( $multiple ) {
-					$html .= sprintf( '<option value="%s"%s>%s</option>', $key, selected( in_array( $key, $value ), true, false ), $label );
+					?>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( $key, $value, true ), true ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php
 				} else {
-					$html .= sprintf( '<option value="%s"%s>%s</option>', $key, selected( $value, $key, false ), $label );
+					?>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $value, $key ); ?>><?php echo esc_html( $label ); ?></option>
+					<?php
 				}
 			}
-
-			$html .= sprintf( '</select>' );
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			?>
+				</select>
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -336,14 +346,13 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 */
 		public function callback_textarea( $args ) {
 
-			$value       = esc_textarea( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
+			$value       = $this->get_option( $args['id'], $args['section'], $args['std'] );
 			$size        = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
-			$placeholder = empty( $args['placeholder'] ) ? '' : ' placeholder="' . $args['placeholder'] . '"';
-
-			$html  = sprintf( '<textarea rows="5" cols="55" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]"%4$s>%5$s</textarea>', $size, $args['section'], $args['id'], $placeholder, $value );
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			$placeholder = empty( $args['placeholder'] ) ? '' : $args['placeholder'];
+			?>
+			<textarea rows="5" cols="55" class="<?php echo esc_attr( $size ); ?>-text" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" placeholder="<?php echo esc_attr( $placeholder ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -352,7 +361,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_html( $args ) {
-			echo $this->get_field_description( $args );
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -381,7 +390,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			echo '</div>';
 
-			echo $this->get_field_description( $args );
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -393,14 +402,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
 			$size  = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
-			$id    = $args['section'] . '[' . $args['id'] . ']';
 			$label = isset( $args['options']['button_label'] ) ? $args['options']['button_label'] : __( 'Choose File', 'woo-wallet' );
-
-			$html  = sprintf( '<input type="text" class="%1$s-text wpsa-url" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value );
-			$html .= '<input type="button" class="button wpsa-browse" value="' . $label . '" />';
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			?>
+			<input type="text" class="<?php echo esc_attr( $size ); ?>-text wpsa-url" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_attr( $value ); ?>"/>
+			<input type="button" class="button wpsa-browse" value="<?php esc_html( $label ); ?>" />
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -420,13 +427,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			if ( $value ) {
 				$attachment_src = wp_get_attachment_url( $value );
 			}
-			$html  = '';
-			$html .= '<img class="wpsa-attachment-image" src="' . $attachment_src . '" width="75" />';
-			$html .= sprintf( '<input type="hidden" class="%1$s-text wpsa-attachment-id" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value );
-			$html .= '<input type="button" class="button wpsa-attachment" data-uploader_title="' . $uploader_title . '" data-uploader_button_text="' . $uploader_button_text . '" value="' . $label . '" />';
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			?>
+			<img class="wpsa-attachment-image" src="<?php echo esc_url( $attachment_src ); ?>" width="75" />
+			<input type="hidden" class="<?php echo esc_attr( $size ); ?>-text wpsa-attachment-id" id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $id ); ?>" value="<?php echo esc_attr( $value ); ?>"/>
+			<input type="button" class="button wpsa-attachment" data-uploader_title="<?php echo esc_attr( $uploader_title ); ?>" data-uploader_button_text="<?php echo esc_attr( $uploader_button_text ); ?>" value="<?php echo esc_html( $label ); ?>" />
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -435,14 +441,8 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param array $args settings field args.
 		 */
 		public function callback_password( $args ) {
-
-			$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
-			$size  = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
-
-			$html  = sprintf( '<input type="password" class="%1$s-text" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s"/>', $size, $args['section'], $args['id'], $value );
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			$args['type'] = 'password';
+			$this->callback_text( $args );
 		}
 
 		/**
@@ -454,11 +454,10 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 
 			$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
 			$size  = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
-
-			$html  = sprintf( '<input type="text" class="%1$s-text wp-color-picker-field" id="%2$s[%3$s]" name="%2$s[%3$s]" value="%4$s" data-default-color="%5$s" />', $size, $args['section'], $args['id'], $value, $args['std'] );
-			$html .= $this->get_field_description( $args );
-
-			echo $html;
+			?>
+			<input type="text" class="<?php echo esc_attr( $size ); ?>-text wp-color-picker-field" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_attr( $value ); ?>" data-default-color="<?php echo esc_attr( $args['std'] ); ?>" />
+			<?php
+			$this->get_field_description( $args );
 		}
 
 		/**
@@ -501,7 +500,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			// Iterate over registered fields and see if we can find proper callback.
 			foreach ( $this->settings_fields as $section => $options ) {
 				foreach ( $options as $option ) {
-					if ( $option['name'] != $slug ) {
+					if ( $option['name'] !== $slug ) {
 						continue;
 					}
 
@@ -536,25 +535,25 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * Shows all the settings section labels as tab
 		 */
 		public function show_navigation() {
-			$html = '<h2 class="nav-tab-wrapper">';
-
 			$count = count( $this->settings_sections );
-
-			// Don't show the navigation if only one section exists.
-			if ( 1 === $count ) {
-				return;
-			}
-
-			foreach ( $this->settings_sections as $tab ) {
-				if ( ! isset( $tab['icon'] ) || empty( $tab['icon'] ) ) {
-					$tab['icon'] = 'dashicons-admin-generic';
+			?>
+			<h2 class="nav-tab-wrapper">
+				<?php
+				// Don't show the navigation if only one section exists.
+				if ( 1 === $count ) {
+					return;
 				}
-				$html .= sprintf( '<a href="#%1$s" class="nav-tab" id="%1$s-tab"><span class="dashicons %2$s"></span> %3$s</a>', $tab['id'], $tab['icon'], $tab['title'] );
-			}
-
-			$html .= '</h2>';
-
-			echo $html;
+				foreach ( $this->settings_sections as $tab ) {
+					if ( ! isset( $tab['icon'] ) || empty( $tab['icon'] ) ) {
+						$tab['icon'] = 'dashicons-admin-generic';
+					}
+					?>
+					<a href="#<?php echo esc_attr( $tab['id'] ); ?>" class="nav-tab" id="<?php echo esc_attr( $tab['id'] ); ?>-tab"><span class="dashicons <?php echo esc_attr( $tab['icon'] ); ?>"></span> <?php echo esc_html( $tab['title'] ); ?></a>
+					<?php
+				}
+				?>
+			</h2>
+			<?php
 		}
 
 		/**
