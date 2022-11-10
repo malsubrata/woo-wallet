@@ -273,7 +273,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	private function process_bulk_actions() {
 		if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'bulk-transactions' ) ) {
 			if ( 'credit' === $this->current_action() ) {
-				$credit_ids  = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$credit_ids  = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
 				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $credit_ids ) {
@@ -285,7 +285,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			}
 
 			if ( 'debit' === $this->current_action() ) {
-				$debit_ids   = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$debit_ids   = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
 				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $debit_ids ) {
@@ -297,7 +297,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			}
 
 			if ( 'delete_log' === $this->current_action() ) {
-				$delete_ids = isset( $_POST['users'] ) ? wp_unslash( $_POST['users'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$delete_ids = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
 				if ( $delete_ids ) {
 					foreach ( $delete_ids as $id ) {
 						$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
