@@ -244,7 +244,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			?>
 			<fieldset>
 				<label for="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>">
-				<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>" value="off" />
+				<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="off" />
 				<input type="checkbox" class="checkbox" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="on" <?php checked( $value, 'on', true ); ?> />
 				<?php echo esc_html( $args['desc'] ); ?>
 				</label>
@@ -325,7 +325,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			foreach ( $args['options'] as $key => $label ) {
 				if ( $multiple ) {
 					?>
-					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( $key, $value, true ), true ); ?>><?php echo esc_html( $label ); ?></option>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( $key, (array) $value, true ), true ); ?>><?php echo esc_html( $label ); ?></option>
 					<?php
 				} else {
 					?>
