@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 5.6
 Requires at least: 4.4
 Tested up to: 6.1
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 Donate link: https://paypal.me/standalonetech
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -124,6 +124,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.2 - 2022-11-11 =
+* Fix - Mini wallet nav menu location.
+
 = 1.4.1 - 2022-11-11 =
 * Fix - Fix Cannot uncheck checkbox issue in plugin settings page.
 

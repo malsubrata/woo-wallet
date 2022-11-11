@@ -5,7 +5,7 @@
  * Description: The leading wallet plugin for WooCommerce with partial payment, refunds, cashbacks and what not!
  * Author: StandaloneTech
  * Author URI: https://standalonetech.com/
- * Version: 1.4.1
+ * Version: 1.4.2
  * Requires at least: 4.4
  * Tested up to: 6.1
  * WC requires at least: 3.0
@@ -47,7 +47,7 @@ if ( ! defined( 'WOO_WALLET_ABSPATH' ) ) {
 
 // Define WOO_WALLET_PLUGIN_VERSION.
 if ( ! defined( 'WOO_WALLET_PLUGIN_VERSION' ) ) {
-	define( 'WOO_WALLET_PLUGIN_VERSION', '1.4.1' );
+	define( 'WOO_WALLET_PLUGIN_VERSION', '1.4.2' );
 }
 
 // include dependencies file.
