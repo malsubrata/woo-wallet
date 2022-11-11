@@ -381,11 +381,11 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			check_ajax_referer( 'woo-wallet-transactions', 'security' );
 			$start  = isset( $_POST['start'] ) ? sanitize_text_field( wp_unslash( $_POST['start'] ) ) : 0;
 			$length = isset( $_POST['length'] ) ? sanitize_text_field( wp_unslash( $_POST['length'] ) ) : 10;
-			$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+			$search = isset( $_POST['search'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['search'] ) ) : '';
 			$args   = array(
 				'limit' => "$start, $length",
 			);
-			if ( $search['value'] && ! empty( $search['value'] ) ) {
+			if ( isset( $search['value'] ) && ! empty( $search['value'] ) ) {
 				$args['where'] = array(
 					array(
 						'key'      => 'date',
