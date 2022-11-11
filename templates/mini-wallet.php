@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <li class="menu-item">
-	<a href="woo-wallet-menu-contents menu-link" title="<?php echo esc_html_e( 'Current wallet balance', 'woo-wallet' ); ?>" class="<?php echo esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ); ?>">
+	<a class="woo-wallet-menu-contents menu-link" title="<?php echo esc_html_e( 'Current wallet balance', 'woo-wallet' ); ?>" href="<?php echo esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ) ) ); ?>">
 		<span dir="rtl" class="woo-wallet-icon-wallet"></span>&nbsp;
 		<?php echo woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</a>
