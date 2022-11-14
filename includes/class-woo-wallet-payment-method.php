@@ -177,6 +177,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 * @param  float  $amount Refund amount.
 		 * @param  string $reason Refund reason.
 		 * @return bool|WP_Error
+		 * @throws Exception WP_Error Exceptions.
 		 */
 		public function process_refund( $order_id, $amount = null, $reason = '' ) {
 			$order          = wc_get_order( $order_id );

@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.4.4 - 2022-11-14 =
+* Fix - Security issue on the function lock_unlock_terawallet.
+
 = 1.4.3 - 2022-11-11 =
 * Fix - Datatable ajax issue.
 

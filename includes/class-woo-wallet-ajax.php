@@ -63,6 +63,9 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			check_ajax_referer( 'lock-unlock-nonce', 'security' );
 			$user_id = isset( $_POST['user_id'] ) ? sanitize_text_field( wp_unslash( $_POST['user_id'] ) ) : 0;
 			$type    = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '';
+			if ( ! current_user_can( 'edit_user', $user_id ) ) {
+				wp_die( -1 );
+			}
 			if ( 'lock' === $type ) {
 				update_user_meta( $user_id, '_is_wallet_locked', true );
 				wp_send_json_success(
