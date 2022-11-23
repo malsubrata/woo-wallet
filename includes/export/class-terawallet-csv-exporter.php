@@ -157,7 +157,7 @@ class TeraWallet_CSV_Exporter {
 			$where .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ))";
 		}
 		$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where};";
-		return $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE %s;", $where ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	public function get_records() {
@@ -174,8 +174,7 @@ class TeraWallet_CSV_Exporter {
 		}
 		$offset = $this->per_page * ( $this->get_step() - 1 );
 		$sql    = "SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where} ORDER BY transactions.transaction_id DESC LIMIT {$offset}, {$this->per_page};";
-
-		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE %s ORDER BY transactions.transaction_id DESC LIMIT %d, %d;", $where, $offset, $this->per_page ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	protected function export_column_headers() {

@@ -107,7 +107,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			}
 
 			if ( ! empty( $_POST['selected_users'] ) ) {
-				$exporter->set_users_to_export( wp_unslash( $_POST['selected_users'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$exporter->set_users_to_export( array_map( 'intval', (array) $_POST['selected_users'] ) );
 			}
 
 			if ( ! empty( $_POST['start_date'] ) ) {
