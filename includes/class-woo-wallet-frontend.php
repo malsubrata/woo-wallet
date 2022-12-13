@@ -567,7 +567,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		public function woocommerce_before_cart_table() {
 			if ( woo_wallet()->cashback->calculate_cashback() && ! is_wallet_rechargeable_cart() && apply_filters( 'display_cashback_notice_at_woocommerce_page', true ) ) :
 				?>
-				<div class="woocommerce-Message woocommerce-Message--info woocommerce-info">
+				<div class="woocommerce-Message woocommerce-Message--info woocommerce-info wallet-cashback-notice">
 					<?php
 					$cashback_amount = woo_wallet()->cashback->calculate_cashback();
 					if ( is_user_logged_in() ) {

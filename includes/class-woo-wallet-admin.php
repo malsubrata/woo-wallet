@@ -683,6 +683,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'value'             => get_post_meta( $post->ID, '_cashback_amount', true ),
 					)
 				);
+				do_action( 'after_wallet_cashback_product_data' );
 				?>
 			</div>
 			<?php
