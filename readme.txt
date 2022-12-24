@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, 
 Requires PHP: 7.2
 Requires at least: 5.8
 Tested up to: 6.1
-Stable tag: 1.4.4
+Stable tag: 1.4.5
 Donate link: https://paypal.me/standalonetech
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -124,6 +124,10 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.5 - 2022-12-24 =
+* Add - Hooks in referral action.
+* Fix - Transaction exporter.
+
 = 1.4.4 - 2022-11-14 =
 * Fix - Security issue on the function lock_unlock_terawallet.
 

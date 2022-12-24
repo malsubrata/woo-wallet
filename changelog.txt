@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.4.5 - 2022-12-24 =
+* Add - Hooks in referral action.
+* Fix - Transaction exporter.
+
 = 1.4.4 - 2022-11-14 =
 * Fix - Security issue on the function lock_unlock_terawallet.
 
