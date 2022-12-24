@@ -105,7 +105,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 */
 		public function get_icon() {
 			$current_balance = woo_wallet()->wallet->get_wallet_balance( get_current_user_id() );
-			return apply_filters( 'woo_wallet_gateway_icon', sprintf( __( ' | Current Balance: <strong>%s</strong>', 'woo-wallet' ), $current_balance ), $this->id );
+			return apply_filters( 'woocommerce_gateway_icon', sprintf( __( ' | Current Balance: <strong>%s</strong>', 'woo-wallet' ), $current_balance ), $this->id );
 		}
 
 		/**
