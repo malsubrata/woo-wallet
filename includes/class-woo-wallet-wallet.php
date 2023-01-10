@@ -58,40 +58,8 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$this->set_user_id( $user_id );
 			$this->wallet_balance = 0;
 			if ( $this->user_id ) {
-				$credit_amount        = array_sum(
-					wp_list_pluck(
-						get_wallet_transactions(
-							array(
-								'user_id' => $this->user_id,
-								'where'   => array(
-									array(
-										'key'   => 'type',
-										'value' => 'credit',
-									),
-								),
-							)
-						),
-						'amount'
-					)
-				);
-				$debit_amount         = array_sum(
-					wp_list_pluck(
-						get_wallet_transactions(
-							array(
-								'user_id' => $this->user_id,
-								'where'   => array(
-									array(
-										'key'   => 'type',
-										'value' => 'debit',
-									),
-								),
-							)
-						),
-						'amount'
-					)
-				);
-				$balance              = $credit_amount - $debit_amount;
-				$this->wallet_balance = apply_filters( 'woo_wallet_current_balance', $balance, $this->user_id );
+				$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // @codingStandardsIgnoreLine
+				$this->wallet_balance = apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id );
 			}
 			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
 		}
