@@ -536,13 +536,13 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 */
 		public function show_navigation() {
 			$count = count( $this->settings_sections );
+			// Don't show the navigation if only one section exists.
+			if ( 1 === $count ) {
+				return;
+			}
 			?>
 			<h2 class="nav-tab-wrapper">
 				<?php
-				// Don't show the navigation if only one section exists.
-				if ( 1 === $count ) {
-					return;
-				}
 				foreach ( $this->settings_sections as $tab ) {
 					if ( ! isset( $tab['icon'] ) || empty( $tab['icon'] ) ) {
 						$tab['icon'] = 'dashicons-admin-generic';

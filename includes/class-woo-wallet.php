@@ -155,9 +155,7 @@ final class WooWallet {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_credit_purchase' ) );
 		}
 
-		foreach ( apply_filters( 'wallet_partial_payment_order_status', array( 'on-hold', 'processing', 'completed' ) ) as $status ) {
-			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_partial_payment' ) );
-		}
+		add_action( 'woocommerce_checkout_order_processed', array( $this->wallet, 'wallet_partial_payment' ), 99 );
 
 		foreach ( apply_filters( 'wallet_cashback_order_status', $this->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ) as $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_cashback' ), 12 );

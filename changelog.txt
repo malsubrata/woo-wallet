@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.4.6 - 2023-01-19 =
+* Fix - Duplicate order issue and negative wallet balance.
+* Fix - Partial payment issue for draft orders.
+
 = 1.4.5 - 2022-12-24 =
 * Add - Hooks in referral action.
 * Fix - Transaction exporter.

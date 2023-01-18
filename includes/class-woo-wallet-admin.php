@@ -96,6 +96,51 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			add_action( 'edit_user_profile', array( $this, 'add_wallet_management_fields' ) );
 			add_action( 'show_user_profile', array( $this, 'add_wallet_management_fields' ) );
+
+			add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
+		}
+
+		/**
+		 * Show row meta on the plugin screen.
+		 *
+		 * @param mixed $links Plugin Row Meta.
+		 * @param mixed $file  Plugin Base file.
+		 *
+		 * @return array
+		 */
+		public static function plugin_row_meta( $links, $file ) {
+			if ( plugin_basename( WOO_WALLET_PLUGIN_FILE ) !== $file ) {
+				return $links;
+			}
+
+			/**
+			 * The Premium plugins URL.
+			 *
+			 * @since 1.4.6
+			 */
+			$premium_plugings_url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/products/' );
+
+			/**
+			 * The TeraWallet API documentation URL.
+			 *
+			 * @since 1.4.6
+			 */
+			$api_docs_url = apply_filters( 'terawallet_apidocs_url', 'https://github.com/malsubrata/woo-wallet/wiki/API-V3' );
+
+			/**
+			 * The community TeraWallet support URL.
+			 *
+			 * @since 1.4.6
+			 */
+			$community_support_url = apply_filters( 'terawallet_community_support_url', 'https://standalonetech.com/forums/forum/terawallet/' );
+
+			$row_meta = array(
+				'plugins' => '<a href="' . esc_url( $premium_plugings_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet premium plugins', 'woo-wallet' ) . '">' . esc_html__( 'Premium plugins', 'woo-wallet' ) . '</a>',
+				'apidocs' => '<a href="' . esc_url( $api_docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet API docs', 'woo-wallet' ) . '">' . esc_html__( 'API docs', 'woo-wallet' ) . '</a>',
+				'support' => '<a href="' . esc_url( $community_support_url ) . '" aria-label="' . esc_attr__( 'Visit community forums', 'woo-wallet' ) . '">' . esc_html__( 'Support forum', 'woo-wallet' ) . '</a>',
+			);
+
+			return array_merge( $links, $row_meta );
 		}
 		/**
 		 * Wallet settings fields on user edit page.
@@ -1077,7 +1122,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<div class="content">
 					<h2 class=""><?php esc_html_e( 'Obtain Superpowers to get the best out of TeraWallet', 'woo-wallet' ); ?></h2>
 					<p><?php esc_html_e( 'Use superpowers to stand above the crowd. our high-octane add-ons are designed to boost your store wallet features.', 'woo-wallet' ); ?></p>
-					<a href="https://standalonetech.com" class="button button-primary promo-btn" target="_blank"><?php esc_html_e( 'Learn More', 'woo-wallet' ); ?> →</a>
+					<a href="https://standalonetech.com/products/" class="button button-primary promo-btn" target="_blank"><?php esc_html_e( 'Learn More', 'woo-wallet' ); ?> →</a>
 				</div>
 				<span class="prmotion-close-icon dashicons dashicons-no-alt"></span>
 				<div class="clear"></div>

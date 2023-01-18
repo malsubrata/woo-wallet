@@ -160,8 +160,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 				}
 
 				.wc_addons_wrap .addons-banner-block-item-icon {
-					background: #e6e6e6;
 					height: 143px;
+					border-bottom: 1px solid #e6e6e6;
 				}
 				.wc_addons_wrap .addons-banner-block-item-icon, .wc_addons_wrap .addons-column-block-item-icon {
 					-webkit-box-align: center;
@@ -182,7 +182,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 					margin: 0 -10px 0 -10px;
 				}
 				.wc_addons_wrap .addons-banner-block img {
-					height: 62px;
+					height: 120px;
 				}
 				.wc_addons_wrap .addons-banner-block-item-content {
 					display: -webkit-box;
@@ -238,15 +238,13 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 				}
 
 				.wc_addons_wrap .addons-column-block-item-icon {
-					background: #e6e6e6;
-					border: 1px solid #c5c5c5;
+					border: 1px solid #e6e6e6;
 					height: 100px;
 					margin: 0 10px 10px 0;
 					width: 100px;
 				}
 				.wc_addons_wrap .addons-column-block img {
-					max-height: 50px;
-					max-width: 50px;
+					max-height: 90px;
 				}
 
 				.wc_addons_wrap .addons-column-block-item {
@@ -300,24 +298,24 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 					<div class="addons-banner-block-items">
 						<div class="addons-banner-block-item">
 							<div class="addons-banner-block-item-icon">
-								<img class="addons-img" src="<?php echo esc_url( woo_wallet()->plugin_url() . '/assets/images/wallet-withdrawal.jpg' ); ?>">
+								<img class="addons-img" src="<?php echo esc_url( woo_wallet()->plugin_url() . '/assets/images/wallet-withdrawal.png' ); ?>">
 							</div>
 							<div class="addons-banner-block-item-content">
 								<h3>Wallet Withdrawal</h3>
 								<p>Let your users withdraw their Wallet balance to bank and other digital accounts like PayPal with this awesome addon.</p>
-								<a href="https://standalonetech.com" class="button addons-button addons-button-solid">
-									From: $49		</a>
+								<a href="https://standalonetech.com/product/wallet-withdrawal/" class="button addons-button addons-button-solid">
+									$49 / Year		</a>
 							</div>
 						</div>
 						<div class="addons-banner-block-item">
 							<div class="addons-banner-block-item-icon">
-								<img class="addons-img" src="<?php echo esc_url( woo_wallet()->plugin_url() . '/assets/images/wallet-importer.jpg' ); ?>">
+								<img class="addons-img" src="<?php echo esc_url( woo_wallet()->plugin_url() . '/assets/images/wallet-importer.png' ); ?>">
 							</div>
 							<div class="addons-banner-block-item-content">
 								<h3>Wallet Importer</h3>
 								<p>Wallet importer addon enables you to modify the Wallet balances of multiple or all users with just one CSV import, hassle free.</p>
-								<a href="https://standalonetech.com" class="button addons-button addons-button-solid">
-									From: $15		</a>
+								<a href="https://standalonetech.com/product/wallet-importer/" class="button addons-button addons-button-solid">
+									$15	/ Year	</a>
 							</div>
 						</div>
 						<div class="addons-banner-block-item">
@@ -327,8 +325,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 							<div class="addons-banner-block-item-content">
 								<h3>Wallet Coupons</h3>
 								<p>Wallet Coupons add-on is the coupon system of Wallet. Coupons are a great way to offer rewards to your customers, coupons to be automatically redeemed to the customer's wallet if its restrictions are met.</p>
-								<a href="https://standalonetech.com" class="button addons-button addons-button-solid">
-									From: $39		</a>
+								<a href="https://standalonetech.com/product/wallet-coupons/" class="button addons-button addons-button-solid">
+									$39	/ Year	</a>
 							</div>
 						</div>
 					</div>
@@ -343,8 +341,8 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 								</div>
 								<div class="addons-column-block-item-content">
 									<h3>Wallet AffiliateWP</h3>
-									<a href="https://standalonetech.com" class="button addons-button addons-button-solid">
-										From: $15		</a>
+									<a href="https://standalonetech.com/product/wallet-affiliatewp/" class="button addons-button addons-button-solid">
+										$15	/ Year	</a>
 									<p>Pay AffiliateWP referrals as Wallet credit.</p>
 								</div>
 							</div>
