@@ -106,14 +106,14 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						array(
 							'name'    => 'product_title',
 							'label'   => __( 'Rechargeable Product Title', 'woo-wallet' ),
-							'desc'    => __( 'Enter wallet rechargeable product title', 'woo-wallet' ),
+							'desc'    => sprintf( __( 'Enter wallet rechargeable product title | <a href="%s" target="_blank">Edit product</a>', 'woo-wallet' ), get_edit_post_link( get_wallet_rechargeable_product()->get_id() ) ),
 							'type'    => 'text',
 							'default' => $this->get_rechargeable_product_title(),
 						),
 						array(
 							'name'    => 'product_image',
 							'label'   => __( 'Rechargeable Product Image', 'woo-wallet' ),
-							'desc'    => __( 'Choose wallet rechargeable product image', 'woo-wallet' ),
+							'desc'    => sprintf( __( 'Choose wallet rechargeable product image | <a href="%s" target="_blank">Edit product</a>', 'woo-wallet' ), get_edit_post_link( get_wallet_rechargeable_product()->get_id() ) ),
 							'type'    => 'attachment',
 							'options' => array(
 								'button_label'         => __( 'Set product image', 'woo-wallet' ),

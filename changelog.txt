@@ -1,4 +1,9 @@
 *** Changelog ***
+= 1.4.7 - 2023-04-05 =
+* Fix - Refund issue.
+* Fix - WooCommerce add to cart notice.
+* Added - WP 6.2 support.
+
 = 1.4.6 - 2023-01-19 =
 * Fix - Duplicate order issue and negative wallet balance.
 * Fix - Partial payment issue for draft orders.

@@ -535,10 +535,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @return boolean
 		 */
 		public function restrict_other_from_add_to_cart( $valid ) {
-			$product = get_wallet_rechargeable_product();
 			if ( is_wallet_rechargeable_cart() ) {
-				wc_add_notice( apply_filters( 'woo_wallet_restrict_other_from_add_to_cart', __( 'You can not add another product while your cart contains with wallet rechargeable product.', 'woo-wallet' ) ), 'error' );
-				$valid = false;
+				wc()->cart->empty_cart();
 			}
 			return $valid;
 		}

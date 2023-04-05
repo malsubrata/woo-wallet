@@ -172,7 +172,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		public function get_field_description( $args ) {
 			if ( ! empty( $args['desc'] ) ) {
 				?>
-				<p class="description"><?php echo esc_html( $args['desc'] ); ?></p>
+				<p class="description"><?php echo $args['desc']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
 				<?php
 			}
 		}
@@ -191,7 +191,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			?>
 			<input type="<?php echo esc_attr( $type ); ?>" class="<?php echo esc_attr( $size ); ?>-text" id="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_attr( $value ); ?>" placeholder="<?php echo esc_attr( $placeholder ); ?>" />
 			<?php
-			echo esc_html( $this->get_field_description( $args ) );
+			$this->get_field_description( $args );
 		}
 
 		/**

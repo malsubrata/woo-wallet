@@ -1,11 +1,11 @@
-=== TeraWallet - For WooCommerce ===
+=== TeraWallet – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
 Contributors: standalonetech, subratamal, moumitaadak
-Tags: woo wallet, woocommerce wallet, wp wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
+Tags: woo wallet, woocommerce wallet, digital wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 7.2
 Requires at least: 5.8
-Tested up to: 6.1
-Stable tag: 1.4.6
-Donate link: https://paypal.me/standalonetech
+Tested up to: 6.2
+Stable tag: 1.4.7
+Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -13,7 +13,11 @@ A powerful, extendable WooCommerce wallet system which support payment, partial 
 
 == Description ==
 
-TeraWallet allows customers to store their money in a digital wallet. The customers can use the wallet money for purchasing products from the store. The customers can add money to their wallet using various payment methods set by the admin. The admin can set cashback rules according to cart price or product. The customers will receive their cashback amount in their wallet account. The admin can process refund to customer wallet.
+TeraWallet is a powerful digital wallet and credit system designed for WooCommerce. With TeraWallet, you can allow your customers to deposit funds into their accounts, transfer funds to other users, and pay for purchases using their wallet balance.
+
+In addition to its core wallet functionality, TeraWallet also includes a cashback rewards system that lets you offer discounts and rewards to your customers for their purchases. You can set cashback rates for individual products or categories, and even offer bonus cashback for specific promotions or events.
+
+TeraWallet is fully customizable, with TeraWallet, you can create a seamless and convenient payment experience for your customers while also boosting loyalty and repeat purchases through cashback rewards. Try TeraWallet today and streamline your WooCommerce payment system!
 
 [youtube https://www.youtube.com/watch?v=Fnpp8qxAWBw]
 
@@ -131,6 +135,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.7 - 2023-04-05 =
+* Fix - Refund issue.
+* Fix - WooCommerce add to cart notice.
+* Added - WP 6.2 support.
+
 = 1.4.6 - 2023-01-19 =
 * Fix - Duplicate order issue and negative wallet balance.
 * Fix - Partial payment issue for draft orders.
