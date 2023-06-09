@@ -55,7 +55,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'admin_init', array( $this, 'admin_init' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10 );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ), 50 );
-			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'on' ) && 'product' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
+			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) && 'product' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
 				add_filter( 'woocommerce_product_data_tabs', array( $this, 'woocommerce_product_data_tabs' ) );
 				add_action( 'woocommerce_product_data_panels', array( $this, 'woocommerce_product_data_panels' ) );
 				add_action( 'save_post_product', array( $this, 'save_post_product' ) );
@@ -70,7 +70,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			add_filter( 'admin_footer_text', array( $this, 'admin_footer_text' ), 5 );
 
-			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'on' ) && 'product_cat' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
+			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) && 'product_cat' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
 				add_action( 'product_cat_add_form_fields', array( $this, 'add_product_cat_cashback_field' ) );
 				add_action( 'product_cat_edit_form_fields', array( $this, 'edit_product_cat_cashback_field' ) );
 				add_action( 'created_term', array( $this, 'save_product_cashback_field' ), 10, 3 );
@@ -164,7 +164,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 					<td>
 						<button type="button" class="button hide-if-no-js lock-unlock-user-wallet" data-user_id="<?php echo esc_attr( $user->ID ); ?>" data-type="<?php echo get_user_meta( $user->ID, '_is_wallet_locked', true ) ? 'unlock' : 'lock'; ?>">
-							<?php if ( get_user_meta( $user->ID, '_is_wallet_locked', true ) ) { ?>
+							<?php if ( is_wallet_account_locked( $user->ID ) ) { ?>
 								<span class="dashicons dashicons-unlock" style="padding-top: 3px;"></span> <label><?php esc_html_e( 'Unlock', 'woo-wallet' ); ?></label>
 							<?php } else { ?>
 								<span class="dashicons dashicons-lock" style="padding-top: 3px;"></span> <label><?php esc_html_e( 'Lock', 'woo-wallet' ); ?></label>
@@ -273,9 +273,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function admin_menu() {
 			$woo_wallet_menu_page_hook = add_menu_page( __( 'TeraWallet', 'woo-wallet' ), __( 'TeraWallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet', array( $this, 'wallet_page' ), '', 59 );
+			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'handle_wallet_balance_adjustment' ) );
 			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
-			$woo_wallet_menu_page_hook_add = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-add', array( $this, 'add_balance_to_user_wallet' ) );
-			add_action( "load-$woo_wallet_menu_page_hook_add", array( $this, 'add_woo_wallet_add_balance_option' ) );
 			$woo_wallet_menu_page_hook_view = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
 			add_submenu_page( 'woo-wallet', __( 'Actions', 'woo-wallet' ), __( 'Actions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-actions', array( $this, 'plugin_actions_page' ) );
@@ -465,6 +464,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				wp_enqueue_style( 'terawallet-exporter-style' );
 			}
 
+			if ( in_array( $screen_id, array( 'toplevel_page_woo-wallet' ), true ) ) {
+				add_thickbox();
+			}
+
 			wp_enqueue_script( 'terawallet_admin' );
 		}
 
@@ -475,6 +478,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Users wallet details', 'woo-wallet' ); ?></h2>
+				<?php settings_errors(); ?>
 				<?php do_action( 'woo_wallet_before_balance_details_table' ); ?>
 				<?php $this->balance_details_table->views(); ?>
 				<form id="posts-filter" method="post">
@@ -611,42 +615,90 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		/**
 		 * Handel admin add wallet balance
 		 */
-		public function add_woo_wallet_add_balance_option() {
+		public function handle_wallet_balance_adjustment() {
 			if ( isset( $_POST['woo-wallet-admin-adjust-balance'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woo-wallet-admin-adjust-balance'] ) ), 'woo-wallet-admin-adjust-balance' ) ) {
 				$transaction_id = null;
-				$message        = '';
 				$user_id        = filter_input( INPUT_POST, 'user_id' );
 				$amount         = filter_input( INPUT_POST, 'balance_amount' );
 				$payment_type   = filter_input( INPUT_POST, 'payment_type' );
 				$description    = filter_input( INPUT_POST, 'payment_description' );
-				if ( null !== $user_id && ! empty( $user_id ) && null !== $amount && ! empty( $amount ) ) {
-					$amount = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
-					if ( 'credit' === $payment_type ) {
-						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description );
+				$response       = array(
+					'type'    => 'success',
+					'message' => '',
+				);
+				$user           = new WP_User( $user_id );
+				if ( ! $user ) {
+					$response = array(
+						'type'    => 'error',
+						'message' => __( 'Invalid user', 'woo-wallet' ),
+					);
+				} elseif ( is_null( $amount ) || empty( $amount ) ) {
+					$response = array(
+						'type'    => 'error',
+						'message' => __( 'Please enter amount', 'woo-wallet' ),
+					);
+				} else {
+					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
+					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit' );
+					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+						$response = array(
+							'type'    => 'error',
+							/* translators: 1: User login. */
+							'message' => sprintf( __( '%s has insufficient balance for debit.', 'woo-wallet' ), $user->user_login ),
+						);
 					} elseif ( 'debit' === $payment_type ) {
 						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description );
+						if ( $transaction_id ) {
+							$response = array(
+								'type'    => 'success',
+								'message' => sprintf(
+									/* translators: 1: amount name, 2: username, 3: transaction details url. */
+									__( '%1$s has been debited from %2$s wallet account. <a href="%3$s">View all transactions&rarr;</a>', 'woo-wallet' ),
+									wc_price( $amount, woo_wallet_wc_price_args( $user_id ) ),
+									$user->user_login,
+									add_query_arg(
+										array(
+											'page'    => 'woo-wallet-transactions',
+											'user_id' => $user_id,
+										),
+										admin_url( 'admin.php' )
+									)
+								),
+							);
+						} else {
+							$response = array(
+								'type'    => 'error',
+								'message' => __( 'There may be some issue with database connection. Please deactivate TeraWallet plugin and activate again.', 'woo-wallet' ),
+							);
+						}
+					} elseif ( 'credit' === $payment_type ) {
+						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description );
+						if ( $transaction_id ) {
+							$response = array(
+								'type'    => 'success',
+								'message' => sprintf(
+									/* translators: 1: amount name, 2: username, 3: transaction details url. */
+									__( '%1$s has been credited to %2$s wallet account. <a href="%3$s">View all transactions&rarr;</a>', 'woo-wallet' ),
+									wc_price( $amount, woo_wallet_wc_price_args( $user_id ) ),
+									$user->user_login,
+									add_query_arg(
+										array(
+											'page'    => 'woo-wallet-transactions',
+											'user_id' => $user_id,
+										),
+										admin_url( 'admin.php' )
+									)
+								),
+							);
+						} else {
+							$response = array(
+								'type'    => 'error',
+								'message' => __( 'There may be some issue with database connection. Please deactivate TeraWallet plugin and activate again.', 'woo-wallet' ),
+							);
+						}
 					}
-					if ( ! $transaction_id ) {
-						$message = __( 'There may be some issue with database connection. Please deactivate TeraWallet plugin and activate again.', 'woo-wallet' );
-					}
-				} else {
-					$message = __( 'Please enter amount', 'woo-wallet' );
 				}
-				if ( ! $transaction_id ) {
-					add_settings_error( '', '102', $message );
-				} else {
-					do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
-					wp_safe_redirect(
-						add_query_arg(
-							array(
-								'page'    => 'woo-wallet-transactions',
-								'user_id' => $user_id,
-							),
-							admin_url( 'admin.php' )
-						)
-					);
-					exit();
-				}
+				add_settings_error( '', 'terawallet', $response['message'], $response['type'] );
 			}
 		}
 
@@ -860,7 +912,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 			$current_screen                = get_current_screen();
 			$woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-add', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-actions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
+			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-actions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
 			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages, true ) ) {
 				if ( ! get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
 					$footer_text = sprintf(

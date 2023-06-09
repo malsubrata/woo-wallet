@@ -1,7 +1,7 @@
 /* jshint node:true */
 module.exports = function (grunt) {
     'use strict';
-
+    const sass = require('node-sass');
     grunt.initConfig({
 
         // Setting folder templates.
@@ -75,7 +75,7 @@ module.exports = function (grunt) {
         sass: {
             compile: {
                 options: {
-                    sourceMap: 'none'
+                    implementation: sass
                 },
                 files: [{
                         expand: true,
@@ -185,13 +185,7 @@ module.exports = function (grunt) {
         postcss: {
             options: {
                 processors: [
-                    require('autoprefixer')({
-                        browsers: [
-                            '> 0.1%',
-                            'ie 8',
-                            'ie 9'
-                        ]
-                    })
+                    require('autoprefixer')(), // add vendor prefixes
                 ]
             },
             dist: {

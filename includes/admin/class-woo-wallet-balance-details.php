@@ -33,18 +33,21 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * Get columns.
 	 */
 	public function get_columns() {
-		return apply_filters(
-			'woo_wallet_balance_details_columns',
-			array(
-				'cb'       => __( 'cb', 'woo-wallet' ),
-				'username' => __( 'Username', 'woo-wallet' ),
-				'name'     => __( 'Name', 'woo-wallet' ),
-				'email'    => __( 'Email', 'woo-wallet' ),
-				'balance'  => __( 'Remaining balance', 'woo-wallet' ),
-				'actions'  => __( 'Actions', 'woo-wallet' ),
-				'id'       => __( 'ID', 'woo-wallet' ),
-			)
+		$columns = array(
+			'cb'             => __( 'cb', 'woo-wallet' ),
+			'username'       => __( 'Username', 'woo-wallet' ),
+			'email'          => __( 'Email', 'woo-wallet' ),
+			'total_diposit'  => __( 'Total Diposit', 'woo-wallet' ),
+			'total_spent'    => __( 'Total Spent', 'woo-wallet' ),
+			'cashbak_earned' => __( 'Cashback Earned', 'woo-wallet' ),
+			'balance'        => __( 'Remaining balance', 'woo-wallet' ),
+			'status'         => __( 'Status', 'woo-wallet' ),
+			'id'             => __( 'ID', 'woo-wallet' ),
 		);
+		if ( 'off' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) ) {
+			unset( $columns['cashbak_earned'] );
+		}
+		return apply_filters( 'woo_wallet_balance_details_columns', $columns );
 	}
 
 	/**
@@ -76,9 +79,13 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			$args['search'] = '*' . $args['search'] . '*';
 		}
 
-		$args['role']    = isset( $_GET['role'] ) ? sanitize_text_field( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		$args['orderby'] = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		$args['order']   = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$args['role'] = isset( $_GET['role'] ) ? sanitize_text_field( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( isset( $_REQUEST['orderby'] ) ) {
+			$args['orderby'] = sanitize_text_field( wp_unslash( $_REQUEST['orderby'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		}
+		if ( isset( $_REQUEST['order'] ) ) {
+			$args['order'] = sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		}
 
 		if ( isset( $args['orderby'] ) ) {
 			if ( 'balance' === $args['orderby'] ) {
@@ -139,48 +146,79 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		$wp_roles = wp_roles();
 
-		$url           = 'admin.php?page=woo-wallet';
-		$users_of_blog = count_users();
+		$count_users = ! wp_is_large_user_count();
 
-		$total_users = $users_of_blog['total_users'];
-		$avail_roles = & $users_of_blog['avail_roles'];
-		unset( $users_of_blog );
+		$url = 'admin.php?page=woo-wallet';
 
-		$current_link            = ( ! empty( $_REQUEST['role'] ) ? wp_unslash( $_REQUEST['role'] ) : 'all' ); //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
-		$current_link_attributes = ( 'all' === $current_link ) ? ' class="current" aria-current="page"' : '';
+		$role_links  = array();
+		$avail_roles = array();
+		$all_text    = __( 'All' );
 
-		$role_links = array();
-		/* translators: Total user */
-		$role_links['all'] = "<a href='$url'$current_link_attributes>" . sprintf( _nx( 'All <span class="count">(%s)</span>', 'All <span class="count">(%s)</span>', $total_users, 'users', 'woo-wallet' ), number_format_i18n( $total_users ) ) . '</a>';
+		if ( $count_users ) {
+			$users_of_blog = count_users();
+
+			$total_users = $users_of_blog['total_users'];
+			$avail_roles =& $users_of_blog['avail_roles'];
+			unset( $users_of_blog );
+
+			$all_text = sprintf(
+				/* translators: %s: Number of users. */
+				_nx(
+					'All <span class="count">(%s)</span>',
+					'All <span class="count">(%s)</span>',
+					$total_users,
+					'users'
+				),
+				number_format_i18n( $total_users )
+			);
+		}
+
+		$role_links['all'] = array(
+			'url'     => $url,
+			'label'   => $all_text,
+			'current' => empty( $role ),
+		);
+
 		foreach ( $wp_roles->get_names() as $this_role => $name ) {
-			if ( ! isset( $avail_roles[ $this_role ] ) ) {
+			if ( $count_users && ! isset( $avail_roles[ $this_role ] ) ) {
 				continue;
 			}
 
-			$current_link_attributes = '';
-			$current_link_attributes = ( $current_link === $this_role ? ' class="current" aria-current="page"' : '' );
-
 			$name = translate_user_role( $name );
-			/* translators: User role name with count */
-			$name                     = sprintf( __( '%1$s <span class="count">(%2$s)</span>', 'woo-wallet' ), $name, number_format_i18n( $avail_roles[ $this_role ] ) );
-			$role_links[ $this_role ] = "<a href='" . esc_url( add_query_arg( 'role', $this_role, $url ) ) . "'$current_link_attributes>$name</a>";
+			if ( $count_users ) {
+				$name = sprintf(
+					/* translators: 1: User role name, 2: Number of users. */
+					__( '%1$s <span class="count">(%2$s)</span>' ),
+					$name,
+					number_format_i18n( $avail_roles[ $this_role ] )
+				);
+			}
+
+			$role_links[ $this_role ] = array(
+				'url'     => esc_url( add_query_arg( 'role', $this_role, $url ) ),
+				'label'   => $name,
+				'current' => $this_role === $role,
+			);
 		}
 
 		if ( ! empty( $avail_roles['none'] ) ) {
 
-			$current_link_attributes = '';
+			$name = __( 'No role' );
+			$name = sprintf(
+				/* translators: 1: User role name, 2: Number of users. */
+				__( '%1$s <span class="count">(%2$s)</span>' ),
+				$name,
+				number_format_i18n( $avail_roles['none'] )
+			);
 
-			if ( 'none' === $role ) {
-				$current_link_attributes = ' class="current" aria-current="page"';
-			}
-
-			$name = __( 'No role', 'woo-wallet' );
-			/* translators: User role name with count */
-			$name               = sprintf( __( '%1$s <span class="count">(%2$s)</span>', 'woo-wallet' ), $name, number_format_i18n( $avail_roles['none'] ) );
-			$role_links['none'] = "<a href='" . esc_url( add_query_arg( 'role', 'none', $url ) ) . "'$current_link_attributes>$name</a>";
+			$role_links['none'] = array(
+				'url'     => esc_url( add_query_arg( 'role', 'none', $url ) ),
+				'label'   => $name,
+				'current' => 'none' === $role,
+			);
 		}
 
-		return $role_links;
+		return $this->get_views_links( $role_links );
 	}
 
 	/**
@@ -239,22 +277,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			case 'email':
 			case 'balance':
 				return $item[ $column_name ];
-			case 'actions':
-				return '<p><a href="' . add_query_arg(
-					array(
-						'page'    => 'woo-wallet-add',
-						'user_id' => $item['id'],
-					),
-					admin_url( 'admin.php' )
-				) . '" class="button tips wallet-manage"></a> <a class="button tips wallet-view" href="' . add_query_arg(
-					array(
-						'page'    => 'woo-wallet-transactions',
-						'user_id' => $item['id'],
-					),
-					admin_url( 'admin.php' )
-				) . '"></a></p>';
-			case 'cb':
-				return '<input type="checkbox" />';
 			default:
 				return apply_filters( 'woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item );
 		}
@@ -266,6 +288,158 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	protected function column_cb( $item ) {
 		return sprintf( '<input type="checkbox" name="users[]" value="%s" />', $item['id'] );
+	}
+	/**
+	 * Display username column.
+	 *
+	 * @param array $item item.
+	 * @return string
+	 */
+	protected function column_username( $item ) {
+		$user_object = new WP_User( $item['id'] );
+
+		$link = add_query_arg(
+			array(
+				'page'    => 'woo-wallet-transactions',
+				'user_id' => $item['id'],
+			),
+			admin_url( 'admin.php' )
+		);
+
+		$edit_balance_link = add_query_arg(
+			array(
+				'action'    => 'get_edit_wallet_balance_template',
+				'security'  => wp_create_nonce( 'woo-wallet-edit-balance-template' ),
+				'user_id'   => $item['id'],
+				'TB_iframe' => false,
+				'width'     => 450,
+				'height'    => 450,
+			),
+			admin_url( 'admin-ajax.php' )
+		);
+
+		$avatar  = get_avatar( $user_object->ID, 32 );
+		$output  = '';
+		$output .= $avatar;
+		/* translators: 1: user_login */
+		$output .= '<strong><a href="' . esc_url( $link ) . '" class="row-title">' . esc_html( sprintf( _x( '%s', 'user autocomplete result', 'woo-wallet' ), $user_object->user_login ) ) . '</a></strong>';
+
+		// Get actions.
+		$actions = array(
+			'edit' => '<a href="' . esc_url( $edit_balance_link ) . '" class="thickbox">' . esc_html__( 'Edit Balance', 'woo-wallet' ) . '</a>',
+		);
+
+		if ( is_wallet_account_locked( $item['id'] ) ) {
+			unset( $actions['edit'] );
+		}
+
+		$row_actions = array();
+
+		foreach ( $actions as $action => $link ) {
+			$row_actions[] = '<span class="' . esc_attr( $action ) . '">' . $link . '</span>';
+		}
+		$output .= '<br>';
+		$output .= '<div class="row-actions">' . implode( ' | ', $row_actions ) . '</div>';
+
+		return $output;
+	}
+	/**
+	 * Display total diposit column
+	 *
+	 * @param array $item item.
+	 * @return string
+	 */
+	protected function column_total_diposit( $item ) {
+		$args          = array(
+			'user_id'    => $item['id'],
+			'where'      => array(
+				array(
+					'key'   => 'type',
+					'value' => 'credit',
+				),
+			),
+			'where_meta' => array(
+				array(
+					'key'   => '_type',
+					'value' => 'credit_purchase',
+				),
+			),
+		);
+		$transactions  = get_wallet_transactions( $args );
+		$total_diposit = array_sum( wp_list_pluck( $transactions, 'amount' ) );
+		return wc_price( $total_diposit, woo_wallet_wc_price_args() );
+	}
+
+	protected function column_total_spent( $item ) {
+		$args                  = array(
+			'user_id'    => $item['id'],
+			'where'      => array(
+				array(
+					'key'   => 'type',
+					'value' => 'debit',
+				),
+			),
+			'where_meta' => array(
+				array(
+					'key'   => '_type',
+					'value' => 'purchase',
+				),
+			),
+		);
+		$transactions          = get_wallet_transactions( $args );
+		$total_spent_by_wallet = array_sum( wp_list_pluck( $transactions, 'amount' ) );
+		$args                  = array(
+			'user_id'    => $item['id'],
+			'where'      => array(
+				array(
+					'key'   => 'type',
+					'value' => 'debit',
+				),
+			),
+			'where_meta' => array(
+				array(
+					'key'   => '_type',
+					'value' => 'partial_payment',
+				),
+			),
+		);
+		$transactions          = get_wallet_transactions( $args );
+		$total_partial_payment = array_sum( wp_list_pluck( $transactions, 'amount' ) );
+		return wc_price( $total_spent_by_wallet + $total_partial_payment, woo_wallet_wc_price_args() );
+	}
+
+	protected function column_cashbak_earned( $item ) {
+		$args           = array(
+			'user_id'    => $item['id'],
+			'where'      => array(
+				array(
+					'key'   => 'type',
+					'value' => 'credit',
+				),
+			),
+			'where_meta' => array(
+				array(
+					'key'   => '_type',
+					'value' => 'cashback',
+				),
+			),
+		);
+		$transactions   = get_wallet_transactions( $args );
+		$total_cashback = array_sum( wp_list_pluck( $transactions, 'amount' ) );
+		return wc_price( $total_cashback, woo_wallet_wc_price_args() );
+	}
+
+	protected function column_status( $item ) {
+		$is_locked = is_wallet_account_locked( $item['id'] );
+		?>
+		<span style="color: <?php echo $is_locked ? '#D63638' : '#135E96'; ?>;">
+			<?php if ( $is_locked ) { ?>
+				<span class="dashicons dashicons-lock" title="<?php echo esc_attr( __( 'Locked', 'woo-wallet' ) ); ?>"></span>
+			<?php } else { ?>
+				<span class="dashicons dashicons-yes" title="<?php echo esc_attr( __( 'Active', 'woo-wallet' ) ); ?>"></span>
+			<?php } ?>
+		</span>
+		<?php
 	}
 	/**
 	 * Process Bulk actions.
@@ -302,7 +476,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 					foreach ( $delete_ids as $id ) {
 						$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
 						delete_user_wallet_transactions( $id, true );
-						if ( $current_balance ) {
+						if ( $current_balance && apply_filters( 'woo_wallet_credit_user_after_delete_log', true ) ) {
 							woo_wallet()->wallet->credit( $id, $current_balance, __( 'Balance after deleting transaction logs', 'woo-wallet' ) );
 						}
 					}

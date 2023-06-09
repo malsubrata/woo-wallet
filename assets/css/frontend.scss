@@ -167,10 +167,24 @@ p.woo-wallet-field-container {
     margin-bottom: 1em;
     border-radius: 3px;
 }
-.woocommerce-MyAccount-navigation > ul li.woocommerce-MyAccount-navigation-link--woo-wallet a::before {
+.theme-storefront .woocommerce-MyAccount-navigation > ul li.woocommerce-MyAccount-navigation-link--woo-wallet a::before {
     font-family: 'woowallet' !important;
     content: "\e900";
 }
 #wc-wallet-transaction-details.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before, table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>th:first-child:before{
     line-height: 19px !important;
+}
+#wc-wallet-transaction-details{
+    mark.debit::before{
+        content: "-";
+    }
+    mark.credit::before{
+        content: "+";
+    }
+    mark.debit{
+        color: #bf0003;
+    }
+    mark.credit{
+        color: #197f36;
+    }
 }

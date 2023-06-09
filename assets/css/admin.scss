@@ -108,3 +108,77 @@
     vertical-align: bottom ;
     margin: 0 0 5px 5px;
 }
+
+.toplevel_page_woo-wallet{
+    #TB_title {
+		display: none;
+	}
+    #TB_ajaxContent {
+		width: 100% !important;
+		padding: 0 !important;
+	}
+    .woo-wallet-edit-balance-tb-main{
+        header {
+            height: auto;
+            background: #fcfcfc;
+            padding: 1em 1.5em;
+            border-bottom: 1px solid #ddd;
+            display: block;
+            position: relative;
+            h1 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 700;
+                line-height: 1.5em;
+            }
+            .modal-close-link {
+                cursor: pointer;
+                color: #777;
+                height: 54px;
+                width: 54px;
+                padding: 0;
+                position: absolute;
+                top: 0;
+                right: 0;
+                text-align: center;
+                border: 0;
+                border-left: 1px solid #ddd;
+                background-color: transparent;
+                transition: color .1s ease-in-out, background .1s ease-in-out;
+            }
+        }
+        fieldset{
+            padding: 14px;
+        }
+        .current-balance{
+            float: right;
+            margin-right: 54px;
+            margin-top: 5px;
+        }
+        footer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            padding: 1em 1.5em;
+            background: #fcfcfc;
+            border-top: 1px solid #dfdfdf;
+        }
+        .inner {
+            line-height: 23px;
+        }
+        .button.button-large {
+            margin-left: 10px;
+            padding: 0 10px !important;
+            line-height: 28px;
+            height: auto;
+            display: inline-block;
+        }
+    }
+}
+#setting-error-terawallet{
+    a{
+        text-decoration: none;
+    }
+}

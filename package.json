@@ -23,6 +23,9 @@
     "url": "https://github.com/malsubrata/woo-wallet/issues"
   },
   "homepage": "https://github.com/malsubrata/woo-wallet#readme",
+  "browserslist": [
+    "extends @wordpress/browserslist-config"
+  ],
   "devDependencies": {
     "autoprefixer": "^10.4.13",
     "grunt": "^1.5.3",

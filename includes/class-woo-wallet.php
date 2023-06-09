@@ -179,6 +179,8 @@ final class WooWallet {
 		}
 
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
+
+		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
 	}
 	/**
 	 * WooWallet init widget
@@ -346,6 +348,23 @@ final class WooWallet {
 		if ( apply_filters( 'woo_wallet_delete_transaction_records', true ) ) {
 			$wpdb->query( $wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		}
+	}
+	/**
+	 * Filter wallet topup orders.
+	 *
+	 * @param array $query query.
+	 * @param array $query_vars query_vars.
+	 * @return array
+	 */
+	public function filter_wallet_topup_orders( $query, $query_vars ) {
+		if ( ! empty( $query_vars['topuporders'] ) && $query_vars['topuporders'] ) {
+			$query['meta_query'][] = array(
+				'key'   => '_wc_wallet_purchase_credited',
+				'value' => true,
+			);
+		}
+
+		return $query;
 	}
 
 	/**

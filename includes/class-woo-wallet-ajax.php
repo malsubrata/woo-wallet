@@ -53,6 +53,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			add_action( 'wp_ajax_terawallet_do_ajax_transaction_export', array( $this, 'terawallet_do_ajax_transaction_export' ) );
 
 			add_action( 'wp_ajax_lock_unlock_terawallet', array( $this, 'lock_unlock_terawallet' ) );
+
+			add_action( 'wp_ajax_get_edit_wallet_balance_template', array( $this, 'edit_wallet_balance_template' ) );
 		}
 		/**
 		 * Lock / Unlock user wallet
@@ -370,7 +372,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				wp_send_json_error( __( 'You have no permission to do that', 'woo-wallet' ) );
 			}
 
-			if ( isset( $_POST['nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
+			if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
 				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
 			}
 			update_option( '_woo_wallet_promotion_dismissed', true );
@@ -413,16 +415,29 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'woo_wallet_transactons_datatable_row_data',
 						array(
 							'id'      => $transaction->transaction_id,
-							'credit'  => 'credit' === $transaction->type ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) : ' - ',
-							'debit'   => 'debit' === $transaction->type ? wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) : ' - ',
+							'amount'  => '<mark class="' . $transaction->type . '">' . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) . '</mark>',
 							'details' => $transaction->details,
 							'date'    => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ),
+							'type'    => ucfirst( $transaction->type ),
 						),
 						$transaction
 					);
 				}
 			}
 			wp_send_json( $response );
+		}
+		/**
+		 * Return edit wallet template for thickbox.
+		 *
+		 * @return void
+		 */
+		public function edit_wallet_balance_template() {
+			check_ajax_referer( 'woo-wallet-edit-balance-template', 'security' );
+			$user_id = isset( $_REQUEST['user_id'] ) ? absint( $_REQUEST['user_id'] ) : 0;
+			ob_start();
+			woo_wallet()->get_template( 'admin/edit-balance.php', array( 'user_id' => $user_id ) );
+			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			wp_die();
 		}
 
 	}

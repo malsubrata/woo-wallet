@@ -243,7 +243,7 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 					}
 				}
 			}
-			return apply_filters( 'woo_wallet_product_wise_cashback_amount', $cashback_amount, $product, $qty );
+			return apply_filters( 'woo_wallet_product_wise_cashback_amount', $cashback_amount, $product, $qty, $product_price );
 		}
 
 		/**
@@ -302,7 +302,7 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 					}
 				}
 			}
-			return apply_filters( 'woo_wallet_product_category_wise_cashback_amount', $cashback_amount, $product, $qty );
+			return apply_filters( 'woo_wallet_product_category_wise_cashback_amount', $cashback_amount, $product, $qty, $product_price );
 		}
 
 	}
