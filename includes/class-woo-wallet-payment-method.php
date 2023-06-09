@@ -105,6 +105,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 */
 		public function get_icon() {
 			$current_balance = woo_wallet()->wallet->get_wallet_balance( get_current_user_id() );
+			/* translators: 1: wallet amount */
 			return apply_filters( 'woocommerce_gateway_icon', sprintf( __( ' | Current Balance: <strong>%s</strong>', 'woo-wallet' ), $current_balance ), $this->id );
 		}
 
@@ -127,6 +128,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		public function process_payment( $order_id ) {
 			$order = wc_get_order( $order_id );
 			if ( ( $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) && apply_filters( 'woo_wallet_disallow_negative_transaction', ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) <= 0 || $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ), $order->get_total( 'edit' ), woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
+				/* translators: 1: wallet amount */
 				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
 				return;
 			}

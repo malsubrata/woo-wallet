@@ -22,10 +22,10 @@ $currency  = get_woocommerce_currency_symbol();
 $remaining = woo_wallet()->wallet->get_wallet_balance( $user->ID, 'edit' );
 echo '= ' . esc_html( $email_heading ) . " =\n\n";
 echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
-/* translators: blogname */
+/* translators: 1: wallet amount */
 echo sprintf( esc_html__( 'Your %s wallet balance is low.', 'woo-wallet' ), wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
-/* translators: wallet amount */
+/* translators: 1: wallet amount */
 echo sprintf( esc_html__( 'Current Balance: %s', 'woo-wallet' ), $currency . ' ' . woo_wallet()->wallet->get_wallet_balance( $user->ID, 'edit' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 echo sprintf( esc_html__( 'Please recharge you wallet now to avoid any disruption.', 'woo-wallet' ) );

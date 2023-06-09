@@ -27,9 +27,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 do_action( 'woocommerce_email_header', $email_heading, $email );
 
 ?>
-<p><?php /* translators: wallet amount */ echo sprintf( __( 'Your %s wallet balance is low.', 'woo-wallet' ), wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
-<p><b><?php /* translators: wallet amount */ echo sprintf( __( 'Current Balance: %s', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user->ID ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></b></p>
-<p><?php echo sprintf( __( 'Please recharge you wallet now to avoid any disruption.', 'woo-wallet' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+<p>
+	<?php
+	/* translators: 1: wallet amount */
+	echo sprintf( __( 'Your %s wallet balance is low.', 'woo-wallet' ), wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+	?>
+</p>
+<p>
+	<b>
+		<?php
+		/* translators: 1: wallet amount */
+		echo sprintf( __( 'Current Balance: %s', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user->ID ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+		?>
+	</b>
+</p>
+<p>
+	<?php echo sprintf( __( 'Please recharge you wallet now to avoid any disruption.', 'woo-wallet' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+</p>
 <?php
 /**
  * WooCommerce email footer

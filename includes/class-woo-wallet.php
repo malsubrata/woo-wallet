@@ -137,6 +137,8 @@ final class WooWallet {
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
 		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
+		// Registers WooCommerce Blocks integration.
+		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'woocommerce_gateway_wallet_woocommerce_block_support' ) );
 		do_action( 'woo_wallet_init' );
 	}
 
@@ -365,6 +367,20 @@ final class WooWallet {
 		}
 
 		return $query;
+	}
+	/**
+	 * Registers WooCommerce Blocks integration.
+	 */
+	public static function woocommerce_gateway_wallet_woocommerce_block_support() {
+		if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
+			require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payments-blocks.php';
+			add_action(
+				'woocommerce_blocks_payment_method_type_registration',
+				function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+					$payment_method_registry->register( new WC_Gateway_Wallet_Blocks_Support() );
+				}
+			);
+		}
 	}
 
 	/**

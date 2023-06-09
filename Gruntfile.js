@@ -129,63 +129,11 @@ module.exports = function (grunt) {
             }
         },
 
-        // Generate POT files.
-        makepot: {
-            options: {
-                type: 'wp-plugin',
-                domainPath: 'languages',
-                potHeaders: {
-                    'report-msgid-bugs-to': 'https://github.com/malsubrata/woo-wallet/issues',
-                    'language-team': 'StandaloneTech <admin@standalonetech.com>',
-                    'last-translator': 'Subrata Mal<m.subrata1991@gmail.com>'
-                }
-            },
-            dist: {
-                options: {
-                    potFilename: 'woo-wallet.pot',
-                    exclude: [
-                        'tmp/.*'
-                    ]
-                }
-            }
-        },
-
-        // Check textdomain errors.
-        checktextdomain: {
-            options: {
-                text_domain: 'woo-wallet',
-                keywords: [
-                    '__:1,2d',
-                    '_e:1,2d',
-                    '_x:1,2c,3d',
-                    'esc_html__:1,2d',
-                    'esc_html_e:1,2d',
-                    'esc_html_x:1,2c,3d',
-                    'esc_attr__:1,2d',
-                    'esc_attr_e:1,2d',
-                    'esc_attr_x:1,2c,3d',
-                    '_ex:1,2c,3d',
-                    '_n:1,2,4d',
-                    '_nx:1,2,4c,5d',
-                    '_n_noop:1,2,3d',
-                    '_nx_noop:1,2,3c,4d'
-                ]
-            },
-            files: {
-                src: [
-                    '**/*.php', // Include all files
-                    '!node_modules/**', // Exclude node_module
-                    '!tmp/**'                 // Exclude tmp/
-                ],
-                expand: true
-            }
-        },
-
         // Autoprefixer.
         postcss: {
             options: {
                 processors: [
-                    require('autoprefixer')(), // add vendor prefixes
+                    require('autoprefixer')()
                 ]
             },
             dist: {
@@ -201,8 +149,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-rtlcss');
     grunt.loadNpmTasks('grunt-postcss');
     grunt.loadNpmTasks('grunt-stylelint');
-    grunt.loadNpmTasks('grunt-wp-i18n');
-    grunt.loadNpmTasks('grunt-checktextdomain');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -211,8 +157,7 @@ module.exports = function (grunt) {
     // Register tasks
     grunt.registerTask('default', [
         'js',
-        'css',
-        'i18n'
+        'css'
     ]);
 
     grunt.registerTask('js', [
@@ -231,10 +176,5 @@ module.exports = function (grunt) {
     // Only an alias to 'default' task.
     grunt.registerTask('dev', [
         'default'
-    ]);
-
-    grunt.registerTask('i18n', [
-        'checktextdomain',
-        'makepot'
     ]);
 };

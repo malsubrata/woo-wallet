@@ -1,13 +1,9 @@
 {
   "name": "woo-wallet",
-  "title": "WooCommerce Wallet",
-  "version": "1.3.0",
+  "title": "TeraWallet - WooCommerce Wallet",
+  "version": "1.4.0",
   "description": "A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.",
   "main": "Gruntfile.js",
-  "scripts": {
-    "build": "grunt",
-    "build-watch": "grunt watch"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://malsubrata@github.com/malsubrata/woo-wallet.git"
@@ -17,8 +13,12 @@
     "wallet",
     "wordpress-plugin"
   ],
-  "author": "Subrata Mal",
+  "author": "StandaloneTech",
   "license": "GPL-3.0+",
+  "engines": {
+		"node": ">=6.9.4",
+		"npm": ">=1.1.0"
+	},
   "bugs": {
     "url": "https://github.com/malsubrata/woo-wallet/issues"
   },
@@ -44,9 +44,22 @@
     "grunt-wp-i18n": "^1.0.3",
     "node-sass": "^8.0.0",
     "stylelint": "^14.15.0",
-    "@wordpress/browserslist-config": "^5.5.0"
+    "@wordpress/browserslist-config": "^5.5.0",
+    "@woocommerce/dependency-extraction-webpack-plugin": "^1.7.0",
+		"@wordpress/scripts": "17.1.0",
+		"cross-env": "6.0.3"
   },
   "dependencies": {
     "postcss": "^8.4.19"
+  },
+  "scripts": {
+    "start": "wp-scripts start",
+    "build": "wp-scripts build && npm run i18n:build",
+    "build-watch": "grunt watch",
+		"i18n": "npm run i18n:build",
+		"i18n:build": "npm run i18n:pot && ./bin/build_i18n.sh",
+		"i18n:pot": "php -d xdebug.max_nesting_level=512 $(which wp) i18n make-pot --exclude=\"node_modules/,languages/,assets/, build/\" --headers='{\"Report-Msgid-Bugs-To\":\"https://github.com/malsubrata/woo-wallet/issues\", \"language-team\":\"StandaloneTech <support@standalonetech.com>\"}' . languages/woo-wallet.pot",
+		"i18n:json": "$(which wp) i18n make-json languages --no-purge",
+		"check-engines": "wp-scripts check-engines"
   }
 }

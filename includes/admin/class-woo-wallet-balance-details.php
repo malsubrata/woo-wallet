@@ -322,7 +322,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$output  = '';
 		$output .= $avatar;
 		/* translators: 1: user_login */
-		$output .= '<strong><a href="' . esc_url( $link ) . '" class="row-title">' . esc_html( sprintf( _x( '%s', 'user autocomplete result', 'woo-wallet' ), $user_object->user_login ) ) . '</a></strong>';
+		$output .= '<strong><a href="' . esc_url( $link ) . '" class="row-title">' . esc_html( $user_object->user_login ) . '</a></strong>';
 
 		// Get actions.
 		$actions = array(
