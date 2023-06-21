@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the TeraWallet plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.4.7\n"
+"Project-Id-Version: TeraWallet 1.4.8\n"
 "Report-Msgid-Bugs-To: https://github.com/malsubrata/woo-wallet/issues\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Last-Translator: StandaloneTech <support@standalonetech.com>\n"
+"Language-Team: StandaloneTech <support@standalonetech.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-06-09T21:52:24+05:30\n"
+"POT-Creation-Date: 2023-06-21T13:31:21+05:30\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.6.0\n"
 "language-team: StandaloneTech <support@standalonetech.com>\n"
@@ -23,7 +23,7 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:921
 #: includes/class-woo-wallet-admin.php:1096
 #: includes/class-woo-wallet-extensions.php:64
-#: includes/class-woo-wallet-settings.php:58
+#: includes/class-woo-wallet-settings.php:65
 msgid "TeraWallet"
 msgstr ""
 
@@ -624,13 +624,13 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:816
 #: includes/class-woo-wallet-admin.php:993
 #: includes/class-woo-wallet-admin.php:1016
-#: includes/class-woo-wallet-settings.php:236
+#: includes/class-woo-wallet-settings.php:243
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:207
 msgid "Cashback type"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:764
-#: includes/class-woo-wallet-settings.php:237
+#: includes/class-woo-wallet-settings.php:244
 msgid "Select cashback type percentage or fixed"
 msgstr ""
 
@@ -638,9 +638,9 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:818
 #: includes/class-woo-wallet-admin.php:995
 #: includes/class-woo-wallet-admin.php:1019
-#: includes/class-woo-wallet-settings.php:172
-#: includes/class-woo-wallet-settings.php:240
-#: includes/class-woo-wallet-settings.php:285
+#: includes/class-woo-wallet-settings.php:179
+#: includes/class-woo-wallet-settings.php:247
+#: includes/class-woo-wallet-settings.php:292
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:214
 msgid "Percentage"
 msgstr ""
@@ -649,9 +649,9 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:819
 #: includes/class-woo-wallet-admin.php:996
 #: includes/class-woo-wallet-admin.php:1020
-#: includes/class-woo-wallet-settings.php:173
-#: includes/class-woo-wallet-settings.php:241
-#: includes/class-woo-wallet-settings.php:286
+#: includes/class-woo-wallet-settings.php:180
+#: includes/class-woo-wallet-settings.php:248
+#: includes/class-woo-wallet-settings.php:293
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:215
 msgid "Fixed"
 msgstr ""
@@ -660,13 +660,13 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:835
 #: includes/class-woo-wallet-admin.php:1000
 #: includes/class-woo-wallet-admin.php:1025
-#: includes/class-woo-wallet-settings.php:247
+#: includes/class-woo-wallet-settings.php:254
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:224
 msgid "Cashback Amount"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:779
-#: includes/class-woo-wallet-settings.php:248
+#: includes/class-woo-wallet-settings.php:255
 msgid "Enter cashback amount"
 msgstr ""
 
@@ -997,235 +997,235 @@ msgstr ""
 msgid "Select"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:31
-#: includes/class-woo-wallet-settings.php:317
-#: includes/class-woo-wallet.php:232
+#: includes/class-woo-wallet-settings.php:38
+#: includes/class-woo-wallet-settings.php:324
+#: includes/class-woo-wallet.php:233
 msgid "Settings"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:85
+#: includes/class-woo-wallet-settings.php:92
 msgid "General"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:90
+#: includes/class-woo-wallet-settings.php:97
 msgid "Credit Options"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:108
+#: includes/class-woo-wallet-settings.php:115
 msgid "Rechargeable Product Title"
 msgstr ""
 
 #. translators: 1: Product edit URL
-#: includes/class-woo-wallet-settings.php:110
+#: includes/class-woo-wallet-settings.php:117
 msgid "Enter wallet rechargeable product title | <a href=\"%s\" target=\"_blank\">Edit product</a>"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:116
+#: includes/class-woo-wallet-settings.php:123
 msgid "Rechargeable Product Image"
 msgstr ""
 
 #. translators: 1: Product edit URL
-#: includes/class-woo-wallet-settings.php:118
+#: includes/class-woo-wallet-settings.php:125
 msgid "Choose wallet rechargeable product image | <a href=\"%s\" target=\"_blank\">Edit product</a>"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:121
-#: includes/class-woo-wallet-settings.php:123
+#: includes/class-woo-wallet-settings.php:128
+#: includes/class-woo-wallet-settings.php:130
 msgid "Set product image"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:122
+#: includes/class-woo-wallet-settings.php:129
 msgid "Product image"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:131
+#: includes/class-woo-wallet-settings.php:138
 msgid "Minimum Topup Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:132
+#: includes/class-woo-wallet-settings.php:139
 msgid "The minimum amount needed for wallet top up"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:138
+#: includes/class-woo-wallet-settings.php:145
 msgid "Maximum Topup Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:139
+#: includes/class-woo-wallet-settings.php:146
 msgid "The maximum amount needed for wallet top up"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:148
+#: includes/class-woo-wallet-settings.php:155
 msgid "Auto deduct wallet balance for partial payment"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:149
+#: includes/class-woo-wallet-settings.php:156
 msgid "If a purchase requires more balance than you have in your wallet, then if checked the wallet balance will be deduct first and the rest of the amount will need to be paid."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:154
+#: includes/class-woo-wallet-settings.php:161
 msgid "Allow Wallet Transfer"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:155
+#: includes/class-woo-wallet-settings.php:162
 msgid "If checked user will be able to transfer fund to another user."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:161
+#: includes/class-woo-wallet-settings.php:168
 msgid "Minimum Transfer Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:162
+#: includes/class-woo-wallet-settings.php:169
 msgid "Enter minimum transfer amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:168
+#: includes/class-woo-wallet-settings.php:175
 msgid "Transfer charge type"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:169
+#: includes/class-woo-wallet-settings.php:176
 msgid "Select transfer charge type percentage or fixed"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:179
+#: includes/class-woo-wallet-settings.php:186
 msgid "Transfer charge Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:180
+#: includes/class-woo-wallet-settings.php:187
 msgid "Enter transfer charge amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:191
+#: includes/class-woo-wallet-settings.php:198
 msgid "Cashback Reward Program"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:192
+#: includes/class-woo-wallet-settings.php:199
 msgid "Run cashback reward program on your store"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:197
+#: includes/class-woo-wallet-settings.php:204
 msgid "Process cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:198
+#: includes/class-woo-wallet-settings.php:205
 msgid "Select order status to process cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:203
+#: includes/class-woo-wallet-settings.php:210
 msgid "Pending payment"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:204
+#: includes/class-woo-wallet-settings.php:211
 msgid "On hold"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:205
+#: includes/class-woo-wallet-settings.php:212
 msgid "Processing"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:206
+#: includes/class-woo-wallet-settings.php:213
 msgid "Completed"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:218
+#: includes/class-woo-wallet-settings.php:225
 msgid "Cashback Rule"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:219
+#: includes/class-woo-wallet-settings.php:226
 msgid "Select Cashback Rule cart or product wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:224
+#: includes/class-woo-wallet-settings.php:231
 msgid "Cart wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:225
+#: includes/class-woo-wallet-settings.php:232
 msgid "Product wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:226
+#: includes/class-woo-wallet-settings.php:233
 msgid "Product category wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:254
+#: includes/class-woo-wallet-settings.php:261
 msgid "Minimum Cart Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:255
+#: includes/class-woo-wallet-settings.php:262
 msgid "Enter applicable minimum cart amount for cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:261
+#: includes/class-woo-wallet-settings.php:268
 msgid "Maximum Cashback Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:262
+#: includes/class-woo-wallet-settings.php:269
 msgid "Enter maximum cashback amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:268
+#: includes/class-woo-wallet-settings.php:275
 msgid "Allow Minimum cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:269
+#: includes/class-woo-wallet-settings.php:276
 msgid "If checked minimum cashback amount will be applied on product category cashback calculation."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:275
+#: includes/class-woo-wallet-settings.php:282
 msgid "Payment gateway charge"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:276
+#: includes/class-woo-wallet-settings.php:283
 msgid "Charge customer when they add balance to their wallet?"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:281
+#: includes/class-woo-wallet-settings.php:288
 msgid "Charge type"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:282
+#: includes/class-woo-wallet-settings.php:289
 msgid "Select gateway charge type percentage or fixed"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:336
-#: includes/class-woo-wallet-settings.php:363
+#: includes/class-woo-wallet-settings.php:343
+#: includes/class-woo-wallet-settings.php:370
 msgid "(no title)"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:341
+#: includes/class-woo-wallet-settings.php:348
 msgid "Enter gateway charge amount for "
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:368
+#: includes/class-woo-wallet-settings.php:375
 msgid "Allow this gateway for recharge wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:389
+#: includes/class-woo-wallet-settings.php:396
 msgid "Rechargeable Product Tax status"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:390
-#: includes/class-woo-wallet-settings.php:401
+#: includes/class-woo-wallet-settings.php:397
+#: includes/class-woo-wallet-settings.php:408
 msgid "Define whether or not the rechargeable Product is taxable."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:393
+#: includes/class-woo-wallet-settings.php:400
 msgid "Taxable"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:394
+#: includes/class-woo-wallet-settings.php:401
 msgctxt "Tax status"
 msgid "None"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:400
+#: includes/class-woo-wallet-settings.php:407
 msgid "Rechargeable Product Tax class"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:404
+#: includes/class-woo-wallet-settings.php:411
 msgid "Choose a tax class for rechargeable product. Tax classes are used to apply different tax rates specific to certain types of product."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:424
+#: includes/class-woo-wallet-settings.php:431
 msgid "Mini wallet display location"
 msgstr ""
 
@@ -1285,15 +1285,15 @@ msgstr ""
 msgid "Title:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:232
+#: includes/class-woo-wallet.php:233
 msgid "View Wallet settings"
 msgstr ""
 
-#: includes/class-woo-wallet.php:436
+#: includes/class-woo-wallet.php:445
 msgid "WooCommerce Wallet plugin requires"
 msgstr ""
 
-#: includes/class-woo-wallet.php:437
+#: includes/class-woo-wallet.php:446
 msgid "plugins to be active!"
 msgstr ""
 

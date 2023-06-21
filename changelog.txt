@@ -1,4 +1,10 @@
 *** Changelog ***
+= 1.4.8 - 2023-06-22 =
+* New - Redesign wallet admin panel.
+* New - Added support for WooCommerce block checkout.
+* New - Added support for FOX – Currency Switcher Professional for WooCommerce
+* Fix - PHP 8.2 issues.
+
 = 1.4.7 - 2023-04-05 =
 * Fix - Refund issue.
 * Fix - WooCommerce add to cart notice.
