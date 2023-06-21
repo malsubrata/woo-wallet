@@ -1,21 +1,28 @@
 <?php
-
 /**
  * Woo Wallet settings
  *
  * @author Subrata Mal
+ * @package StandaloneTech
  */
+
 if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
-
+	/**
+	 * Plugin settings page class
+	 */
 	class Woo_Wallet_Settings {
-		/* setting api object */
 
+		/**
+		 * Settings api object
+		 *
+		 * @var Woo_Wallet_Settings_API
+		 */
 		private $settings_api;
 
 		/**
 		 * Class constructor
 		 *
-		 * @param object $settings_api
+		 * @param Woo_Wallet_Settings_API $settings_api settings_api.
 		 */
 		public function __construct( $settings_api ) {
 			$this->settings_api = $settings_api;
@@ -442,21 +449,21 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			/**
 			 * Save product title on option change
 			 */
-			if ( $old_value['product_title'] !== $value['product_title'] ) {
+			if ( ! isset( $old_value['product_title'] ) || $old_value['product_title'] !== $value['product_title'] ) {
 				$this->set_rechargeable_product_title( $value['product_title'] );
 			}
 
 			/**
 			 * Save tax status
 			 */
-			if ( $old_value['_tax_status'] !== $value['_tax_status'] || $old_value['_tax_class'] !== $value['_tax_class'] ) {
+			if ( isset( $value['_tax_status'] ) && isset( $value['_tax_class'] ) ) {
 				$this->set_rechargeable_tax_status( $value['_tax_status'], $value['_tax_class'] );
 			}
 
 			/**
 			 * Save product image
 			 */
-			if ( $old_value['product_image'] !== $value['product_image'] ) {
+			if ( ! isset( $old_value['product_image'] ) || $old_value['product_image'] !== $value['product_image'] ) {
 				$this->set_rechargeable_product_image( $value['product_image'] );
 			}
 		}

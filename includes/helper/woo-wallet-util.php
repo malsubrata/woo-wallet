@@ -677,19 +677,22 @@ if ( ! function_exists( 'woo_wallet_wc_price_args' ) ) {
 	 * @param int $user_id user_id.
 	 * @return array
 	 */
-	function woo_wallet_wc_price_args( $user_id = '' ) {
+	function woo_wallet_wc_price_args( $user_id = '', $args = array() ) {
 		if ( ! $user_id ) {
 			$user_id = get_current_user_id();
 		}
 		$args = apply_filters(
 			'woo_wallet_wc_price_args',
-			array(
-				'ex_tax_label'       => false,
-				'currency'           => '',
-				'decimal_separator'  => wc_get_price_decimal_separator(),
-				'thousand_separator' => wc_get_price_thousand_separator(),
-				'decimals'           => wc_get_price_decimals(),
-				'price_format'       => get_woocommerce_price_format(),
+			wp_parse_args(
+				$args,
+				array(
+					'ex_tax_label'       => false,
+					'currency'           => '',
+					'decimal_separator'  => wc_get_price_decimal_separator(),
+					'thousand_separator' => wc_get_price_thousand_separator(),
+					'decimals'           => wc_get_price_decimals(),
+					'price_format'       => get_woocommerce_price_format(),
+				)
 			),
 			$user_id
 		);

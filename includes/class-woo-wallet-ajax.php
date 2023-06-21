@@ -200,7 +200,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$order_id               = absint( filter_input( INPUT_POST, 'order_id' ) );
 			$order                  = wc_get_order( $order_id );
 			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
-			$transaction_id         = woo_wallet()->wallet->credit( $order->get_customer_id(), $partial_payment_amount, __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number() );
+			$transaction_id         = woo_wallet()->wallet->credit( $order->get_customer_id(), $partial_payment_amount, __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number(), array( 'currency' => $order->get_currency( 'edit' ) ) );
 			if ( $transaction_id ) {
 				$response['success'] = true;
 				/* translators: wallet amount */
@@ -279,7 +279,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					)
 				);
 				if ( ! is_wp_error( $refund ) ) {
-					$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $refund_amount, $refund_reason );
+					$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $refund_amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
 					if ( ! $transaction_id ) {
 						throw new Exception( __( 'Refund not credited to customer', 'woo-wallet' ) );
 					} else {

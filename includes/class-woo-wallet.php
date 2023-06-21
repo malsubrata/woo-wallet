@@ -149,6 +149,7 @@ final class WooWallet {
 		$this->load_plugin_textdomain();
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payment-method.php';
 		$this->add_marketplace_support();
+		$this->add_multicurrency_support();
 		add_filter( 'woocommerce_email_classes', array( $this, 'woocommerce_email_classes' ), 999 );
 		add_filter( 'woocommerce_template_directory', array( $this, 'woocommerce_template_directory' ), 10, 2 );
 		add_filter( 'woocommerce_payment_gateways', array( $this, 'load_gateway' ) );
@@ -330,13 +331,21 @@ final class WooWallet {
 		}
 	}
 	/**
+	 * Load multicurrency supported file.
+	 */
+	public function add_multicurrency_support() {
+		if ( class_exists( 'WOOCS' ) ) {
+			include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/woocommerce-currency-switcher/class-wallet-multi-currency.php';
+		}
+	}
+	/**
 	 * Store fee key to order item meta.
 	 *
 	 * @param Int               $item_id ItemId.
 	 * @param WC_Order_Item_Fee $item Item.
 	 */
 	public function woocommerce_new_order_item( $item_id, $item ) {
-		if ( 'fee' === $item->get_type() ) {
+		if ( 'fee' === $item->get_type() && property_exists( $item, 'legacy_fee_key' ) ) {
 			update_metadata( 'order_item', $item_id, '_legacy_fee_key', $item->legacy_fee_key );
 		}
 	}
