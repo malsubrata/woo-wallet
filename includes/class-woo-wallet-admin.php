@@ -98,6 +98,23 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'show_user_profile', array( $this, 'add_wallet_management_fields' ) );
 
 			add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
+
+			add_action( 'current_screen', array( $this, 'remove_woocommerce_help_tabs' ), 999 );
+		}
+		/**
+		 * Remove all WooCommerce help tabs
+		 *
+		 * @return void
+		 */
+		public function remove_woocommerce_help_tabs() : void {
+			$screen = get_current_screen();
+			if ( ! $screen ) {
+				return;
+			}
+			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
+			if ( in_array( $screen->id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) ) {
+				$screen->remove_help_tabs();
+			}
 		}
 
 		/**
@@ -279,7 +296,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
 			add_submenu_page( 'woo-wallet', __( 'Actions', 'woo-wallet' ), __( 'Actions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-actions', array( $this, 'plugin_actions_page' ) );
 
-			add_submenu_page( null, null, null, get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
+			add_submenu_page( '', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
 		}
 		/**
 		 * Load exporter files.
@@ -355,7 +372,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 								?>
 							</td>
 							<td class="name" width=""><a href="<?php echo esc_url( admin_url( 'admin.php?page=woo-wallet-actions&action=' . strtolower( $action->id ) ) ); ?>" class="wc-payment-gateway-method-title"><?php echo esc_html( $action->get_action_title() ); ?></a></td>
-							<td class="description" width=""><?php echo esc_html( $action->get_action_description() ); ?></td>
+							<td class="description" width=""><?php echo $action->get_action_description(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
 							<td class="action" width="1%">
 								<a class="button alignright" href="<?php echo esc_url( admin_url( 'admin.php?page=woo-wallet-actions&action=' . strtolower( $action->id ) ) ); ?>">
 									<?php

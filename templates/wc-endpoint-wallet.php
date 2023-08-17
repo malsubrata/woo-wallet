@@ -111,7 +111,7 @@ $menu_items                = apply_filters(
 					<?php foreach ( $transactions as $transaction ) : ?> 
 						<li>
 							<div>
-								<p><?php echo esc_html( $transaction->details ); ?></p>
+								<p><?php echo $transaction->details; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
 								<small><?php echo wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></small>
 							</div>
 							<div class="woo-wallet-transaction-type-<?php echo esc_attr( $transaction->type ); ?>">

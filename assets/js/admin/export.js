@@ -14,6 +14,8 @@
 
         // Events.
         $form.on('submit', {teraWalletExportForm: this}, this.onSubmit);
+
+        this.$form.find('.terawallet-exporter-type').on('change', {teraWalletExportForm: this}, this.onChangeType).change();
     };
 
     /**
@@ -34,15 +36,25 @@
         event.data.teraWalletExportForm.$form.find('.terawallet-exporter-button').prop('disabled', true);
         event.data.teraWalletExportForm.processStep(1, $(this).serialize(), '', filename);
     };
+
+    teraWalletExportForm.prototype.onChangeType = function(){
+        if ($(this).is(':checked')) {
+            $('.export-transaction-settings-fields').hide();
+        } else{
+            $('.export-transaction-settings-fields').show();
+        }
+    };
+    
     /**
      * Process the current export step.
      */
     teraWalletExportForm.prototype.processStep = function (step, data, columns, filename) {
         var $this = this,
-                selected_columns = $('.terawallet-exporter-columns').val(),
-                selected_users = $('.terawallet-exporter-users').val(),
-                from_date = $('.terawallet-exporter-from-date').val(),
-                to_date = $('.terawallet-exporter-to-date').val();
+        export_type = $('.terawallet-exporter-type').is(':checked') ? 'balance' : 'transactions',
+        selected_columns = $('.terawallet-exporter-columns').val(),
+        selected_users = $('.terawallet-exporter-users').val(),
+        from_date = $('.terawallet-exporter-from-date').val(),
+        to_date = $('.terawallet-exporter-to-date').val();
         $.ajax({
             type: 'POST',
             url: ajaxurl,
@@ -50,6 +62,7 @@
                 form: data,
                 action: 'terawallet_do_ajax_transaction_export',
                 step: step,
+                export_type: export_type,
                 columns: columns,
                 selected_columns: selected_columns,
                 selected_users: selected_users,

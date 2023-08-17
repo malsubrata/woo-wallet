@@ -30,9 +30,8 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 			$this->init_form_fields();
 			$this->init_settings();
 			// Get settings.
-			$this->title        = $this->get_option( 'title' );
-			$this->description  = $this->get_option( 'description' );
-			$this->instructions = $this->get_option( 'instructions' );
+			$this->title       = $this->get_option( 'title' );
+			$this->description = $this->get_option( 'description' );
 
 			add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 			/* support for woocommerce subscription plugin */

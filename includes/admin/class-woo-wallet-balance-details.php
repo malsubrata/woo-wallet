@@ -69,7 +69,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$hidden         = $this->get_hidden_columns();
 		$sortable       = $this->get_sortable_columns();
 		$args           = array(
-			'blog_id' => $GLOBALS['blog_id'],
+			'blog_id' => get_current_blog_id(),
 			'number'  => $users_per_page,
 			'offset'  => ( $paged - 1 ) * $users_per_page,
 			'search'  => $usersearch,

@@ -246,6 +246,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				'details'    => $details,
 				'date'       => current_time( 'mysql' ),
 				'created_by' => get_current_user_id(),
+				'for'        => '',
 			);
 
 			$parsed_args = wp_parse_args( $args, $defaults );

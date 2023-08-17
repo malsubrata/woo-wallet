@@ -26,6 +26,14 @@ $exporter = new TeraWallet_CSV_Exporter();
 					<tbody>
 						<tr>
 							<th scope="row">
+								<label for="terawallet-exporter-type"><?php esc_html_e( 'Wallet balance only?', 'woo-wallet' ); ?></label>
+							</th>
+							<td>
+								<input type="checkbox" <?php checked( true ); ?> name="terawallet-exporter-type" id="terawallet-exporter-type" class="terawallet-exporter-type" value="1">
+							</td>
+						</tr>
+						<tr class="export-transaction-settings-fields">
+							<th scope="row">
 								<label for="terawallet-exporter-columns"><?php esc_html_e( 'Which columns should be exported?', 'woo-wallet' ); ?></label>
 							</th>
 							<td>
@@ -46,7 +54,7 @@ $exporter = new TeraWallet_CSV_Exporter();
 								<select id="terawallet-exporter-users" name="terawallet-exporter-users" class="terawallet-exporter-users" style="width:100%;" multiple data-placeholder="<?php esc_attr_e( 'Export all users', 'woo-wallet' ); ?>"></select>
 							</td>
 						</tr>
-						<tr>
+						<tr class="export-transaction-settings-fields">
 							<th scope="row">
 								<label for="terawallet-exporter-from-date"><?php esc_html_e( 'From date', 'woo-wallet' ); ?></label>
 							</th>
@@ -54,7 +62,7 @@ $exporter = new TeraWallet_CSV_Exporter();
 								<input type="date" id="terawallet-exporter-from-date" name="terawallet-exporter-from-date" style="width: 100%" class="terawallet-exporter-from-date" />
 							</td>
 						</tr>
-						<tr>
+						<tr class="export-transaction-settings-fields">
 							<th scope="row">
 								<label for="terawallet-exporter-to-date"><?php esc_html_e( 'To date', 'woo-wallet' ); ?></label>
 							</th>

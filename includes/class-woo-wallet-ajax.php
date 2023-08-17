@@ -104,6 +104,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 
 			$exporter->set_step( $step );
 
+			if ( ! empty( $_POST['export_type'] ) ) {
+				$exporter->set_export_type( wp_unslash( $_POST['export_type'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			}
+
 			if ( ! empty( $_POST['selected_columns'] ) ) {
 				$exporter->set_columns_to_export( wp_unslash( $_POST['selected_columns'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			}

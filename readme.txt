@@ -1,10 +1,10 @@
 === TeraWallet – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
 Contributors: standalonetech, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, digital wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
-Requires PHP: 7.2
-Requires at least: 5.8
-Tested up to: 6.2
-Stable tag: 1.4.8
+Requires PHP: 7.3
+Requires at least: 6.0
+Tested up to: 6.3
+Stable tag: 1.4.9
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -24,7 +24,7 @@ TeraWallet puts you in control with extensive customization options. By implemen
 = Use case of TeraWallet =
 With this plugin, your customers no longer need to repeatedly enter payment details. They can conveniently log in and use their wallet funds to make purchases. Additionally, customers can earn cashback by utilizing their wallet balance. The admin also has the ability to process refunds directly to the customer's wallet.
 
-= ðŸ’¥ðŸ’¥ Features of TeraWallet ðŸ’¥ðŸ’¥ =
+= Features of TeraWallet =
 - Wallet system works just like any other payment method.
 - Set wallet system payment method title for the front-end.
 - The customers can use various payment methods to add money.
@@ -74,10 +74,10 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 
 = Minimum Requirements =
 
-* PHP version 5.2.4 or greater (PHP 5.6 or greater is recommended)
-* MySQL version 5.0 or greater (MySQL 5.6 or greater is recommended)
-* WordPress 5.8+
-* WooCommerce 6.0+
+* PHP 7.3 or greater is required (PHP 8.0 or greater is recommended)
+* MySQL 5.6 or greater, OR MariaDB version 10.1 or greater, is required
+* WordPress 6.0 or greater is required
+* WooCommerce 7.2 or greater is required
 
 = Automatic installation =
 
@@ -138,6 +138,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.9 - 2023-08-17 =
+* New - Added sell your content action ( Using this action you can sell your site content using wallet balance).
+* New - Export user wallet balance ( Now site admin also export only user balance of the website in CSV file).
+* Fix - Compatibility issue with digits plugin.
+* Fix - Wallet transactions details table.
+* Add - Support for WordPress 6.3 and WooCommerce 8.0
+
 = 1.4.8 - 2023-06-22 =
 * New - Redesign wallet admin panel.
 * New - Added support for WooCommerce block checkout.

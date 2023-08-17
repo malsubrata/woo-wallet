@@ -186,7 +186,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			$suffix     = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 			wp_register_style( 'woo-wallet-payment-jquery-ui', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery-ui.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'jquery-datatables-style', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
-			wp_register_style( 'jquery-datatables-responsive-style', woo_wallet()->plugin_url() . '/assets/jquery/css/responsive.bootstrap.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
+			wp_register_style( 'jquery-datatables-responsive-style', woo_wallet()->plugin_url() . '/assets/jquery/css/responsive.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'woo-wallet-style', woo_wallet()->plugin_url() . '/assets/css/frontend.css', array(), WOO_WALLET_PLUGIN_VERSION );
 			// Add RTL support.
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );

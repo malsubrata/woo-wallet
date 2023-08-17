@@ -68,6 +68,7 @@ class WOO_Wallet_Actions {
 				'Action_Product_Review',
 				'Action_Daily_Visits',
 				'Action_Referrals',
+				'Woo_Wallet_Action_Sell_Content',
 			)
 		);
 		foreach ( $load_actions as $action ) {
@@ -85,6 +86,7 @@ class WOO_Wallet_Actions {
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-product-review.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-daily-visits.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-referrals.php';
+		require_once WOO_WALLET_ABSPATH . 'includes/actions/class-woo-wallet-action-sell-content.php';
 		do_action( 'woo_wallet_load_actions' );
 	}
 	/**

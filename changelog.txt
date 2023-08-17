@@ -1,4 +1,11 @@
 *** Changelog ***
+= 1.4.9 - 2023-08-17 =
+* New - Added sell your content action ( Using this action you can sell your site content using wallet balance).
+* New - Export user wallet balance ( Now site admin also export only user balance of the website in CSV file).
+* Fix - Compatibility issue with digits plugin.
+* Fix - Wallet transactions details table.
+* Add - Support for WordPress 6.3 and WooCommerce 8.0
+
 = 1.4.8 - 2023-06-22 =
 * New - Redesign wallet admin panel.
 * New - Added support for WooCommerce block checkout.
