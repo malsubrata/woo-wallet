@@ -878,17 +878,23 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		public function add_wallet_payment_amount( $order_id ) {
 			$order                 = wc_get_order( $order_id );
 			$total_cashback_amount = get_total_order_cashback_amount( $order_id );
+			$html = '';
 			if ( $total_cashback_amount ) {
-				?>
+				$label = __( 'Cashback', 'woo-wallet' );
+				$total_cashback_amount = wc_price( $total_cashback_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) );
+				$html = '
 				<tr>
-					<td class="label"><?php esc_html_e( 'Cashback', 'woo-wallet' ); ?>:</td>
+					<td class="label">'.$label.'</td>
 					<td width="1%"></td>
-					<td class="via-wallet">
-						<?php echo wc_price( $total_cashback_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-					</td>
-				</tr>
-				<?php
+					<td class="via-wallet">'.$total_cashback_amount.'</td>
+				</tr>';
 			}
+
+			if ( has_filter( 'add_wallet_payment_amount_filter' ) ) {
+				$html = apply_filters( 'add_wallet_payment_amount_filter', $order,  $total_cashback_amount, $html);
+			}
+
+			echo $html;
 		}
 
 		/**
