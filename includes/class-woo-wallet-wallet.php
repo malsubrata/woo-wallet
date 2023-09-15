@@ -181,11 +181,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 */
 		public function process_cancelled_order( $order_id ) {
 			$order = wc_get_order( $order_id );
+			$transaction_id = 0; 
 			/** Credit partial payment amount * */
 			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
 			if ( $partial_payment_amount && get_post_meta( $order_id, '_partial_pay_through_wallet_compleate', true ) ) {
 				/* translators: Order number */
-				$this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) );
+				$transaction_id = $this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) );
 				/* translators: wallet amount */
 				$order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
 				delete_post_meta( $order_id, '_partial_pay_through_wallet_compleate' );
@@ -197,12 +198,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$total_cashback_amount = get_total_order_cashback_amount( $order_id );
 				if ( $total_cashback_amount ) {
 					/* translators: Order number */
-					if ( $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ) ) ) {
+					$transaction_id = $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ) );
+					if ( $transaction_id ) {
 						delete_post_meta( $order_id, '_general_cashback_transaction_id' );
 						delete_post_meta( $order_id, '_coupon_cashback_transaction_id' );
 					}
 				}
 			}
+			do_action( 'woo_wallet_order_cancelled', $transaction_id, $order, $total_cashback_amount );
 		}
 
 		/**
