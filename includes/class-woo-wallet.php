@@ -337,6 +337,9 @@ final class WooWallet {
 		if ( class_exists( 'WOOCS' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/woocommerce-currency-switcher/class-wallet-multi-currency.php';
 		}
+		if ( class_exists( 'WCML_Multi_Currency' ) ) {
+			include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/woocommerce-multilingual/class-wallet-wpml-multi-currency.php';
+		}
 	}
 	/**
 	 * Store fee key to order item meta.
