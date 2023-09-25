@@ -161,7 +161,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 				'name'    => 'product_cahback_change',
 				'label'   => __( 'Cashback Option', 'woo-wallet' ),
 				'desc'    => __( 'Allow vendor to update product cashback', 'woo-wallet' ),
-				'type'    => 'checkbox',
+				'type'    => 'switcher',
 				'default' => 'off',
 				'tooltip' => __( 'Checking this will enable sellers to change the product cashback option. If unchecked, only admin can change product cashback.', 'woo-wallet' ),
 			);
