@@ -229,7 +229,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	 */
 	public function add_meta_box( $post_type ) {
 		// Limit meta box to certain post types.
-		$post_types = $this->settings['post_types'];
+		$post_types = (array) $this->settings['post_types'];
 
 		if ( in_array( $post_type, $post_types, true ) ) {
 			add_meta_box(

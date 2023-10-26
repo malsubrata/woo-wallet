@@ -237,7 +237,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$balance -= $amount;
 			}
 			$defaults = array(
-				'blog_id'    => $GLOBALS['blog_id'],
+				'blog_id'    => get_current_blog_id(),
 				'user_id'    => $this->user_id,
 				'type'       => $type,
 				'amount'     => $amount,

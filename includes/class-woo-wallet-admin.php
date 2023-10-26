@@ -666,6 +666,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					} elseif ( 'debit' === $payment_type ) {
 						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description );
 						if ( $transaction_id ) {
+							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
 								'type'    => 'success',
 								'message' => sprintf(
@@ -691,6 +692,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					} elseif ( 'credit' === $payment_type ) {
 						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description );
 						if ( $transaction_id ) {
+							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
 								'type'    => 'success',
 								'message' => sprintf(

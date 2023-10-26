@@ -37,7 +37,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			'cb'             => __( 'cb', 'woo-wallet' ),
 			'username'       => __( 'Username', 'woo-wallet' ),
 			'email'          => __( 'Email', 'woo-wallet' ),
-			'total_diposit'  => __( 'Total Diposit', 'woo-wallet' ),
+			'total_deposits' => __( 'Total Deposits', 'woo-wallet' ),
 			'total_spent'    => __( 'Total Spent', 'woo-wallet' ),
 			'cashbak_earned' => __( 'Cashback Earned', 'woo-wallet' ),
 			'balance'        => __( 'Remaining balance', 'woo-wallet' ),
@@ -80,10 +80,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		}
 
 		$args['role'] = isset( $_GET['role'] ) ? sanitize_text_field( wp_unslash( $_GET['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		if ( isset( $_REQUEST['orderby'] ) ) {
+		if ( isset( $_REQUEST['orderby'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			$args['orderby'] = sanitize_text_field( wp_unslash( $_REQUEST['orderby'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
-		if ( isset( $_REQUEST['order'] ) ) {
+		if ( isset( $_REQUEST['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			$args['order'] = sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 
@@ -278,7 +278,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			case 'balance':
 				return $item[ $column_name ];
 			default:
-				return apply_filters( 'woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item );
+				return apply_filters( 'woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 	}
 	/**
@@ -344,13 +344,13 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		return $output;
 	}
 	/**
-	 * Display total diposit column
+	 * Display total deposits column
 	 *
 	 * @param array $item item.
 	 * @return string
 	 */
-	protected function column_total_diposit( $item ) {
-		$args          = array(
+	protected function column_total_deposits( $item ) {
+		$args           = array(
 			'user_id'    => $item['id'],
 			'where'      => array(
 				array(
@@ -365,11 +365,16 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				),
 			),
 		);
-		$transactions  = get_wallet_transactions( $args );
-		$total_diposit = array_sum( wp_list_pluck( $transactions, 'amount' ) );
-		return wc_price( $total_diposit, woo_wallet_wc_price_args() );
+		$transactions   = get_wallet_transactions( $args );
+		$total_deposits = array_sum( wp_list_pluck( $transactions, 'amount' ) );
+		return wc_price( $total_deposits, woo_wallet_wc_price_args() );
 	}
-
+	/**
+	 * Render total spent column
+	 *
+	 * @param array $item item.
+	 * @return string
+	 */
 	protected function column_total_spent( $item ) {
 		$args                  = array(
 			'user_id'    => $item['id'],
@@ -407,7 +412,12 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$total_partial_payment = array_sum( wp_list_pluck( $transactions, 'amount' ) );
 		return wc_price( $total_spent_by_wallet + $total_partial_payment, woo_wallet_wc_price_args() );
 	}
-
+	/**
+	 * Render cashback earned column
+	 *
+	 * @param array $item item.
+	 * @return string
+	 */
 	protected function column_cashbak_earned( $item ) {
 		$args           = array(
 			'user_id'    => $item['id'],
@@ -428,7 +438,12 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$total_cashback = array_sum( wp_list_pluck( $transactions, 'amount' ) );
 		return wc_price( $total_cashback, woo_wallet_wc_price_args() );
 	}
-
+	/**
+	 * Render status column
+	 *
+	 * @param array $item item.
+	 * @return void
+	 */
 	protected function column_status( $item ) {
 		$is_locked = is_wallet_account_locked( $item['id'] );
 		?>

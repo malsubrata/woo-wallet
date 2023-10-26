@@ -325,7 +325,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			foreach ( $args['options'] as $key => $label ) {
 				if ( $multiple ) {
 					?>
-					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( $key, (array) $value, true ), true ); ?>><?php echo esc_html( $label ); ?></option>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( in_array( $key, (array) $value ), true ); ?>><?php echo esc_html( $label ); ?></option>
 					<?php
 				} else {
 					?>
