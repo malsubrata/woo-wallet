@@ -3,8 +3,8 @@ Contributors: standalonetech, subratamal, moumitaadak
 Tags: woo wallet, woocommerce wallet, digital wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
 Requires PHP: 7.3
 Requires at least: 6.0
-Tested up to: 6.3
-Stable tag: 1.4.9
+Tested up to: 6.4
+Stable tag: 1.4.10
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -46,6 +46,7 @@ With this plugin, your customers no longer need to repeatedly enter payment deta
 - Support multiple languages translations.
 - Support [CURCY – Multi Currency for WooCommerce](https://wordpress.org/plugins/woo-multi-currency/)
 - Support [FOX – Currency Switcher Professional for WooCommerce](https://wordpress.org/plugins/woocommerce-currency-switcher/)
+- Support [WooCommerce Multilingual & Multicurrency with WPML](https://wpml.org/)
 - Support WooCommerce block checkout.
 - Support WooCommerce Subscriptions.
 - Support WooCommerce Multivendor Marketplace by WC Lovers.
@@ -74,7 +75,7 @@ On the front-end, the customers can log in to the store and go to wallet page fr
 
 = Minimum Requirements =
 
-* PHP 7.3 or greater is required (PHP 8.0 or greater is recommended)
+* PHP 7.4 or greater is required (PHP 8.0 or greater is recommended)
 * MySQL 5.6 or greater, OR MariaDB version 10.1 or greater, is required
 * WordPress 6.0 or greater is required
 * WooCommerce 7.2 or greater is required
@@ -138,6 +139,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.4.10 - 2023-11-23 =
+* New - Added WooCommerce Multilingual & Multicurrency with WPML plugin support.
+* Fix - Compatibility issue with Dokan 3.8
+* Fix - PHP issues
+
 = 1.4.9 - 2023-08-17 =
 * New - Added sell your content action ( Using this action you can sell your site content using wallet balance).
 * New - Export user wallet balance ( Now site admin also export only user balance of the website in CSV file).
