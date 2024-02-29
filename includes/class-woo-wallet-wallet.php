@@ -59,7 +59,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$this->wallet_balance = 0;
 			if ( $this->user_id ) {
 				$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // @codingStandardsIgnoreLine
-				$this->wallet_balance = apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id );
+				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id );
 			}
 			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
 		}
@@ -118,7 +118,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 				update_post_meta( $order_id, '_wc_wallet_purchase_gateway_charge', $charge_amount );
 			}
-			$transaction_id = $this->credit( $order->get_customer_id(), $recharge_amount, __( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(), array( 'for' => 'credit_purchase', 'currency' => $order->get_currency( 'edit' ) ) );
+			$transaction_id = $this->credit(
+				$order->get_customer_id(),
+				$recharge_amount,
+				__( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(),
+				array(
+					'for'      => 'credit_purchase',
+					'currency' => $order->get_currency( 'edit' ),
+				)
+			);
 			if ( $transaction_id ) {
 				update_post_meta( $order_id, '_wc_wallet_purchase_credited', true );
 				update_post_meta( $order_id, '_wallet_payment_transaction_id', $transaction_id );
@@ -136,7 +144,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$order = wc_get_order( $order_id );
 			/* General Cashback */
 			if ( apply_filters( 'process_woo_wallet_general_cashback', ! get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true ) && $order->get_customer_id(), $order ) && woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ) ) {
-				$transaction_id = $this->credit( $order->get_customer_id(), woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ), __( 'Wallet credit through cashback #', 'woo-wallet' ) . $order->get_order_number(), array( 'for' => 'cashback', 'currency' => $order->get_currency( 'edit' ) ) );
+				$transaction_id = $this->credit(
+					$order->get_customer_id(),
+					woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ),
+					__( 'Wallet credit through cashback #', 'woo-wallet' ) . $order->get_order_number(),
+					array(
+						'for'      => 'cashback',
+						'currency' => $order->get_currency( 'edit' ),
+					)
+				);
 				if ( $transaction_id ) {
 					update_post_meta( $order->get_id(), '_general_cashback_transaction_id', $transaction_id );
 					do_action( 'woo_wallet_general_cashback_credited', $transaction_id, $order );
@@ -146,7 +162,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( apply_filters( 'process_woo_wallet_coupon_cashback', ! get_post_meta( $order->get_id(), '_coupon_cashback_transaction_id', true ) && $order->get_customer_id(), $order ) && get_post_meta( $order->get_id(), '_coupon_cashback_amount', true ) ) {
 				$coupon_cashback_amount = apply_filters( 'woo_wallet_coupon_cashback_amount', get_post_meta( $order->get_id(), '_coupon_cashback_amount', true ), $order );
 				if ( $coupon_cashback_amount ) {
-					$transaction_id = $this->credit( $order->get_customer_id(), $coupon_cashback_amount, __( 'Wallet credit through cashback by applying coupon', 'woo-wallet' ), array( 'for' => 'cashback', 'currency' => $order->get_currency( 'edit' ) ) );
+					$transaction_id = $this->credit(
+						$order->get_customer_id(),
+						$coupon_cashback_amount,
+						__( 'Wallet credit through cashback by applying coupon', 'woo-wallet' ),
+						array(
+							'for'      => 'cashback',
+							'currency' => $order->get_currency( 'edit' ),
+						)
+					);
 					if ( $transaction_id ) {
 						update_post_meta( $order->get_id(), '_coupon_cashback_transaction_id', $transaction_id );
 						do_action( 'woo_wallet_coupon_cashback_credited', $transaction_id, $order );
@@ -288,7 +312,6 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 			return false;
 		}
-
 	}
 
 }

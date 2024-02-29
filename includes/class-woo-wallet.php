@@ -62,6 +62,8 @@ final class WooWallet {
 			$this->init_hooks();
 			do_action( 'woo_wallet_loaded' );
 		} else {
+			require_once ABSPATH . '/wp-admin/includes/plugin.php';
+			deactivate_plugins( plugin_basename( WOO_WALLET_PLUGIN_FILE ) );
 			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 		}
 	}
@@ -388,7 +390,7 @@ final class WooWallet {
 			require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payments-blocks.php';
 			add_action(
 				'woocommerce_blocks_payment_method_type_registration',
-				function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+				function ( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
 					$payment_method_registry->register( new WC_Gateway_Wallet_Blocks_Support() );
 				}
 			);
@@ -445,11 +447,10 @@ final class WooWallet {
 		?>
 		<div class="error">
 			<p>
-				<?php echo esc_html_e( 'WooCommerce Wallet plugin requires', 'woo-wallet' ); ?> 
-				<a href="https://wordpress.org/plugins/woocommerce/">WooCommerce</a> <?php echo esc_html_e( 'plugins to be active!', 'woo-wallet' ); ?>;
+				<?php echo esc_html_e( 'TeraWallet plugin requires', 'woo-wallet' ); ?> 
+				<a href="https://wordpress.org/plugins/woocommerce/">WooCommerce</a> <?php echo esc_html_e( 'plugins to be active!', 'woo-wallet' ); ?>
 			</p>
 		</div>
 		<?php
 	}
-
 }

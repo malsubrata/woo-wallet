@@ -106,7 +106,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 *
 		 * @return void
 		 */
-		public function remove_woocommerce_help_tabs() : void {
+		public function remove_woocommerce_help_tabs(): void {
 			$screen = get_current_screen();
 			if ( ! $screen ) {
 				return;
@@ -292,11 +292,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$woo_wallet_menu_page_hook = add_menu_page( __( 'TeraWallet', 'woo-wallet' ), __( 'TeraWallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet', array( $this, 'wallet_page' ), '', 59 );
 			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'handle_wallet_balance_adjustment' ) );
 			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
-			$woo_wallet_menu_page_hook_view = add_submenu_page( '', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
+			$woo_wallet_menu_page_hook_view = add_submenu_page( 'null', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
 			add_submenu_page( 'woo-wallet', __( 'Actions', 'woo-wallet' ), __( 'Actions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-actions', array( $this, 'plugin_actions_page' ) );
 
-			add_submenu_page( '', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
+			add_submenu_page( 'null', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
 		}
 		/**
 		 * Load exporter files.
@@ -398,7 +398,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @global type $post
 		 */
 		public function admin_scripts() {
-			global $post;
+			global $wp_query, $post, $theorder;
 			$screen    = get_current_screen();
 			$screen_id = $screen ? $screen->id : '';
 			$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
@@ -423,20 +423,28 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					)
 				);
 			}
-			if ( in_array( $screen_id, array( 'shop_order' ), true ) ) {
-				$order = wc_get_order( $post->ID );
-				wp_enqueue_script( 'woo_wallet_admin_order' );
-				$order_localizer = array(
-					'order_id'       => $post->ID,
-					'payment_method' => $order->get_payment_method( 'edit' ),
-					'default_price'  => wc_price( 0 ),
-					'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ), $order ),
-					'i18n'           => array(
-						'refund'     => __( 'Refund', 'woo-wallet' ),
-						'via_wallet' => __( 'to customer wallet', 'woo-wallet' ),
-					),
-				);
-				wp_localize_script( 'woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer );
+			if ( in_array( $screen_id, array( 'shop_order', 'woocommerce_page_wc-orders' ), true ) ) {
+				$order_id = 0;
+				if ( $theorder instanceof WC_Order ) {
+					$order_id = $theorder->get_id();
+				} elseif ( is_a( $post, 'WP_Post' ) && 'shop_order' === get_post_type( $post ) ) {
+					$order_id = $post->ID;
+				}
+				$order = wc_get_order( $order_id );
+				if ( $order ) {
+					wp_enqueue_script( 'woo_wallet_admin_order' );
+					$order_localizer = array(
+						'order_id'       => $order_id,
+						'payment_method' => $order->get_payment_method( 'edit' ),
+						'default_price'  => wc_price( 0 ),
+						'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ), $order ),
+						'i18n'           => array(
+							'refund'     => __( 'Refund', 'woo-wallet' ),
+							'via_wallet' => __( 'to customer wallet', 'woo-wallet' ),
+						),
+					);
+					wp_localize_script( 'woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer );
+				}
 			}
 			wp_enqueue_style( 'woo_wallet_admin_styles' );
 
@@ -529,7 +537,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<?php settings_errors(); ?>
-				<h2><?php /* translators: user display name and email */ echo sprintf( __( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), $user->display_name, $user->user_email ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<h2><?php /* translators: user display name and email */ printf( __( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), $user->display_name, $user->user_email ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
 				<p>
 					<?php
 					esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
@@ -1123,16 +1131,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @param Object $item item.
 		 */
 		public function woocommerce_after_order_fee_item_name_callback( $item_id, $item ) {
-			global $post, $thepostid;
-
 			if ( ! is_partial_payment_order_item( $item_id, $item ) ) {
 				return;
 			}
-			if ( ! is_int( $thepostid ) ) {
-					$thepostid = $post->ID;
-			}
-
-			$order_id = $thepostid;
+			$order_id = wc_get_order_id_by_order_item_id( $item_id );
 			if ( get_post_meta( $order_id, '_woo_wallet_partial_payment_refunded', true ) ) {
 				echo '<small class="refunded">' . esc_html__( 'Refunded', 'woo-wallet' ) . '</small>';
 			} else {
@@ -1280,7 +1282,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			</script>
 			<?php
 		}
-
 	}
 
 }

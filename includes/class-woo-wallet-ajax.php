@@ -157,6 +157,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function terawallet_export_user_search() {
 			check_ajax_referer( 'search-user', 'security' );
+			// Check permissions again and make sure we have what we need.
+			if ( ! get_wallet_user_capability() ) {
+				wp_die( -1 );
+			}
 			$term    = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
 			$return  = array();
 			$blog_id = isset( $_POST['site_id'] ) ? sanitize_text_field( wp_unslash( $_POST['site_id'] ) ) : get_current_blog_id();
@@ -443,7 +447,6 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			wp_die();
 		}
-
 	}
 
 }

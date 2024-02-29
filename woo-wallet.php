@@ -50,12 +50,12 @@ if ( ! defined( 'WOO_WALLET_PLUGIN_VERSION' ) ) {
 
 // include dependencies file.
 if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ) {
-	include_once dirname( __FILE__ ) . '/includes/class-woo-wallet-dependencies.php';
+	include_once __DIR__ . '/includes/class-woo-wallet-dependencies.php';
 }
 
 // Include the main class.
 if ( ! class_exists( 'WooWallet' ) ) {
-	include_once dirname( __FILE__ ) . '/includes/class-woo-wallet.php';
+	include_once __DIR__ . '/includes/class-woo-wallet.php';
 }
 /**
  * Returns the main instance of WooWallet.
