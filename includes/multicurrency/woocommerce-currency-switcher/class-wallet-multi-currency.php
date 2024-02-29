@@ -116,7 +116,7 @@ if ( ! class_exists( 'Wallet_Multi_currency' ) ) {
 		 * @return array
 		 */
 		public function convert_settings_option( $option_value ) {
-			if ( ! is_admin() ) {
+			if ( ! is_admin() && is_numeric( $option_value ) ) {
 				$option_value = self::get_converted_amount( $option_value, get_option( 'woocommerce_currency' ), get_woocommerce_currency() );
 			}
 			return $option_value;

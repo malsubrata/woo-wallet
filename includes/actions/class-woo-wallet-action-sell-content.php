@@ -52,6 +52,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 				'desc_tip'    => true,
 				'description' => __( 'This option lets you to choose post types which you want to sell.', 'woo-wallet' ),
 				'options'     => self::get_post_types_options(),
+				'default'     => array(),
 			),
 			'default_amount'              => array(
 				'title'       => __( 'Default Amount', 'woo-wallet' ),
@@ -349,7 +350,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	public function validate_content_for_sale( $content ) : string {
 		global $post;
 		$user_id         = get_current_user_id();
-		$post_types      = $this->settings['post_types'];
+		$post_types      = (array) $this->settings['post_types'];
 		$tw_sell_content = get_post_meta( $post->ID, '_tw_sell_content', true );
 		$is_owner        = ( (int) $post->post_author === $user_id ) ? true : false;
 		if ( ! $tw_sell_content || ! in_array( $post->post_type, $post_types, true ) || $is_owner || self::is_user_administrator() ) {
