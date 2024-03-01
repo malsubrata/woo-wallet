@@ -1,4 +1,8 @@
 *** Changelog ***
+= 1.4.11 - 2024-03-01 =
+* Fix - Compatibility with PHP 8.1
+* Fix - Missing Authorization to Authenticated (Subscriber+) User Email Export
+
 = 1.4.10 - 2023-11-23 =
 * New - Added WooCommerce Multilingual & Multicurrency with WPML plugin support.
 * Fix - Compatibility issue with Dokan 3.8
