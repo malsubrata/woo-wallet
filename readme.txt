@@ -4,7 +4,7 @@ Tags: woo wallet, woocommerce wallet, digital wallet, user wallet, refund, cashb
 Requires PHP: 7.3
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 1.4.11
+Stable tag: 1.5.0
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -139,6 +139,9 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= 1.5.0 - 2024-03-09 =
+* Fix - Vulnerability: Cross Site Scripting (XSS)
+
 = 1.4.11 - 2024-03-01 =
 * Fix - Compatibility issues with PHP 8.1
 * Fix - Missing Authorization to Authenticated (Subscriber+) User Email Export

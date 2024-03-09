@@ -1,4 +1,7 @@
 *** Changelog ***
+= 1.5.0 - 2024-03-09 =
+* Fix - Vulnerability: Cross Site Scripting (XSS)
+
 = 1.4.11 - 2024-03-01 =
 * Fix - Compatibility with PHP 8.1
 * Fix - Missing Authorization to Authenticated (Subscriber+) User Email Export
