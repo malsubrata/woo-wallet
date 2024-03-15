@@ -1,6 +1,6 @@
 === TeraWallet – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
 Contributors: standalonetech, subratamal, moumitaadak
-Tags: woo wallet, woocommerce wallet, digital wallet, user wallet, refund, cashback, partial payment, wallet, wc wallet, woocommerce credits
+Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.3
 Requires at least: 6.0
 Tested up to: 6.4
@@ -9,7 +9,7 @@ Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
+A extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
 
 == Description ==
 

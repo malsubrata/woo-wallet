@@ -643,10 +643,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		public function handle_wallet_balance_adjustment() {
 			if ( isset( $_POST['woo-wallet-admin-adjust-balance'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woo-wallet-admin-adjust-balance'] ) ), 'woo-wallet-admin-adjust-balance' ) ) {
 				$transaction_id = null;
-				$user_id        = sanitize_text_field( wp_unslash( filter_input( INPUT_POST, 'user_id' ) ) );
-				$amount         = sanitize_text_field( wp_unslash( filter_input( INPUT_POST, 'balance_amount' ) ) );
-				$payment_type   = sanitize_text_field( wp_unslash( filter_input( INPUT_POST, 'payment_type' ) ) );
-				$description    = sanitize_text_field( wp_unslash( filter_input( INPUT_POST, 'payment_description' ) ) );
+				$user_id        = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
+				$amount         = isset( $_POST['balance_amount'] ) ? sanitize_text_field( wp_unslash( $_POST['balance_amount'] ) ) : 0;
+				$payment_type   = isset( $_POST['payment_type'] ) ? sanitize_text_field( wp_unslash( $_POST['payment_type'] ) ) : '';
+				$description    = isset( $_POST['payment_description'] ) ? wp_kses_post( trim( wp_unslash( $_POST['payment_description'] ) ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$response       = array(
 					'type'    => 'success',
 					'message' => '',
