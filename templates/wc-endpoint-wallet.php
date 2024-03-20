@@ -111,13 +111,13 @@ $menu_items                = apply_filters(
 					<?php foreach ( $transactions as $transaction ) : ?> 
 						<li>
 							<div>
-								<p><?php echo $transaction->details; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
-								<small><?php echo wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></small>
+								<p><?php echo wp_kses_post( $transaction->details ); ?>
+								<small><?php echo esc_html( wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ) ); ?></small>
 							</div>
 							<div class="woo-wallet-transaction-type-<?php echo esc_attr( $transaction->type ); ?>">
 								<?php
 								echo 'credit' === $transaction->type ? '+' : '-';
-								echo wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								echo wp_kses_post( wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) );
 								?>
 							</div>
 						</li>

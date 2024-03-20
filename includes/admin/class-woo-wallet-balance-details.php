@@ -272,13 +272,9 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	public function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
 			case 'id':
-			case 'username':
 			case 'name':
 			case 'email':
-			case 'balance':
-				return $item[ $column_name ];
-			default:
-				return apply_filters( 'woo_wallet_balance_details_column_default', print_r( $item, true ), $column_name, $item ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+				return esc_html( $item[ $column_name ] );
 		}
 	}
 	/**
@@ -288,6 +284,15 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	protected function column_cb( $item ) {
 		return sprintf( '<input type="checkbox" name="users[]" value="%s" />', $item['id'] );
+	}
+
+	/**
+	 * Display balance column.
+	 *
+	 * @param array $item Item.
+	 */
+	protected function column_balance( $item ) {
+		echo $item['balance'] ? wp_kses_post( $item['balance'] ) : '<span class="na">&ndash;</span>';
 	}
 	/**
 	 * Display username column.

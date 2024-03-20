@@ -31,7 +31,7 @@ $referring_earning = get_user_meta( $user_id, '_woo_wallet_referring_earning', t
 ?>
 <span>
 	<?php esc_html_e( 'Your referral URL is:', 'woo-wallet' ); ?> 
-	<input type="text" readonly="" id="referral_url" value="<?php echo esc_attr( $referral_url ); ?>" /> 
+	<input type="text" readonly="" id="referral_url" value="<?php echo esc_url( $referral_url ); ?>" /> 
 	<div class="referral-tooltip">
 		<button onclick="referralTooltip()" onmouseout="referralTooltipOutFunc()">
 			<span class="referral-tooltiptext" id="referral_tooltip"><?php esc_html_e( 'Copy to clipboard', 'woo-wallet' ); ?></span>

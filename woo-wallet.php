@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: TeraWallet
- * Plugin URI: https://wordpress.org/plugins/woo-wallet/
+ * Plugin URI: https://standalonetech.com/
  * Description: The leading wallet plugin for WooCommerce with partial payment, refunds, cashbacks and what not!
  * Author: StandaloneTech
  * Author URI: https://standalonetech.com/
- * Version: 1.5.0
+ * Version: 1.5.1
  * Requires at least: 6.0
  * Tested up to: 6.4
  *
@@ -45,7 +45,7 @@ if ( ! defined( 'WOO_WALLET_ABSPATH' ) ) {
 
 // Define WOO_WALLET_PLUGIN_VERSION.
 if ( ! defined( 'WOO_WALLET_PLUGIN_VERSION' ) ) {
-	define( 'WOO_WALLET_PLUGIN_VERSION', '1.5.0' );
+	define( 'WOO_WALLET_PLUGIN_VERSION', '1.5.1' );
 }
 
 // include dependencies file.

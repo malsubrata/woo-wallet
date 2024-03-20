@@ -423,10 +423,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'woo_wallet_transactons_datatable_row_data',
 						array(
 							'id'      => $transaction->transaction_id,
-							'amount'  => '<mark class="' . $transaction->type . '">' . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) . '</mark>',
-							'details' => $transaction->details,
+							'amount'  => '<mark class="' . esc_attr( $transaction->type ) . '">' . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) . '</mark>',
+							'details' => wp_kses_post( $transaction->details ),
 							'date'    => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ),
-							'type'    => ucfirst( $transaction->type ),
+							'type'    => esc_html( ucfirst( $transaction->type ) ),
 						),
 						$transaction
 					);
