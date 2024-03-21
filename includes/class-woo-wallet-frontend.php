@@ -759,12 +759,15 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		/**
 		 * Update WC Cart get_total if cashback coupon applied.
 		 *
-		 * @param float $total total.
+		 * @param mixed $total total.
 		 * @return float
 		 */
 		public function woocommerce_cart_get_total( $total ) {
+			if ( ! is_numeric( $total ) ) {
+				$total = (float) $total;
+			}
 			$total += get_woowallet_coupon_cashback_amount();
-			return $total;
+			return (string) $total;
 		}
 
 		/**
