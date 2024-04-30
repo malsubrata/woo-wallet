@@ -2,7 +2,7 @@
 /**
  * Wallet Admin file.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -53,8 +53,12 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_action( 'wp_enqueue_scripts', array( &$this, 'woo_wallet_styles' ), 20 );
 			add_filter( 'woocommerce_available_payment_gateways', array( $this, 'woocommerce_available_payment_gateways' ), 30 );
 			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) ) {
-				add_action( 'woocommerce_before_cart_table', array( $this, 'woocommerce_before_cart_table' ) );
-				add_action( 'woocommerce_before_checkout_form', array( $this, 'woocommerce_before_cart_table' ) );
+				add_action( 'woocommerce_before_cart_table', array( $this, 'display_cashback_on_cart_checkout' ) );
+				add_action( 'woocommerce_before_checkout_form', array( $this, 'display_cashback_on_cart_checkout' ) );
+
+				add_action( 'woocommerce_blocks_enqueue_cart_block_scripts_after', array( $this, 'display_cashback_on_cart_checkout' ) );
+				add_action( 'woocommerce_blocks_enqueue_checkout_block_scripts_before', array( $this, 'display_cashback_on_cart_checkout' ) );
+
 				add_action( 'woocommerce_shop_loop_item_title', array( $this, 'display_cashback' ), 15 );
 				add_action( 'woocommerce_single_product_summary', array( $this, 'display_cashback' ), 15 );
 				add_filter( 'woocommerce_available_variation', array( $this, 'woocommerce_available_variation' ), 10, 3 );
@@ -562,7 +566,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		/**
 		 * Cashback notice
 		 */
-		public function woocommerce_before_cart_table() {
+		public function display_cashback_on_cart_checkout() {
 			if ( woo_wallet()->cashback->calculate_cashback() && ! is_wallet_rechargeable_cart() && apply_filters( 'display_cashback_notice_at_woocommerce_page', ! is_wallet_account_locked() ) ) :
 				?>
 				<div class="woocommerce-Message woocommerce-Message--info woocommerce-info wallet-cashback-notice">
@@ -591,7 +595,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		public function woocommerce_checkout_order_processed( $order_id, $posted_data, $order ) {
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback();
 			if ( $cashback_amount && ! is_wallet_rechargeable_order( wc_get_order( $order_id ) ) && is_user_logged_in() ) {
-				update_post_meta( $order_id, '_wallet_cashback', $cashback_amount );
+				WOO_Wallet_Helper::update_order_meta_data( $order_id, '_wallet_cashback', $cashback_amount );
 			}
 		}
 
@@ -654,10 +658,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		/**
 		 * Convert coupon to cashback.
 		 *
-		 * @param array  $item item.
-		 * @param string $code code.
-		 * @param Object $coupon coupon.
-		 * @param Object $order order.
+		 * @param array    $item item.
+		 * @param string   $code code.
+		 * @param Object   $coupon coupon.
+		 * @param WC_Order $order order.
 		 * @since 1.0.6
 		 */
 		public function convert_coupon_to_cashbak_if( $item, $code, $coupon, $order ) {
@@ -668,9 +672,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				$coupon_amount   = WC()->cart->get_coupon_discount_amount( $code, WC()->cart->display_cart_ex_tax );
 				$discount_total -= $coupon_amount;
 				$order->set_discount_total( $discount_total );
-				$order_id                = $order->save();
-				$_coupon_cashback_amount = floatval( get_post_meta( $order_id, '_coupon_cashback_amount', true ) );
-				update_post_meta( $order_id, '_coupon_cashback_amount', ( $_coupon_cashback_amount + $coupon_amount ) );
+				$_coupon_cashback_amount = floatval( $order->get_meta( '_coupon_cashback_amount' ) );
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_amount', ( $_coupon_cashback_amount + $coupon_amount ) );
 			}
 		}
 		/**

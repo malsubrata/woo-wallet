@@ -4,7 +4,7 @@
  *
  * Functions for updating data.
  *
- * @package WooWallet
+ * @package StandaleneTech
  * @version 1.0.8
  */
 

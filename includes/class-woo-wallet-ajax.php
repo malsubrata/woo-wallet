@@ -2,7 +2,7 @@
 /**
  * Plugin ajax file
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -191,7 +191,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function recalculate_order_cashback_after_calculate_totals( $and_taxes, $order ) {
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
-			$transaction_id  = get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true );
+			$transaction_id  = $order->get_meta( '_general_cashback_transaction_id' );
 			if ( $transaction_id ) {
 				update_wallet_transaction( $transaction_id, $order->get_customer_id(), array( 'amount' => $cashback_amount ), array( '%f' ) );
 			}
@@ -213,8 +213,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				$response['success'] = true;
 				/* translators: wallet amount */
 				$order->add_order_note( sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
-				update_post_meta( $order_id, '_woo_wallet_partial_payment_refunded', true );
-				update_post_meta( $order_id, '_partial_payment_refund_id', $transaction_id );
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_partial_payment_refunded', true, false );
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_partial_payment_refund_id', $transaction_id );
 				do_action( 'woo_wallet_partial_order_refunded', $order_id, $transaction_id );
 			}
 			wp_send_json( $response );

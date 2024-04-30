@@ -7,7 +7,7 @@
  * @author   Subrata Mal
  * @category API
  * @since   1.3.23
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 defined( 'ABSPATH' ) || exit;

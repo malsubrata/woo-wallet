@@ -4,7 +4,7 @@
  *
  * @author Subrata Mal <m.subrata1991@gmail.com>
  * @since 1.2.5
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

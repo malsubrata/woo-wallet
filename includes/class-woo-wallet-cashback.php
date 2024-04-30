@@ -2,7 +2,7 @@
 /**
  * Wallet cashback file.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -70,6 +70,7 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 		 */
 		public static function calculate_cashback( $form_cart = true, $order_id = 0, $force = false ) {
 			self::init_cashback_settings();
+			$order = wc_get_order( $order_id );
 			if ( 'on' !== woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit' ) ) {
 				return 0;
 			}
@@ -80,7 +81,7 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 				return 0;
 			}
 			if ( ! $form_cart && ! $force ) {
-				return get_post_meta( $order_id, '_wallet_cashback', true ) ? get_post_meta( $order_id, '_wallet_cashback', true ) : self::calculate_cashback_form_order( $order_id );
+				return $order->get_meta( '_wallet_cashback' ) ? $order->get_meta( '_wallet_cashback' ) : self::calculate_cashback_form_order( $order_id );
 			}
 			if ( $form_cart ) {
 				return self::calculate_cashback_form_cart();
@@ -191,7 +192,7 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 					break;
 			}
 			$cashback_amount = apply_filters( 'woo_wallet_form_order_cashback_amount', $cashback_amount, $order_id );
-			update_post_meta( $order_id, '_wallet_cashback', $cashback_amount );
+			WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_cashback', $cashback_amount );
 			return $cashback_amount;
 		}
 

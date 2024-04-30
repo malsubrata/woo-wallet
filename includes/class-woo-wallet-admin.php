@@ -2,7 +2,7 @@
 /**
  * Wallet Admin file.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -207,7 +207,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
 					$order           = wc_get_order( $order_id );
 					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
-					$charge_amount   = get_post_meta( $order_id, '_wc_wallet_purchase_gateway_charge', true );
+					$charge_amount   = $order->get_meta( '_wc_wallet_purchase_gateway_charge' );
 					if ( $charge_amount ) {
 						$recharge_amount -= $charge_amount;
 					}
@@ -978,7 +978,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'desc'     => __( 'Endpoint for the "My account &rarr; My Wallet" page.', 'woo-wallet' ),
 						'id'       => 'woocommerce_woo_wallet_endpoint',
 						'type'     => 'text',
-						'default'  => 'woo-wallet',
+						'default'  => 'my-wallet',
 						'desc_tip' => true,
 					),
 					array(
@@ -986,7 +986,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'desc'     => __( 'Endpoint for the "My account &rarr; View wallet transactions" page.', 'woo-wallet' ),
 						'id'       => 'woocommerce_woo_wallet_transactions_endpoint',
 						'type'     => 'text',
-						'default'  => 'woo-wallet-transactions',
+						'default'  => 'wallet-transactions',
 						'desc_tip' => true,
 					),
 				)
@@ -1135,7 +1135,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				return;
 			}
 			$order_id = wc_get_order_id_by_order_item_id( $item_id );
-			if ( get_post_meta( $order_id, '_woo_wallet_partial_payment_refunded', true ) ) {
+			$order    = wc_get_order( $order_id );
+			if ( $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
 				echo '<small class="refunded">' . esc_html__( 'Refunded', 'woo-wallet' ) . '</small>';
 			} else {
 				echo '<button type="button" class="button refund-partial-payment">' . esc_html__( 'Refund', 'woo-wallet' ) . '</button>';
@@ -1169,7 +1170,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
 			if ( in_array( $order->get_status(), apply_filters( 'wallet_cashback_order_status', woo_wallet()->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ), true ) ) {
 				woo_wallet()->wallet->wallet_cashback( $order->get_id() );
-				$transaction_id = get_post_meta( $order->get_id(), '_general_cashback_transaction_id', true );
+				$transaction_id = $order->get_meta( '_general_cashback_transaction_id' );
 				if ( $transaction_id ) {
 					update_wallet_transaction( $transaction_id, $order->get_customer_id(), array( 'amount' => $cashback_amount ), array( '%f' ) );
 				}

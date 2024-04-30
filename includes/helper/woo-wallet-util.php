@@ -2,7 +2,7 @@
 /**
  * Utility file for this plugin.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
@@ -339,7 +339,11 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		}
 		$query['join'] = implode( ' ', $joins );
 
-		$query['where'] = "WHERE transactions.user_id = {$user_id}";
+		$query['where'] = 'WHERE 1=1';
+		if ( $user_id ) {
+			$query['where'] .= " AND transactions.user_id = {$user_id}";
+		}
+
 		if ( ! $include_deleted ) {
 			$query['where'] .= ' AND transactions.deleted = 0';
 		}
@@ -591,8 +595,8 @@ if ( ! function_exists( 'get_total_order_cashback_amount' ) ) {
 		$total_cashback_amount = 0;
 		if ( $order ) {
 			$transaction_ids                  = array();
-			$_general_cashback_transaction_id = get_post_meta( $order_id, '_general_cashback_transaction_id', true );
-			$_coupon_cashback_transaction_id  = get_post_meta( $order_id, '_coupon_cashback_transaction_id', true );
+			$_general_cashback_transaction_id = $order->get_meta( '_general_cashback_transaction_id' );
+			$_coupon_cashback_transaction_id  = $order->get_meta( '_coupon_cashback_transaction_id' );
 			if ( $_general_cashback_transaction_id ) {
 				$transaction_ids[] = $_general_cashback_transaction_id;
 			}

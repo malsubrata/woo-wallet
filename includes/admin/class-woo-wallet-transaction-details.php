@@ -4,7 +4,7 @@
  *
  * Display wallet transaction details page.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! class_exists( 'WP_List_Table' ) ) {
@@ -153,6 +153,8 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 			case 'type':
 			case 'date':
 				return esc_html( $item[ $column_name ] );
+			default:
+				return apply_filters( 'woo_wallet_transaction_details_column_default', print_r( $item, true ), $column_name, $item ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 	}
 	/**

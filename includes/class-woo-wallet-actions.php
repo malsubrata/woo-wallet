@@ -2,7 +2,7 @@
 /**
  * Wallet actions file.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

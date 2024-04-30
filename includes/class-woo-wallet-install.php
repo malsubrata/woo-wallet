@@ -2,7 +2,7 @@
 /**
  * Wallet plugin installation file
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

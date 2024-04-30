@@ -12,7 +12,7 @@
  *
  * @author  Subrata Mal
  * @version     1.1.8
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

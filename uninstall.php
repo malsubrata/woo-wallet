@@ -7,7 +7,7 @@
  * @author      Subrata Mal
  * @version 1.0.1
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {

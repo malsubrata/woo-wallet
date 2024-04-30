@@ -91,6 +91,7 @@ final class WooWallet {
 	 * Load plugin files
 	 */
 	public function includes() {
+		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-helper.php';
 		include_once WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-util.php';
 		include_once WOO_WALLET_ABSPATH . 'includes/helper/woo-wallet-update-functions.php';
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-install.php';
@@ -136,6 +137,7 @@ final class WooWallet {
 		register_activation_hook( WOO_WALLET_PLUGIN_FILE, array( 'Woo_Wallet_Install', 'install' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
+		add_filter( 'woocommerce_get_query_vars', array( $this, 'woocommerce_query_vars' ) );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
 		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
@@ -176,16 +178,20 @@ final class WooWallet {
 
 		add_action( 'woocommerce_new_order_item', array( $this, 'woocommerce_new_order_item' ), 10, 2 );
 
-		add_rewrite_endpoint( get_option( 'woocommerce_woo_wallet_endpoint', 'woo-wallet' ), EP_PAGES );
-		add_rewrite_endpoint( get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'woo-wallet-transactions' ), EP_PAGES );
-		if ( ! get_option( '_wallet_enpoint_added' ) ) {
-			flush_rewrite_rules();
-			update_option( '_wallet_enpoint_added', true );
-		}
-
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
 
 		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
+	}
+	/**
+	 * Add wallet query vars
+	 *
+	 * @param array $query_vars query_vars.
+	 * @return array
+	 */
+	public function woocommerce_query_vars( $query_vars ) {
+		$query_vars['my-wallet']           = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
+		$query_vars['wallet-transactions'] = get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'wallet-transactions' );
+		return $query_vars;
 	}
 	/**
 	 * WooWallet init widget

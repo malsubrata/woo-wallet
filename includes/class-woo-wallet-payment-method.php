@@ -195,11 +195,11 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 * @return void
 		 */
 		public function scheduled_subscription_payment( $amount_to_charge, $order ) {
-			if ( get_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true ) ) {
+			if ( $order->get_meta( '_wallet_scheduled_subscription_payment_processed' ) ) {
 				return;
 			}
 			$order->payment_complete();
-			update_post_meta( $order->get_id(), '_wallet_scheduled_subscription_payment_processed', true );
+			WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_scheduled_subscription_payment_processed', true );
 		}
 	}
 }

@@ -2,7 +2,7 @@
 /**
  * Admin View: Wallet Transactions Export
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

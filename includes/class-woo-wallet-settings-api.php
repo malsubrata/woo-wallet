@@ -5,7 +5,7 @@
  * @version 1.0.0
  *
  * @author Subrata Mal
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :

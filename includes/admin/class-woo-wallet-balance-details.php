@@ -4,7 +4,7 @@
  *
  * Display wallet balance details page.
  *
- * @package WooWallet
+ * @package StandaleneTech
  */
 
 if ( ! class_exists( 'WP_List_Table' ) ) {
@@ -142,7 +142,6 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * @return array An array of HTML links, one for each view.
 	 */
 	protected function get_views() {
-		global $role;
 
 		$wp_roles = wp_roles();
 
@@ -150,9 +149,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		$url = 'admin.php?page=woo-wallet';
 
-		$role_links  = array();
-		$avail_roles = array();
-		$all_text    = __( 'All' );
+		$role_links   = array();
+		$avail_roles  = array();
+		$all_text     = __( 'All' );
+		$selcted_role = isset( $_REQUEST['role'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
 		if ( $count_users ) {
 			$users_of_blog = count_users();
@@ -176,7 +176,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		$role_links['all'] = array(
 			'url'     => $url,
 			'label'   => $all_text,
-			'current' => empty( $role ),
+			'current' => empty( $selcted_role ),
 		);
 
 		foreach ( $wp_roles->get_names() as $this_role => $name ) {
@@ -197,7 +197,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			$role_links[ $this_role ] = array(
 				'url'     => esc_url( add_query_arg( 'role', $this_role, $url ) ),
 				'label'   => $name,
-				'current' => $this_role === $role,
+				'current' => $this_role === $selcted_role,
 			);
 		}
 
@@ -214,7 +214,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			$role_links['none'] = array(
 				'url'     => esc_url( add_query_arg( 'role', 'none', $url ) ),
 				'label'   => $name,
-				'current' => 'none' === $role,
+				'current' => 'none' === $selcted_role,
 			);
 		}
 
@@ -275,6 +275,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			case 'name':
 			case 'email':
 				return esc_html( $item[ $column_name ] );
+			default:
+				return apply_filters( 'woo_wallet_balance_details_column_default', esc_html( print_r( $item, true ) ), $column_name, $item ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 	}
 	/**
