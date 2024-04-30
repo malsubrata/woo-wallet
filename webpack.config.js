@@ -1,6 +1,12 @@
-const defaultConfig = require('@wordpress/scripts/config/webpack.config');
-const WooCommerceDependencyExtractionWebpackPlugin = require('@woocommerce/dependency-extraction-webpack-plugin');
-const path = require('path');
+const path = require( 'path' );
+const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
+const WooCommerceDependencyExtractionWebpackPlugin = require( '@woocommerce/dependency-extraction-webpack-plugin' );
+const MiniCssExtractPlugin = require( 'mini-css-extract-plugin' );
+
+// Remove SASS rule from the default config so we can define our own.
+const defaultRules = defaultConfig.module.rules.filter( ( rule ) => {
+	return String( rule.test ) !== String( /\.(sc|sa)ss$/ );
+} );
 
 const wcDepMap = {
 	'@woocommerce/blocks-registry': ['wc', 'wcBlocksRegistry'],
@@ -30,11 +36,29 @@ const requestToHandle = (request) => {
 module.exports = {
 	...defaultConfig,
 	entry: {
-		'checkout/wallet': '/src/js/checkout/wallet.js',
+		'payment-method/index': '/src/payment-method/index.js',
+		'partial-payment/index': '/src/partial-payment/index.js',
 	},
 	output: {
-		path: path.resolve( __dirname, 'build/js' ),
+		path: path.resolve( __dirname, 'build' ),
 		filename: '[name].js',
+	},
+	module: {
+		...defaultConfig.module,
+		rules: [
+			...defaultRules,
+			{
+				test: /\.(sc|sa)ss$/,
+				exclude: /node_modules/,
+				use: [
+					MiniCssExtractPlugin.loader,
+					{ loader: 'css-loader', options: { importLoaders: 1 } },
+					{
+						loader: 'sass-loader',
+					},
+				],
+			},
+		],
 	},
 	plugins: [
 		...defaultConfig.plugins.filter(
@@ -44,6 +68,9 @@ module.exports = {
 		new WooCommerceDependencyExtractionWebpackPlugin({
 			requestToExternal,
 			requestToHandle
-		})
+		}),
+		new MiniCssExtractPlugin( {
+			filename: `[name].css`,
+		} ),
 	]
 };

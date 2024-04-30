@@ -142,7 +142,7 @@ final class WooWallet {
 		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		// Registers WooCommerce Blocks integration.
-		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'woocommerce_gateway_wallet_woocommerce_block_support' ) );
+		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
 		do_action( 'woo_wallet_init' );
 	}
 
@@ -391,16 +391,41 @@ final class WooWallet {
 	/**
 	 * Registers WooCommerce Blocks integration.
 	 */
-	public static function woocommerce_gateway_wallet_woocommerce_block_support() {
+	public static function add_woocommerce_block_support() {
 		if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
 			require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payments-blocks.php';
 			add_action(
 				'woocommerce_blocks_payment_method_type_registration',
 				function ( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
-					$payment_method_registry->register( new WC_Gateway_Wallet_Blocks_Support() );
+					$payment_method_registry->register( new WOO_Wallet_Payments_Blocks() );
 				}
 			);
 		}
+
+		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-partial-payment-blocks.php';
+		add_action(
+			'woocommerce_blocks_cart_block_registration',
+			function( $integration_registry ) {
+				$integration_registry->register( new WOO_Wallet_Partial_Payment_Blocks() );
+			}
+		);
+		add_action(
+			'woocommerce_blocks_checkout_block_registration',
+			function( $integration_registry ) {
+				$integration_registry->register( new WOO_Wallet_Partial_Payment_Blocks() );
+			}
+		);
+
+		woocommerce_store_api_register_update_callback(
+			array(
+				'namespace' => 'apply-partial-payment',
+				'callback'  => function( $data ) {
+					if ( ! is_null( wc()->session ) ) {
+						wc()->session->set( 'partial_payment_amount', $data['amount'] );
+					}
+				},
+			)
+		);
 	}
 
 	/**

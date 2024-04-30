@@ -5,6 +5,11 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { getSetting } from '@woocommerce/settings';
 import { formatPrice, getCurrencyFromPriceResponse, Currency } from '@woocommerce/price-format';
 
+/**
+ * Internal dependencies
+ */
+import './style.scss';
+
 const settings = getSetting( 'wallet_data', {} );
 
 const defaultLabel = __(

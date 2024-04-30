@@ -1,4 +1,10 @@
 <?php
+/**
+ * WooCommerce block checkout support.
+ *
+ * @package StandaloneTech
+ */
+
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 
 /**
@@ -6,7 +12,7 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
  *
  * @since 1.0.3
  */
-final class WC_Gateway_Wallet_Blocks_Support extends AbstractPaymentMethodType {
+final class WOO_Wallet_Payments_Blocks extends AbstractPaymentMethodType {
 
 	/**
 	 * The gateway instance.
@@ -45,13 +51,13 @@ final class WC_Gateway_Wallet_Blocks_Support extends AbstractPaymentMethodType {
 	 * @return array
 	 */
 	public function get_payment_method_script_handles() {
-		$script_path       = '/build/js/checkout/wallet.js';
-		$script_asset_path = WOO_WALLET_ABSPATH . 'build/js/checkout/wallet.asset.php';
+		$script_path       = '/build/payment-method/index.js';
+		$script_asset_path = WOO_WALLET_ABSPATH . 'build/payment-method/index.asset.php';
 		$script_asset      = file_exists( $script_asset_path )
 			? require $script_asset_path
 			: array(
 				'dependencies' => array(),
-				'version'      => '1.2.0',
+				'version'      => WOO_WALLET_PLUGIN_VERSION,
 			);
 		$script_url        = woo_wallet()->plugin_url() . $script_path;
 

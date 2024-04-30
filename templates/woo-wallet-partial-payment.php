@@ -18,11 +18,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
-$current_wallet_amount = apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
-if ( $current_wallet_amount <= 0 ) {
+$parial_payment_amount = apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) >= wc()->session->get( 'partial_payment_amount', 0 ) ? wc()->session->get( 'partial_payment_amount', 0 ) : woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
+if ( $parial_payment_amount <= 0 ) {
 	return;
 }
-$rest_amount = get_woowallet_cart_total() - $current_wallet_amount;
+$rest_amount = get_woowallet_cart_total() - $parial_payment_amount;
 if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) {
 	?>
 	<tr class="wallet-pay-partial">
@@ -30,7 +30,7 @@ if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partia
 			<label>
 				<?php
 				/* translators: wallet amount */
-				echo sprintf( __( '%1$s will be debited from your wallet and %2$s will be paid through other payment method', 'woo-wallet' ), wc_price( $current_wallet_amount, woo_wallet_wc_price_args() ), wc_price( $rest_amount, woo_wallet_wc_price_args() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+				echo sprintf( __( '%1$s will be debited from your wallet and %2$s will be paid through other payment method', 'woo-wallet' ), wc_price( $parial_payment_amount, woo_wallet_wc_price_args() ), wc_price( $rest_amount, woo_wallet_wc_price_args() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
 				?>
 			</label>
 		</th>
@@ -42,7 +42,7 @@ if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partia
 			<?php
 			esc_html_e( 'Pay by wallet', 'woo-wallet' );
 			?>
-			<span id="partial_wallet_payment_tooltip" style="vertical-align: middle;" title="<?php /* translators: wallet amount */ echo esc_html( sprintf( __( 'If checked %1$s will be debited from your wallet and %2$s will be paid through other payment method', 'woo-wallet' ), wc_price( $current_wallet_amount, woo_wallet_wc_price_args() ), wc_price( $rest_amount, woo_wallet_wc_price_args() ) ) ); ?>" class="dashicons dashicons-info"></span>
+			<span id="partial_wallet_payment_tooltip" style="vertical-align: middle;" title="<?php /* translators: wallet amount */ echo esc_html( sprintf( __( 'If checked %1$s will be debited from your wallet and %2$s will be paid through other payment method', 'woo-wallet' ), wc_price( $parial_payment_amount, woo_wallet_wc_price_args() ), wc_price( $rest_amount, woo_wallet_wc_price_args() ) ) ); ?>" class="dashicons dashicons-info"></span>
 		</th>
 		<td data-title="<?php esc_attr_e( 'Pay by wallet', 'woo-wallet' ); ?>"><input type="checkbox" <?php checked( is_enable_wallet_partial_payment(), true, true ); ?> style="vertical-align: middle;" name="partial_pay_through_wallet" class="partial_pay_through_wallet" /></td>
 	</tr>

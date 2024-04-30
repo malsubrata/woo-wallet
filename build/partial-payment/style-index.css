@@ -1,0 +1,27 @@
+/*!*****************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[8].use[1]!./node_modules/sass-loader/dist/cjs.js!./src/partial-payment/style.scss ***!
+  \*****************************************************************************************************************************************************/
+.wc-block-components-partial-payment {
+  flex-direction: column;
+  position: relative;
+}
+.wc-block-components-partial-payment .wc-block-components-partial-payment_form {
+  display: flex;
+  margin-bottom: 0;
+  width: 100%;
+}
+.wc-block-components-partial-payment .wc-block-components-partial-payment_form .wc-block-components-partial-payment_input {
+  flex-grow: 1;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+.wc-block-components-partial-payment .wc-block-components-partial-payment_form .wc-block-components-partial-payment_button {
+  flex-shrink: 0;
+  height: 3em;
+  margin-left: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  white-space: nowrap;
+}
+
+/*# sourceMappingURL=style-index.css.map*/

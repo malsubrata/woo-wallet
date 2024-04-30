@@ -16,9 +16,9 @@
   "author": "StandaloneTech",
   "license": "GPL-3.0+",
   "engines": {
-		"node": ">=6.9.4",
-		"npm": ">=1.1.0"
-	},
+    "node": ">=6.9.4",
+    "npm": ">=1.1.0"
+  },
   "bugs": {
     "url": "https://github.com/malsubrata/woo-wallet/issues"
   },
@@ -27,12 +27,16 @@
     "extends @wordpress/browserslist-config"
   ],
   "devDependencies": {
-    "autoprefixer": "^10.4.13",
-    "grunt": "^1.5.3",
+    "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.0",
+    "@wordpress/browserslist-config": "^5.39.0",
+    "@wordpress/scripts": "27.7.0",
+    "autoprefixer": "^10.4.19",
+    "cross-env": "7.0.3",
+    "grunt": "^1.6.1",
     "grunt-checktextdomain": "^1.0.1",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-concat": "^2.1.0",
-    "grunt-contrib-cssmin": "^4.0.0",
+    "grunt-contrib-cssmin": "^5.0.0",
     "grunt-contrib-jshint": "^3.2.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-contrib-watch": "^1.1.0",
@@ -40,26 +44,23 @@
     "grunt-rtlcss": "^2.0.2",
     "grunt-sass": "^3.1.0",
     "grunt-shell": "^4.0.0",
-    "grunt-stylelint": "^0.18.0",
+    "grunt-stylelint": "^0.19.0",
     "grunt-wp-i18n": "^1.0.3",
-    "node-sass": "^8.0.0",
-    "stylelint": "^14.15.0",
-    "@wordpress/browserslist-config": "^5.5.0",
-    "@woocommerce/dependency-extraction-webpack-plugin": "^1.7.0",
-		"@wordpress/scripts": "17.1.0",
-		"cross-env": "6.0.3"
+    "node-sass": "^9.0.0",
+    "sass-loader": "^14.2.1",
+    "stylelint": "^16.4.0"
   },
   "dependencies": {
-    "postcss": "^8.4.19"
+    "postcss": "^8.4.38"
   },
   "scripts": {
     "start": "wp-scripts start",
     "build": "wp-scripts build && npm run i18n:build",
     "build-watch": "grunt watch",
-		"i18n": "npm run i18n:build",
-		"i18n:build": "npm run i18n:pot && ./bin/build_i18n.sh",
-		"i18n:pot": "php -d xdebug.max_nesting_level=512 $(which wp) i18n make-pot --exclude=\"node_modules/,languages/,assets/, build/\" --headers='{\"Report-Msgid-Bugs-To\":\"https://github.com/malsubrata/woo-wallet/issues\", \"language-team\":\"StandaloneTech <support@standalonetech.com>\"}' . languages/woo-wallet.pot",
-		"i18n:json": "$(which wp) i18n make-json languages --no-purge",
-		"check-engines": "wp-scripts check-engines"
+    "i18n": "npm run i18n:build",
+    "i18n:build": "npm run i18n:pot && ./bin/build_i18n.sh",
+    "i18n:pot": "php -d xdebug.max_nesting_level=512 $(which wp) i18n make-pot --exclude=\"node_modules/,languages/,assets/, build/\" --headers='{\"Report-Msgid-Bugs-To\":\"https://github.com/malsubrata/woo-wallet/issues\", \"language-team\":\"StandaloneTech <support@standalonetech.com>\"}' . languages/woo-wallet.pot",
+    "i18n:json": "$(which wp) i18n make-json languages --no-purge",
+    "check-engines": "wp-scripts check-engines"
   }
 }

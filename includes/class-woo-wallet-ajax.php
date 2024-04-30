@@ -364,7 +364,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function woo_wallet_partial_payment_update_session() {
 			if ( isset( $_POST['checked'] ) && 'true' === $_POST['checked'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-				update_wallet_partial_payment_session( true );
+				update_wallet_partial_payment_session( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
 			} else {
 				update_wallet_partial_payment_session();
 			}
