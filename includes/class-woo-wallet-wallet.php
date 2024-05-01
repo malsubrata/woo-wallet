@@ -181,12 +181,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		/**
 		 * Process wallet partial payment.
 		 *
-		 * @param integer $order_id order_id.
+		 * @param WC_Order|int $order order.
 		 * @return void
 		 */
-		public function wallet_partial_payment( $order_id ) {
-			$order                  = wc_get_order( $order_id );
-			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
+		public function wallet_partial_payment( $order ) {
+			if ( ! $order instanceof WC_Order ) {
+				$order = wc_get_order( $order );
+			}
+			$partial_payment_amount = get_order_partial_payment_amount( $order->get_id() );
 			if ( $partial_payment_amount && ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
 				$transaction_id = $this->debit( $order->get_customer_id(), $partial_payment_amount, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), array( 'for' => 'partial_payment' ) );
 				if ( $transaction_id ) {
@@ -196,6 +198,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $order );
 				}
 			}
+			update_wallet_partial_payment_session();
 		}
 		/**
 		 * Process cancle order.

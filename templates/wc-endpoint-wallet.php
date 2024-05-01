@@ -1,6 +1,6 @@
 <?php
 /**
- * The Template for displaying wallet recharge form
+ * The Template for displaying wallet dashboard.
  *
  * This template can be overridden by copying it to yourtheme/woo-wallet/wc-endpoint-wallet.php.
  *
@@ -111,7 +111,7 @@ $menu_items                = apply_filters(
 					<?php foreach ( $transactions as $transaction ) : ?> 
 						<li>
 							<div>
-								<p><?php echo wp_kses_post( $transaction->details ); ?>
+								<p><?php echo wp_kses_post( $transaction->details ); ?></p>
 								<small><?php echo esc_html( wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ) ); ?></small>
 							</div>
 							<div class="woo-wallet-transaction-type-<?php echo esc_attr( $transaction->type ); ?>">
