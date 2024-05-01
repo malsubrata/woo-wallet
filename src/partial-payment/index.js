@@ -38,7 +38,6 @@ const render = () => {
 			setShowSpinner(false);
 		});
 	};
-	console.log(settings);
 	return (
 		<ExperimentalDiscountsMeta>
 			{settings.active ? (

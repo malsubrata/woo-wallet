@@ -1,7 +1,7 @@
 {
   "name": "woo-wallet",
   "title": "TeraWallet - WooCommerce Wallet",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.",
   "main": "Gruntfile.js",
   "repository": {

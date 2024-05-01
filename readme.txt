@@ -1,10 +1,10 @@
-=== TeraWallet – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
+=== Wallet for WooCommerce – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
 Contributors: standalonetech, subratamal, moumitaadak
 Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
-Requires PHP: 7.3
-Requires at least: 6.0
-Tested up to: 6.4
-Stable tag: 1.5.1
+Requires PHP: 7.4
+Requires at least: 6.4
+Tested up to: 6.5
+Stable tag: 1.5.2
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -12,6 +12,8 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.html
 A extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
 
 == Description ==
+
+= THE BEST WALLET PLUGIN FOR WORDPRESS – POWERED BY WOOCOMMERCE =
 
 TeraWallet is an advanced digital wallet and credit system specially designed for WooCommerce. It empowers you to offer your customers a seamless payment experience by allowing them to deposit funds into their accounts, transfer money to other users, and make purchases using their wallet balance.
 
@@ -57,7 +59,7 @@ With this plugin, your customers no longer need to repeatedly enter payment deta
 
 = Workflow of TeraWallet =
 After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
-Now for enable cashback rules, navigate to WooWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
+Now for enable cashback rules, navigate to TeraWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
 On the front-end, the customers can log in to the store and go to wallet page from My Account. Enter the amount to add and then complete the checkout process just like any other product purchase.
 
 = Premium extensions =
@@ -100,7 +102,7 @@ If on the off-chance you do encounter issues with the wallet endpoints pages aft
 
 = Does this plugin work with newest WP version and also older versions? =
 
-Yes, this plugin works fine with WordPress 4.9, It is also compatible for older WordPress versions upto 4.4.
+Yes, this plugin works fine with WordPress 6.5, It is also compatible for older WordPress versions upto 6.0.
 
 = Up to which version of WooCommerce this plugin compatible with? =
 
@@ -139,6 +141,15 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= v1.5.2 ( May 02, 2024 ) =
+- **Added:-** Support for WooCommerce HPOS.
+- **Added:-** Support for WooCommerce block cart & checkout.
+- **Added:-** Partial payment option for WooCommerce block cart & checkout.
+- **New:-** Now customer can enter amount they want to redeem at cart & checkout page.
+- **Fix:-** Conflict with WooCommerce Square plugin.
+- **Fix:-** Partial payment amount not debited issue for WooCommerce block checkout.
+- **Fix:-** Coupon cashback issue for WooCommerce block checkout.
+
 = 1.5.1 - 2024-03-20 =
 * Added - Escaping functions for rendering html content.
 

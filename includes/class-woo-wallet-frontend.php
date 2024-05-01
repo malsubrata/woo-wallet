@@ -63,13 +63,17 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				add_action( 'woocommerce_single_product_summary', array( $this, 'display_cashback' ), 15 );
 				add_filter( 'woocommerce_available_variation', array( $this, 'woocommerce_available_variation' ), 10, 3 );
 			}
-			add_action( 'woocommerce_checkout_order_processed', array( $this, 'woocommerce_checkout_order_processed' ), 30, 3 );
-			add_action( 'woocommerce_review_order_after_order_total', array( $this, 'woocommerce_review_order_after_order_total' ) );
-			add_action( 'woocommerce_checkout_create_order_coupon_item', array( $this, 'convert_coupon_to_cashbak_if' ), 10, 4 );
 
+			add_action( 'woocommerce_checkout_order_processed', array( $this, 'checkout_order_processed' ), 30 );
+			add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'checkout_order_processed' ), 30 );
+
+			add_action( 'woocommerce_review_order_after_order_total', array( $this, 'woocommerce_review_order_after_order_total' ) );
+
+			// add_action( 'woocommerce_checkout_create_order_coupon_item', array( $this, 'convert_coupon_to_cashbak_if' ), 10, 4 );
 			add_filter( 'woocommerce_coupon_message', array( $this, 'update_woocommerce_coupon_message_as_cashback' ), 10, 3 );
 			add_filter( 'woocommerce_cart_totals_coupon_label', array( $this, 'change_coupon_label' ), 10, 2 );
 			add_filter( 'woocommerce_cart_get_total', array( $this, 'woocommerce_cart_get_total' ) );
+
 			add_shortcode( 'woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback' );
 			add_shortcode( 'mini-wallet', __CLASS__ . '::mini_wallet_shortcode_callback' );
 			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'woo_wallet_add_partial_payment_fee' ) );
@@ -582,16 +586,32 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		}
 
 		/**
-		 * Handel cashback and partial payment on order processed hook
+		 * Handel cashback calculation on order processed hook
 		 *
-		 * @param int    $order_id order_id.
-		 * @param array  $posted_data posted_data.
-		 * @param Object $order order.
+		 * @param int     @param WC_Order|int $order order.
 		 */
-		public function woocommerce_checkout_order_processed( $order_id, $posted_data, $order ) {
+		public function checkout_order_processed( $order ) {
+			if ( ! $order instanceof WC_Order ) {
+				$order = wc_get_order( $order );
+			}
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback();
-			if ( $cashback_amount && ! is_wallet_rechargeable_order( wc_get_order( $order_id ) ) && is_user_logged_in() ) {
-				WOO_Wallet_Helper::update_order_meta_data( $order_id, '_wallet_cashback', $cashback_amount );
+			if ( $cashback_amount && ! is_wallet_rechargeable_order( wc_get_order( $order->get_id() ) ) && is_user_logged_in() ) {
+				WOO_Wallet_Helper::update_order_meta_data( $order->get_id(), '_wallet_cashback', $cashback_amount );
+			}
+			$_coupon_cashback_amount = 0;
+			foreach ( WC()->cart->get_coupons() as $code => $coupon ) {
+				$coupon_id           = $coupon->get_id();
+				$_is_coupon_cashback = get_post_meta( $coupon_id, '_is_coupon_cashback', true );
+				if ( 'yes' === $_is_coupon_cashback && is_user_logged_in() ) {
+					$_coupon_cashback_amount += WC()->cart->get_coupon_discount_amount( $code, WC()->cart->display_cart_ex_tax );
+				}
+			}
+			if ( $_coupon_cashback_amount ) {
+				$discount_total  = $order->get_discount_total( 'edit' );
+				$discount_total -= $_coupon_cashback_amount;
+				$order->set_discount_total( $discount_total );
+				$order->set_total( $order->get_total( 'edit' ) + $_coupon_cashback_amount );
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_amount', $_coupon_cashback_amount );
 			}
 		}
 
@@ -655,13 +675,13 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		/**
 		 * Convert coupon to cashback.
 		 *
-		 * @param array    $item item.
-		 * @param string   $code code.
-		 * @param Object   $coupon coupon.
-		 * @param WC_Order $order order.
+		 * @param WC_Order_Item_Coupon $item item.
+		 * @param string               $code code.
+		 * @param Object               $coupon coupon.
+		 * @param WC_Order             $order order.
 		 * @since 1.0.6
 		 */
-		public function convert_coupon_to_cashbak_if( $item, $code, $coupon, $order ) {
+		public function convert_coupon_to_cashbak_if( &$item, $code, $coupon, $order ) {
 			$coupon_id           = $coupon->get_id();
 			$_is_coupon_cashback = get_post_meta( $coupon_id, '_is_coupon_cashback', true );
 			if ( 'yes' === $_is_coupon_cashback && is_user_logged_in() ) {
@@ -670,7 +690,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				$discount_total -= $coupon_amount;
 				$order->set_discount_total( $discount_total );
 				$_coupon_cashback_amount = floatval( $order->get_meta( '_coupon_cashback_amount' ) );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_amount', ( $_coupon_cashback_amount + $coupon_amount ) );
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_amount', ( $_coupon_cashback_amount + $coupon_amount ), false );
 			}
 		}
 		/**

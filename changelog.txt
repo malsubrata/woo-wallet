@@ -1,4 +1,13 @@
 *** Changelog ***
+= v1.5.2 ( May 02, 2024 ) =
+- **Added:-** Support for WooCommerce HPOS.
+- **Added:-** Support for WooCommerce block cart & checkout.
+- **Added:-** Partial payment option for WooCommerce block cart & checkout.
+- **New:-** Now customer can enter amount they want to redeem at cart & checkout page.
+- **Fix:-** Conflict with WooCommerce Square plugin.
+- **Fix:-** Partial payment amount not debited issue for WooCommerce block checkout.
+- **Fix:-** Coupon cashback issue for WooCommerce block checkout.
+
 = 1.5.1 - 2024-03-20 =
 * Added - Escaping functions for rendering html content.
 

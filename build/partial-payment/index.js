@@ -62,7 +62,6 @@ const render = () => {
       setShowSpinner(false);
     });
   };
-  console.log(settings);
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_woocommerce_blocks_checkout__WEBPACK_IMPORTED_MODULE_2__.ExperimentalDiscountsMeta, null, settings.active ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_woocommerce_blocks_components__WEBPACK_IMPORTED_MODULE_7__.Panel, {
     className: "wc-block-components-partial-payment-panel",
     initialOpen: false,
