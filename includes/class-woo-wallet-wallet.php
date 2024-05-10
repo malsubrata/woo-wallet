@@ -215,7 +215,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) );
 				/* translators: wallet amount */
 				$order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
-				delete_post_meta( $order_id, '_partial_pay_through_wallet_compleate' );
+				$order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
 				WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_partial_payment_refunded', true );
 			}
 
@@ -225,8 +225,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( $total_cashback_amount ) {
 					/* translators: Order number */
 					if ( $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ) ) ) {
-						delete_post_meta( $order_id, '_general_cashback_transaction_id' );
-						delete_post_meta( $order_id, '_coupon_cashback_transaction_id' );
+						$order->delete_meta_data( '_general_cashback_transaction_id' );
+						$order->delete_meta_data( '_coupon_cashback_transaction_id' );
+						$order->save();
 					}
 				}
 			}

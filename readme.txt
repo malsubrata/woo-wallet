@@ -4,7 +4,7 @@ Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.5
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -141,6 +141,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+= v1.5.4 ( May 10, 2024 ) =
+- **Fix:-** Multiple refund of partial payment amount when order cancelled.
+- **Fix:-** Rewrite rule issues for wallet endpoints.
+
+= v1.5.3 ( May 02, 2024 ) =
+- **Fix:-** Partial payment option not showing at old WooCommerce checkout page issue.
+
 = v1.5.2 ( May 02, 2024 ) =
 - **Added:-** Support for WooCommerce HPOS.
 - **Added:-** Support for WooCommerce block cart & checkout.

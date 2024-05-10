@@ -1,4 +1,11 @@
 *** Changelog ***
+= v1.5.4 ( May 10, 2024 ) =
+- **Fix:-** Multiple refund of partial payment amount when order cancelled.
+- **Fix:-** Rewrite rule issues for wallet endpoints.
+
+= v1.5.3 ( May 02, 2024 ) =
+- **Fix:-** Partial payment option not showing at old WooCommerce checkout page issue.
+
 = v1.5.2 ( May 02, 2024 ) =
 - **Added:-** Support for WooCommerce HPOS.
 - **Added:-** Support for WooCommerce block cart & checkout.
