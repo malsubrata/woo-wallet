@@ -1,4 +1,4 @@
-=== Wallet for WooCommerce – Best WooCommerce Wallet System With Cashback Rewards, Partial Payment, Wallet Refunds ===
+=== Wallet for WooCommerce ===
 Contributors: standalonetech, subratamal, moumitaadak
 Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
@@ -13,7 +13,7 @@ A extendable WooCommerce wallet system which support payment, partial payment, c
 
 == Description ==
 
-= THE BEST WALLET PLUGIN FOR WORDPRESS – POWERED BY WOOCOMMERCE =
+= Maximize Convenience and Savings: Wallet for WooCommerce Facilitates Quick Funds, Cashback, Refunds, and Partial Payments! =
 
 TeraWallet is an advanced digital wallet and credit system specially designed for WooCommerce. It empowers you to offer your customers a seamless payment experience by allowing them to deposit funds into their accounts, transfer money to other users, and make purchases using their wallet balance.
 
