@@ -135,9 +135,9 @@ final class WooWallet {
 	 */
 	private function init_hooks() {
 		register_activation_hook( WOO_WALLET_PLUGIN_FILE, array( 'Woo_Wallet_Install', 'install' ) );
+		register_deactivation_hook( WOO_WALLET_PLUGIN_FILE, array( $this, 'deactivate_plugin' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
-		add_filter( 'woocommerce_get_query_vars', array( $this, 'woocommerce_query_vars' ) );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
 		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
@@ -182,17 +182,25 @@ final class WooWallet {
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
 
 		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
+
+		$is_active = get_option( 'woo_wallet_is_active', false );
+
+		if ( false === $is_active ) {
+			update_option( 'woo_wallet_is_active', true );
+			flush_rewrite_rules();
+			do_action( 'woo_wallet_activated' );
+		}
 	}
+
 	/**
-	 * Add wallet query vars
+	 * Runs the required processes when the plugin is deactivated.
 	 *
-	 * @param array $query_vars query_vars.
-	 * @return array
+	 * @since 1.5.0
 	 */
-	public function woocommerce_query_vars( $query_vars ) {
-		$query_vars['my-wallet']           = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
-		$query_vars['wallet-transactions'] = get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'wallet-transactions' );
-		return $query_vars;
+	public function deactivate_plugin() {
+		delete_option( 'woo_wallet_is_active' );
+		flush_rewrite_rules();
+		do_action( 'woo_wallet_deactivated' );
 	}
 	/**
 	 * WooWallet init widget

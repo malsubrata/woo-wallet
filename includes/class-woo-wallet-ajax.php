@@ -402,7 +402,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				$args['where'] = array(
 					array(
 						'key'      => 'date',
-						'value'    => $search['value'] . '%',
+						'value'    => esc_sql( $search['value'] ) . '%',
 						'operator' => 'LIKE',
 					),
 				);
@@ -414,7 +414,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$response = array(
 				'draw'            => isset( $_POST['draw'] ) ? sanitize_text_field( wp_unslash( $_POST['draw'] ) ) : 1,
 				'recordsTotal'    => $records_total,
-				'recordsFiltered' => count( get_wallet_transactions( $args ) ),
+				'recordsFiltered' => count( $transactions ),
 				'data'            => array(),
 			);
 			if ( $transactions ) {

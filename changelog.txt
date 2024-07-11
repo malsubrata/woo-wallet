@@ -1,4 +1,8 @@
 *** Changelog ***
+= v1.5.5 ( July 11, 2024 ) =
+- **Fix:-** Security issues.
+- **Fix:-** Permalinks issues.
+
 = v1.5.4 ( May 10, 2024 ) =
 - **Fix:-** Multiple refund of partial payment amount when order cancelled.
 - **Fix:-** Rewrite rule issues for wallet endpoints.

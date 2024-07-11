@@ -566,21 +566,17 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * Cashback notice
 		 */
 		public function display_cashback_on_cart_checkout() {
-			if ( woo_wallet()->cashback->calculate_cashback() && ! is_wallet_rechargeable_cart() && apply_filters( 'display_cashback_notice_at_woocommerce_page', ! is_wallet_account_locked() ) ) :
-				?>
-				<div class="woocommerce-Message woocommerce-Message--info woocommerce-info wallet-cashback-notice">
-					<?php
-					$cashback_amount = woo_wallet()->cashback->calculate_cashback();
-					if ( is_user_logged_in() ) {
-						/* translators: 1:cashback amount */
-						echo apply_filters( 'woo_wallet_cashback_notice_text', sprintf( __( 'Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet' ), wc_price( $cashback_amount, woo_wallet_wc_price_args() ) ), $cashback_amount ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					} else {
-						/* translators: 1: Login URL, 2:wallet amount */
-						echo apply_filters( 'woo_wallet_cashback_notice_text', sprintf( __( 'Please <a href="%1$s">log in</a> to avail %2$s cashback from this order.', 'woo-wallet' ), esc_url( get_permalink( get_option( 'woocommerce_myaccount_page_id' ) ) ), wc_price( $cashback_amount, woo_wallet_wc_price_args() ) ), $cashback_amount ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					}
-					?>
-				</div>
-				<?php
+			$cashback_amount = woo_wallet()->cashback->calculate_cashback();
+			if ( $cashback_amount && ! is_wallet_rechargeable_cart() && apply_filters( 'display_cashback_notice_at_woocommerce_page', ! is_wallet_account_locked() ) ) :
+				$cashback_notice_text = '';
+				if ( is_user_logged_in() ) {
+					/* translators: 1:cashback amount */
+					$cashback_notice_text = apply_filters( 'woo_wallet_cashback_notice_text', sprintf( __( 'Upon placing this order a cashback of %s will be credited to your wallet.', 'woo-wallet' ), wc_price( $cashback_amount, woo_wallet_wc_price_args() ) ), $cashback_amount ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				} else {
+					/* translators: 1: Login URL, 2:wallet amount */
+					$cashback_notice_text = apply_filters( 'woo_wallet_cashback_notice_text', sprintf( __( 'Please <a href="%1$s">log in</a> to avail %2$s cashback from this order.', 'woo-wallet' ), esc_url( get_permalink( get_option( 'woocommerce_myaccount_page_id' ) ) ), wc_price( $cashback_amount, woo_wallet_wc_price_args() ) ), $cashback_amount ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
+				wc_print_notice( $cashback_notice_text, 'notice' );
 			endif;
 		}
 

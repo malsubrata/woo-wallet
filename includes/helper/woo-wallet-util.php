@@ -341,7 +341,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 
 		$query['where'] = 'WHERE 1=1';
 		if ( $user_id ) {
-			$query['where'] .= " AND transactions.user_id = {$user_id}";
+			$query['where'] .= $wpdb->prepare( ' AND transactions.user_id = %d', $user_id );
 		}
 
 		if ( ! $include_deleted ) {
@@ -353,7 +353,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 				if ( ! isset( $value['operator'] ) ) {
 					$value['operator'] = '=';
 				}
-				$query['where'] .= " AND (transaction_meta.meta_key = '{$value['key']}' AND transaction_meta.meta_value {$value['operator']} '{$value['value']}' )";
+				$query['where'] .= $wpdb->prepare( " AND (transaction_meta.meta_key = %s AND transaction_meta.meta_value {$value['operator']} %s )", $value['key'], $value['value'] );
 			}
 		}
 
@@ -363,10 +363,10 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 					$value['operator'] = '=';
 				}
 				if ( 'IN' === $value['operator'] && is_array( $value['value'] ) ) {
-					$value['value']  = implode( ',', $value['value'] );
+					$value['value']  = esc_sql( implode( ',', $value['value'] ) );
 					$query['where'] .= " AND transactions.{$value['key']} {$value['operator']} ({$value['value']})";
 				} else {
-					$query['where'] .= " AND transactions.{$value['key']} {$value['operator']} '{$value['value']}'";
+					$query['where'] .= $wpdb->prepare( " AND transactions.{$value['key']} {$value['operator']} %s", $value['value'] );
 				}
 			}
 		}
@@ -374,7 +374,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		if ( ! empty( $after ) || ! empty( $before ) ) {
 			$after           = empty( $after ) ? '0000-00-00' : $after;
 			$before          = empty( $before ) ? current_time( 'mysql', 1 ) : $before;
-			$query['where'] .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ))";
+			$query['where'] .= $wpdb->prepare( ' AND ( transactions.date BETWEEN %s AND %s', $after, $before );
 		}
 
 		if ( $order_by ) {
@@ -385,8 +385,9 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 			$query['limit'] = "LIMIT {$limit}";
 		}
 		$wpdb->hide_errors();
-		$query          = apply_filters( 'woo_wallet_transactions_query', $query );
-		$query          = implode( ' ', $query );
+		$query = apply_filters( 'woo_wallet_transactions_query', $query );
+		$query = implode( ' ', $query );
+
 		$query_hash     = md5( $user_id . $query );
 		$cached_results = is_array( get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) ) ? get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) : array();
 
