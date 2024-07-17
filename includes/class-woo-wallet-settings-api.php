@@ -518,7 +518,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * @param string $option  settings field name.
 		 * @param string $section the section name this field belongs to.
 		 * @param string $default default text if it's not found.
-		 * @return string
+		 * @return mixed
 		 */
 		public function get_option( $option, $section, $default = '' ) {
 

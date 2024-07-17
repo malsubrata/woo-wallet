@@ -183,6 +183,8 @@ final class WooWallet {
 
 		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
 
+		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
+
 		$is_active = get_option( 'woo_wallet_is_active', false );
 
 		if ( false === $is_active ) {
@@ -190,6 +192,18 @@ final class WooWallet {
 			flush_rewrite_rules();
 			do_action( 'woo_wallet_activated' );
 		}
+	}
+
+	/**
+	 * Add WooCommerce query vars.
+	 *
+	 * @param type $query_vars query_vars.
+	 * @return type
+	 */
+	public function add_woocommerce_query_vars( $query_vars ) {
+		$query_vars['woo-wallet']              = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
+		$query_vars['woo-wallet-transactions'] = get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'wallet-transactions' );
+		return $query_vars;
 	}
 
 	/**

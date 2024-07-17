@@ -39,7 +39,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 */
 		public function __construct() {
 			add_filter( 'wp_nav_menu_items', array( $this, 'add_wallet_nav_menu' ), 100, 2 );
-			add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
 			add_filter( 'woocommerce_endpoint_woo-wallet_title', array( $this, 'woocommerce_endpoint_title' ), 10, 2 );
 			add_filter( 'woocommerce_endpoint_woo-wallet-transactions_title', array( $this, 'woocommerce_endpoint_title' ), 10, 2 );
 			add_filter( 'woocommerce_account_menu_items', array( $this, 'woo_wallet_menu_items' ), 10, 1 );
@@ -150,18 +149,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			woo_wallet()->get_template( 'mini-wallet.php' );
 			$mini_wallet = ob_get_clean();
 			return $menu . $mini_wallet;
-		}
-
-		/**
-		 * Add WooCommerce query vars.
-		 *
-		 * @param type $query_vars query_vars.
-		 * @return type
-		 */
-		public function add_woocommerce_query_vars( $query_vars ) {
-			$query_vars['woo-wallet']              = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
-			$query_vars['woo-wallet-transactions'] = get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'wallet-transactions' );
-			return $query_vars;
 		}
 
 		/**
