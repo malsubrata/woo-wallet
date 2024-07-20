@@ -185,6 +185,8 @@ final class WooWallet {
 
 		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
 
+		add_action( 'woocommerce_order_item_fee_after_calculate_taxes', array( $this, 'woocommerce_order_item_fee_after_calculate_taxes_callback' ), 10, 2 );
+
 		$is_active = get_option( 'woo_wallet_is_active', false );
 
 		if ( false === $is_active ) {
@@ -449,6 +451,23 @@ final class WooWallet {
 				},
 			)
 		);
+	}
+
+	/**
+	 * Set wallet partial amount tax.
+	 *
+	 * @param WC_Order_Item_Fee $item item.
+	 * @param array             $calculate_tax_for calculate_tax_for.
+	 * @return void
+	 */
+	public function woocommerce_order_item_fee_after_calculate_taxes_callback( $item, $calculate_tax_for ) {
+		if ( ! isset( $calculate_tax_for['tax_class'] ) ) {
+			return;
+		}
+		if ( '_via_wallet_partial_payment' !== $item->legacy_fee_key ) {
+			return;
+		}
+		$item->set_taxes( false );
 	}
 
 	/**

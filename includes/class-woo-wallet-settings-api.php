@@ -202,7 +202,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		public function callback_rand( $args ) {
 			$value = wp_rand();
 			?>
-			<input type="hidden" id="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" value="<?php echo esc_html( $value ); ?>" />
+			<input type="hidden" id="<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="<?php echo esc_html( $value ); ?>" />
 			<?php
 		}
 

@@ -1,4 +1,8 @@
 *** Changelog ***
+=v1.5.6 ( July 20, 2024) =
+- **Fix:-** Permalinks issues.
+- **Fix:-** Partial payment issues.
+
 = v1.5.5 ( July 11, 2024 ) =
 - **Fix:-** Security issues.
 - **Fix:-** Permalinks issues.
