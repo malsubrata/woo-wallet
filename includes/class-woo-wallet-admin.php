@@ -1109,7 +1109,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function manage_users_custom_column( $value, $column_name, $user_id ) {
 			if ( 'current_wallet_balance' === $column_name ) {
-				return sprintf( '<a href="%s" title="%s">%s</a>', admin_url( '?page=woo-wallet-transactions&user_id=' . $user_id ), __( 'View details', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user_id ) );
+				return sprintf( '<a href="%s" title="%s">%s</a>', admin_url( 'admin.php?page=woo-wallet-transactions&user_id=' . $user_id ), __( 'View details', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user_id ) );
 			}
 			return $value;
 		}
