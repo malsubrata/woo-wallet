@@ -202,7 +202,19 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function add_wallet_topup_report() {
 			if ( current_user_can( 'view_woocommerce_reports' ) ) {
-				$wallet_recharge_order_ids = get_wallet_rechargeable_orders( array( 'date_query' => array( 'after' => gmdate( 'Y-m-01' ) ) ) );
+				$wallet_recharge_order_ids = wc_get_orders(
+					array(
+						'limit'        => -1,
+						'meta_query'   => array(
+							array(
+								'key'   => '_wc_wallet_purchase_credited',
+								'value' => true,
+							),
+						),
+						'date_created' => '>=' . gmdate( 'Y-m-01' ),
+						'return'       => 'ids',
+					)
+				);
 				$top_up_amount             = 0;
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
 					$order           = wc_get_order( $order_id );

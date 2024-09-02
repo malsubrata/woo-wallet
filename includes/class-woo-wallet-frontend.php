@@ -75,7 +75,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_shortcode( 'woo-wallet', __CLASS__ . '::woo_wallet_shortcode_callback' );
 			add_shortcode( 'mini-wallet', __CLASS__ . '::mini_wallet_shortcode_callback' );
 			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'woo_wallet_add_partial_payment_fee' ) );
-			add_filter( 'woocommerce_cart_totals_get_fees_from_cart_taxes', array( $this, 'woocommerce_cart_totals_get_fees_from_cart_taxes' ), 10, 2 );
+			add_filter( 'woocommerce_cart_totals_get_fees_from_cart_taxes', array( $this, 'woocommerce_cart_totals_get_fees_from_cart_taxes' ), 999, 2 );
 			add_action( 'woocommerce_thankyou', array( $this, 'restore_woocommerce_cart_items' ) );
 			add_filter( 'woo_wallet_is_enable_transfer', array( $this, 'woo_wallet_is_enable_transfer' ) );
 
@@ -400,15 +400,17 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				'message'  => '',
 			);
 			if ( isset( $_POST['woo_wallet_transfer'] ) && wp_verify_nonce( wp_unslash( $_POST['woo_wallet_transfer'] ), 'woo_wallet_transfer' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				if ( isset( $_POST['woo_wallet_transfer_user_id'] ) ) {
-					$whom = sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_user_id'] ) );
-				}
-				if ( isset( $_POST['woo_wallet_transfer_amount'] ) ) {
-					$amount = sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_amount'] ) );
-				}
+				$whom             = isset( $_POST['woo_wallet_transfer_user_id'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_user_id'] ) ) ) : 0;
+				$amount           = isset( $_POST['woo_wallet_transfer_amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_amount'] ) ) ) : 0;
 				$whom             = apply_filters( 'woo_wallet_transfer_user_id', $whom );
 				$whom             = get_userdata( $whom );
 				$current_user_obj = get_userdata( get_current_user_id() );
+				if ( get_current_user_id() === $whom->ID ) {
+					return array(
+						'is_valid' => false,
+						'message'  => sprintf( __( 'Invalid user', 'woo-wallet' ) ),
+					);
+				}
 				/* translators: user_email */
 				$credit_note = isset( $_POST['woo_wallet_transfer_note'] ) && ! empty( $_POST['woo_wallet_transfer_note'] ) ? sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_note'] ) ) : sprintf( __( 'Wallet funds received from %s', 'woo-wallet' ), $current_user_obj->user_email );
 				/* translators: user_email */
@@ -442,7 +444,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 						'message'  => __( 'Invalid user', 'woo-wallet' ),
 					);
 				}
-				if ( floatval( $debit_amount ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) {
+				if ( $debit_amount > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) {
 					return array(
 						'is_valid' => false,
 						'message'  => __( 'Entered amount is greater than current wallet amount.', 'woo-wallet' ),

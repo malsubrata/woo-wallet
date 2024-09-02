@@ -414,7 +414,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$response = array(
 				'draw'            => isset( $_POST['draw'] ) ? sanitize_text_field( wp_unslash( $_POST['draw'] ) ) : 1,
 				'recordsTotal'    => $records_total,
-				'recordsFiltered' => count( $transactions ),
+				'recordsFiltered' => count( get_wallet_transactions( $args ) ),
 				'data'            => array(),
 			);
 			if ( $transactions ) {

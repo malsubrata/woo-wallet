@@ -1,4 +1,9 @@
 *** Changelog ***
+=v1.5.7 ( September 02, 2024) =
+- **Fix:-** Broken wallet page link on user page.
+- **Fix:-** Security issues.
+- **Fix:-** Wallet top-up amount widget in admin panel.
+
 =v1.5.6 ( July 20, 2024) =
 - **Fix:-** Permalinks issues.
 - **Fix:-** Partial payment issues.

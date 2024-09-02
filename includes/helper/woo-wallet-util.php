@@ -181,17 +181,19 @@ if ( ! function_exists( 'get_wallet_rechargeable_orders' ) ) {
 	 * @return array
 	 */
 	function get_wallet_rechargeable_orders( $args = array() ) {
-		$default_args = array(
-			'posts_per_page'   => -1,
-			'meta_key'         => '_wc_wallet_purchase_credited', // @codingStandardsIgnoreLine
-			'meta_value'       => true, // @codingStandardsIgnoreLine
-			'post_type'        => 'shop_order',
-			'post_status'      => array( 'completed', 'processing', 'on-hold' ),
-			'suppress_filters' => true,
+		$order_ids = wc_get_orders(
+			array(
+				'limit'      => -1,
+				'meta_query' => array(
+					array(
+						'key'   => '_wc_wallet_purchase_credited',
+						'value' => true,
+					),
+				),
+				'return'     => 'ids',
+			)
 		);
-		$args         = wp_parse_args( $args, $default_args );
-		$orders       = get_posts( $args );
-		return wp_list_pluck( $orders, 'ID' );
+		return $order_ids;
 	}
 }
 
