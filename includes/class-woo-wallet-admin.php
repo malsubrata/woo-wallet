@@ -205,12 +205,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				$wallet_recharge_order_ids = wc_get_orders(
 					array(
 						'limit'        => -1,
-						'meta_query'   => array(
-							array(
-								'key'   => '_wc_wallet_purchase_credited',
-								'value' => true,
-							),
-						),
+						'topuporders'  => true,
 						'date_created' => '>=' . gmdate( 'Y-m-01' ),
 						'return'       => 'ids',
 					)

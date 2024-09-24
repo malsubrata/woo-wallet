@@ -183,14 +183,9 @@ if ( ! function_exists( 'get_wallet_rechargeable_orders' ) ) {
 	function get_wallet_rechargeable_orders( $args = array() ) {
 		$order_ids = wc_get_orders(
 			array(
-				'limit'      => -1,
-				'meta_query' => array(
-					array(
-						'key'   => '_wc_wallet_purchase_credited',
-						'value' => true,
-					),
-				),
-				'return'     => 'ids',
+				'limit'       => -1,
+				'return'      => 'ids',
+				'topuporders' => true,
 			)
 		);
 		return $order_ids;
