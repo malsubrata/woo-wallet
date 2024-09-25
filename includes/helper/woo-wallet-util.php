@@ -5,6 +5,8 @@
  * @package StandaleneTech
  */
 
+use Automattic\WooCommerce\Utilities\OrderUtil;
+
 if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
 
 	/**
@@ -181,13 +183,31 @@ if ( ! function_exists( 'get_wallet_rechargeable_orders' ) ) {
 	 * @return array
 	 */
 	function get_wallet_rechargeable_orders( $args = array() ) {
-		$order_ids = wc_get_orders(
-			array(
-				'limit'       => -1,
-				'return'      => 'ids',
-				'topuporders' => true,
-			)
-		);
+		$hpos_enabled = OrderUtil::custom_orders_table_usage_is_enabled();
+		if ( $hpos_enabled ) {
+			$order_ids = wc_get_orders(
+				array(
+					'limit'      => -1,
+					'meta_query' => array(
+						array(
+							'key'   => '_wc_wallet_purchase_credited',
+							'value' => true,
+						),
+					),
+					'return'     => 'ids',
+					'status'     => wc_get_is_paid_statuses(),
+				)
+			);
+		} else {
+			$order_ids = wc_get_orders(
+				array(
+					'limit'       => -1,
+					'return'      => 'ids',
+					'topuporders' => true,
+					'status'      => wc_get_is_paid_statuses(),
+				)
+			);
+		}
 		return $order_ids;
 	}
 }

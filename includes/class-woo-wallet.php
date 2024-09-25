@@ -1,4 +1,10 @@
 <?php
+/**
+ * Main wallet calss
+ *
+ * @package StandaloneTech
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -180,8 +186,6 @@ final class WooWallet {
 		add_action( 'woocommerce_new_order_item', array( $this, 'woocommerce_new_order_item' ), 10, 2 );
 
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
-
-		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
 
 		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
 
@@ -397,23 +401,6 @@ final class WooWallet {
 		}
 	}
 	/**
-	 * Filter wallet topup orders.
-	 *
-	 * @param array $query query.
-	 * @param array $query_vars query_vars.
-	 * @return array
-	 */
-	public function filter_wallet_topup_orders( $query, $query_vars ) {
-		if ( ! empty( $query_vars['topuporders'] ) && $query_vars['topuporders'] ) {
-			$query['meta_query'][] = array(
-				'key'   => '_wc_wallet_purchase_credited',
-				'value' => true,
-			);
-		}
-
-		return $query;
-	}
-	/**
 	 * Registers WooCommerce Blocks integration.
 	 */
 	public static function add_woocommerce_block_support() {
@@ -430,13 +417,13 @@ final class WooWallet {
 		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-partial-payment-blocks.php';
 		add_action(
 			'woocommerce_blocks_cart_block_registration',
-			function( $integration_registry ) {
+			function ( $integration_registry ) {
 				$integration_registry->register( new WOO_Wallet_Partial_Payment_Blocks() );
 			}
 		);
 		add_action(
 			'woocommerce_blocks_checkout_block_registration',
-			function( $integration_registry ) {
+			function ( $integration_registry ) {
 				$integration_registry->register( new WOO_Wallet_Partial_Payment_Blocks() );
 			}
 		);
@@ -444,7 +431,7 @@ final class WooWallet {
 		woocommerce_store_api_register_update_callback(
 			array(
 				'namespace' => 'apply-partial-payment',
-				'callback'  => function( $data ) {
+				'callback'  => function ( $data ) {
 					if ( ! is_null( wc()->session ) ) {
 						wc()->session->set( 'partial_payment_amount', $data['amount'] );
 					}
@@ -516,11 +503,10 @@ final class WooWallet {
 	/**
 	 * Display admin notice
 	 */
-	public function admin_notices() {
-		?>
+	public function admin_notices() {                   ?>
 		<div class="error">
 			<p>
-				<?php echo esc_html_e( 'TeraWallet plugin requires', 'woo-wallet' ); ?> 
+				<?php echo esc_html_e( 'TeraWallet plugin requires', 'woo-wallet' ); ?>
 				<a href="https://wordpress.org/plugins/woocommerce/">WooCommerce</a> <?php echo esc_html_e( 'plugins to be active!', 'woo-wallet' ); ?>
 			</p>
 		</div>

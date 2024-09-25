@@ -5,6 +5,8 @@
  * @package StandaleneTech
  */
 
+use Automattic\WooCommerce\Utilities\OrderUtil;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -202,15 +204,34 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function add_wallet_topup_report() {
 			if ( current_user_can( 'view_woocommerce_reports' ) ) {
-				$wallet_recharge_order_ids = wc_get_orders(
-					array(
-						'limit'        => -1,
-						'topuporders'  => true,
-						'date_created' => '>=' . gmdate( 'Y-m-01' ),
-						'return'       => 'ids',
-					)
-				);
-				$top_up_amount             = 0;
+				$hpos_enabled = OrderUtil::custom_orders_table_usage_is_enabled();
+				if ( $hpos_enabled ) {
+					$wallet_recharge_order_ids = wc_get_orders(
+						array(
+							'limit'        => -1,
+							'meta_query'   => array(
+								array(
+									'key'   => '_wc_wallet_purchase_credited',
+									'value' => true,
+								),
+							),
+							'date_created' => '>=' . gmdate( 'Y-m-01' ),
+							'return'       => 'ids',
+							'status'       => wc_get_is_paid_statuses(),
+						)
+					);
+				} else {
+					$wallet_recharge_order_ids = wc_get_orders(
+						array(
+							'limit'        => -1,
+							'topuporders'  => true,
+							'date_created' => '>=' . gmdate( 'Y-m-01' ),
+							'return'       => 'ids',
+							'status'       => wc_get_is_paid_statuses(),
+						)
+					);
+				}
+				$top_up_amount = 0;
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
 					$order           = wc_get_order( $order_id );
 					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
