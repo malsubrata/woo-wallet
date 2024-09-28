@@ -168,8 +168,8 @@ final class WooWallet {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_credit_purchase' ) );
 		}
 
-		add_action( 'woocommerce_checkout_order_processed', array( $this->wallet, 'wallet_partial_payment' ), 99 );
-		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this->wallet, 'wallet_partial_payment' ), 99 );
+		add_action( 'woocommerce_checkout_order_processed', array( $this->wallet, 'woocommerce_order_processed' ), 99 );
+		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this->wallet, 'woocommerce_order_processed' ), 99 );
 
 		foreach ( apply_filters( 'wallet_cashback_order_status', $this->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ) as $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_cashback' ), 12 );
@@ -186,6 +186,8 @@ final class WooWallet {
 		add_action( 'woocommerce_new_order_item', array( $this, 'woocommerce_new_order_item' ), 10, 2 );
 
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
+
+		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
 
 		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
 
@@ -400,6 +402,25 @@ final class WooWallet {
 			$wpdb->query( $wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		}
 	}
+
+	/**
+	 * Filter wallet topup orders.
+	 *
+	 * @param array $query query.
+	 * @param array $query_vars query_vars.
+	 * @return array
+	 */
+	public function filter_wallet_topup_orders( $query, $query_vars ) {
+		if ( ! empty( $query_vars['topuporders'] ) && $query_vars['topuporders'] ) {
+			$query['meta_query'][] = array(
+				'key'   => '_wc_wallet_purchase_credited',
+				'value' => true,
+			);
+		}
+
+		return $query;
+	}
+
 	/**
 	 * Registers WooCommerce Blocks integration.
 	 */
