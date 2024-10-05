@@ -83,11 +83,15 @@ final class WOO_Wallet_Payments_Blocks extends AbstractPaymentMethodType {
 	 */
 	public function get_payment_method_data() {
 		return array(
-			'title'          => $this->get_setting( 'title' ),
-			'description'    => $this->get_setting( 'description' ),
-			'supports'       => array_filter( $this->gateway->supports, array( $this->gateway, 'supports' ) ),
-			'balance'        => woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ),
-			'canMakePayment' => apply_filters( 'woo_wallet_payment_is_available', ( $this->is_active() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() && ! is_wallet_account_locked() ) ),
+			'title'              => $this->get_setting( 'title' ),
+			'description'        => $this->get_setting( 'description' ),
+			'supports'           => array_filter( $this->gateway->supports, array( $this->gateway, 'supports' ) ),
+			'balance'            => woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ),
+			'canMakePayment'     => apply_filters( 'woo_wallet_payment_is_available', ( $this->is_active() && is_full_payment_through_wallet() && is_user_logged_in() && ! is_enable_wallet_partial_payment() && ! is_wallet_account_locked() ) ),
+			'currency_symbol'    => get_woocommerce_currency_symbol(),
+			'decimal_separator'  => wc_get_price_decimal_separator(),
+			'thousand_separator' => wc_get_price_thousand_separator(),
+			'decimals'           => wc_get_price_decimals(),
 		);
 	}
 }

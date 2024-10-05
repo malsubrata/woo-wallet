@@ -100,6 +100,10 @@ class WOO_Wallet_Partial_Payment_Blocks implements IntegrationInterface {
 			'active'                 => apply_filters( 'is_enable_wallet_partial_payment', $is_enable ),
 			'balance'                => woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ),
 			'partial_payment_amount' => ! is_null( wc()->session ) && woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) >= wc()->session->get( 'partial_payment_amount', 0 ) ? wc()->session->get( 'partial_payment_amount', 0 ) : woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ),
+			'currency_symbol'        => get_woocommerce_currency_symbol(),
+			'decimal_separator'      => wc_get_price_decimal_separator(),
+			'thousand_separator'     => wc_get_price_thousand_separator(),
+			'decimals'               => wc_get_price_decimals(),
 		);
 
 		return $data;

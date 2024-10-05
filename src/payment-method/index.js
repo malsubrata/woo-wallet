@@ -3,7 +3,6 @@ import { sprintf, __ } from '@wordpress/i18n';
 import { registerPaymentMethod } from '@woocommerce/blocks-registry';
 import { decodeEntities } from '@wordpress/html-entities';
 import { getSetting } from '@woocommerce/settings';
-import { formatPrice, getCurrencyFromPriceResponse, Currency } from '@woocommerce/price-format';
 
 /**
  * Internal dependencies
@@ -25,10 +24,28 @@ const Content = () => {
 	return decodeEntities( settings.description || '' );
 };
 
+const formatedBalance = () => {
+	const { balance, currency_symbol, decimal_separator, thousand_separator, decimals } = settings;
+	// Ensure that 'amount' is a valid number
+    let numericAmount = parseFloat(balance);
+    if (isNaN(numericAmount)) {
+        return amount; // Return the original value if it's not a valid number
+    }
+    // Format the amount to the required number of decimal places
+    let fixedAmount = numericAmount.toFixed(decimals);
+    // Split the integer and decimal parts
+    let parts = fixedAmount.split('.');
+    // Add thousand separator to the integer part only
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousand_separator);
+    // Rejoin integer and decimal parts with the correct decimal separator
+    let formattedAmount = parts.join(decimal_separator);
+    return decodeEntities(`${currency_symbol}${formattedAmount}`);
+}
+
 const CurrentBalance = () => {
 	return (
 		<span>
-			&nbsp;{ /* translators: 1: Wallet amount */ sprintf(__('| Current Balance: %s', 'woo-wallet'), formatPrice( settings.balance * 100 ))}
+			&nbsp;{ /* translators: 1: Wallet amount */ sprintf(__('| Current Balance: %s', 'woo-wallet'), formatedBalance())}
 		</span>
 	);
 }

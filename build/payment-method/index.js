@@ -19,10 +19,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_html_entities__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _woocommerce_settings__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @woocommerce/settings */ "@woocommerce/settings");
 /* harmony import */ var _woocommerce_settings__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_woocommerce_settings__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _woocommerce_price_format__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @woocommerce/price-format */ "@woocommerce/price-format");
-/* harmony import */ var _woocommerce_price_format__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_woocommerce_price_format__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./style.scss */ "./src/payment-method/style.scss");
-
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./style.scss */ "./src/payment-method/style.scss");
 
 
 
@@ -42,8 +39,31 @@ const label = (0,_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_3__.decodeEnt
 const Content = () => {
   return (0,_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_3__.decodeEntities)(settings.description || '');
 };
+const formatedBalance = () => {
+  const {
+    balance,
+    currency_symbol,
+    decimal_separator,
+    thousand_separator,
+    decimals
+  } = settings;
+  // Ensure that 'amount' is a valid number
+  let numericAmount = parseFloat(balance);
+  if (isNaN(numericAmount)) {
+    return amount; // Return the original value if it's not a valid number
+  }
+  // Format the amount to the required number of decimal places
+  let fixedAmount = numericAmount.toFixed(decimals);
+  // Split the integer and decimal parts
+  let parts = fixedAmount.split('.');
+  // Add thousand separator to the integer part only
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousand_separator);
+  // Rejoin integer and decimal parts with the correct decimal separator
+  let formattedAmount = parts.join(decimal_separator);
+  return (0,_wordpress_html_entities__WEBPACK_IMPORTED_MODULE_3__.decodeEntities)(`${currency_symbol}${formattedAmount}`);
+};
 const CurrentBalance = () => {
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "\xA0", /* translators: 1: Wallet amount */(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('| Current Balance: %s', 'woo-wallet'), (0,_woocommerce_price_format__WEBPACK_IMPORTED_MODULE_5__.formatPrice)(settings.balance * 100)));
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, "\xA0", /* translators: 1: Wallet amount */(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('| Current Balance: %s', 'woo-wallet'), formatedBalance()));
 };
 /**
  * Label component
@@ -96,16 +116,6 @@ __webpack_require__.r(__webpack_exports__);
 /***/ ((module) => {
 
 module.exports = window["React"];
-
-/***/ }),
-
-/***/ "@woocommerce/price-format":
-/*!*************************************!*\
-  !*** external ["wc","priceFormat"] ***!
-  \*************************************/
-/***/ ((module) => {
-
-module.exports = window["wc"]["priceFormat"];
 
 /***/ }),
 
