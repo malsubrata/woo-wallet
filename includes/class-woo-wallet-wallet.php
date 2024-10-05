@@ -179,15 +179,16 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 		}
 		/**
-		 * Process wallet partial payment.
+		 * Actions after woocommerce create order from checkout page.
 		 *
 		 * @param WC_Order|int $order order.
 		 * @return void
 		 */
-		public function wallet_partial_payment( $order ) {
+		public function woocommerce_order_processed( $order ) {
 			if ( ! $order instanceof WC_Order ) {
 				$order = wc_get_order( $order );
 			}
+			// Deduct partial payment amount.
 			$partial_payment_amount = get_order_partial_payment_amount( $order->get_id() );
 			if ( $partial_payment_amount && ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
 				$transaction_id = $this->debit( $order->get_customer_id(), $partial_payment_amount, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), array( 'for' => 'partial_payment' ) );
@@ -198,6 +199,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $order );
 				}
 			}
+			// Update order meta if wallet rechargable order.
+			if ( is_wallet_rechargeable_order( $order ) ) {
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_rechargeable_order', true );
+			} else {
+				WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_rechargeable_order', false );
+			}
+			// Update partial payment session.
 			update_wallet_partial_payment_session();
 		}
 		/**
