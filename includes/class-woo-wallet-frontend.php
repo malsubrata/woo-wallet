@@ -683,6 +683,15 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @return void
 		 */
 		public function display_cashback() {
+			$user_id = get_current_user_id();
+			if ( ! is_user_logged_in() ) {
+				return;
+			}
+			$user         = new WP_User( $user_id );
+			$exclude_role = woo_wallet()->settings_api->get_option( 'exclude_role', '_wallet_settings_credit', array() );
+			if ( ! array_diff( $user->roles, $exclude_role ) ) {
+				return;
+			}
 			$product = wc_get_product( get_the_ID() );
 			if ( ! $product || is_wallet_account_locked() ) {
 				return;

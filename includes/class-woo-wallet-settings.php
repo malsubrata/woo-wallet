@@ -221,6 +221,16 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'multiple' => true,
 						),
 						array(
+							'name'     => 'exclude_role',
+							'label'    => __( 'Exclude user role', 'woo-wallet' ),
+							'desc'     => __( 'This option lets you specify which user role you want to exclude from the cashback program.', 'woo-wallet' ),
+							'type'     => 'select',
+							'options'  => $this->get_editable_role_options(),
+							'default'  => array(),
+							'size'     => 'regular-text wc-enhanced-select',
+							'multiple' => true,
+						),
+						array(
 							'name'    => 'cashback_rule',
 							'label'   => __( 'Cashback Rule', 'woo-wallet' ),
 							'desc'    => __( 'Select Cashback Rule cart or product wise', 'woo-wallet' ),
@@ -436,6 +446,19 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				}
 			}
 			return $menu_locations;
+		}
+
+		/**
+		 * Get all editable roles.
+		 */
+		public function get_editable_role_options() {
+			$role_options   = array();
+			$editable_roles = array_reverse( wp_roles()->roles );
+			foreach ( $editable_roles as $role => $details ) {
+				$name                  = translate_user_role( $details['name'] );
+				$role_options[ $role ] = $name;
+			}
+			return $role_options;
 		}
 
 		/**

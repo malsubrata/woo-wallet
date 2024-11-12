@@ -70,8 +70,17 @@ if ( ! class_exists( 'Woo_Wallet_Cashback' ) ) {
 		 */
 		public static function calculate_cashback( $form_cart = true, $order_id = 0, $force = false ) {
 			self::init_cashback_settings();
-			$order = wc_get_order( $order_id );
+			$order   = wc_get_order( $order_id );
+			$user_id = get_current_user_id();
+			if ( $order ) {
+				$user_id = $order->get_customer_id();
+			}
+			$user         = new WP_User( $user_id );
+			$exclude_role = woo_wallet()->settings_api->get_option( 'exclude_role', '_wallet_settings_credit', array() );
 			if ( 'on' !== woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit' ) ) {
+				return 0;
+			}
+			if ( ! array_diff( $user->roles, $exclude_role ) ) {
 				return 0;
 			}
 			if ( ! $form_cart && ! $order_id ) {

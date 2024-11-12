@@ -303,18 +303,19 @@ if ( ! function_exists( 'get_wallet_transaction_meta' ) ) {
 	 * Fetch transaction meta
 	 *
 	 * @global object $wpdb
-	 * @param int     $transaction_id transaction_id.
-	 * @param string  $meta_key meta_key.
-	 * @param boolean $single single.
-	 * @return boolean
+	 * @param int    $transaction_id transaction_id.
+	 * @param string $meta_key meta_key.
+	 * @param mixed  $default The fallback value to return if the data does not exist.
+	 *                           Default false.
+	 * @return mixed
 	 */
-	function get_wallet_transaction_meta( $transaction_id, $meta_key, $single = true ) {
+	function get_wallet_transaction_meta( $transaction_id, $meta_key, $default = false ) {
 		global $wpdb;
 		$resualt = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id = %s AND meta_key = %s", $transaction_id, $meta_key ) ); // @codingStandardsIgnoreLine
 		if ( ! is_null( $resualt ) ) {
 			return maybe_unserialize( $resualt );
 		} else {
-			return false;
+			return $default;
 		}
 	}
 }
