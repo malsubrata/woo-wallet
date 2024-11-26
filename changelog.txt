@@ -1,4 +1,7 @@
 *** Changelog ***
+=v1.5.9 ( November 26, 2024) =
+- **Fix:-** Plugin Localisation issue for WP 6.7.
+
 =v1.5.8 ( November 26, 2024) =
 - **New:-** User role wise cashback restriction.
 - **Fix:-** WooCommerce analytics and dashboard reports.
