@@ -3,8 +3,8 @@ Contributors: standalonetech, subratamal, moumitaadak
 Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
 Requires at least: 6.4
-Tested up to: 6.6
-Stable tag: 1.5.7
+Tested up to: 6.7
+Stable tag: 1.5.8
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -141,6 +141,11 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+=v1.5.8 ( November 26, 2024) =
+- **New:-** User role wise cashback restriction.
+- **Fix:-** WooCommerce analytics and dashboard reports.
+- **Fix:-** Wallet amount display on cart and checkout block.
+
 =v1.5.7 ( September 02, 2024) =
 - **Fix:-** Broken wallet page link on user page.
 - **Fix:-** Security issues.

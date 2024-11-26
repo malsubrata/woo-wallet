@@ -1,4 +1,9 @@
 *** Changelog ***
+=v1.5.8 ( November 26, 2024) =
+- **New:-** User role wise cashback restriction.
+- **Fix:-** WooCommerce analytics and dashboard reports.
+- **Fix:-** Wallet amount display on cart and checkout block.
+
 =v1.5.7 ( September 02, 2024) =
 - **Fix:-** Broken wallet page link on user page.
 - **Fix:-** Security issues.
