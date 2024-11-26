@@ -279,10 +279,10 @@ final class WooWallet {
 	 * Text Domain loader
 	 */
 	public function load_plugin_textdomain() {
-		$locale = is_admin() && function_exists( 'get_user_locale' ) ? get_user_locale() : get_locale();
+		$locale = determine_locale();
 		$locale = apply_filters( 'plugin_locale', $locale, 'woo-wallet' );
 
-		unload_textdomain( 'woo-wallet' );
+		unload_textdomain( 'woo-wallet', true );
 		load_textdomain( 'woo-wallet', WP_LANG_DIR . '/woo-wallet/woo-wallet-' . $locale . '.mo' );
 		load_plugin_textdomain( 'woo-wallet', false, plugin_basename( dirname( WOO_WALLET_PLUGIN_FILE ) ) . '/languages' );
 	}
