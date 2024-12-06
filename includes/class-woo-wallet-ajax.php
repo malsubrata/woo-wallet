@@ -190,6 +190,9 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * @param WC_Order $order order.
 		 */
 		public function recalculate_order_cashback_after_calculate_totals( $and_taxes, $order ) {
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				return;
+			}
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
 			$transaction_id  = $order->get_meta( '_general_cashback_transaction_id' );
 			if ( $transaction_id ) {
