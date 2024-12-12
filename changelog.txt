@@ -1,4 +1,7 @@
 *** Changelog ***
+=v1.5.10 ( December 12, 2024) =
+- **Fix:-** Refund issue.
+
 =v1.5.9 ( November 26, 2024) =
 - **Fix:-** Plugin Localisation issue for WP 6.7.
 

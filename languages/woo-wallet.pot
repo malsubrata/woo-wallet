@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the TeraWallet plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.5.9\n"
+"Project-Id-Version: TeraWallet 1.5.10\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-11-26T15:53:31+00:00\n"
+"POT-Creation-Date: 2024-12-12T02:25:23+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: woo-wallet\n"
@@ -894,33 +894,33 @@ msgstr ""
 
 #. translators: 1: user_login, 2: user_email
 #: includes/class-woo-wallet-ajax.php:179
-#: includes/class-woo-wallet-ajax.php:334
-#: includes/class-woo-wallet-ajax.php:353
+#: includes/class-woo-wallet-ajax.php:337
+#: includes/class-woo-wallet-ajax.php:356
 msgctxt "user autocomplete result"
 msgid "%1$s (%2$s)"
 msgstr ""
 
-#: includes/class-woo-wallet-ajax.php:211
-#: includes/class-woo-wallet-ajax.php:277
+#: includes/class-woo-wallet-ajax.php:214
+#: includes/class-woo-wallet-ajax.php:280
 #: includes/class-woo-wallet-payment-method.php:181
 msgid "Wallet refund #"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-ajax.php:215
+#: includes/class-woo-wallet-ajax.php:218
 msgid "%s refunded to customer wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-ajax.php:292
+#: includes/class-woo-wallet-ajax.php:295
 #: includes/class-woo-wallet-payment-method.php:184
 msgid "Refund not credited to customer"
 msgstr ""
 
-#: includes/class-woo-wallet-ajax.php:380
+#: includes/class-woo-wallet-ajax.php:383
 msgid "You have no permission to do that"
 msgstr ""
 
-#: includes/class-woo-wallet-ajax.php:384
+#: includes/class-woo-wallet-ajax.php:387
 msgid "Invalid nonce"
 msgstr ""
 
