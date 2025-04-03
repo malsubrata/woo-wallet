@@ -26,7 +26,9 @@ if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
 				}
 			}
 		}
-		return apply_filters( 'woo_wallet_is_wallet_rechargeable_order', $is_wallet_rechargeable_order, $order );
+		$woo_wallet_is_wallet_rechargeable_order = apply_filters( 'woo_wallet_is_wallet_rechargeable_order', $is_wallet_rechargeable_order, $order );
+		$woo_wallet_is_wallet_rechargeable_order = (empty($woo_wallet_is_wallet_rechargeable_order)) ? $is_wallet_rechargeable_order : $woo_wallet_is_wallet_rechargeable_order;
+		return $woo_wallet_is_wallet_rechargeable_order;
 	}
 }
 
