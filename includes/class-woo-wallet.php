@@ -145,7 +145,7 @@ final class WooWallet {
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
-		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
+		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );

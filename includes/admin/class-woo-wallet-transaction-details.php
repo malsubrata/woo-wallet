@@ -184,7 +184,11 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 	 * @return void
 	 */
 	protected function column_created_by( $item ) : void {
-		echo '<a href="' . esc_url( add_query_arg( 'user_id', $item['created_by'], self_admin_url( 'user-edit.php' ) ) ) . '">' . esc_html( get_user_by( 'ID', $item['created_by'] )->display_name ) . '</a>';
+		if ( $item['created_by'] ) {
+			echo '<a href="' . esc_url( add_query_arg( 'user_id', $item['created_by'], self_admin_url( 'user-edit.php' ) ) ) . '">' . esc_html( get_user_by( 'ID', $item['created_by'] )->display_name ) . '</a>';
+		} else {
+			echo '-';
+		}
 	}
 
 }
