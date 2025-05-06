@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main wallet calss
  */
-final class WooWallet {
+final class Woo_Wallet {
 
 	/**
 	 * The single instance of the class.
 	 *
-	 * @var WooWallet
+	 * @var Woo_Wallet
 	 * @since 1.0.0
 	 */
 	protected static $_instance = null;
@@ -63,15 +63,9 @@ final class WooWallet {
 	 * Class constructor
 	 */
 	public function __construct() {
-		if ( Woo_Wallet_Dependencies::is_woocommerce_active() ) {
-			$this->includes();
-			$this->init_hooks();
-			do_action( 'woo_wallet_loaded' );
-		} else {
-			require_once ABSPATH . '/wp-admin/includes/plugin.php';
-			deactivate_plugins( plugin_basename( WOO_WALLET_PLUGIN_FILE ) );
-			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
-		}
+		$this->includes();
+		$this->init_hooks();
+		do_action( 'woo_wallet_loaded' );
 	}
 
 	/**
@@ -519,18 +513,5 @@ final class WooWallet {
 			$template = $default_path . $template_name;
 		}
 		return $template;
-	}
-
-	/**
-	 * Display admin notice
-	 */
-	public function admin_notices() {                   ?>
-		<div class="error">
-			<p>
-				<?php echo esc_html_e( 'TeraWallet plugin requires', 'woo-wallet' ); ?>
-				<a href="https://wordpress.org/plugins/woocommerce/">WooCommerce</a> <?php echo esc_html_e( 'plugins to be active!', 'woo-wallet' ); ?>
-			</p>
-		</div>
-		<?php
 	}
 }
