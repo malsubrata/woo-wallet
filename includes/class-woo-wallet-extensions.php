@@ -59,8 +59,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 		public function admin_enqueue_scripts() {
 			$screen    = get_current_screen();
 			$screen_id = $screen ? $screen->id : '';
-			$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/assets/js/admin/admin-settings' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'woo-wallet-admin-settings', woo_wallet()->plugin_url() . '/build/admin/settings.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
 			if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-extensions" ), true ) ) {
 				wp_enqueue_style( 'dashicons' );

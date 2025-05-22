@@ -429,13 +429,13 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			global $wp_query, $post, $theorder;
 			$screen    = get_current_screen();
 			$screen_id = $screen ? $screen->id : '';
-			$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 			// register styles.
-			wp_register_style( 'woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/assets/css/admin.css', array(), WOO_WALLET_PLUGIN_VERSION );
-
+			wp_register_style( 'woo_wallet_admin_styles', woo_wallet()->plugin_url() . '/build/admin/main.css', array(), WOO_WALLET_PLUGIN_VERSION );
+			// Add RTL support.
+			wp_style_add_data( 'woo_wallet_admin_styles', 'rtl', 'replace' );
 			// Register scripts.
-			wp_register_script( 'woo_wallet_admin_product', woo_wallet()->plugin_url() . '/assets/js/admin/admin-product' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'woo_wallet_admin_order', woo_wallet()->plugin_url() . '/assets/js/admin/admin-order' . $suffix . '.js', array( 'jquery', 'wc-admin-order-meta-boxes' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'woo_wallet_admin_product', woo_wallet()->plugin_url() . '/build/admin/product.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'woo_wallet_admin_order', woo_wallet()->plugin_url() . '/build/admin/order.js', array( 'jquery', 'wc-admin-order-meta-boxes' ), WOO_WALLET_PLUGIN_VERSION, true );
 
 			if ( in_array( $screen_id, array( 'product', 'edit-product' ), true ) ) {
 				wp_enqueue_script( 'woo_wallet_admin_product' );
@@ -477,10 +477,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			wp_enqueue_style( 'woo_wallet_admin_styles' );
 
 			// register exporter styles.
-			wp_register_style( 'terawallet-exporter-style', woo_wallet()->plugin_url() . '/assets/css/export.css', array(), WOO_WALLET_PLUGIN_VERSION );
-
+			wp_register_style( 'terawallet-exporter-style', woo_wallet()->plugin_url() . '/build/admin/export.css', array(), WOO_WALLET_PLUGIN_VERSION );
+			// Add RTL support.
+			wp_style_add_data( 'terawallet-exporter-style', 'rtl', 'replace' );
 			// register exporter scripts.
-			wp_register_script( 'terawallet-exporter-script', woo_wallet()->plugin_url() . '/assets/js/admin/export' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'terawallet-exporter-script', woo_wallet()->plugin_url() . '/build/admin/export.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_localize_script(
 				'terawallet-exporter-script',
 				'terawallet_export_params',
@@ -497,7 +498,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				)
 			);
 
-			wp_register_script( 'terawallet_admin', woo_wallet()->plugin_url() . '/assets/js/admin/admin' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'terawallet_admin', woo_wallet()->plugin_url() . '/build/admin/main.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_localize_script(
 				'terawallet_admin',
 				'terawallet_admin_params',

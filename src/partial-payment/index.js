@@ -6,11 +6,13 @@ import { ExperimentalOrderMeta, ExperimentalDiscountsMeta } from '@woocommerce/b
 import { getSetting } from '@woocommerce/settings';
 import { __, sprintf } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
-import { useState } from '@wordpress/element';
+import { useState, useRef } from '@wordpress/element';
 import {
-	Panel,
 	ValidatedTextInput,
 	ValidationInputError,
+	ValidatedTextInputHandle,
+	Panel,
+	Spinner,
 	Button
 } from '@woocommerce/blocks-components';
 
@@ -63,14 +65,14 @@ const render = () => {
 				<Panel
 					className="wc-block-components-partial-payment-panel"
 					initialOpen={false}
-					hasBorder={false}
+					hasBorder={true}
+					headingLevel={ 2 }
 					title={
 						<span className="wc-block-components-partial-payment-panel__button-text">
 							{ /* translators: 1: Wallet amount */ sprintf(__('You have %s in your wallet to spend!', 'woo-wallet'), formatedBalance())}
 						</span>
 					}
 				>
-					<span>{__("Enter the amount you'd like to redeem", "woo-wallet")}</span>
 					<div class="wc-block-components-partial-payment">
 						<form
 							className="wc-block-components-partial-payment_form"
@@ -79,19 +81,16 @@ const render = () => {
 
 							<ValidatedTextInput
 								id={textInputId}
-								errorId="coupon"
+								errorId="partial-payment-error"
 								className="wc-block-components-partial-payment_input"
-								label={__(
-									'Enter amount',
-									'woo-wallet'
-								)}
+								label={__( 'Enter amount', 'woo-wallet' )}
 								value={partialPaymentAmount}
 								onChange={(newPartialPaymentAmount) => {
 									setPartialPaymentAmount(newPartialPaymentAmount);
 								}}
-								focusOnMount={false}
-								validateOnMount={false}
-								showError={false}
+								focusOnMount={ true }
+								validateOnMount={ false }
+								showError={ false }
 							/>
 							<Button
 								className="wc-block-components-partial-payment_button"

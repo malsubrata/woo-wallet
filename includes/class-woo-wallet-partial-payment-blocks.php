@@ -107,7 +107,6 @@ class WOO_Wallet_Partial_Payment_Blocks implements IntegrationInterface {
 		);
 
 		return $data;
-
 	}
 
 	/**

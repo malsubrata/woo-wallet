@@ -1,5 +1,5 @@
 /* global wallet_param */
-
+import '../scss/frontend.scss';
 jQuery(function ($) {
     var transactionDetailsDataTable = $('#wc-wallet-transaction-details').DataTable(
             {

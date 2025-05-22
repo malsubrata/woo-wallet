@@ -113,13 +113,12 @@ class WOO_Wallet_Actions {
 		$screen_id = $screen ? $screen->id : '';
 		$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		// Register scripts.
-		wp_register_script( 'woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/assets/js/admin/admin-actions' . $suffix . '.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+		wp_register_script( 'woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/build/admin/actions.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 		$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
 		if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) ) {
 			wp_enqueue_script( 'woo_wallet_admin_actions' );
 		}
 	}
-
 }
 
 WOO_Wallet_Actions::instance();
