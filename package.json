@@ -44,7 +44,7 @@
     "@tailwindcss/postcss": "^4.1.5"
   },
   "scripts": {
-    "build": "wp-scripts build && npm run make-pot",
+    "build": "wp-scripts build",
     "start": "wp-scripts start",
     "make-pot": "wp i18n make-pot . languages/woo-wallet.pot"
   }
