@@ -23,3 +23,7 @@
         }
     }
 }
+
+.slot-wrapper:has(.wc-block-components-discounts-meta) {
+    padding: 16px 0 !important; 
+}

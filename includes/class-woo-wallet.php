@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main wallet calss
  */
-final class WooWallet {
+final class Woo_Wallet {
 
 	/**
 	 * The single instance of the class.
 	 *
-	 * @var WooWallet
+	 * @var Woo_Wallet
 	 * @since 1.0.0
 	 */
 	protected static $_instance = null;
@@ -63,15 +63,9 @@ final class WooWallet {
 	 * Class constructor
 	 */
 	public function __construct() {
-		if ( Woo_Wallet_Dependencies::is_woocommerce_active() ) {
-			$this->includes();
-			$this->init_hooks();
-			do_action( 'woo_wallet_loaded' );
-		} else {
-			require_once ABSPATH . '/wp-admin/includes/plugin.php';
-			deactivate_plugins( plugin_basename( WOO_WALLET_PLUGIN_FILE ) );
-			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
-		}
+		$this->includes();
+		$this->init_hooks();
+		do_action( 'woo_wallet_loaded' );
 	}
 
 	/**
@@ -145,7 +139,7 @@ final class WooWallet {
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
-		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
+		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
@@ -519,18 +513,5 @@ final class WooWallet {
 			$template = $default_path . $template_name;
 		}
 		return $template;
-	}
-
-	/**
-	 * Display admin notice
-	 */
-	public function admin_notices() {                   ?>
-		<div class="error">
-			<p>
-				<?php echo esc_html_e( 'TeraWallet plugin requires', 'woo-wallet' ); ?>
-				<a href="https://wordpress.org/plugins/woocommerce/">WooCommerce</a> <?php echo esc_html_e( 'plugins to be active!', 'woo-wallet' ); ?>
-			</p>
-		</div>
-		<?php
 	}
 }

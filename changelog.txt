@@ -1,4 +1,7 @@
 *** Changelog ***
+=v1.5.11 ( May 08, 2025) =
+- **Fix:-** Text Domain loading issue.
+
 =v1.5.10 ( December 12, 2024) =
 - **Fix:-** Refund issue.
 

@@ -128,10 +128,10 @@ jQuery(function ($) {
             }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .process_cashback_status').show();
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .process_cashback_status, .exclude_role').show();
                     $('#_wallet_settings_credit-cashback_type, #_wallet_settings_credit-cashback_rule').trigger('change');
                 } else {
-                    $('.cashback_rule, .cashback_type, .cashback_amount, .process_cashback_status').hide();
+                    $('.cashback_rule, .cashback_type, .cashback_amount, .process_cashback_status, .exclude_role').hide();
                     $('#_wallet_settings_credit-cashback_type, #_wallet_settings_credit-cashback_rule').trigger('change');
                 }
             }).change();

@@ -176,17 +176,15 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * Register and enqueue frontend styles and scripts
 		 */
 		public function woo_wallet_styles() {
-			$wp_scripts = wp_scripts();
-			$suffix     = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 			wp_register_style( 'woo-wallet-payment-jquery-ui', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery-ui.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'jquery-datatables-style', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'jquery-datatables-responsive-style', woo_wallet()->plugin_url() . '/assets/jquery/css/responsive.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
-			wp_register_style( 'woo-wallet-style', woo_wallet()->plugin_url() . '/assets/css/frontend.css', array(), WOO_WALLET_PLUGIN_VERSION );
+			wp_register_style( 'woo-wallet-style', woo_wallet()->plugin_url() . '/build/frontend/main.css', array(), WOO_WALLET_PLUGIN_VERSION );
 			// Add RTL support.
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );
 			wp_register_script( 'jquery-datatables-script', woo_wallet()->plugin_url() . '/assets/jquery/js/jquery.dataTables.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_register_script( 'jquery-datatables-responsive-script', woo_wallet()->plugin_url() . '/assets/jquery/js/dataTables.responsive.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/assets/js/frontend/wc-endpoint-wallet' . $suffix . '.js', array( 'jquery', 'jquery-datatables-script' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array( 'jquery', 'jquery-datatables-script' ), WOO_WALLET_PLUGIN_VERSION, true );
 			$data_table_columns    = apply_filters(
 				'woo_wallet_transactons_datatable_columns',
 				array(

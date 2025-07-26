@@ -1,5 +1,5 @@
 /* global terawallet_admin_params */
-
+import '../scss/admin.scss';
 jQuery(function ($) {
     var $wallet_screen = $('.toplevel_page_woo-wallet'),
             $title_action = $wallet_screen.find('.wrap h2:first');

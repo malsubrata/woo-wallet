@@ -1,4 +1,5 @@
 /* global ajaxurl, terawallet_export_params */
+import '../scss/export.scss';
 (function ($, window) {
     /**
      * teraWalletExportForm handles the export process.
