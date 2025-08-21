@@ -123,7 +123,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 					$callback = null;
 				}
 
-				add_settings_section( $section['id'], $section['title'], $callback, $section['id'] );
+				add_settings_section( $section['id'], '', $callback, $section['id'] );
 			}
 
 			// Register settings fields.
@@ -550,7 +550,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 						$tab['icon'] = 'dashicons-admin-generic';
 					}
 					?>
-					<a href="#<?php echo esc_attr( $tab['id'] ); ?>" class="nav-tab" id="<?php echo esc_attr( $tab['id'] ); ?>-tab"><span class="dashicons <?php echo esc_attr( $tab['icon'] ); ?>"></span> <span><?php echo esc_html( $tab['label'] ); ?></span></a>
+					<a href="#<?php echo esc_attr( $tab['id'] ); ?>" class="nav-tab" id="<?php echo esc_attr( $tab['id'] ); ?>-tab"><span class="dashicons <?php echo esc_attr( $tab['icon'] ); ?>"></span> <span><?php echo esc_html( $tab['title'] ); ?></span></a>
 					<?php
 				}
 				?>
@@ -610,7 +610,6 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 				<?php
 			endif;
 		}
-
 	}
 
 

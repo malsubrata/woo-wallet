@@ -88,12 +88,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			$sections = array(
 				array(
 					'id'    => '_wallet_settings_general',
-					'label' => __( 'General Options', 'woo-wallet' ),
+					'title' => __( 'General Options', 'woo-wallet' ),
 					'icon'  => 'dashicons-admin-generic',
 				),
 				array(
 					'id'    => '_wallet_settings_credit',
-					'label' => __( 'Credit Options', 'woo-wallet' ),
+					'title' => __( 'Credit Options', 'woo-wallet' ),
 					'icon'  => 'dashicons-money-alt',
 				),
 			);

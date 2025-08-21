@@ -351,9 +351,7 @@ if ( ! class_exists( 'Woo_Wallet_Extensions_Settings' ) ) :
 				</div>
 			</div>
 			<?php
-
 		}
-
 	}
 
 	endif;

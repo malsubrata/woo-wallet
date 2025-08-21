@@ -145,6 +145,66 @@
     }
 }
 
+.wallet-settings-extensions-wrap{
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        background-color: #ccc;
+        border-radius: 34px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transition: background-color 0.3s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: '';
+        height: 22px;
+        width: 22px;
+        left: 2px;
+        top: 2px;
+        background-color: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    input:checked+.slider {
+        background-color: #2271b1;
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(22px);
+    }
+
+    .checkmark {
+        position: absolute;
+        top: 6px;
+        left: 28px;
+        font-size: 14px;
+        color: white;
+        display: none;
+    }
+
+    input:checked~.checkmark {
+        display: block;
+    }
+}
+
 .column-actions {
     .wallet-manage {
         &::after {
