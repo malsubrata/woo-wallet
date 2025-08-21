@@ -1,10 +1,21 @@
 <?php
+/**
+ * Woo Wallet Dokan Class
+ *
+ * @package StandaloneTech
+ * @since 1.1.10
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
-
+	/**
+	 * Woo_Wallet_Dokan Class.
+	 *
+	 * @since 1.1.10
+	 */
 	class Woo_Wallet_Dokan {
 
 		/**
@@ -143,10 +154,8 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 					$transaction_id = woo_wallet()->wallet->credit( $withdraw->get_user_id(), $withdraw->get_amount(), __( 'Withdrawal request #', 'woo-wallet' ) . $withdraw->get_id() );
 					update_wallet_transaction_meta( $transaction_id, '_dokan_withdrawal_id', $withdraw->get_id() );
 				}
-			} else {
-				if ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {
-					update_wallet_transaction( $wallet_transaction->transaction_id, $withdraw->get_user_id(), array( 'deleted' => 1 ), array( '%d' ) );
-				}
+			} elseif ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {
+				update_wallet_transaction( $wallet_transaction->transaction_id, $withdraw->get_user_id(), array( 'deleted' => 1 ), array( '%d' ) );
 			}
 		}
 
@@ -277,7 +286,6 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 			}
 			return $process_cashback;
 		}
-
 	}
 
 }

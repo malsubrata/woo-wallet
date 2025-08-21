@@ -402,13 +402,11 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				'limit' => "$start, $length",
 			);
 			if ( isset( $search['value'] ) && ! empty( $search['value'] ) ) {
-				$args['where'] = array(
-					array(
-						'key'      => 'date',
-						'value'    => esc_sql( $search['value'] ) . '%',
-						'operator' => 'LIKE',
-					),
-				);
+				$date_rage = explode( '|', $search['value'] );
+				if ( count( $date_rage ) === 2 && ! empty( $date_rage[0] ) && ! empty( $date_rage[1] ) ) {
+					$args['after']  = $date_rage[0] . ' 00:00:00';
+					$args['before'] = $date_rage[1] . ' 23:59:59';
+				}
 			}
 			$transactions = get_wallet_transactions( $args );
 			unset( $args['limit'] );

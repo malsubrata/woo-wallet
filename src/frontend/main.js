@@ -2,42 +2,69 @@
 import '../scss/frontend.scss';
 jQuery(function ($) {
     var transactionDetailsDataTable = $('#wc-wallet-transaction-details').DataTable(
-            {
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: wallet_param.ajax_url,
-                    type: 'POST',
-                    data: {
-                        action: 'draw_wallet_transaction_details_table',
-                        security: wallet_param.transaction_table_nonce
-                    }
-                },
-                columns: wallet_param.columns,
-                responsive: true,
-                searching: true,
-                language: {
-                    emptyTable: wallet_param.i18n.emptyTable,
-                    zeroRecords: wallet_param.i18n.zeroRecords,
-                    lengthMenu: wallet_param.i18n.lengthMenu,
-                    info: wallet_param.i18n.info,
-                    infoEmpty: wallet_param.i18n.infoEmpty,
-                    infoFiltered: wallet_param.i18n.infoFiltered,
-                    paginate: wallet_param.i18n.paginate,
-                    processing: wallet_param.i18n.processing,
-                    search: wallet_param.i18n.search
-                },
-                initComplete: function () {
-                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').attr('placeholder', wallet_param.i18n.placeholder);
-                    $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').datepicker({
-                        dateFormat: 'yy-mm-dd',
-                        maxDate: new Date(),
-                        onSelect: function (dateText) {
-                            transactionDetailsDataTable.search(dateText).draw();
-                        }
-                    });
+        {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: wallet_param.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'draw_wallet_transaction_details_table',
+                    security: wallet_param.transaction_table_nonce
                 }
+            },
+            columns: wallet_param.columns,
+            responsive: true,
+            searching: true,
+            language: {
+                emptyTable: wallet_param.i18n.emptyTable,
+                zeroRecords: wallet_param.i18n.zeroRecords,
+                lengthMenu: wallet_param.i18n.lengthMenu,
+                info: wallet_param.i18n.info,
+                infoEmpty: wallet_param.i18n.infoEmpty,
+                infoFiltered: wallet_param.i18n.infoFiltered,
+                paginate: wallet_param.i18n.paginate,
+                processing: wallet_param.i18n.processing,
+                search: wallet_param.i18n.search
+            },
+            initComplete: function () {
+                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').daterangepicker({
+                    opens: 'left',
+                    maxDate: moment(),
+                    autoUpdateInput: false,
+                    parentEl: '#wc-wallet-transaction-details_wrapper',
+                    locale: {
+                        format: wallet_param.js_date_format,
+                        cancelLabel: wallet_param.i18n.cancel,
+                        applyLabel: wallet_param.i18n.apply,
+                        customRangeLabel: wallet_param.i18n.customRangeLabel,
+                        weekLabel: wallet_param.i18n.weekLabel,
+                        daysOfWeek: wallet_param.i18n.daysOfWeek,
+                        monthNames: wallet_param.i18n.monthNames,
+                    },
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                        'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    },
+                    alwaysShowCalendars: true,
+                });
+
+                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').on('apply.daterangepicker', function (ev, picker) {
+                    transactionDetailsDataTable.search(picker.startDate.format('YYYY-MM-DD') + '|' + picker.endDate.format('YYYY-MM-DD')).draw();
+                    $(this).val(picker.startDate.format(wallet_param.js_date_format) + ' - ' + picker.endDate.format(wallet_param.js_date_format));
+                });
+
+                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').on('cancel.daterangepicker', function (ev, picker) {
+                    transactionDetailsDataTable.search('').draw();
+                    $(this).val('');
+                });
             }
+        }
     );
     $('.woo-wallet-select2').selectWoo({
         language: {

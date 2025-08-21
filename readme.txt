@@ -4,7 +4,7 @@ Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.8
-Stable tag: 1.5.11
+Stable tag: 1.5.12
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -20,8 +20,6 @@ TeraWallet is an advanced digital wallet and credit system specially designed fo
 Beyond its core wallet functionality, TeraWallet introduces an enticing cashback rewards system that enables you to provide discounts and rewards to your customers based on their purchases. You have the flexibility to set cashback rates for specific products or categories, and even offer bonus cashback during promotions or special events.
 
 TeraWallet puts you in control with extensive customization options. By implementing TeraWallet, you can effortlessly enhance customer loyalty and drive repeat purchases through the attractive cashback rewards. Discover the power of TeraWallet today and optimize your WooCommerce payment system for maximum efficiency!
-
-[youtube https://www.youtube.com/watch?v=Fnpp8qxAWBw]
 
 = Use case of TeraWallet =
 With this plugin, your customers no longer need to repeatedly enter payment details. They can conveniently log in and use their wallet funds to make purchases. Additionally, customers can earn cashback by utilizing their wallet balance. The admin also has the ability to process refunds directly to the customer's wallet.
@@ -141,6 +139,13 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 9. Wallet actions.
 
 == Changelog ==
+=v1.5.12 (August 21, 2025) =
+- **New:-** Date range filter in wallet transaction page.
+- **New:-** Settings panel design.
+- **New:-** Now site admin can enable/disable wallet topup.
+- **Fix:-** Partial payment issue.
+- **Fix:-** Cashback display issue on cart and checkout page.
+
 =v1.5.11 ( May 08, 2025) =
 - **Fix:-** Text Domain loading issue.
 

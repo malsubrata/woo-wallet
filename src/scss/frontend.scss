@@ -188,3 +188,10 @@ p.woo-wallet-field-container {
         color: #197f36;
     }
 }
+
+#wc-wallet-transaction-details_wrapper .daterangepicker .drp-calendar {
+    max-width: 100%;
+}
+#wc-wallet-transaction-details_wrapper .daterangepicker .drp-calendar .calendar-table table td, table th {
+    padding: 0.5em 0.5em;
+}

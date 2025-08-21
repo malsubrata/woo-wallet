@@ -243,11 +243,13 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$value = esc_attr( $this->get_option( $args['id'], $args['section'], $args['std'] ) );
 			?>
 			<fieldset>
-				<label for="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>">
-				<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="off" />
-				<input type="checkbox" class="checkbox" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="on" <?php checked( $value, 'on', true ); ?> />
-				<?php echo esc_html( $args['desc'] ); ?>
+				<label class="switch" for="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>">
+					<input type="hidden" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="off" />
+					<input type="checkbox" class="checkbox" id="wcwp-<?php echo esc_attr( $args['section'] ); ?>-<?php echo esc_attr( $args['id'] ); ?>" name="<?php echo esc_attr( $args['section'] ); ?>[<?php echo esc_attr( $args['id'] ); ?>]" value="on" <?php checked( $value, 'on', true ); ?> />
+					<span class="slider"></span>
+					<span class="checkmark">✔</span>
 				</label>
+				<?php $this->get_field_description( $args ); ?>
 			</fieldset>
 			<?php
 		}
@@ -548,7 +550,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 						$tab['icon'] = 'dashicons-admin-generic';
 					}
 					?>
-					<a href="#<?php echo esc_attr( $tab['id'] ); ?>" class="nav-tab" id="<?php echo esc_attr( $tab['id'] ); ?>-tab"><span class="dashicons <?php echo esc_attr( $tab['icon'] ); ?>"></span> <?php echo esc_html( $tab['title'] ); ?></a>
+					<a href="#<?php echo esc_attr( $tab['id'] ); ?>" class="nav-tab" id="<?php echo esc_attr( $tab['id'] ); ?>-tab"><span class="dashicons <?php echo esc_attr( $tab['icon'] ); ?>"></span> <span><?php echo esc_html( $tab['label'] ); ?></span></a>
 					<?php
 				}
 				?>

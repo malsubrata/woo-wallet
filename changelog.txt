@@ -1,4 +1,11 @@
 *** Changelog ***
+=v1.5.12 (August 21, 2025) =
+- **New:-** Date range filter in wallet transaction page.
+- **New:-** Settings panel design.
+- **New:-** Now site admin can enable/disable wallet topup.
+- **Fix:-** Partial payment issue.
+- **Fix:-** Cashback display issue on cart and checkout page.
+
 =v1.5.11 ( May 08, 2025) =
 - **Fix:-** Text Domain loading issue.
 

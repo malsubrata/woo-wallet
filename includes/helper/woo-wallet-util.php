@@ -392,7 +392,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		if ( ! empty( $after ) || ! empty( $before ) ) {
 			$after           = empty( $after ) ? '0000-00-00' : $after;
 			$before          = empty( $before ) ? current_time( 'mysql', 1 ) : $before;
-			$query['where'] .= $wpdb->prepare( ' AND ( transactions.date BETWEEN %s AND %s', $after, $before );
+			$query['where'] .= $wpdb->prepare( ' AND transactions.date BETWEEN %s AND %s', $after, $before );
 		}
 
 		if ( $order_by ) {
@@ -405,7 +405,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$wpdb->hide_errors();
 		$query = apply_filters( 'woo_wallet_transactions_query', $query );
 		$query = implode( ' ', $query );
-
+		
 		$query_hash     = md5( $user_id . $query );
 		$cached_results = is_array( get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) ) ? get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) : array();
 

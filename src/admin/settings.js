@@ -99,6 +99,7 @@ jQuery(function ($) {
             });
         },
         settings_page_init: function () {
+            // Show/Hide settings based on checkbox
             $('#_wallet_settings_general-_tax_status').on('change', function () {
                 if ($(this).val() === 'taxable') {
                     $('._tax_class').show();
@@ -106,24 +107,44 @@ jQuery(function ($) {
                     $('._tax_class').hide();
                 }
             }).change();
+            $('#wcwp-_wallet_settings_general-is_enable_gateway_charge').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('.gateway_charge_type').show();
+                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
+                        $('.charge_amount_' + value).show();
+                    });
+                } else {
+                    $('.gateway_charge_type').hide();
+                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
+                        $('.charge_amount_' + value).hide();
+                    });
+                }
+            }).change();
+            $('#wcwp-_wallet_settings_general-is_enable_wallet_topup').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('.product_title, .product_image, ._tax_status, ._tax_class, .min_topup_amount, .max_topup_amount, .allowed_payment_gateways, .is_enable_gateway_charge, .gateway_charge_type').show();
+                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
+                        $('.charge_amount_' + value).show();
+                    });
+                } else {
+                    $('.product_title, .product_image, ._tax_status, ._tax_class, .min_topup_amount, .max_topup_amount, .allowed_payment_gateways, .is_enable_gateway_charge, .gateway_charge_type').hide();
+                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
+                        $('.charge_amount_' + value).hide();
+                    });
+                }
+            }).change();
+            $('#wcwp-_wallet_settings_general-is_enable_partial_payment').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('.is_auto_deduct_for_partial_payment').show();
+                } else {
+                    $('.is_auto_deduct_for_partial_payment').hide();
+                }
+            }).change();
             $('#wcwp-_wallet_settings_general-is_enable_wallet_transfer').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('.min_transfer_amount, .transfer_charge_type, .transfer_charge_amount').show();
                 } else {
                     $('.min_transfer_amount, .transfer_charge_type, .transfer_charge_amount').hide();
-                }
-            }).change();
-            $('#wcwp-_wallet_settings_credit-is_enable_gateway_charge').on('change', function () {
-                if ($(this).is(':checked')) {
-                    $('.gateway_charge_type').show();
-                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
-                        $('#_wallet_settings_credit .' + value).show();
-                    });
-                } else {
-                    $('.gateway_charge_type').hide();
-                    $.each(woo_wallet_admin_settings_param.gateways, function (index, value) {
-                        $('#_wallet_settings_credit .' + value).hide();
-                    });
                 }
             }).change();
             $('#wcwp-_wallet_settings_credit-is_enable_cashback_reward_program').on('change', function () {

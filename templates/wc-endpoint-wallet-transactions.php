@@ -19,7 +19,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-$transactions = get_wallet_transactions();
 do_action( 'woo_wallet_before_transaction_details_content' );
 ?>
 <p><?php esc_html_e( 'Current balance :', 'woo-wallet' ); ?> <?php echo woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a href="<?php echo is_account_page() ? esc_url( wc_get_account_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ) ) ) : esc_url( get_permalink() ); ?>"><span class="dashicons dashicons-editor-break"></span></a></p>

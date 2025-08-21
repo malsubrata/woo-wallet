@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'woowallet';
-    src:  url('../fonts/woowallet.eot?tewfy0');
-    src:  url('../fonts/woowallet.eot?tewfy0#iefix') format('embedded-opentype'),
+    src: url('../fonts/woowallet.eot?tewfy0');
+    src: url('../fonts/woowallet.eot?tewfy0#iefix') format('embedded-opentype'),
         url('../fonts/woowallet.ttf?tewfy0') format('truetype'),
         url('../fonts/woowallet.woff?tewfy0') format('woff'),
         url('../fonts/woowallet.svg?tewfy0#woowallet') format('svg');
@@ -11,15 +11,16 @@
 
 :root {
     --wp-admin-theme-color: #007cba;
-    --wp-admin-theme-color--rgb: 0,124,186;
+    --wp-admin-theme-color--rgb: 0, 124, 186;
     --wp-admin-theme-color-darker-10: #006ba1;
-    --wp-admin-theme-color-darker-10--rgb: 0,107,161;
+    --wp-admin-theme-color-darker-10--rgb: 0, 107, 161;
     --wp-admin-theme-color-darker-20: #005a87;
-    --wp-admin-theme-color-darker-20--rgb: 0,90,135;
+    --wp-admin-theme-color-darker-20--rgb: 0, 90, 135;
     --wp-admin-border-width-focus: 2px;
 }
 
-[class^="woo-wallet-icon-"], [class*=" woo-wallet-icon-"] {
+[class^="woo-wallet-icon-"],
+[class*=" woo-wallet-icon-"] {
     /* use !important to prevent issues with browser extensions that change fonts */
     font-family: 'woowallet' !important;
     font-style: normal;
@@ -36,7 +37,8 @@
 .woo-wallet-icon-wallet:before {
     content: "\e900";
 }
-#adminmenu #toplevel_page_woo-wallet .menu-icon-generic div.wp-menu-image::before{
+
+#adminmenu #toplevel_page_woo-wallet .menu-icon-generic div.wp-menu-image::before {
     font-family: 'woowallet' !important;
     content: "\e900";
 }
@@ -44,12 +46,14 @@
 .wallet-settings-wrap {
     display: flex;
     border: 1px solid #c8d7e1;
+
     h2.nav-tab-wrapper {
         flex: 1;
         border-bottom: none;
         padding: 0;
         background: #f1f1f1;
         border-right: 1px solid #c8d7e1;
+
         a {
             float: none;
             display: block;
@@ -60,11 +64,13 @@
             font-weight: 500;
             border-bottom: 1px solid #c8d7e1;
         }
+
         a.nav-tab-active {
             background: #fff !important;
             border-right: 1px solid #c8d7e1;
             width: 99%;
             color: #2e4453;
+
             .dashicons {
                 &:before {
                     color: #008EC2;
@@ -72,13 +78,73 @@
             }
         }
     }
+
     .metabox-holder {
         flex: 3;
         padding-left: 3%;
         padding-right: 10px;
         background: #fff;
     }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        background-color: #ccc;
+        border-radius: 34px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transition: background-color 0.3s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: '';
+        height: 22px;
+        width: 22px;
+        left: 2px;
+        top: 2px;
+        background-color: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    input:checked+.slider {
+        background-color: #2271b1;
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(22px);
+    }
+
+    .checkmark {
+        position: absolute;
+        top: 6px;
+        left: 28px;
+        font-size: 14px;
+        color: white;
+        display: none;
+    }
+
+    input:checked~.checkmark {
+        display: block;
+    }
 }
+
 .column-actions {
     .wallet-manage {
         &::after {
@@ -96,6 +162,7 @@
             margin: 0px;
         }
     }
+
     .wallet-view {
         &::after {
             font-family: Dashicons;
@@ -113,20 +180,23 @@
         }
     }
 }
-.form-table .wpsa-attachment{
-    vertical-align: bottom ;
+
+.form-table .wpsa-attachment {
+    vertical-align: bottom;
     margin: 0 0 5px 5px;
 }
 
-.toplevel_page_woo-wallet{
+.toplevel_page_woo-wallet {
     #TB_title {
-		display: none;
-	}
+        display: none;
+    }
+
     #TB_ajaxContent {
-		width: 100% !important;
-		padding: 0 !important;
-	}
-    .woo-wallet-edit-balance-tb-main{
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .woo-wallet-edit-balance-tb-main {
         header {
             height: auto;
             background: #fcfcfc;
@@ -134,12 +204,14 @@
             border-bottom: 1px solid #ddd;
             display: block;
             position: relative;
+
             h1 {
                 margin: 0;
                 font-size: 18px;
                 font-weight: 700;
                 line-height: 1.5em;
             }
+
             .modal-close-link {
                 cursor: pointer;
                 color: #777;
@@ -156,14 +228,17 @@
                 transition: color .1s ease-in-out, background .1s ease-in-out;
             }
         }
-        fieldset{
+
+        fieldset {
             padding: 14px;
         }
-        .current-balance{
+
+        .current-balance {
             float: right;
             margin-right: 54px;
             margin-top: 5px;
         }
+
         footer {
             position: absolute;
             left: 0;
@@ -174,9 +249,11 @@
             background: #fcfcfc;
             border-top: 1px solid #dfdfdf;
         }
+
         .inner {
             line-height: 23px;
         }
+
         .button.button-large {
             margin-left: 10px;
             padding: 0 10px !important;
@@ -186,8 +263,9 @@
         }
     }
 }
-#setting-error-terawallet{
-    a{
+
+#setting-error-terawallet {
+    a {
         text-decoration: none;
     }
 }

@@ -128,7 +128,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 					'transaction_id' => $transaction->transaction_id,
 					'name'           => get_user_by( 'ID', $transaction->user_id )->display_name,
 					'type'           => ( 'credit' === $transaction->type ) ? __( 'Credit', 'woo-wallet' ) : __( 'Debit', 'woo-wallet' ),
-					'amount'         => wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ),
+					'amount'         => wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id, array( 'currency' => $transaction->currency ) ) ),
 					'details'        => $transaction->details,
 					'created_by'     => $transaction->created_by,
 					'date'           => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ),
@@ -163,7 +163,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 	 * @param array $item item.
 	 * @return void
 	 */
-	protected function column_amount( $item ) : void {
+	protected function column_amount( $item ): void {
 		echo $item['amount'] ? wp_kses_post( $item['amount'] ) : '<span class="na">&ndash;</span>';
 	}
 
@@ -173,7 +173,7 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 	 * @param array $item item.
 	 * @return void
 	 */
-	protected function column_details( $item ) : void {
+	protected function column_details( $item ): void {
 		echo $item['details'] ? wp_kses_post( $item['details'] ) : '<span class="na">&ndash;</span>';
 	}
 
@@ -183,12 +183,11 @@ class Woo_Wallet_Transaction_Details extends WP_List_Table {
 	 * @param array $item item.
 	 * @return void
 	 */
-	protected function column_created_by( $item ) : void {
+	protected function column_created_by( $item ): void {
 		if ( $item['created_by'] ) {
 			echo '<a href="' . esc_url( add_query_arg( 'user_id', $item['created_by'], self_admin_url( 'user-edit.php' ) ) ) . '">' . esc_html( get_user_by( 'ID', $item['created_by'] )->display_name ) . '</a>';
 		} else {
 			echo '-';
 		}
 	}
-
 }
