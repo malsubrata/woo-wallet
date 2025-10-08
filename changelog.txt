@@ -1,4 +1,10 @@
 *** Changelog ***
+=v1.5.14 (October 08, 2025) =
+- **Fix:-** RTL CSS issue.
+
+=v1.5.13 (August 21, 2025) =
+- **Fix:-** PHP warning.
+
 =v1.5.12 (August 21, 2025) =
 - **New:-** Date range filter in wallet transaction page.
 - **New:-** Settings panel design.

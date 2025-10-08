@@ -102,7 +102,7 @@ const vanillaAssetsConfig = {
             filename: '[name].css',
         }),
         new RtlCssPlugin({
-            filename: '[name].rtl.css',
+            filename: '[name]-rtl.css',
         })
     ]
 };
