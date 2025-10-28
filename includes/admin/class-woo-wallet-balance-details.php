@@ -333,7 +333,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		// Get actions.
 		$actions = array(
-			'edit' => '<a href="' . esc_url( $edit_balance_link ) . '" class="thickbox">' . esc_html__( 'Edit Balance', 'woo-wallet' ) . '</a>',
+			'edit' => '<a href="#" class="edit-wallet-balance" data-user-id="' . $user_object->ID . '">' . esc_html__( 'Edit Balance', 'woo-wallet' ) . '</a>',
 		);
 
 		if ( is_wallet_account_locked( $item['id'] ) ) {
@@ -538,6 +538,14 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * Add js for this page.
 	 */
 	public function add_js_scripts() {
+		$screen = get_current_screen();
+		if ( 'toplevel_page_woo-wallet' === $screen->id ) {
+			ob_start();
+			woo_wallet()->get_template( 'admin/edit-balance.php' );
+			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			wp_enqueue_script( 'wc-backbone-modal' );
+		}
+
 		$bulk_delete_log_msg = __( 'You are about to delete transaction records from database for selected users.', 'woo-wallet' );
 		?>
 		<script type="text/javascript">
@@ -548,10 +556,29 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 					}
 					return true;
 				});
+				$(document).on('click', '.toplevel_page_woo-wallet .edit-wallet-balance', function (event) {
+					event.preventDefault();
+					var $user_id = $(this).data('userId');
+					$.ajax({
+						url:     '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
+						data:    {
+							user_id: $user_id,
+							action  : 'get_edit_wallet_balance_template_data',
+							security: '<?php echo esc_js( wp_create_nonce( 'woo-wallet-edit-balance-template-data' ) ); ?>'
+						},
+						type:    'GET',
+						success: function( response ) {
+							if ( response.success ) {
+								$( this ).WCBackboneModal({
+									template: 'woo-wallet-modal-edit-balance',
+									variable : response.data
+								});
+							}
+						}
+					});
+				});
 			});
 		</script>
 		<?php
-
 	}
-
 }

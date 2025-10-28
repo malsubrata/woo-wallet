@@ -39,7 +39,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 * @param int $user_id User ID.
 		 */
 		private function set_user_id( $user_id = '' ) {
-			$this->user_id = $user_id ? $user_id : $this->user_id;
+			$this->user_id = $user_id ? intval( $user_id ) : $this->user_id;
 		}
 
 		/**

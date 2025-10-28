@@ -518,10 +518,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				wp_enqueue_style( 'terawallet-exporter-style' );
 			}
 
-			if ( in_array( $screen_id, array( 'toplevel_page_woo-wallet' ), true ) ) {
-				add_thickbox();
-			}
-
 			wp_enqueue_script( 'terawallet_admin' );
 		}
 

@@ -54,7 +54,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 
 			add_action( 'wp_ajax_lock_unlock_terawallet', array( $this, 'lock_unlock_terawallet' ) );
 
-			add_action( 'wp_ajax_get_edit_wallet_balance_template', array( $this, 'edit_wallet_balance_template' ) );
+			add_action( 'wp_ajax_get_edit_wallet_balance_template_data', array( $this, 'edit_wallet_balance_template_data' ) );
 		}
 		/**
 		 * Lock / Unlock user wallet
@@ -436,17 +436,25 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			wp_send_json( $response );
 		}
 		/**
-		 * Return edit wallet template for thickbox.
+		 * Return edit wallet template data for WCBackboneModal.
 		 *
 		 * @return void
 		 */
-		public function edit_wallet_balance_template() {
-			check_ajax_referer( 'woo-wallet-edit-balance-template', 'security' );
+		public function edit_wallet_balance_template_data() {
+			check_ajax_referer( 'woo-wallet-edit-balance-template-data', 'security' );
 			$user_id = isset( $_REQUEST['user_id'] ) ? absint( $_REQUEST['user_id'] ) : 0;
-			ob_start();
-			woo_wallet()->get_template( 'admin/edit-balance.php', array( 'user_id' => $user_id ) );
-			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			wp_die();
+			if ( $user_id ) {
+				if ( ! current_user_can( 'edit_user', $user_id ) ) {
+					wp_die( -1 );
+				}
+				wp_send_json_success(
+					array(
+						'user_id'         => $user_id,
+						'current_balance' => woo_wallet()->wallet->get_wallet_balance( $user_id ),
+					)
+				);
+			}
+			wp_send_json_error( array( 'error' => __( 'User not found', 'woo-wallet' ) ) );
 		}
 	}
 
