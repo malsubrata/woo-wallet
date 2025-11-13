@@ -558,6 +558,8 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				});
 				$(document).on('click', '.toplevel_page_woo-wallet .edit-wallet-balance', function (event) {
 					event.preventDefault();
+					var self = $(this);
+					self.html('<?php echo esc_js( __( 'Loading...', 'woo-wallet' ) ); ?>');
 					var $user_id = $(this).data('userId');
 					$.ajax({
 						url:     '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
@@ -574,6 +576,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 									variable : response.data
 								});
 							}
+							self.html('<?php echo esc_js( __( 'Edit Balance', 'woo-wallet' ) ); ?>');
 						}
 					});
 				});

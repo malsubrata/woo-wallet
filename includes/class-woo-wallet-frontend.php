@@ -186,9 +186,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );
 			wp_register_script( 'jquery-datatables-script', woo_wallet()->plugin_url() . '/assets/jquery/js/jquery.dataTables.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_register_script( 'jquery-datatables-responsive-script', woo_wallet()->plugin_url() . '/assets/jquery/js/dataTables.responsive.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'moment-script', woo_wallet()->plugin_url() . '/assets/jquery/js/moment.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'jquery-daterangepicker-script', woo_wallet()->plugin_url() . '/assets/jquery/js/daterangepicker.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array( 'jquery', 'jquery-datatables-script' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'jquery-daterangepicker-script', woo_wallet()->plugin_url() . '/assets/jquery/js/daterangepicker.min.js', array( 'jquery', 'moment' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array( 'jquery', 'jquery-datatables-script', 'moment' ), WOO_WALLET_PLUGIN_VERSION, true );
 			$data_table_columns = apply_filters(
 				'woo_wallet_transactons_datatable_columns',
 				array(
@@ -312,7 +311,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				wp_enqueue_script( 'selectWoo' );
 				wp_enqueue_script( 'jquery-datatables-script' );
 				wp_enqueue_script( 'jquery-datatables-responsive-script' );
-				wp_enqueue_script( 'moment-script' );
 				wp_enqueue_script( 'jquery-daterangepicker-script' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 			}
@@ -861,7 +859,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				wp_enqueue_script( 'jquery-datatables-responsive-script' );
 				wp_enqueue_script( 'selectWoo' );
 				wp_enqueue_script( 'jquery-ui-datepicker' );
-				wp_enqueue_script( 'moment-script' );
 				wp_enqueue_script( 'jquery-daterangepicker-script' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 				if ( isset( $_GET['wallet_action'] ) && ! empty( $_GET['wallet_action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
