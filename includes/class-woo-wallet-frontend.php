@@ -122,7 +122,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 */
 		public function wp_nav_menu_objects( $items ) {
 			foreach ( $items as &$item ) {
-				if ( 'my-wallet' === $item->post_name && get_post_meta( $item->ID, '_show_wallet_icon_amount', true ) ) {
+				if ( is_object( $item ) && 'my-wallet' === $item->post_name && get_post_meta( $item->ID, '_show_wallet_icon_amount', true ) ) {
 					$item->title = apply_filters( 'wp_wallet_nav_menu_title', '<span dir="rtl" class="woo-wallet-icon-wallet"></span>&nbsp;' . woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ), $item );
 				}
 			}
