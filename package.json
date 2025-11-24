@@ -23,6 +23,7 @@
     "extends @wordpress/browserslist-config"
   ],
   "devDependencies": {
+    "@babel/runtime": "^7.28.4",
     "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.0",
     "@wordpress/scripts": "^30.16.0",
     "autoprefixer": "^10.4.21",
