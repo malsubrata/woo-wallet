@@ -1006,14 +1006,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'default'  => 'my-wallet',
 						'desc_tip' => true,
 					),
-					array(
-						'title'    => __( 'Wallet Transactions', 'woo-wallet' ),
-						'desc'     => __( 'Endpoint for the "My account &rarr; View wallet transactions" page.', 'woo-wallet' ),
-						'id'       => 'woocommerce_woo_wallet_transactions_endpoint',
-						'type'     => 'text',
-						'default'  => 'wallet-transactions',
-						'desc_tip' => true,
-					),
 				)
 			);
 

@@ -3,6 +3,7 @@ import '../scss/frontend.scss';
 jQuery(function ($) {
     var transactionDetailsDataTable = $('#wc-wallet-transaction-details').DataTable(
         {
+            dom: '<"dt-controls"lf>rt<"dt-controls"ip>',
             processing: true,
             serverSide: true,
             ajax: {
@@ -28,11 +29,17 @@ jQuery(function ($) {
                 search: wallet_param.i18n.search
             },
             initComplete: function () {
+                // Remove datatable default search input text
+                $('#wc-wallet-transaction-details_filter input')
+                    .attr('placeholder', 'Select Date Range')
+                    .prop('readonly', true);
                 $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').daterangepicker({
                     opens: 'left',
+                    drops: 'auto',
                     maxDate: moment(),
                     autoUpdateInput: false,
-                    parentEl: '#wc-wallet-transaction-details_wrapper',
+                    parentEl: 'body', // very important for responsive popup
+                    alwaysShowCalendars: true,
                     locale: {
                         format: wallet_param.js_date_format,
                         cancelLabel: wallet_param.i18n.cancel,

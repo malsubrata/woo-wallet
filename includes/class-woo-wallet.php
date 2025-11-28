@@ -204,7 +204,6 @@ final class Woo_Wallet {
 	 */
 	public function add_woocommerce_query_vars( $query_vars ) {
 		$query_vars['woo-wallet']              = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
-		$query_vars['woo-wallet-transactions'] = get_option( 'woocommerce_woo_wallet_transactions_endpoint', 'wallet-transactions' );
 		return $query_vars;
 	}
 

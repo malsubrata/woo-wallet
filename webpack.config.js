@@ -1,45 +1,52 @@
-const path = require( 'path' );
-const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
-const WooCommerceDependencyExtractionWebpackPlugin = require( '@woocommerce/dependency-extraction-webpack-plugin' );
-const MiniCssExtractPlugin = require( 'mini-css-extract-plugin' );
+const path = require('path');
+const defaultConfig = require('@wordpress/scripts/config/webpack.config');
+const WooCommerceDependencyExtractionWebpackPlugin = require('@woocommerce/dependency-extraction-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const RtlCssPlugin = require('rtlcss-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 // Remove SASS rule from the default config so we can define our own.
-const defaultRules = defaultConfig.module.rules.filter( ( rule ) => {
-	return String( rule.test ) !== String( /\.(sc|sa)ss$/ );
-} );
+const defaultRules = defaultConfig.module.rules.filter((rule) => {
+    return String(rule.test) !== String(/\.(sc|sa)ss$/);
+});
 
 const wcDepMap = {
-	'@woocommerce/blocks-registry': ['wc', 'wcBlocksRegistry'],
-	'@woocommerce/price-format': [ 'wc', 'priceFormat' ],
-	'@woocommerce/settings'       : ['wc', 'wcSettings']
+    '@woocommerce/blocks-registry': ['wc', 'wcBlocksRegistry'],
+    '@woocommerce/price-format': ['wc', 'priceFormat'],
+    '@woocommerce/settings': ['wc', 'wcSettings']
 };
 
 const wcHandleMap = {
-	'@woocommerce/blocks-registry': 'wc-blocks-registry',
-	'@woocommerce/price-format': 'wc-price-format',
-	'@woocommerce/settings'       : 'wc-settings'
+    '@woocommerce/blocks-registry': 'wc-blocks-registry',
+    '@woocommerce/price-format': 'wc-price-format',
+    '@woocommerce/settings': 'wc-settings'
 };
 
 const requestToExternal = (request) => wcDepMap[request];
 const requestToHandle = (request) => wcHandleMap[request];
 
 const sharedRules = [
-	...defaultRules,
-	{
-		test: /\.(sc|sa)ss$/,
-		exclude: /node_modules/,
-		use: [
-			MiniCssExtractPlugin.loader,
-			{ 
-				loader: 'css-loader', 
-				options: { importLoaders: 1 } 
-			},
-			'postcss-loader',
-			'sass-loader'
-		]
-	}
+    ...defaultRules,
+    {
+        test: /\.(sc|sa)ss$/,
+        exclude: /node_modules/,
+        use: [
+            MiniCssExtractPlugin.loader,
+            {
+                loader: 'css-loader',
+                options: { importLoaders: 1 }
+            },
+            'postcss-loader',
+            {
+                loader: 'sass-loader',
+                options: {
+                    sassOptions: {
+                        silenceDeprecations: ['legacy-js-api'],
+                    },
+                },
+            }
+        ]
+    }
 ];
 
 const wcBuildConfig = {
@@ -74,13 +81,13 @@ const vanillaAssetsConfig = {
     ...defaultConfig,
     entry: {
         'admin/actions': './src/admin/actions.js',
-		'admin/order': './src/admin/order.js',
-		'admin/product': './src/admin/product.js',
-		'admin/settings': './src/admin/settings.js',
-		'admin/export': './src/admin/export.js',
-		'admin/main': './src/admin/main.js',
+        'admin/order': './src/admin/order.js',
+        'admin/product': './src/admin/product.js',
+        'admin/settings': './src/admin/settings.js',
+        'admin/export': './src/admin/export.js',
+        'admin/main': './src/admin/main.js',
 
-		'frontend/main': './src/frontend/main.js',
+        'frontend/main': './src/frontend/main.js',
     },
     output: {
         path: path.resolve(__dirname, 'build'),

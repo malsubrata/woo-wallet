@@ -182,6 +182,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			wp_register_style( 'jquery-datatables-responsive-style', woo_wallet()->plugin_url() . '/assets/jquery/css/responsive.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'jquery-daterangepicker-style', woo_wallet()->plugin_url() . '/assets/jquery/css/daterangepicker.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'woo-wallet-style', woo_wallet()->plugin_url() . '/build/frontend/main.css', array(), WOO_WALLET_PLUGIN_VERSION );
+			// wp_register_style( 'woo-wallet-modern-dashboard', woo_wallet()->plugin_url() . '/assets/css/modern-dashboard.css', array(), WOO_WALLET_PLUGIN_VERSION );
 			// Add RTL support.
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );
 			wp_register_script( 'jquery-datatables-script', woo_wallet()->plugin_url() . '/assets/jquery/js/jquery.dataTables.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
@@ -192,18 +193,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				'woo_wallet_transactons_datatable_columns',
 				array(
 					array(
-						'data'      => 'id',
-						'title'     => __( 'ID', 'woo-wallet' ),
-						'orderable' => false,
-					),
-					array(
-						'data'      => 'type',
-						'title'     => __( 'Type', 'woo-wallet' ),
-						'orderable' => false,
-					),
-					array(
-						'data'      => 'amount',
-						'title'     => __( 'Amount', 'woo-wallet' ),
+						'data'      => 'date',
+						'title'     => __( 'Date', 'woo-wallet' ),
 						'orderable' => false,
 					),
 					array(
@@ -212,8 +203,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 						'orderable' => false,
 					),
 					array(
-						'data'      => 'date',
-						'title'     => __( 'Date', 'woo-wallet' ),
+						'data'      => 'amount',
+						'title'     => __( 'Amount', 'woo-wallet' ),
 						'orderable' => false,
 					),
 				)
@@ -257,8 +248,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 					'zeroRecords'          => __( 'No matching records found', 'woo-wallet' ),
 					'inputTooShort'        => __( 'Please enter 3 or more characters', 'woo-wallet' ),
 					'searching'            => __( 'Searching…', 'woo-wallet' ),
-					'processing'           => __( 'Processing...', 'woo-wallet' ),
-					'search'               => __( 'Search by date:', 'woo-wallet' ),
+					'processing'           => __( '', 'woo-wallet' ),
+					'search'               => '',
 					'placeholder'          => __( 'yyyy-mm-dd', 'woo-wallet' ),
 					'cancel'               => __( 'Cancel', 'woo-wallet' ),
 					'apply'                => __( 'Apply', 'woo-wallet' ),
@@ -300,6 +291,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			);
 			wp_localize_script( 'wc-endpoint-wallet', 'wallet_param', $wallet_localize_param );
 			wp_enqueue_style( 'woo-wallet-style' );
+			// wp_enqueue_style( 'woo-wallet-modern-dashboard' );
 			if ( is_account_page() ) {
 				wp_enqueue_style( 'woo-wallet-payment-jquery-ui' );
 				wp_enqueue_style( 'dashicons' );
@@ -864,7 +856,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				if ( isset( $_GET['wallet_action'] ) && ! empty( $_GET['wallet_action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 					if ( 'view_transactions' === $_GET['wallet_action'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 						woo_wallet()->get_template( 'wc-endpoint-wallet-transactions.php' );
-					} elseif ( in_array( $_GET['wallet_action'], apply_filters( 'woo_wallet_endpoint_actions', array( 'add', 'transfer' ) ), true ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					} elseif ( in_array( $_GET['wallet_action'], apply_filters( 'woo_wallet_endpoint_actions', array( 'add', 'transfer', 'transactions' ) ), true ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 						woo_wallet()->get_template( 'wc-endpoint-wallet.php' );
 					}
 					do_action( 'woo_wallet_shortcode_action', wp_unslash( $_GET['wallet_action'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended

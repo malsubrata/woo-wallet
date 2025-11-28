@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'woowallet';
-    src:  url('../fonts/woowallet.eot?tewfy0');
-    src:  url('../fonts/woowallet.eot?tewfy0#iefix') format('embedded-opentype'),
+    src: url('../fonts/woowallet.eot?tewfy0');
+    src: url('../fonts/woowallet.eot?tewfy0#iefix') format('embedded-opentype'),
         url('../fonts/woowallet.ttf?tewfy0') format('truetype'),
         url('../fonts/woowallet.woff?tewfy0') format('woff'),
         url('../fonts/woowallet.svg?tewfy0#woowallet') format('svg');
@@ -9,10 +9,10 @@
     font-style: normal;
 }
 
-[class^="woo-wallet-icon-"], [class*=" woo-wallet-icon-"] {
+[class^="woo-wallet-icon-"],
+[class*=" woo-wallet-icon-"] {
     /* use !important to prevent issues with browser extensions that change fonts */
     font-family: 'woowallet' !important;
-    speak: none;
     font-style: normal;
     font-weight: normal;
     font-variant: normal;
@@ -24,174 +24,770 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+// Variables
+$wallet-primary-color: #483DE0;
+$wallet-text-color: #333;
+$wallet-bg-color: #f4f6f8;
+$wallet-border-color: #eee;
+
 .woo-wallet-icon-wallet:before {
     content: "\e900";
 }
 
+/* Migrated from modern-dashboard.css */
 .woo-wallet-my-wallet-container {
-    max-width: 100%;
-    overflow: hidden;
-    border: 1px solid #f2f2f2;
-    display: flex;
-    p {
-        margin: 0 auto;
-    }
-    .woo-wallet-sidebar {
-        width: 30%;
-        float: left;
-        background: #f2f2f2;
-        min-height: 100px;
-        padding-top: 20px;
-    }
-    .woo-wallet-content {
-        width: 70%;
-        float: left;
-        min-height: 100px;
-        padding: 20px;
-    }
-}
-.woo-wallet-sidebar {
-    ul {
-        margin: 0 auto;
-        li {
-            list-style: none;
-            margin: 20px;
-            span {
-                vertical-align: middle;
-            }
-            p {
-                margin: 0 auto;
-                line-height: 1em;
-            }
-        }
-        li.card {
-            background: #fff;
-            border-radius: 2px;
-            text-align: center;
-            position: relative;
-            max-width: 100%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
-            cursor: pointer;
-            a {
-                padding: 20px;
-                display: inline-block;
-                width: 100%;
-            }
-            &:hover {
-                box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
-            }
-        }
-    }
-}
-.woo-wallet-sidebar-heading {
-    text-align: center;
-}
-.woo-wallet-content-h3 {
-    float: left;
-    margin: 0 0 15px;
-    line-height: 1em;
-}
-.woo-wallet-content {
-    .woo-wallet-price {
-        float: right;
-        margin: 0 0 15px;
-    }
-}
-.woo-wallet-content-heading {
-    overflow: hidden;
-}
-.woo-wallet-transactions-items {
-    margin: 0 auto;
-    li {
-        overflow: hidden;
-        padding-bottom: 15px;
-        div {
-            &:first-child {
-                float: left;
-                max-width: 80%;
-            }
-            &:last-child {
-                float: right;
-            }
-        }
-    }
-}
-.woo-wallet-transaction-type-credit {
-    color: #197F36;
-}
-.woo-wallet-transaction-type-debit {
-    color: #BF0003;
-}
-.woo-wallet-balance-to-add {
+    // CSS Variables for runtime usage if needed
+    --wallet-primary-color: #{$wallet-primary-color};
+    --wallet-text-color: #{$wallet-text-color};
+    --wallet-bg-color: #{$wallet-bg-color};
+    --wallet-border-color: #{$wallet-border-color};
+
+    color: var(--wallet-text-color);
     width: 100%;
-}
-.woo-add-to-wallet {
-    float: right;
-    margin-top: 10px;
-}
-.woo-wallet-view-more {
-    float: right;
-    span {
+    max-width: 100%;
+    box-sizing: border-box;
+    display: block;
+
+    // Header
+    .woo-wallet-header {
+        margin-bottom: 25px;
+        text-align: left;
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: #2c3e50;
+        }
+
+        p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 1rem;
+        }
+    }
+
+    // Top Section Wrapper
+    .woo-wallet-top-section {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+        background: #fff;
+    }
+
+    // Balance Card
+    .woo-wallet-balance-card {
+        background: var(--wallet-primary-color);
+        color: #fff;
+        padding: 50px 30px;
+        border-radius: 0;
+        text-align: center;
+        position: relative;
+        margin-bottom: 0;
+        width: 100%;
+        box-sizing: border-box;
+        box-shadow: none;
+
+        h3 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0 0 10px;
+            text-transform: none;
+            letter-spacing: 0.5px;
+        }
+
+        .woo-wallet-price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+            line-height: 1.1;
+        }
+    }
+
+    // Navigation Tabs
+    .woo-wallet-nav-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        background: #f0f0f0;
+        border-radius: 0;
+        overflow: hidden;
+        margin-bottom: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .woo-wallet-nav-tab {
+        flex: 1;
+        text-align: center;
+        padding: 20px 15px;
+        background: #f0f0f0;
+        color: #666;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        border: none;
+        white-space: nowrap;
+
+        &:last-child {
+            border-right: none;
+        }
+
+        &:hover {
+            background: #e5e5e5;
+            color: #333;
+        }
+
+        &.active {
+            color: var(--wallet-primary-color);
+            box-shadow: none;
+            background: #e5e5e5;
+        }
+    }
+
+    // Content Area
+    .woo-wallet-content-area {
+        background: #fff;
+        padding: 0;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .woo-wallet-section-title {
+        padding: 25px 30px;
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-bottom: 1px solid #eee;
+        background: #fff;
+        color: #2c3e50;
+    }
+
+    .woo-wallet-form-wrapper .woo-wallet-section-title {
+        padding: 25px 0px;
+    }
+
+    // Transactions Table
+    .woo-wallet-transactions-list {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--wallet-border-color);
+        padding: 0;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .woo-wallet-transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+
+        th {
+            text-align: left;
+            padding: 20px 30px;
+            font-weight: 600;
+            color: #7f8c8d;
+            border-bottom: 1px solid #eee;
+            background: #f9f9f9;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fafafa;
+        }
+
+        .amount {
+            font-weight: 700;
+            text-align: right;
+
+            &.credit {
+                color: #27ae60;
+            }
+
+            &.debit {
+                color: #c0392b;
+            }
+        }
+    }
+
+    // Forms
+    .woo-wallet-form-wrapper {
+        padding: 40px;
+        border: 1px solid var(--wallet-border-color);
+        border-radius: 12px;
+
+        form {
+            padding-top: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            background: #f9f9f9;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+
+            &:focus {
+                border-color: var(--wallet-primary-color);
+                outline: none;
+                background: #fff;
+            }
+        }
+
+        input[type="submit"] {
+            background: var(--wallet-primary-color);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-size: 1rem;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(241, 99, 76, 0.3);
+            }
+        }
+    }
+
+    // Referral Page
+    .woo-wallet-referral-link-card {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        border: 1px solid var(--wallet-border-color);
+        box-sizing: border-box;
+
+        h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+    }
+
+    .woo-wallet-referral-input-group {
+        display: flex !important;
+        align-items: center !important;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .woo-wallet-referral-input-wrapper {
+        position: relative;
+        flex: 1;
+        display: block;
+
+        .dashicons {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-family: "dashicons" !important;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            pointer-events: none;
+        }
+
+        input[type="text"] {
+            width: 100% !important;
+            padding: 15px 15px 15px 45px !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            font-size: 1rem !important;
+            color: #555 !important;
+            background: #f9f9f9 !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            height: auto !important;
+            line-height: normal !important;
+        }
+    }
+
+    .woo-wallet-copy-btn {
+        background: var(--wallet-primary-color);
+        color: #fff;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        position: relative;
+        font-size: 1rem;
+        line-height: normal;
+
+        &:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        // Tooltip
+        &::after {
+            content: attr(data-tooltip);
+            visibility: hidden;
+            width: 140px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            font-weight: normal;
+            pointer-events: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        &::before {
+            content: "";
+            visibility: hidden;
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        &:hover::after,
+        &:hover::before {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
+
+    // Referral Stats Table
+    .woo-wallet-referral-stats {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--wallet-border-color);
+        padding: 0;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            table-layout: fixed;
+        }
+
+        th {
+            text-align: left;
+            padding: 20px 30px;
+            font-weight: 600;
+            color: #7f8c8d;
+            border-bottom: 1px solid #eee;
+            background: #f9f9f9;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    }
+
+    // Responsive
+    @media (max-width: 768px) {
+        .woo-wallet-nav-tabs {
+            flex-direction: column;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .woo-wallet-nav-tab {
+            border-right: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .woo-wallet-balance-card .woo-wallet-price {
+            font-size: 2.5rem;
+        }
+
+        .woo-wallet-referral-input-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .woo-wallet-copy-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .woo-wallet-referral-input-wrapper input[type="text"] {
+            padding-left: 45px !important;
+        }
+
+        .woo-wallet-content-area,
+        .woo-wallet-referral-stats {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .woo-wallet-transactions-table,
+        .woo-wallet-referral-stats table {
+            min-width: 600px;
+        }
+
+        .dt-controls {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dt-controls>*:not(:last-child) {
+            margin-bottom: 10px;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+    }
+
+    // DataTables Overrides
+    .dataTables_wrapper {
+        color: var(--wallet-text-color);
+
+        .dataTables_paginate {
+            font-size: 14px;
+            padding: 0 1rem !important;
+        }
+
+        .dataTables_info {
+            padding: 0 1rem !important;
+            float: left;
+            color: var(--wallet-text-color);
+            font-size: 0.9rem;
+        }
+
+        .dataTables_paginate .paginate_button {
+            border-radius: 6px !important;
+            border: 1px solid transparent !important;
+            color: #555 !important;
+            font-weight: 600;
+            background: transparent !important;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &:hover {
+                background: #f0f0f0 !important;
+                color: #333 !important;
+                border: 1px solid #ddd !important;
+            }
+
+            &.current,
+            &.current:hover {
+                background: var(--wallet-primary-color) !important;
+                color: #fff !important;
+                border: 1px solid var(--wallet-primary-color) !important;
+                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2);
+            }
+
+            &.disabled,
+            &.disabled:hover,
+            &.disabled:active {
+                color: #aaa !important;
+                background: transparent !important;
+                border: 1px solid transparent !important;
+                cursor: default;
+                box-shadow: none;
+            }
+        }
+
+        &::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+    }
+
+    // Length & Filter Controls
+    .dataTables_length,
+    .dataTables_filter {
+        color: #2c3e50;
+        display: inline-block;
+        vertical-align: middle;
+        padding: 0 1rem;
+        font-size: 14px;
+    }
+
+    .dataTables_length {
+        float: left;
+
+        select {
+            border: 1px solid var(--wallet-border-color) !important;
+            border-radius: 6px !important;
+            outline: none;
+            color: #555;
+            background: #fff;
+            cursor: pointer;
+
+            &:focus {
+                border-color: var(--wallet-primary-color) !important;
+            }
+        }
+    }
+
+    .dataTables_filter {
+        float: right;
+
+        label {
+            font-size: 0;
+        }
+
+        input {
+            border: 1px solid var(--wallet-border-color) !important;
+            border-radius: 6px !important;
+            padding: 8px 12px 8px 35px !important;
+            outline: none;
+            color: #555;
+            background: #fff;
+            width: 200px;
+            font-size: 14px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 10px center;
+
+            &:focus {
+                border-color: var(--wallet-primary-color) !important;
+                background: #fff;
+            }
+        }
+    }
+
+    // Table Styling
+    table.dataTable.no-footer {
+        border-bottom: 1px solid var(--wallet-border-color) !important;
+        border-collapse: collapse !important;
+        margin-top: 10px !important;
+    }
+
+    table,
+    td,
+    th {
+        border: 0;
+    }
+
+    table.dataTable thead th,
+    table.dataTable thead td {
+        border-bottom: 1px solid var(--wallet-border-color) !important;
+        background: #f9f9f9;
+        color: #7f8c8d;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        padding: 15px 20px !important;
+        letter-spacing: 0.5px;
+    }
+
+    table.dataTable tbody th,
+    table.dataTable tbody td {
+        padding: 15px 20px !important;
+        border-bottom: 1px solid var(--wallet-border-color);
+        color: #2c3e50;
+        font-size: 1rem;
         vertical-align: middle;
     }
-}
-p.woo-wallet-field-container {
-    margin-bottom: 11px;
-}
-.woo-wallet-select2 {
-    width: 100%;
-}
-@media (max-width: 600px) {
-    .woo-wallet-my-wallet-container {
-        .woo-wallet-sidebar {
-            width: 100%;
-        }
-        .woo-wallet-content {
-            width: 100%;
-        }
-        display: block;
+
+    // Credit/Debit Colors
+    #wc-wallet-transaction-details mark.credit {
+        background: none;
+        color: #27ae60;
+        font-weight: 700;
+    }
+
+    #wc-wallet-transaction-details mark.debit {
+        background: none;
+        color: #c0392b;
+        font-weight: 700;
+    }
+
+    table.dataTable.row-border tbody th,
+    table.dataTable.row-border tbody td,
+    table.dataTable.display tbody th,
+    table.dataTable.display tbody td {
+        border-top: none !important;
+    }
+
+    table.dataTable thead {
+        border-top: 1px solid var(--wallet-border-color) !important;
+    }
+
+    table.dataTable tbody tr:hover {
+        background-color: #fafafa !important;
+    }
+
+    .dt-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0;
     }
 }
 
-/* for display cashback in shop page */
-.on-woo-wallet-cashback{
-    border-color: #6d6d6d;
-    border: 1px solid;
-    color: #43454b;
-    padding: .202em .6180469716em;
-    font-size: .875em;
-    text-transform: uppercase;
-    font-weight: 600;
-    display: inline-block;
-    margin-bottom: 1em;
-    border-radius: 3px;
-}
-.theme-storefront .woocommerce-MyAccount-navigation > ul li.woocommerce-MyAccount-navigation-link--woo-wallet a::before {
-    font-family: 'woowallet' !important;
-    content: "\e900";
-}
-#wc-wallet-transaction-details.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before, table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>th:first-child:before{
-    line-height: 19px !important;
-}
-#wc-wallet-transaction-details{
-    mark.debit::before{
-        content: "-";
-    }
-    mark.credit::before{
-        content: "+";
-    }
-    mark.debit{
-        color: #bf0003;
-    }
-    mark.credit{
-        color: #197f36;
-    }
-}
+// Date Range Picker Overrides
+.daterangepicker {
+    border: 1px solid $wallet-border-color !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    z-index: 99999 !important;
+    border-radius: 12px !important;
 
-#wc-wallet-transaction-details_wrapper .daterangepicker .drp-calendar {
-    max-width: 100%;
-}
-#wc-wallet-transaction-details_wrapper .daterangepicker .drp-calendar .calendar-table table td, table th {
-    padding: 0.5em 0.5em;
+    .calendar-table {
+        background: #fff !important;
+        border: none !important;
+    }
+
+    table,
+    td,
+    th {
+        border: 0 !important;
+    }
+
+    td.active,
+    td.active:hover {
+        background-color: $wallet-primary-color !important;
+    }
+
+    .drp-buttons {
+        border-top: 1px solid $wallet-border-color !important;
+        padding: 15px !important;
+
+        .btn {
+            font-weight: 600 !important;
+            padding: 8px 20px !important;
+            border-radius: 6px !important;
+            font-size: 13px !important;
+            margin-left: 10px !important;
+        }
+
+        .btn-primary {
+            background-color: $wallet-primary-color !important;
+            border-color: $wallet-primary-color !important;
+            color: #fff !important;
+        }
+
+        .btn-default {
+            background-color: $wallet-bg-color !important;
+            border: 1px solid #ddd !important;
+            color: #333 !important;
+        }
+    }
+
+    .ranges li.active {
+        background-color: $wallet-primary-color !important;
+    }
+
+    .ranges li:hover {
+        background-color: $wallet-bg-color !important;
+    }
+
+    table {
+        margin: 0 !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+
+        td,
+        th {
+            padding: 5px !important;
+            font-size: 13px !important;
+            border: none !important;
+            border-radius: 4px !important;
+        }
+    }
+
+    th.month {
+        font-weight: 600 !important;
+        color: #2c3e50 !important;
+    }
+
+    td.in-range {
+        background-color: #f0f0f0 !important;
+        color: #333 !important;
+        border-radius: 0 !important;
+    }
+
+    td.start-date {
+        border-radius: 4px 0 0 4px !important;
+    }
+
+    td.end-date {
+        border-radius: 0 4px 4px 0 !important;
+    }
+
+    td.start-date.end-date {
+        border-radius: 4px !important;
+    }
+
+    @media (max-width: 480px) {
+        left: 2% !important;
+        right: 2% !important;
+        width: 96% !important;
+
+        .ranges,
+        .calendar {
+            width: 100% !important;
+            float: none !important;
+        }
+    }
 }
