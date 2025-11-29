@@ -70,7 +70,8 @@ $wallet-border-color: #eee;
     // Top Section Wrapper
     .woo-wallet-top-section {
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
+        /* Changed from hidden to allow submenu overflow */
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         margin-bottom: 40px;
         background: #fff;
@@ -81,7 +82,8 @@ $wallet-border-color: #eee;
         background: var(--wallet-primary-color);
         color: #fff;
         padding: 50px 30px;
-        border-radius: 0;
+        border-radius: 12px 12px 0 0;
+        /* Added radius directly */
         text-align: center;
         position: relative;
         margin-bottom: 0;
@@ -107,21 +109,32 @@ $wallet-border-color: #eee;
         }
     }
 
-    // Navigation Tabs
+    /* Navigation Tabs */
     .woo-wallet-nav-tabs {
         display: flex;
         flex-wrap: wrap;
         background: #f0f0f0;
-        border-radius: 0;
-        overflow: hidden;
+        border-radius: 0 0 12px 12px;
+        /* Added radius directly */
+        overflow: visible;
+        /* Changed from hidden to allow dropdown */
         margin-bottom: 0;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .woo-wallet-nav-tab {
+    .woo-wallet-nav-item-wrapper {
         flex: 1;
-        text-align: center;
+        position: relative;
+
+        /* Removed hover effect for click-based toggle */
+    }
+
+    .woo-wallet-nav-tab {
+        display: flex;
+        /* Changed to flex for icon alignment */
+        align-items: center;
+        justify-content: center;
         padding: 20px 15px;
         background: #f0f0f0;
         color: #666;
@@ -131,20 +144,82 @@ $wallet-border-color: #eee;
         transition: all 0.2s ease;
         border: none;
         white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+        border-right: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 
-        &:last-child {
-            border-right: none;
-        }
-
-        &:hover {
+        &:hover,
+        &:focus,
+        &:active {
             background: #e5e5e5;
             color: #333;
+            outline: none;
+            box-shadow: none;
         }
 
         &.active {
             color: var(--wallet-primary-color);
             box-shadow: none;
             background: #e5e5e5;
+            outline: none;
+        }
+
+        /* Icon spacing */
+        >span:first-child {
+            margin-right: 8px;
+        }
+    }
+
+    .woo-wallet-submenu-toggle {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        margin-left: 8px;
+        transition: transform 0.3s ease;
+
+        &.rotate {
+            transform: rotate(180deg);
+        }
+    }
+
+    .woo-wallet-nav-item-wrapper:last-child .woo-wallet-nav-tab {
+        border-right: none;
+    }
+
+    /* Submenu */
+    .woo-wallet-submenu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 200px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        border-radius: 0 0 8px 8px;
+        overflow: hidden;
+        /* Removed opacity/visibility transition for slideToggle compatibility */
+
+        .woo-wallet-submenu-item {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f5f5f5;
+            text-align: left;
+            transition: background 0.2s;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &:hover {
+                background: #f9f9f9;
+                color: var(--wallet-primary-color);
+            }
         }
     }
 
@@ -455,9 +530,25 @@ $wallet-border-color: #eee;
             border-radius: 0 0 15px 15px;
         }
 
+        .woo-wallet-nav-item-wrapper {
+            width: 100%;
+        }
+
         .woo-wallet-nav-tab {
             border-right: none;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .woo-wallet-submenu {
+            position: static;
+            display: none;
+            /* Hidden by default on mobile too, could use JS to toggle */
+            box-shadow: none;
+            width: 100%;
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            background: #f9f9f9;
         }
 
         .woo-wallet-balance-card .woo-wallet-price {

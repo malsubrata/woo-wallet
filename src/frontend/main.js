@@ -126,4 +126,27 @@ jQuery(function ($) {
         // submit once return true
         return true;
     });
+
+    // Submenu Toggle
+    $('.woo-wallet-nav-item-wrapper.has-submenu > a').on('click', function (e) {
+        e.preventDefault();
+        var $submenu = $(this).siblings('.woo-wallet-submenu');
+        var $icon = $(this).find('.woo-wallet-submenu-toggle');
+
+        // Close other submenus
+        $('.woo-wallet-submenu').not($submenu).slideUp();
+        $('.woo-wallet-submenu-toggle').not($icon).removeClass('rotate');
+
+        // Toggle current
+        $submenu.slideToggle();
+        $icon.toggleClass('rotate');
+    });
+
+    // Close submenu when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.woo-wallet-nav-item-wrapper.has-submenu').length) {
+            $('.woo-wallet-submenu').slideUp();
+            $('.woo-wallet-submenu-toggle').removeClass('rotate');
+        }
+    });
 });

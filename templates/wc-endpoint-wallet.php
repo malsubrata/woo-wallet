@@ -71,9 +71,16 @@ $menu_items                = apply_filters(
 			}
 			if(!function_exists('is_wallet_tab_active')) {
 				// Helper to check active state
-				function is_wallet_tab_active( $tab_key, $current_action ) {
+				function is_wallet_tab_active( $tab_key, $current_action, $menu_item = null ) {
 					if ( $tab_key === $current_action ) return true;
 					if ( $tab_key === 'transactions' && empty( $current_action ) ) return true;
+					
+					// Check submenu
+					if ( $menu_item && isset( $menu_item['submenu'] ) && is_array( $menu_item['submenu'] ) ) {
+						if ( array_key_exists( $current_action, $menu_item['submenu'] ) ) {
+							return true;
+						}
+					}
 					return false;
 				}
 			}
@@ -81,10 +88,24 @@ $menu_items                = apply_filters(
 
 			<?php foreach ( $menu_items as $item => $menu_item ) : ?>
 				<?php if ( apply_filters( 'woo_wallet_is_enable_' . $item, true ) ) : ?>
-					<a href="<?php echo esc_url( $menu_item['url'] ); ?>" class="woo-wallet-nav-tab <?php echo is_wallet_tab_active( $item, $current_action ) ? 'active' : ''; ?>">
-						<span class="<?php echo esc_attr( $menu_item['icon'] ); ?>"></span>
-						<?php echo esc_html( $menu_item['title'] ); ?>
-					</a>
+					<div class="woo-wallet-nav-item-wrapper <?php echo isset($menu_item['submenu']) ? 'has-submenu' : ''; ?>">
+						<a href="<?php echo esc_url( $menu_item['url'] ); ?>" class="woo-wallet-nav-tab <?php echo is_wallet_tab_active( $item, $current_action, $menu_item ) ? 'active' : ''; ?>">
+							<span class="<?php echo esc_attr( $menu_item['icon'] ); ?>"></span>
+							<?php echo esc_html( $menu_item['title'] ); ?>
+							<?php if ( isset( $menu_item['submenu'] ) ) : ?>
+								<span class="woo-wallet-submenu-toggle dashicons dashicons-arrow-down-alt2"></span>
+							<?php endif; ?>
+						</a>
+						<?php if ( isset( $menu_item['submenu'] ) && is_array( $menu_item['submenu'] ) ) : ?>
+							<div class="woo-wallet-submenu">
+								<?php foreach ( $menu_item['submenu'] as $sub_key => $sub_item ) : ?>
+									<a href="<?php echo esc_url( $sub_item['url'] ); ?>" class="woo-wallet-submenu-item">
+										<?php echo esc_html( $sub_item['title'] ); ?>
+									</a>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
+					</div>
 				<?php endif; ?>
 			<?php endforeach; ?>
 			<?php do_action( 'woo_wallet_menu_items' ); ?>
