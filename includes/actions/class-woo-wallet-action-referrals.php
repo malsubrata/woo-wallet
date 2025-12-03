@@ -146,8 +146,8 @@ class Action_Referrals extends WooWalletAction {
 		if ( $this->is_enabled() ) {
 			$this->referral_handel = apply_filters( 'woo_wallet_referral_handel', 'wwref' );
 			add_filter( 'woo_wallet_nav_menu_items', array( $this, 'add_referral_nav_menu' ), 10, 2 );
-			add_action( 'woo_wallet_menu_content', array( $this, 'referral_content' ) );
 			add_filter( 'woo_wallet_endpoint_actions', array( $this, 'woo_wallet_endpoint_actions' ) );
+			add_action( 'woo_wallet_referrals_content', array( $this, 'woo_wallet_referrals_content' ) );
 			$this->init_referrals();
 			add_action( 'wp', array( $this, 'init_referral_visit' ), 105 );
 			add_action( 'woocommerce_order_status_changed', array( $this, 'woo_wallet_credit_referring_signup' ), 100 );
@@ -175,19 +175,18 @@ class Action_Referrals extends WooWalletAction {
 	 * @return array
 	 */
 	public function woo_wallet_endpoint_actions( $actions ) {
-		$actions[] = 'referrals';
-		return $actions;
+		return array_merge( $actions, array( 'referrals' ) );
 	}
 	/**
 	 * Referral page content.
 	 *
 	 * @return void
 	 */
-	public function referral_content() {
+	public function woo_wallet_referrals_content() {
 		global $wp;
 		if ( apply_filters( 'woo_wallet_is_enable_referrals', true ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'referrals' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'referrals' === $_GET['wallet_action'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			woo_wallet()->get_template(
-				'woo-wallet-referrals.php',
+				'referrals.php',
 				array(
 					'settings' => $this->settings,
 					'referral' => $this,

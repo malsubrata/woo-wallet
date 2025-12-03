@@ -43,6 +43,26 @@ $menu_items                = apply_filters(
 	),
 	$is_rendred_from_myaccount
 );
+$current_action = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : '' );
+// Default to transactions if no action or just 'woo-wallet' endpoint
+if ( empty( $current_action ) && ! isset( $_GET['wallet_action'] ) ) {
+	$current_action = 'transactions';
+}
+if(!function_exists('is_wallet_tab_active')) {
+	// Helper to check active state
+	function is_wallet_tab_active( $tab_key, $current_action, $menu_item = null ) {
+		if ( $tab_key === $current_action ) return true;
+		if ( $tab_key === 'transactions' && empty( $current_action ) ) return true;
+		
+		// Check submenu
+		if ( $menu_item && isset( $menu_item['submenu'] ) && is_array( $menu_item['submenu'] ) ) {
+			if ( array_key_exists( $current_action, $menu_item['submenu'] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
 ?>
 
 <div class="woo-wallet-my-wallet-container">
@@ -63,29 +83,6 @@ $menu_items                = apply_filters(
 
 		<!-- Navigation Tabs -->
 		<div class="woo-wallet-nav-tabs">
-			<?php
-			$current_action = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : '' );
-			// Default to transactions if no action or just 'woo-wallet' endpoint
-			if ( empty( $current_action ) && ! isset( $_GET['wallet_action'] ) ) {
-				$current_action = 'transactions';
-			}
-			if(!function_exists('is_wallet_tab_active')) {
-				// Helper to check active state
-				function is_wallet_tab_active( $tab_key, $current_action, $menu_item = null ) {
-					if ( $tab_key === $current_action ) return true;
-					if ( $tab_key === 'transactions' && empty( $current_action ) ) return true;
-					
-					// Check submenu
-					if ( $menu_item && isset( $menu_item['submenu'] ) && is_array( $menu_item['submenu'] ) ) {
-						if ( array_key_exists( $current_action, $menu_item['submenu'] ) ) {
-							return true;
-						}
-					}
-					return false;
-				}
-			}
-			?>
-
 			<?php foreach ( $menu_items as $item => $menu_item ) : ?>
 				<?php if ( apply_filters( 'woo_wallet_is_enable_' . $item, true ) ) : ?>
 					<div class="woo-wallet-nav-item-wrapper <?php echo isset($menu_item['submenu']) ? 'has-submenu' : ''; ?>">
@@ -115,66 +112,12 @@ $menu_items                = apply_filters(
 	<!-- Content Area -->
 	<div class="woo-wallet-content-area">
 		<?php if ( ( isset( $wp->query_vars['woo-wallet'] ) && ! empty( $wp->query_vars['woo-wallet'] ) ) || isset( $_GET['wallet_action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-
-			<?php if ( apply_filters( 'woo_wallet_is_enable_top_up', true ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'add' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'add' === $_GET['wallet_action'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-				<!-- Top Up Form -->
-				<div class="woo-wallet-form-wrapper">
-					<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Wallet Topup', 'woo-wallet' ); ?></h3>
-					<form method="post" action="">
-						<div class="woo-wallet-add-amount">
-							<label for="woo_wallet_balance_to_add"><?php esc_html_e( 'Enter amount', 'woo-wallet' ); ?></label>
-							<?php
-							$min_amount = woo_wallet()->settings_api->get_option( 'min_topup_amount', '_wallet_settings_general', 0 );
-							$max_amount = woo_wallet()->settings_api->get_option( 'max_topup_amount', '_wallet_settings_general', '' );
-							?>
-							<input type="number" step="0.01" min="<?php echo esc_attr( $min_amount ); ?>" max="<?php echo esc_attr( $max_amount ); ?>" name="woo_wallet_balance_to_add" id="woo_wallet_balance_to_add" class="woo-wallet-balance-to-add" required="" placeholder="0.00" />
-							<?php wp_nonce_field( 'woo_wallet_topup', 'woo_wallet_topup' ); ?>
-							<input type="submit" name="woo_add_to_wallet" class="woo-add-to-wallet" value="<?php esc_html_e( 'Add Funds', 'woo-wallet' ); ?>" />
-						</div>
-					</form>
-				</div>
-				<div style="clear: both;"></div>
-
-			<?php } elseif ( apply_filters( 'woo_wallet_is_enable_transfer', 'on' === woo_wallet()->settings_api->get_option( 'is_enable_wallet_transfer', '_wallet_settings_general', 'on' ) ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'transfer' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'transfer' === $_GET['wallet_action'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?> 
-				<!-- Transfer Form -->
-				<div class="woo-wallet-form-wrapper">
-					<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Wallet Transfer', 'woo-wallet' ); ?></h3>
-					<form method="post" action="" id="woo_wallet_transfer_form">
-						<p class="woo-wallet-field-container form-row form-row-wide">
-							<label for="woo_wallet_transfer_user_id"><?php esc_html_e( 'Select Recipient', 'woo-wallet' ); ?> <?php
-							if ( apply_filters( 'woo_wallet_user_search_exact_match', true ) ) {
-								esc_html_e( '(Email)', 'woo-wallet' );
-							}
-							?>
-								</label>
-							<select name="woo_wallet_transfer_user_id" id="woo_wallet_transfer_user_id" class="woo-wallet-select2" required=""></select>
-						</p>
-						<p class="woo-wallet-field-container form-row form-row-wide">
-							<label for="woo_wallet_transfer_amount"><?php esc_html_e( 'Amount', 'woo-wallet' ); ?></label>
-							<input id="woo_wallet_transfer_amount" type="number" step="0.01" min="<?php echo woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="woo_wallet_transfer_amount" required="" placeholder="0.00"/>
-						</p>
-						<p class="woo-wallet-field-container form-row form-row-wide">
-							<label for="woo_wallet_transfer_note"><?php esc_html_e( 'What\'s this for?', 'woo-wallet' ); ?></label>
-							<textarea id="woo_wallet_transfer_note" name="woo_wallet_transfer_note" placeholder="<?php esc_attr_e( 'Optional note...', 'woo-wallet' ); ?>"></textarea>
-						</p>
-						<p class="woo-wallet-field-container form-row">
-							<?php wp_nonce_field( 'woo_wallet_transfer', 'woo_wallet_transfer' ); ?>
-							<input type="submit" class="button" name="woo_wallet_transfer_fund" value="<?php esc_html_e( 'Proceed to Transfer', 'woo-wallet' ); ?>" />
-						</p>
-					</form>
-				</div>
-			<?php } elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) && ( ( isset( $wp->query_vars['woo-wallet'] ) && 'transactions' === $wp->query_vars['woo-wallet'] ) || ( isset( $_GET['wallet_action'] ) && 'transactions' === $_GET['wallet_action'] ) ) ) { ?>
-				<!-- Recent Transactions -->
-				<div class="woo-wallet-transactions-list">
-					<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Transactions', 'woo-wallet' ); ?></h3>
-					<?php do_action( 'woo_wallet_before_transactions_content' ); ?>
-					<table id="wc-wallet-transaction-details" class="table"></table>
-					<?php do_action( 'woo_wallet_after_transactions_content' ); ?>
-				</div>
-			<?php } ?>
-			<?php do_action( 'woo_wallet_menu_content' ); ?>
-
-		<?php } elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) ) { ?>
+			<?php 
+			if ( apply_filters( "woo_wallet_is_enable_{$current_action}", true ) ) {
+				do_action( "woo_wallet_{$current_action}_content" );
+			}
+			do_action( 'woo_wallet_menu_content' ); // will be removed in future.
+			} elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) ) { ?>
 			<!-- Recent Transactions -->
 			<div class="woo-wallet-transactions-list">
 				<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Balance History', 'woo-wallet' ); ?></h3>

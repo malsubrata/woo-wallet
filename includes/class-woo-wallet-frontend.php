@@ -40,10 +40,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		public function __construct() {
 			add_filter( 'wp_nav_menu_items', array( $this, 'add_wallet_nav_menu' ), 100, 2 );
 			add_filter( 'woocommerce_endpoint_woo-wallet_title', array( $this, 'woocommerce_endpoint_title' ), 10, 2 );
-			add_filter( 'woocommerce_endpoint_woo-wallet-transactions_title', array( $this, 'woocommerce_endpoint_title' ), 10, 2 );
 			add_filter( 'woocommerce_account_menu_items', array( $this, 'woo_wallet_menu_items' ), 10, 1 );
 			add_action( 'woocommerce_account_woo-wallet_endpoint', array( $this, 'woo_wallet_endpoint_content' ) );
-			add_action( 'woocommerce_account_woo-wallet-transactions_endpoint', array( $this, 'woo_wallet_transactions_endpoint_content' ) );
 
 			add_filter( 'woocommerce_is_purchasable', array( $this, 'make_woo_wallet_recharge_product_purchasable' ), 10, 2 );
 			add_action( 'wp_loaded', array( $this, 'woo_wallet_frontend_loaded' ), 20 );
@@ -85,6 +83,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_action( 'woocommerce_order_details_after_order_table', array( $this, 'remove_woocommerce_order_again_button_for_wallet_rechargeable_order' ), 5 );
 
 			add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'woocommerce_cart_loaded_from_session' ) );
+
+			add_action( 'woo_wallet_add_content', array( $this, 'woo_wallet_add_content' ) );
+			add_action( 'woo_wallet_transfer_content', array( $this, 'woo_wallet_transfer_content' ) );
+			add_action( 'woo_wallet_transactions_content', array( $this, 'woo_wallet_transactions_content' ) );	
 		}
 		/**
 		 * Remove wallet rechargeable product from the cart
@@ -159,16 +161,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @param string $endpoint endpoint.
 		 */
 		public function woocommerce_endpoint_title( $title, $endpoint ) {
-			switch ( $endpoint ) {
-				case 'woo-wallet':
-					$title = apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) );
-					break;
-				case 'woo-wallet-transactions':
-					$title = apply_filters( 'woo_wallet_account_transaction_menu_title', __( 'Wallet Transactions', 'woo-wallet' ) );
-					break;
-				default:
-					$title = '';
-					break;
+			if( 'woo-wallet' === $endpoint ) {
+				return apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) );
 			}
 			return $title;
 		}
@@ -329,7 +323,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		}
 
 		/**
-		 * WooCommerce endpoint contents for wallet
+		 * WooCommerce endpoint contents for wallet.
 		 */
 		public function woo_wallet_endpoint_content() {
 			if ( is_wallet_account_locked() ) {
@@ -340,14 +334,24 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		}
 
 		/**
-		 * WooCommerce endpoint contents for transaction details
+		 * Wallet dashboard top-up endpoint contents.
 		 */
-		public function woo_wallet_transactions_endpoint_content() {
-			if ( is_wallet_account_locked() ) {
-				woo_wallet()->get_template( 'no-access.php' );
-			} else {
-				woo_wallet()->get_template( 'wc-endpoint-wallet-transactions.php' );
-			}
+		public function woo_wallet_add_content() {
+			woo_wallet()->get_template( 'topup.php' );
+		}
+
+		/**
+		 * Wallet dashboard transfer endpoint contents.
+		 */
+		public function woo_wallet_transfer_content() {
+			woo_wallet()->get_template( 'transfer.php' );
+		}
+
+		/**
+		 * Wallet dashboard transactions endpoint contents.
+		 */
+		public function woo_wallet_transactions_content() {
+			woo_wallet()->get_template( 'transactions.php' );
 		}
 
 		/**
