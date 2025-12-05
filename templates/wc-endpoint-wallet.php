@@ -25,12 +25,12 @@ $is_rendred_from_myaccount = wc_post_content_has_shortcode( 'woo-wallet' ) ? fal
 $menu_items                = apply_filters(
 	'woo_wallet_nav_menu_items',
 	array(
-		'add'              => array(
+		'add'          => array(
 			'title' => apply_filters( 'woo_wallet_account_topup_menu_title', __( 'Wallet topup', 'woo-wallet' ) ),
 			'url'   => $is_rendred_from_myaccount ? esc_url( wc_get_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ), 'add', wc_get_page_permalink( 'myaccount' ) ) ) : add_query_arg( 'wallet_action', 'add' ),
 			'icon'  => 'dashicons dashicons-plus-alt',
 		),
-		'transfer'            => array(
+		'transfer'     => array(
 			'title' => apply_filters( 'woo_wallet_account_transfer_amount_menu_title', __( 'Wallet transfer', 'woo-wallet' ) ),
 			'url'   => $is_rendred_from_myaccount ? esc_url( wc_get_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ), 'transfer', wc_get_page_permalink( 'myaccount' ) ) ) : add_query_arg( 'wallet_action', 'transfer' ),
 			'icon'  => 'dashicons dashicons-randomize',
@@ -43,18 +43,29 @@ $menu_items                = apply_filters(
 	),
 	$is_rendred_from_myaccount
 );
-$current_action = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : '' );
-// Default to transactions if no action or just 'woo-wallet' endpoint
+$current_action            = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : '' );
+// Default to transactions if no action or just 'woo-wallet' endpoint.
 if ( empty( $current_action ) && ! isset( $_GET['wallet_action'] ) ) {
 	$current_action = 'transactions';
 }
-if(!function_exists('is_wallet_tab_active')) {
-	// Helper to check active state
+if ( ! function_exists( 'is_wallet_tab_active' ) ) {
+	/**
+	 * Helper to check active state.
+	 *
+	 * @param string $tab_key tab key.
+	 * @param string $current_action current action.
+	 * @param array  $menu_item menu item.
+	 * @return bool
+	 */
 	function is_wallet_tab_active( $tab_key, $current_action, $menu_item = null ) {
-		if ( $tab_key === $current_action ) return true;
-		if ( $tab_key === 'transactions' && empty( $current_action ) ) return true;
-		
-		// Check submenu
+		if ( $tab_key === $current_action ) {
+			return true;
+		}
+		if ( 'transactions' === $tab_key && empty( $current_action ) ) {
+			return true;
+		}
+
+		// Check submenu.
 		if ( $menu_item && isset( $menu_item['submenu'] ) && is_array( $menu_item['submenu'] ) ) {
 			if ( array_key_exists( $current_action, $menu_item['submenu'] ) ) {
 				return true;
@@ -69,7 +80,7 @@ if(!function_exists('is_wallet_tab_active')) {
 	
 	<!-- Header -->
 	<div class="woo-wallet-header">
-		<h2><?php echo apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) ); ?></h2>
+		<h2><?php echo esc_html( apply_filters( 'woo_wallet_account_menu_title', __( 'My Wallet', 'woo-wallet' ) ) ); ?></h2>
 		<p><?php esc_html_e( 'Manage your wallet and transactions seamlessly.', 'woo-wallet' ); ?></p>
 	</div>
 
@@ -85,7 +96,7 @@ if(!function_exists('is_wallet_tab_active')) {
 		<div class="woo-wallet-nav-tabs">
 			<?php foreach ( $menu_items as $item => $menu_item ) : ?>
 				<?php if ( apply_filters( 'woo_wallet_is_enable_' . $item, true ) ) : ?>
-					<div class="woo-wallet-nav-item-wrapper <?php echo isset($menu_item['submenu']) ? 'has-submenu' : ''; ?>">
+					<div class="woo-wallet-nav-item-wrapper <?php echo isset( $menu_item['submenu'] ) ? 'has-submenu' : ''; ?>">
 						<a href="<?php echo esc_url( $menu_item['url'] ); ?>" class="woo-wallet-nav-tab <?php echo is_wallet_tab_active( $item, $current_action, $menu_item ) ? 'active' : ''; ?>">
 							<span class="<?php echo esc_attr( $menu_item['icon'] ); ?>"></span>
 							<?php echo esc_html( $menu_item['title'] ); ?>
@@ -108,16 +119,18 @@ if(!function_exists('is_wallet_tab_active')) {
 			<?php do_action( 'woo_wallet_menu_items' ); ?>
 		</div>
 	</div>
-
+	<!-- Print notices -->
+	<?php wc_print_notices(); ?>
 	<!-- Content Area -->
 	<div class="woo-wallet-content-area">
 		<?php if ( ( isset( $wp->query_vars['woo-wallet'] ) && ! empty( $wp->query_vars['woo-wallet'] ) ) || isset( $_GET['wallet_action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<?php 
+			<?php
 			if ( apply_filters( "woo_wallet_is_enable_{$current_action}", true ) ) {
 				do_action( "woo_wallet_{$current_action}_content" );
 			}
 			do_action( 'woo_wallet_menu_content' ); // will be removed in future.
-			} elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) ) { ?>
+		} elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) ) {
+			?>
 			<!-- Recent Transactions -->
 			<div class="woo-wallet-transactions-list">
 				<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Balance History', 'woo-wallet' ); ?></h3>

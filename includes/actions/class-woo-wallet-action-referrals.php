@@ -146,7 +146,6 @@ class Action_Referrals extends WooWalletAction {
 		if ( $this->is_enabled() ) {
 			$this->referral_handel = apply_filters( 'woo_wallet_referral_handel', 'wwref' );
 			add_filter( 'woo_wallet_nav_menu_items', array( $this, 'add_referral_nav_menu' ), 10, 2 );
-			add_filter( 'woo_wallet_endpoint_actions', array( $this, 'woo_wallet_endpoint_actions' ) );
 			add_action( 'woo_wallet_referrals_content', array( $this, 'woo_wallet_referrals_content' ) );
 			$this->init_referrals();
 			add_action( 'wp', array( $this, 'init_referral_visit' ), 105 );
@@ -167,15 +166,6 @@ class Action_Referrals extends WooWalletAction {
 			'icon'  => 'dashicons dashicons-groups',
 		);
 		return $nav_menu;
-	}
-	/**
-	 * Wallet endpoint actions
-	 *
-	 * @param array $actions actions.
-	 * @return array
-	 */
-	public function woo_wallet_endpoint_actions( $actions ) {
-		return array_merge( $actions, array( 'referrals' ) );
 	}
 	/**
 	 * Referral page content.
@@ -346,5 +336,4 @@ class Action_Referrals extends WooWalletAction {
 			do_action( 'woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this, $order_id );
 		}
 	}
-
 }

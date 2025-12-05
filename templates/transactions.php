@@ -14,14 +14,15 @@
  * @version     1.5.15
  * @package StandaleneTech
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly.
+	exit; // Exit if accessed directly.
 }
 ?>
 <!-- Transactions -->
 <div class="woo-wallet-transactions-list">
-    <h3 class="woo-wallet-section-title"><?php esc_html_e( 'Transactions', 'woo-wallet' ); ?></h3>
-    <?php do_action( 'woo_wallet_before_transactions_content' ); ?>
-    <table id="wc-wallet-transaction-details" class="table"></table>
-    <?php do_action( 'woo_wallet_after_transactions_content' ); ?>
+	<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Transactions', 'woo-wallet' ); ?></h3>
+	<?php do_action( 'woo_wallet_before_transactions_content' ); ?>
+	<table id="wc-wallet-transaction-details" class="table"></table>
+	<?php do_action( 'woo_wallet_after_transactions_content' ); ?>
 </div>
