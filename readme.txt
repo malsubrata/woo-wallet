@@ -3,8 +3,8 @@ Contributors: standalonetech, subratamal, moumitaadak
 Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
 Requires at least: 6.4
-Tested up to: 6.8
-Stable tag: 1.5.14
+Tested up to: 6.9
+Stable tag: 1.5.15
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -128,17 +128,24 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 
 == Screenshots ==
 
-1. User wallet page.
-2. Transfer wallet balance.
-3. View transaction details.
-4. All user balance details.
-5. Admin view transaction details.
+1. User wallet dashboard page.
+2. Wallet topup page.
+3. Transfer wallet balance.
+4. Transaction details page.
+5. Admin wallet details page.
 6. Admin adjust wallet balance.
-7. WooCommerce wallet payment gateway.
-8. WooCommerce refund.
-9. Wallet actions.
+7. Admin wallet transaction details page.
+8. Wallet payment gateway.
+9. WooCommerce refund.
+10. Wallet actions. 
 
 == Changelog ==
+=v1.5.15 (December 10, 2025)=
+- **New:-** User wallet dashboard design.
+- **Tweak:-** Replace thickbox with wc backbone modal.
+- **Fix:-** Removed moment js and used WordPress core momentjs Library.
+- **Added:-** WordPress 6.9 support.
+
 =v1.5.14 (October 08, 2025) =
 - **Fix:-** RTL CSS issue.
 

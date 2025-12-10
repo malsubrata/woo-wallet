@@ -24,7 +24,7 @@
   ],
   "devDependencies": {
     "@babel/runtime": "^7.28.4",
-    "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.0",
+    "@woocommerce/dependency-extraction-webpack-plugin": "^4.0.0",
     "@wordpress/scripts": "^30.16.0",
     "autoprefixer": "^10.4.21",
     "css-minimizer-webpack-plugin": "^7.0.2",

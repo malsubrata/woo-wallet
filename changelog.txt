@@ -1,4 +1,10 @@
 *** Changelog ***
+=v1.5.15 (December 10, 2025)=
+- **New:-** User wallet dashboard design.
+- **Tweak:-** Replace thickbox with wc backbone modal.
+- **Fix:-** Removed moment js and used WordPress core momentjs Library.
+- **Added:-** WordPress 6.9 support.
+
 =v1.5.14 (October 08, 2025) =
 - **Fix:-** RTL CSS issue.
 
