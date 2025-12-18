@@ -347,44 +347,112 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$args         = apply_filters( 'woo_wallet_transactions_query_args', $args );
 		$args         = wp_parse_args( $args, $default_args );
 		extract( $args ); // @codingStandardsIgnoreLine
-		$query           = array();
-		$query['select'] = 'SELECT transactions.*';
-		$query['from']   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
-		// Joins.
-		$joins = array();
-		if ( ! empty( $where_meta ) ) {
-			$joins['transaction_meta'] = "{$join_type} JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
-		}
-		$query['join'] = implode( ' ', $joins );
+		// Build query safely: validate identifiers and use prepared statements for values.
+		$select = 'SELECT transactions.*';
+		$from   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
 
-		$query['where'] = 'WHERE 1=1';
-		if ( $user_id ) {
-			$query['where'] .= $wpdb->prepare( ' AND transactions.user_id = %d', $user_id );
+		// Validate and whitelist inputs that become SQL identifiers.
+		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'date', 'type', 'deleted' );
+		if ( ! in_array( $order_by, $allowed_order_cols, true ) ) {
+			$order_by = 'transaction_id';
 		}
+		$order = strtoupper( $order ) === 'ASC' ? 'ASC' : 'DESC';
 
-		if ( ! $include_deleted ) {
-			$query['where'] .= ' AND transactions.deleted = 0';
+		$join_type_allowed = array( 'INNER', 'LEFT', 'RIGHT' );
+		$join_type         = strtoupper( $join_type );
+		if ( ! in_array( $join_type, $join_type_allowed, true ) ) {
+			$join_type = 'INNER';
 		}
 
-		if ( ! empty( $where_meta ) ) {
-			foreach ( $where_meta as $value ) {
-				if ( ! isset( $value['operator'] ) ) {
-					$value['operator'] = '=';
-				}
-				$query['where'] .= $wpdb->prepare( " AND (transaction_meta.meta_key = %s AND transaction_meta.meta_value {$value['operator']} %s )", $value['key'], $value['value'] );
+		// Sanitize limit: allow either integer or "offset,limit" numeric pattern.
+		$limit_sql = '';
+		if ( $limit ) {
+			if ( is_numeric( $limit ) ) {
+				$limit_sql = 'LIMIT ' . absint( $limit );
+			} elseif ( is_string( $limit ) && preg_match( '/^\d+,\d+$/', $limit ) ) {
+				$limit_sql = 'LIMIT ' . $limit;
 			}
 		}
 
+		$joins = array();
+		if ( ! empty( $where_meta ) ) {
+			$joins[] = "{$join_type} JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
+		}
+
+		// Build WHERE clauses and parameter list for $wpdb->prepare.
+		$where_clauses = array( '1=1' );
+		$params        = array();
+
+		if ( $user_id ) {
+			$where_clauses[] = 'transactions.user_id = %d';
+			$params[]        = absint( $user_id );
+		}
+
+		if ( ! $include_deleted ) {
+			$where_clauses[] = 'transactions.deleted = 0';
+		}
+
+		// Allowed operators for safety.
+		$allowed_ops = array( '=', '!=', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN' );
+
+		// where_meta (meta_key/meta_value) - meta_key is compared with placeholder, meta_value handled safely.
+		if ( ! empty( $where_meta ) ) {
+			foreach ( $where_meta as $value ) {
+				$op = isset( $value['operator'] ) ? strtoupper( $value['operator'] ) : '=';
+				if ( ! in_array( $op, $allowed_ops, true ) ) {
+					$op = '=';
+				}
+				$meta_key = isset( $value['key'] ) ? $value['key'] : '';
+				if ( 'IN' === $op || 'NOT IN' === $op ) {
+					if ( is_array( $value['value'] ) && count( $value['value'] ) ) {
+						$placeholders    = implode( ',', array_fill( 0, count( $value['value'] ), '%s' ) );
+						$where_clauses[] = "(transaction_meta.meta_key = %s AND transaction_meta.meta_value {$op} ({$placeholders}))";
+						$params[]        = $meta_key;
+						foreach ( $value['value'] as $v ) {
+							$params[] = $v;
+						}
+					}
+				} elseif ( 'LIKE' === $op || 'NOT LIKE' === $op ) {
+						$val             = '%' . $wpdb->esc_like( $value['value'] ) . '%';
+						$where_clauses[] = "(transaction_meta.meta_key = %s AND transaction_meta.meta_value {$op} %s)";
+						$params[]        = $meta_key;
+						$params[]        = $val;
+				} else {
+					$where_clauses[] = "(transaction_meta.meta_key = %s AND transaction_meta.meta_value {$op} %s)";
+					$params[]        = $meta_key;
+					$params[]        = $value['value'];
+				}
+			}
+		}
+
+		// where on transactions table: validate columns against whitelist.
 		if ( ! empty( $where ) ) {
 			foreach ( $where as $value ) {
-				if ( ! isset( $value['operator'] ) ) {
-					$value['operator'] = '=';
+				$op = isset( $value['operator'] ) ? strtoupper( $value['operator'] ) : '=';
+				if ( ! in_array( $op, $allowed_ops, true ) ) {
+					$op = '=';
 				}
-				if ( 'IN' === $value['operator'] && is_array( $value['value'] ) ) {
-					$value['value']  = esc_sql( implode( ',', $value['value'] ) );
-					$query['where'] .= " AND transactions.{$value['key']} {$value['operator']} ({$value['value']})";
+				$col = isset( $value['key'] ) ? $value['key'] : '';
+				if ( ! in_array( $col, $allowed_order_cols, true ) ) {
+					// Skip unknown/unsafe column names.
+					continue;
+				}
+
+				if ( 'IN' === $op || 'NOT IN' === $op ) {
+					if ( is_array( $value['value'] ) && count( $value['value'] ) ) {
+						$placeholders    = implode( ',', array_fill( 0, count( $value['value'] ), '%s' ) );
+						$where_clauses[] = "transactions.{$col} {$op} ({$placeholders})";
+						foreach ( $value['value'] as $v ) {
+							$params[] = $v;
+						}
+					}
+				} elseif ( 'LIKE' === $op || 'NOT LIKE' === $op ) {
+						$val             = '%' . $wpdb->esc_like( $value['value'] ) . '%';
+						$where_clauses[] = "transactions.{$col} {$op} %s";
+						$params[]        = $val;
 				} else {
-					$query['where'] .= $wpdb->prepare( " AND transactions.{$value['key']} {$value['operator']} %s", $value['value'] );
+					$where_clauses[] = "transactions.{$col} {$op} %s";
+					$params[]        = $value['value'];
 				}
 			}
 		}
@@ -392,33 +460,35 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		if ( ! empty( $after ) || ! empty( $before ) ) {
 			$after           = empty( $after ) ? '0000-00-00' : $after;
 			$before          = empty( $before ) ? current_time( 'mysql', 1 ) : $before;
-			$query['where'] .= $wpdb->prepare( ' AND transactions.date BETWEEN %s AND %s', $after, $before );
+			$where_clauses[] = 'transactions.date BETWEEN %s AND %s';
+			$params[]        = $after;
+			$params[]        = $before;
 		}
 
-		if ( $order_by ) {
-			$query['order_by'] = "ORDER BY transactions.{$order_by} {$order}";
-		}
+		$order_by_sql = "ORDER BY transactions.{$order_by} {$order}";
 
-		if ( $limit ) {
-			$query['limit'] = "LIMIT {$limit}";
-		}
 		$wpdb->hide_errors();
-		$query = apply_filters( 'woo_wallet_transactions_query', $query );
+
+		$query = apply_filters( 'woo_wallet_transactions_query', array( $select, $from, implode( ' ', $joins ), 'WHERE ' . implode( ' AND ', $where_clauses ), $order_by_sql, $limit_sql ) );
 		$query = implode( ' ', $query );
-		
-		$query_hash     = md5( $user_id . $query );
+
+		$query_hash     = md5( absint( $user_id ) . $query );
 		$cached_results = is_array( get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) ) ? get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) : array();
 
 		if ( $nocache || ! isset( $cached_results[ $query_hash ] ) ) {
 			// Enable big selects.
 			$wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' ); // @codingStandardsIgnoreLine
-			$query_resualts = $wpdb->get_results( // @codingStandardsIgnoreLine
-				// @codingStandardsIgnoreLine
-				$query 
-			);
+
+			if ( ! empty( $params ) ) {
+				$prepared_sql   = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $query ), $params ) );
+				$query_resualts = $wpdb->get_results( $prepared_sql, $output ); // @codingStandardsIgnoreLine
+			} else {
+				$query_resualts = $wpdb->get_results( $query, $output ); // @codingStandardsIgnoreLine
+			}
+
 			if ( 'all_with_meta' === $fields ) {
 				foreach ( $query_resualts as $key => $query_resualt ) {
-					$query_resualts[ $key ]->meta = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_meta.meta_key, transaction_meta.meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta WHERE transaction_id = %d", $query_resualt->transaction_id ) ); // @codingStandardsIgnoreLine
+					$query_resualts[ $key ]->meta = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_meta.meta_key, transaction_meta.meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta WHERE transaction_id = %d", $query_resualt->transaction_id ), $output ); // @codingStandardsIgnoreLine
 				}
 			}
 			$cached_results[ $query_hash ] = $query_resualts;
