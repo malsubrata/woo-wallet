@@ -90,7 +90,17 @@ const render = () => {
 								}}
 								focusOnMount={ true }
 								validateOnMount={ false }
-								showError={ false }
+								showError={ true }
+								type="number"
+								validate={(value) => {
+									const num = parseFloat(value);
+									if (isNaN(num) || num <= 0) {
+										return __('Please enter a valid amount greater than 0', 'woo-wallet');
+									}
+									if (num > settings.balance) {
+										return __('Amount cannot exceed your wallet balance', 'woo-wallet');
+									}
+								}}
 							/>
 							<Button
 								className="wc-block-components-partial-payment_button"

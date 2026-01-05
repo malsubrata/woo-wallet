@@ -425,7 +425,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 			$label                = isset( $args['options']['button_label'] ) ? $args['options']['button_label'] : __( 'Choose File', 'woo-wallet' );
 			$uploader_title       = isset( $args['options']['uploader_title'] ) ? $args['options']['uploader_title'] : __( 'Select', 'woo-wallet' );
 			$uploader_button_text = isset( $args['options']['uploader_button_text'] ) ? $args['options']['uploader_button_text'] : __( 'Select', 'woo-wallet' );
-			$attachment_src       = WC()->plugin_url() . '/assets/images/placeholder.png';
+			$attachment_src       = WC()->plugin_url() . '/assets/images/placeholder.webp';
 			if ( $value ) {
 				$attachment_src = wp_get_attachment_url( $value );
 			}

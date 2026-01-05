@@ -203,7 +203,7 @@ final class Woo_Wallet {
 	 * @return type
 	 */
 	public function add_woocommerce_query_vars( $query_vars ) {
-		$query_vars['woo-wallet']              = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
+		$query_vars['woo-wallet'] = get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' );
 		return $query_vars;
 	}
 
