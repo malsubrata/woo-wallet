@@ -263,66 +263,83 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( $amount < 0 ) {
 				$amount = 0;
 			}
-			$balance = $this->get_wallet_balance( $this->user_id, 'edit' );
-			if ( 'debit' === $type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+
+			// Acquire a per-user DB lock to serialize concurrent requests for the same user.
+			$lock_acquired = false;
+			$lock_name     = 'woo_wallet_lock_user_' . $this->user_id;
+			$lock_timeout  = apply_filters( 'woo_wallet_db_lock_timeout', 5, $this->user_id );
+			$got_lock      = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
 				return false;
 			}
-			if ( 'credit' === $type ) {
-				$balance += $amount;
-			} elseif ( 'debit' === $type ) {
-				$balance -= $amount;
-			}
-			$defaults = array(
-				'blog_id'    => get_current_blog_id(),
-				'user_id'    => $this->user_id,
-				'type'       => $type,
-				'amount'     => $amount,
-				'balance'    => $balance,
-				'currency'   => get_woocommerce_currency(),
-				'details'    => $details,
-				'date'       => current_time( 'mysql' ),
-				'created_by' => get_current_user_id(),
-				'for'        => '',
-			);
+			$lock_acquired = true;
 
-			$parsed_args = wp_parse_args( $args, $defaults );
+			try {
+				$balance = $this->get_wallet_balance( $this->user_id, 'edit' );
+				if ( 'debit' === $type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+					return false;
+				}
+				if ( 'credit' === $type ) {
+					$balance += $amount;
+				} elseif ( 'debit' === $type ) {
+					$balance -= $amount;
+				}
+				$defaults = array(
+					'blog_id'    => get_current_blog_id(),
+					'user_id'    => $this->user_id,
+					'type'       => $type,
+					'amount'     => $amount,
+					'balance'    => $balance,
+					'currency'   => get_woocommerce_currency(),
+					'details'    => $details,
+					'date'       => current_time( 'mysql' ),
+					'created_by' => get_current_user_id(),
+					'for'        => '',
+				);
 
-			if ( $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-				"{$wpdb->base_prefix}woo_wallet_transactions",
-				apply_filters(
-					'woo_wallet_transactions_args',
-					array(
-						'blog_id'    => $parsed_args['blog_id'],
-						'user_id'    => $parsed_args['user_id'],
-						'type'       => $parsed_args['type'],
-						'amount'     => $parsed_args['amount'],
-						'balance'    => $parsed_args['balance'],
-						'currency'   => $parsed_args['currency'],
-						'details'    => $parsed_args['details'],
-						'date'       => $parsed_args['date'],
-						'created_by' => $parsed_args['created_by'],
-					),
-					array( '%d', '%d', '%s', '%f', '%f', '%s', '%s', '%s', '%d' )
-				)
-			) ) {
-				$transaction_id = $wpdb->insert_id;
-				if ( $parsed_args['for'] ) {
-					update_wallet_transaction_meta( $transaction_id, '_type', $parsed_args['for'], $parsed_args['user_id'] );
+				$parsed_args = wp_parse_args( $args, $defaults );
+
+				if ( $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+					"{$wpdb->base_prefix}woo_wallet_transactions",
+					apply_filters(
+						'woo_wallet_transactions_args',
+						array(
+							'blog_id'    => $parsed_args['blog_id'],
+							'user_id'    => $parsed_args['user_id'],
+							'type'       => $parsed_args['type'],
+							'amount'     => $parsed_args['amount'],
+							'balance'    => $parsed_args['balance'],
+							'currency'   => $parsed_args['currency'],
+							'details'    => $parsed_args['details'],
+							'date'       => $parsed_args['date'],
+							'created_by' => $parsed_args['created_by'],
+						),
+						array( '%d', '%d', '%s', '%f', '%f', '%s', '%s', '%s', '%d' )
+					)
+				) ) {
+					$transaction_id = $wpdb->insert_id;
+					if ( $parsed_args['for'] ) {
+						update_wallet_transaction_meta( $transaction_id, '_type', $parsed_args['for'], $parsed_args['user_id'] );
+					}
+					update_user_meta( $this->user_id, $this->meta_key, $balance );
+					clear_woo_wallet_cache( $this->user_id );
+					do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type );
+					$email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
+					if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
+						$email_admin->trigger( $transaction_id );
+					}
+					$low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
+					if ( ! is_null( $low_balance_email ) ) {
+						$low_balance_email->trigger( $this->user_id, $type );
+					}
+					return $transaction_id;
 				}
-				update_user_meta( $this->user_id, $this->meta_key, $balance );
-				clear_woo_wallet_cache( $this->user_id );
-				do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type );
-				$email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
-				if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
-					$email_admin->trigger( $transaction_id );
+				return false;
+			} finally {
+				if ( ! empty( $lock_acquired ) ) {
+					$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 				}
-				$low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
-				if ( ! is_null( $low_balance_email ) ) {
-					$low_balance_email->trigger( $this->user_id, $type );
-				}
-				return $transaction_id;
 			}
-			return false;
 		}
 	}
 

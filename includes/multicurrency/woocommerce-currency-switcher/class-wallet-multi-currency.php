@@ -40,7 +40,9 @@ if ( ! class_exists( 'Wallet_Multi_currency' ) ) {
 			global $WOOCS;
 			$currencies = $WOOCS->get_currencies();
 			if ( isset( $currencies[ $from_currency ] ) && isset( $currencies[ $to_currency ] ) && $currencies[ $from_currency ] != null && $currencies[ $to_currency ] != null ) {
-				$amount = $amount * ( 1 / $currencies[ $from_currency ]['rate'] ) * $currencies[ $to_currency ]['rate'];
+				if ( 0 != $currencies[ $from_currency ]['rate'] ) {
+					$amount = $amount * ( 1 / $currencies[ $from_currency ]['rate'] ) * $currencies[ $to_currency ]['rate'];
+				}
 			}
 			return $amount;
 		}
@@ -56,7 +58,9 @@ if ( ! class_exists( 'Wallet_Multi_currency' ) ) {
 			global $WOOCS;
 			$currencies = $WOOCS->get_currencies();
 			if ( isset( $currencies[ $currency ] ) && isset( $currencies[ $WOOCS->current_currency ] ) ) {
-				$amount = $amount * ( 1 / $currencies[ $currency ]['rate'] ) * $currencies[ $WOOCS->current_currency ]['rate'];
+				if ( 0 != $currencies[ $currency ]['rate'] ) {
+					$amount = $amount * ( 1 / $currencies[ $currency ]['rate'] ) * $currencies[ $WOOCS->current_currency ]['rate'];
+				}
 			}
 			return $amount;
 		}
