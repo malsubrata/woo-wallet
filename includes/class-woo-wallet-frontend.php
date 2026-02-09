@@ -495,12 +495,13 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 						'message'  => __( 'Entered amount is greater than current wallet amount.', 'woo-wallet' ),
 					);
 				}
-				$credit_transaction_id = woo_wallet()->wallet->credit( $whom->ID, $credit_amount, $credit_note );
-				if ( $credit_transaction_id ) {
-					do_action( 'woo_wallet_transfer_amount_credited', $credit_transaction_id, $whom->ID, get_current_user_id() );
-					$debit_transaction_id = woo_wallet()->wallet->debit( get_current_user_id(), $debit_amount, $debit_note );
+
+				$debit_transaction_id = woo_wallet()->wallet->debit( get_current_user_id(), $debit_amount, $debit_note );
+				if ( $debit_transaction_id ) {
 					update_wallet_transaction_meta( $debit_transaction_id, '_wallet_transfer_charge', $transfer_charge, get_current_user_id() );
 					do_action( 'woo_wallet_transfer_amount_debited', $debit_transaction_id, get_current_user_id(), $whom->ID );
+					$credit_transaction_id = woo_wallet()->wallet->credit( $whom->ID, $credit_amount, $credit_note );
+					do_action( 'woo_wallet_transfer_amount_credited', $credit_transaction_id, $whom->ID, get_current_user_id() );
 					$response = array(
 						'is_valid' => true,
 						'message'  => __( 'Amount transferred successfully!', 'woo-wallet' ),
