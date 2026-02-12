@@ -4,7 +4,7 @@ Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 1.5.15
+Stable tag: 1.5.16
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -140,6 +140,15 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 10. Wallet actions. 
 
 == Changelog ==
+=v1.5.16 (February 12, 2025)=
+- **Tweak:-** Enhance SQL query construction for wallet transactions with improved safety and readability.
+- **Tweak:-** Remove return type declarations for compatibility and enhance permission checks in content handling.
+- **Tweak:-** Update version retrieval for script and style assets.
+- **Tweak:-** Enhance partial payment validation in frontend.
+- **Tweak:-** Add checks for zero currency rates in multi-currency conversion methods
+- **Tweak:-** Database Lock to serialize requests for the same user.
+- **Tweak:-** Adjust wallet transfer logic to debit before crediting, ensuring proper transaction flow.
+
 =v1.5.15 (December 10, 2025)=
 - **New:-** User wallet dashboard design.
 - **Tweak:-** Replace thickbox with wc backbone modal.
