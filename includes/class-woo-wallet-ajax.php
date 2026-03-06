@@ -399,7 +399,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$length = isset( $_POST['length'] ) ? sanitize_text_field( wp_unslash( $_POST['length'] ) ) : 10;
 			$search = isset( $_POST['search'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['search'] ) ) : '';
 			$args   = array(
-				'limit' => "$start, $length",
+				'limit' => "$start,$length",
 			);
 			if ( isset( $search['value'] ) && ! empty( $search['value'] ) ) {
 				$date_rage = explode( '|', $search['value'] );
