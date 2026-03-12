@@ -472,6 +472,10 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$query = apply_filters( 'woo_wallet_transactions_query', array( $select, $from, implode( ' ', $joins ), 'WHERE ' . implode( ' AND ', $where_clauses ), $order_by_sql, $limit_sql ) );
 		$query = implode( ' ', $query );
 
+		if ( ! empty( $params ) ) {
+			$query = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $query ), $params ) );
+		}
+
 		$query_hash     = md5( absint( $user_id ) . $query );
 		$cached_results = is_array( get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) ) ? get_transient( "woo_wallet_transaction_resualts_{$user_id}" ) : array();
 
@@ -479,12 +483,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 			// Enable big selects.
 			$wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' ); // @codingStandardsIgnoreLine
 
-			if ( ! empty( $params ) ) {
-				$prepared_sql   = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $query ), $params ) );
-				$query_resualts = $wpdb->get_results( $prepared_sql, $output ); // @codingStandardsIgnoreLine
-			} else {
-				$query_resualts = $wpdb->get_results( $query, $output ); // @codingStandardsIgnoreLine
-			}
+			$query_resualts = $wpdb->get_results( $query, $output ); // @codingStandardsIgnoreLine
 
 			if ( 'all_with_meta' === $fields ) {
 				foreach ( $query_resualts as $key => $query_resualt ) {
