@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the TeraWallet plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.5.16\n"
+"Project-Id-Version: TeraWallet 1.5.17\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-02-12T05:34:10+00:00\n"
+"POT-Creation-Date: 2026-03-12T02:27:43+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -904,7 +904,7 @@ msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:214
 #: includes/class-woo-wallet-ajax.php:280
-#: includes/class-woo-wallet-payment-method.php:181
+#: includes/class-woo-wallet-payment-method.php:189
 msgid "Wallet refund #"
 msgstr ""
 
@@ -915,7 +915,7 @@ msgid "%s refunded to customer wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:295
-#: includes/class-woo-wallet-payment-method.php:184
+#: includes/class-woo-wallet-payment-method.php:192
 msgid "Refund not credited to customer"
 msgstr ""
 
@@ -1205,12 +1205,12 @@ msgstr ""
 msgid "Your wallet balance is low. Please add %s to proceed with this transaction."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:159
+#: includes/class-woo-wallet-payment-method.php:162
 #: includes/class-woo-wallet-wallet.php:194
 msgid "For order payment #"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:165
+#: includes/class-woo-wallet-payment-method.php:173
 msgid "Something went wrong with processing payment please try again."
 msgstr ""
 
