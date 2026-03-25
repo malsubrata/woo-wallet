@@ -1,11 +1,41 @@
-# [TeraWallet](https://standalonetech.com/) [![WP compatibility](https://plugintests.com/plugins/woo-wallet/wp-badge.svg)](https://plugintests.com/plugins/woo-wallet/latest) [![PHP compatibility](https://plugintests.com/plugins/woo-wallet/php-badge.svg)](https://plugintests.com/plugins/woo-wallet/latest)
+# TeraWallet (formerly WooWallet)
 
-Welcome to the WooCommerce Wallet repository on GitHub. Here you can browse the source, look at open issues and keep track of development.
+TeraWallet is the leading wallet system for WooCommerce, providing a seamless digital currency experience for WordPress sites. It allows customers to store funds, earn rewards through various site activities, and use their balance for fast, secure checkouts.
 
-If you are not a developer, please use the [WooCommerce Wallet plugin page](https://wordpress.org/plugins/woo-wallet/) on WordPress.org.
+## 🚀 Key Features
+- **Digital Ledger**: Secure transaction history for every user.
+- **Flexible Top-ups**: Customers can add funds via any WooCommerce gateway.
+- **Partial Payments**: Use wallet balance combined with other payment methods.
+- **Cashback Engine**: Rewards based on Cart, Product, or Category rules.
+- **Incentivized Actions**: Earn balance for Signups, Reviews, Referrals, and Daily Visits.
+- **Peer-to-Peer Transfers**: Users can send balance to other registered customers.
+- **Marketplace Ready**: Full compatibility with Dokan, WCFM, and WCMarketplace.
 
-## Support
-This repository is not suitable for support. Please don't use our issue tracker for support requests, but for core issues only. Support can take place through the appropriate channels:
+## 🛠 Developer Section
 
-* The [TeraWallet premium support portal](https://standalonetech.com/support-forums/) for customers who have purchased extensions.
-* [Our community forum on wp.org](https://wordpress.org/support/plugin/woo-wallet) which is available for all WordPress users.
+### Core Logic & Hooks
+The system uses a strict database-first approach with MySQL-level locking to ensure transaction integrity. 
+
+- **Filters**: 
+    - `woo_wallet_current_balance`: Modify balance display.
+    - `woo_wallet_payment_is_available`: Programmatically toggle the wallet gateway.
+    - `woo_wallet_cashback_amount`: Adjust calculated rewards.
+- **Actions**:
+    - `woo_wallet_transaction_recorded`: Fires after any ledger update.
+    - `woo_wallet_payment_processed`: Fires after a successful wallet purchase.
+    - `woo_wallet_admin_adjust_balance`: Fires when admins manually edit balance.
+
+### REST API (v3)
+TeraWallet extends the WooCommerce REST API under the `wc/v3/wallet` namespace.
+- `GET /balance?email={email}`: Retrieve user balance.
+- `GET /?email={email}`: Retrieve transaction list.
+- `POST /`: Create credit/debit transactions (Admin only).
+
+## 📂 File Structure
+- `includes/class-woo-wallet-wallet.php`: Core ledger and balance logic.
+- `includes/class-woo-wallet-frontend.php`: Shortcodes and checkout integration.
+- `includes/actions/`: Logic for earning balance via site activities.
+- `templates/`: UI components (Overridable via theme).
+
+## 📄 License
+This project is licensed under the terms found in the `LICENSE` file.
