@@ -2,6 +2,10 @@
 
 TeraWallet is the leading wallet system for WooCommerce, providing a seamless digital currency experience for WordPress sites. It allows customers to store funds, earn rewards through various site activities, and use their balance for fast, secure checkouts.
 
+## 📚 Documentation
+- **[Admin Guide](ADMIN_GUIDE.md)**: Configuration, rewards, and technical architecture.
+- **[Customer Guide](CUSTOMER_GUIDE.md)**: Usage instructions and FAQs for shoppers.
+
 ## 🚀 Key Features
 - **Digital Ledger**: Secure transaction history for every user.
 - **Flexible Top-ups**: Customers can add funds via any WooCommerce gateway.
