@@ -1,6 +1,6 @@
 === Wallet for WooCommerce ===
 Contributors: standalonetech, subratamal, moumitaadak
-Tags: terawallet, woocommerce wallet, digital wallet, cashback, partial payment
+Tags: woocommerce wallet, cashback, store credit, partial payment, digital wallet
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.9
@@ -9,67 +9,63 @@ Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-A extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.
+= ✨ Powerful WooCommerce wallet with cashback, store credit, and partial payment. Simplify checkout and boost customer loyalty with ease. =
 
-== Description ==
+Maximize convenience and savings for your customers with **Wallet for WooCommerce** (TeraWallet). This all-in-one digital wallet and store credit system is specifically designed to streamline the checkout process and boost customer loyalty.
 
-= Maximize Convenience and Savings: Wallet for WooCommerce Facilitates Quick Funds, Cashback, Refunds, and Partial Payments! =
+TeraWallet empowers your customers to deposit funds into their personal accounts, transfer money to other users, and make purchases effortlessly using their wallet balance. By reducing the need for repeated payment detail entries, you provide a frictionless shopping experience that encourages repeat business.
 
-TeraWallet is an advanced digital wallet and credit system specially designed for WooCommerce. It empowers you to offer your customers a seamless payment experience by allowing them to deposit funds into their accounts, transfer money to other users, and make purchases using their wallet balance.
+Beyond core wallet functionality, TeraWallet features a robust **Cashback Rewards System**. Incentivize purchases by offering rewards based on cart totals, specific products, or categories. You can even convert WooCommerce coupons into wallet rewards, providing a unique way to drive engagement.
 
-Beyond its core wallet functionality, TeraWallet introduces an enticing cashback rewards system that enables you to provide discounts and rewards to your customers based on their purchases. You have the flexibility to set cashback rates for specific products or categories, and even offer bonus cashback during promotions or special events.
+== ==
 
-TeraWallet puts you in control with extensive customization options. By implementing TeraWallet, you can effortlessly enhance customer loyalty and drive repeat purchases through the attractive cashback rewards. Discover the power of TeraWallet today and optimize your WooCommerce payment system for maximum efficiency!
+👉 **Try the live demo:** [https://demo.standalonetech.com/](https://demo.standalonetech.com/)
+👉 **Read full documentation:** [https://docs.standalonetech.com/](https://docs.standalonetech.com/)
 
-= Use case of TeraWallet =
-With this plugin, your customers no longer need to repeatedly enter payment details. They can conveniently log in and use their wallet funds to make purchases. Additionally, customers can earn cashback by utilizing their wallet balance. The admin also has the ability to process refunds directly to the customer's wallet.
+== ✨ Why choose Wallet for WooCommerce? ==
+*   🚀 **Frictionless Checkout:** One-click payments via wallet balance reduce cart abandonment.
+*   💰 **Automated Cashback:** Automated rewards keep customers coming back for more.
+*   🏦 **Store Credit System:** Easily handle refunds by crediting the user's wallet instantly.
+*   🔄 **Wallet Transfers:** Allow customers to share funds with friends and family.
 
-= Features of TeraWallet =
-- Wallet system works just like any other payment method.
-- Set wallet system payment method title for the front-end.
-- The customers can use various payment methods to add money.
-- The admin can process refund using the wallet money.
-- Customers will earn cashback according to cart price, product or product category wise.
-- Customers can made partial payment.
-- Set cashback amount calculation using fixed or percent method.
-- Admin can export users wallet transactions.
-- Admin can setup low wallet balance notification email.
-- Admin can lock / unlock any user wallet.
-- From the backend, the admin can view the transaction history.
-- Customers receive notification emails for every wallet transaction.
-- The admin can adjust the wallet amount of any customer from the backend.
-- Users can transfer wallet amount to other user.
-- Shortcode `woo-wallet` which will display user wallet page.
-- Built with a REST API
-- Convert WooCommerce coupon into cashback.
-- Support WordPress Multisite Network
-- Support multiple languages translations.
-- Support [CURCY – Multi Currency for WooCommerce](https://wordpress.org/plugins/woo-multi-currency/)
-- Support [FOX – Currency Switcher Professional for WooCommerce](https://wordpress.org/plugins/woocommerce-currency-switcher/)
-- Support [WooCommerce Multilingual & Multicurrency with WPML](https://wpml.org/)
-- Support WooCommerce block checkout.
-- Support WooCommerce Subscriptions.
-- Support WooCommerce Multivendor Marketplace by WC Lovers.
-- Support WC Marketplace.
-- Support Dokan Multivendor Marketplace.
+== 🛠 Features ==
 
-> Experience the future of payments by trying our [demo](https://demo.standalonetech.com/).
+*   🏦 **Core Wallet Management:** A centralized ledger system that tracks every credit and debit with 100% accuracy using SQL-level locking to prevent race conditions.
+*   💰 **Dynamic Cashback System:** 
+    *   **Cart-Wise:** Rewards based on the total order value.
+    *   **Product-Wise:** Granular control over rewards for individual items.
+    *   **Category-Wise:** Rewards based on product taxonomies.
+*   💳 **Smart Checkout Options:**
+    *   **Full Payment:** Pay for the entire order using the wallet gateway.
+    *   **Partial Payment:** Use wallet balance for part of the total and pay the rest via other gateways (Stripe, PayPal, etc.).
+    *   **Auto-Deduct:** Automatically apply available balance as a discount at checkout.
+*   🔄 **User Empowerment:**
+    *   **Wallet Top-ups:** Customers can add funds via their dashboard using any supported payment method.
+    *   **Peer-to-Peer Transfers:** Securely send wallet balance to other registered users via email.
+*   🎁 **Engagement Rewards:** Credit users for specific actions:
+    *   New user registration bonus.
+    *   Daily login rewards.
+    *   Product review rewards.
+*   🛠 **Admin Control Center:**
+    *   View all user balances and transaction history.
+    *   Manually adjust (credit/debit) any user's balance with detailed notes.
+    *   Lock/Unlock user wallets for security and fraud prevention.
+*   🔗 **Seamless Integrations:**
+    *   Full support for WooCommerce Blocks checkout.
+    *   Compatible with WPML, Multi Currency switchers, and WooCommerce Subscriptions.
+    *   Built-in support for Dokan, WCFM, and WCMarketplace.
 
-= Workflow of TeraWallet =
-After the plugin installation, the admin needs to do the payment method configuration. Set the title and select allowed payments for adding money.
-Now for enable cashback rules, navigate to TeraWallet > Settings >  Credit. Now setup cashback rule according to your requirement. If cashback rule set to product wise then admin will have an option to add cashback rule for each product.
-On the front-end, the customers can log in to the store and go to wallet page from My Account. Enter the amount to add and then complete the checkout process just like any other product purchase.
+== 🚀 Pro Features ==
 
-= Premium extensions =
+Upgrade to unlock advanced wallet features and specialized integrations:
 
-- [Wallet Coupons](https://standalonetech.com/product/wallet-coupons/)
-- [Wallet Withdrawal](https://standalonetech.com/product/wallet-withdrawal/)
-- [Wallet Importer](https://standalonetech.com/product/wallet-importer/)
-- [Wallet AffiliateWP](https://standalonetech.com/product/wallet-affiliatewp/)
+*   💸 **Wallet Withdrawal:** Allow customers to request withdrawals from their wallet balance to their bank or other payment methods.
+*   ⌛ **Wallet Expiry:** Set expiration dates for wallet balance or cashback to encourage timely spending.
+*   🎟️ **Wallet Coupons:** Create exclusive coupons that can only be redeemed into the user's wallet.
+*   📥 **Wallet Importer:** Easily bulk import wallet balances and transaction history from CSV files.
+*   🤝 **AffiliateWP Integration:** Automatically credit affiliate commissions directly to the user's wallet.
 
-= Translator Contributors =
-- [#fa_IR](https://translate.wordpress.org/locale/fa/default/wp-plugins/woo-wallet) - [@rahimvaziri](https://wordpress.org/support/users/rahimvaziri/)
-- [#es_ES](https://translate.wordpress.org/locale/es/default/wp-plugins/woo-wallet) - [@chipweb](https://wordpress.org/support/users/chipweb/)
+"Upgrade to unlock advanced wallet features and integrations."
 
 == Installation ==
 
@@ -96,35 +92,29 @@ Automatic updates should work like a charm; as always though, ensure you backup 
 
 If on the off-chance you do encounter issues with the wallet endpoints pages after an update you simply need to flush the permalinks by going to WordPress > Settings > Permalinks and hitting 'save'. That should return things to normal.
 
+= Important =
+
+A hidden "Wallet Topup" product is automatically created upon activation. Ensure it remains **Published** and **Private**.
+
 == Frequently Asked Questions ==
 
-= Does this plugin work with newest WP version and also older versions? =
+= How does wallet payment work? =
+Wallet payment acts as a native WooCommerce gateway. Customers with sufficient balance can select "Wallet" at checkout to pay for their order instantly.
 
-Yes, this plugin works fine with WordPress 6.5, It is also compatible for older WordPress versions upto 6.0.
+= Does it support partial payment? =
+Yes! If enabled in settings, customers can use their wallet balance to pay for a portion of the order and cover the remainder with another gateway like Stripe or PayPal.
 
-= Up to which version of WooCommerce this plugin compatible with? =
+= When is cashback applied? =
+Cashback is triggered by order status changes. You can configure which status (e.g., 'Completed' or 'Processing') triggers the reward in the plugin settings.
 
-This plugin is compatible with the latest version of WooCommerce.
+= Why is the wallet not visible at checkout? =
+Ensure the Wallet gateway is enabled in **WooCommerce > Settings > Payments**. Also, check if "Hide if empty" is enabled in TeraWallet settings if the user has a zero balance.
 
-= Will WooCommerce Wallet work with WordPress multisite network? =
+= Where can I get support? =
+You can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or email us at support@standalonetech.com.
 
-Yes, WooCommerce Wallet plugin is fully compatible with Wordpress multisite.
-
-= Where can I get support or talk to other users? =
-
-If you get stuck, you can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or just email us at support@standalonetech.com.
-
-= Where can I report bugs or contribute to the project? =
-
-Bugs can be reported either in our support forum or preferably on the [GitHub repository](https://github.com/malsubrata/woo-wallet/issues).
-
-= Where can I find the REST API documentation? =
-
-You can find the documentation of our [Wallet REST API Docs](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
-
-= This plugin is awesome! Can I contribute? =
-
-Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/woo-wallet) :)
+= Where is the REST API documentation? =
+You can find the documentation for our [Wallet REST API here](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
 
 == Screenshots ==
 
@@ -140,140 +130,46 @@ Yes you can! Join in on our [GitHub repository](https://github.com/malsubrata/wo
 10. Wallet actions. 
 
 == Changelog ==
-=v1.5.17 (March 12, 2026)=
-- **Fix:-** Remove space in limit parameter for wallet transactions query.
-- **Fix:-** Simplify wallet transactions query preparation by removing redundant parameter checks.
 
-=v1.5.16 (February 12, 2026)=
-- **Tweak:-** Enhance SQL query construction for wallet transactions with improved safety and readability.
-- **Tweak:-** Remove return type declarations for compatibility and enhance permission checks in content handling.
-- **Tweak:-** Update version retrieval for script and style assets.
-- **Tweak:-** Enhance partial payment validation in frontend.
-- **Tweak:-** Add checks for zero currency rates in multi-currency conversion methods
-- **Tweak:-** Database Lock to serialize requests for the same user.
-- **Tweak:-** Adjust wallet transfer logic to debit before crediting, ensuring proper transaction flow.
+= v1.5.17 (March 12, 2026) =
+– **Fix:-** Remove space in limit parameter for wallet transactions query.
+– **Fix:-** Simplify wallet transactions query preparation by removing redundant parameter checks.
 
-=v1.5.15 (December 10, 2025)=
-- **New:-** User wallet dashboard design.
-- **Tweak:-** Replace thickbox with wc backbone modal.
-- **Fix:-** Removed moment js and used WordPress core momentjs Library.
-- **Added:-** WordPress 6.9 support.
+= v1.5.16 (February 12, 2026) =
+– **Tweak:-** Enhance SQL query construction for wallet transactions with improved safety and readability.
+– **Tweak:-** Remove return type declarations for compatibility and enhance permission checks in content handling.
+– **Tweak:-** Update version retrieval for script and style assets.
+– **Tweak:-** Enhance partial payment validation in frontend.
+– **Tweak:-** Add checks for zero currency rates in multi-currency conversion methods
+– **Tweak:-** Database Lock to serialize requests for the same user.
+– **Tweak:-** Adjust wallet transfer logic to debit before crediting, ensuring proper transaction flow.
 
-=v1.5.14 (October 08, 2025) =
-- **Fix:-** RTL CSS issue.
+= v1.5.15 (December 10, 2025) =
+– **New:-** User wallet dashboard design.
+– **Tweak:-** Replace thickbox with wc backbone modal.
+– **Fix:-** Removed moment js and used WordPress core momentjs Library.
+– **Added:-** WordPress 6.9 support.
 
-=v1.5.13 (August 21, 2025) =
-- **Fix:-** PHP warning.
+= v1.5.14 (October 08, 2025) =
+– **Fix:-** RTL CSS issue.
 
-=v1.5.12 (August 21, 2025) =
-- **New:-** Date range filter in wallet transaction page.
-- **New:-** Settings panel design.
-- **New:-** Now site admin can enable/disable wallet topup.
-- **Fix:-** Partial payment issue.
-- **Fix:-** Cashback display issue on cart and checkout page.
+= v1.5.13 (August 21, 2025) =
+– **Fix:-** PHP warning.
 
-=v1.5.11 ( May 08, 2025) =
-- **Fix:-** Text Domain loading issue.
+= v1.5.12 (August 21, 2025) =
+– **New:-** Date range filter in wallet transaction page.
+– **New:-** Settings panel design.
+– **New:-** Now site admin can enable/disable wallet topup.
+– **Fix:-** Partial payment issue.
+– **Fix:-** Cashback display issue on cart and checkout page.
 
-=v1.5.10 ( December 12, 2024) =
-- **Fix:-** Refund issue.
+= v1.5.11 ( May 08, 2025) =
+– **Fix:-** Text Domain loading issue.
 
-=v1.5.9 ( November 26, 2024) =
-- **Fix:-** Plugin Localisation issue for WP 6.7.
-
-=v1.5.8 ( November 26, 2024) =
-- **New:-** User role wise cashback restriction.
-- **Fix:-** WooCommerce analytics and dashboard reports.
-- **Fix:-** Wallet amount display on cart and checkout block.
-
-=v1.5.7 ( September 02, 2024) =
-- **Fix:-** Broken wallet page link on user page.
-- **Fix:-** Security issues.
-- **Fix:-** Wallet top-up amount widget in admin panel.
-
-=v1.5.6 ( July 20, 2024) =
-- **Fix:-** Permalinks issues.
-- **Fix:-** Partial payment issues.
-
-= v1.5.5 ( July 11, 2024 ) =
-- **Fix:-** Security issues.
-- **Fix:-** Permalinks issues.
-
-= v1.5.4 ( May 10, 2024 ) =
-- **Fix:-** Multiple refund of partial payment amount when order cancelled.
-- **Fix:-** Rewrite rule issues for wallet endpoints.
-
-= v1.5.3 ( May 02, 2024 ) =
-- **Fix:-** Partial payment option not showing at old WooCommerce checkout page issue.
-
-= v1.5.2 ( May 02, 2024 ) =
-- **Added:-** Support for WooCommerce HPOS.
-- **Added:-** Support for WooCommerce block cart & checkout.
-- **Added:-** Partial payment option for WooCommerce block cart & checkout.
-- **New:-** Now customer can enter amount they want to redeem at cart & checkout page.
-- **Fix:-** Conflict with WooCommerce Square plugin.
-- **Fix:-** Partial payment amount not debited issue for WooCommerce block checkout.
-- **Fix:-** Coupon cashback issue for WooCommerce block checkout.
-
-= 1.5.1 - 2024-03-20 =
-* Added - Escaping functions for rendering html content.
-
-= 1.5.0 - 2024-03-09 =
-* Fix - Vulnerability: Cross Site Scripting (XSS)
-
-= 1.4.11 - 2024-03-01 =
-* Fix - Compatibility issues with PHP 8.1
-* Fix - Missing Authorization to Authenticated (Subscriber+) User Email Export
-
-= 1.4.10 - 2023-11-23 =
-* New - Added WooCommerce Multilingual & Multicurrency with WPML plugin support.
-* Fix - Compatibility issue with Dokan 3.8
-* Fix - PHP issues
-
-= 1.4.9 - 2023-08-17 =
-* New - Added sell your content action ( Using this action you can sell your site content using wallet balance).
-* New - Export user wallet balance ( Now site admin also export only user balance of the website in CSV file).
-* Fix - Compatibility issue with digits plugin.
-* Fix - Wallet transactions details table.
-* Add - Support for WordPress 6.3 and WooCommerce 8.0
-
-= 1.4.8 - 2023-06-22 =
-* New - Redesign wallet admin panel.
-* New - Added support for WooCommerce block checkout.
-* New - Added support for FOX – Currency Switcher Professional for WooCommerce
-* Fix - PHP 8.2 issues.
-
-= 1.4.7 - 2023-04-05 =
-* Fix - Refund issue.
-* Fix - WooCommerce add to cart notice.
-* Added - WP 6.2 support.
-
-= 1.4.6 - 2023-01-19 =
-* Fix - Duplicate order issue and negative wallet balance.
-* Fix - Partial payment issue for draft orders.
-
-= 1.4.5 - 2022-12-24 =
-* Add - Hooks in referral action.
-* Fix - Transaction exporter.
-
-= 1.4.4 - 2022-11-14 =
-* Fix - Security issue on the function lock_unlock_terawallet.
-
-= 1.4.3 - 2022-11-11 =
-* Fix - Datatable ajax issue.
-
-= 1.4.2 - 2022-11-11 =
-* Fix - Mini wallet nav menu location.
-
-= 1.4.1 - 2022-11-11 =
-* Fix - Fix Cannot uncheck checkbox issue in plugin settings page.
-
-= 1.4.0 - 2022-11-4 =
-* Fix - Plugin CSRF issue ( Thanks Muhammad Daffa ).
-* Add - Compatibility with WP 6.1
-
-[See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
+= v1.5.10 ( December 12, 2024) =
+– **Fix:-** Refund issue.
 
 == Upgrade Notice ==
 
-= 1.3 =
+= 1.5.17 =
+Performance improvements and stability fixes.
