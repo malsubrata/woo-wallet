@@ -144,18 +144,18 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			 *
 			 * @since 1.4.6
 			 */
-			$api_docs_url = apply_filters( 'terawallet_apidocs_url', 'https://github.com/malsubrata/woo-wallet/wiki/API-V3' );
+			$docs_url = apply_filters( 'terawallet_apidocs_url', 'https://docs.standalonetech.com/' );
 
 			/**
 			 * The community TeraWallet support URL.
 			 *
 			 * @since 1.4.6
 			 */
-			$community_support_url = apply_filters( 'terawallet_community_support_url', 'https://standalonetech.com/forums/forum/terawallet/' );
+			$community_support_url = apply_filters( 'terawallet_community_support_url', 'https://standalonetech.com/forum/terawallet/' );
 
 			$row_meta = array(
 				'plugins' => '<a href="' . esc_url( $premium_plugings_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet premium plugins', 'woo-wallet' ) . '">' . esc_html__( 'Premium plugins', 'woo-wallet' ) . '</a>',
-				'apidocs' => '<a href="' . esc_url( $api_docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet API docs', 'woo-wallet' ) . '">' . esc_html__( 'API docs', 'woo-wallet' ) . '</a>',
+				'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet docs', 'woo-wallet' ) . '">' . esc_html__( 'Docs', 'woo-wallet' ) . '</a>',
 				'support' => '<a href="' . esc_url( $community_support_url ) . '" aria-label="' . esc_attr__( 'Visit community forums', 'woo-wallet' ) . '">' . esc_html__( 'Support forum', 'woo-wallet' ) . '</a>',
 			);
 
