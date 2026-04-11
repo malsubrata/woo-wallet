@@ -485,9 +485,19 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 
 			$query_resualts = $wpdb->get_results( $query, $output ); // @codingStandardsIgnoreLine
 
-			if ( 'all_with_meta' === $fields ) {
+			if ( 'all_with_meta' === $fields && ! empty( $query_resualts ) ) {
+				$transaction_ids = array_map( 'absint', wp_list_pluck( $query_resualts, 'transaction_id' ) );
+				$placeholders    = implode( ', ', array_fill( 0, count( $transaction_ids ), '%d' ) );
+				$all_meta        = $wpdb->get_results( // @codingStandardsIgnoreLine
+					$wpdb->prepare( "SELECT transaction_id, meta_key, meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id IN ({$placeholders})", ...$transaction_ids ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					OBJECT
+				);
+				$meta_by_txn_id  = array();
+				foreach ( $all_meta as $meta_row ) {
+					$meta_by_txn_id[ $meta_row->transaction_id ][] = $meta_row;
+				}
 				foreach ( $query_resualts as $key => $query_resualt ) {
-					$query_resualts[ $key ]->meta = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_meta.meta_key, transaction_meta.meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta WHERE transaction_id = %d", $query_resualt->transaction_id ), $output ); // @codingStandardsIgnoreLine
+					$query_resualts[ $key ]->meta = isset( $meta_by_txn_id[ $query_resualt->transaction_id ] ) ? $meta_by_txn_id[ $query_resualt->transaction_id ] : array();
 				}
 			}
 			$cached_results[ $query_hash ] = $query_resualts;
@@ -511,18 +521,27 @@ if ( ! function_exists( 'get_wallet_transactions_count' ) ) {
 	 */
 	function get_wallet_transactions_count( $user_id = null, $include_deleted = false ) {
 		global $wpdb;
-		$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions";
+		$where  = array();
+		$params = array();
+
 		if ( $user_id ) {
-			$sql .= " WHERE user_id=$user_id";
+			$where[]  = 'user_id = %d';
+			$params[] = absint( $user_id );
 		}
 		if ( ! $include_deleted ) {
-			if ( $user_id ) {
-				$sql .= ' AND deleted=0';
-			} else {
-				$sql .= 'WHERE deleted=0';
-			}
+			$where[] = 'deleted = 0';
 		}
-		return $wpdb->get_var( $sql ); // @codingStandardsIgnoreLine
+
+		$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions";
+		if ( ! empty( $where ) ) {
+			$sql .= ' WHERE ' . implode( ' AND ', $where );
+		}
+
+		if ( ! empty( $params ) ) {
+			$sql = $wpdb->prepare( $sql, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		}
+
+		return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 	}
 }
 

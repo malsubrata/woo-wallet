@@ -973,14 +973,13 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						sprintf( '<strong>%s</strong>', esc_html__( 'TeraWallet', 'woo-wallet' ) ),
 						'<a href="https://wordpress.org/support/plugin/woo-wallet/reviews?rate=5#new-post" target="_blank" class="wc-rating-link" data-rated="' . esc_attr__( 'Thanks :)', 'woo-wallet' ) . '">&#9733;&#9733;&#9733;&#9733;&#9733;</a>'
 					);
-					wc_enqueue_js(
-						"
+					$script = "
 					jQuery( 'a.wc-rating-link' ).click( function() {
 						jQuery.post( '" . WC()->ajax_url() . "', { action: 'woocommerce_wallet_rated' } );
 						jQuery( this ).parent().text( jQuery( this ).data( 'rated' ) );
 					});
-				"
-					);
+				";
+					wp_add_inline_script( 'wc-admin-footer-rating', $script );
 				} else {
 					$footer_text = __( 'Thank you for using TeraWallet.', 'woo-wallet' );
 				}

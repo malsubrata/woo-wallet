@@ -36,6 +36,9 @@ class Woo_Wallet_Install {
 		'1.3.21' => array(
 			'woo_wallet_update_1321_db_column',
 		),
+		'1.5.18' => array(
+			'woo_wallet_update_1518_db_schema',
+		),
 	);
 	/**
 	 * Class constructor.
@@ -89,14 +92,15 @@ class Woo_Wallet_Install {
             user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             type ENUM('credit', 'debit') NOT NULL,
             amount DECIMAL( 16,8 ) NOT NULL,
-            balance DECIMAL( 16,8 ) NOT NULL,
             currency varchar(20 ) NOT NULL,
             details longtext NULL,
             created_by BIGINT UNSIGNED NOT NULL DEFAULT 1,
             deleted tinyint(1 ) NOT NULL DEFAULT 0,
             date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (transaction_id ),
-            KEY user_id (user_id )
+            KEY user_id (user_id ),
+            KEY idx_user_deleted (user_id, deleted ),
+            KEY idx_user_date (user_id, date )
         ) $collate;
         CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,
@@ -202,7 +206,6 @@ class Woo_Wallet_Install {
 		delete_option( 'woo_wallet_db_version' );
 		add_option( 'woo_wallet_db_version', is_null( $version ) ? WOO_WALLET_PLUGIN_VERSION : $version );
 	}
-
 }
 
 new Woo_Wallet_Install();

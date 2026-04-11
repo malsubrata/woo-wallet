@@ -271,17 +271,26 @@ class TeraWallet_CSV_Exporter {
 	public function get_tota_record_count() {
 		global $wpdb;
 		if ( 'transactions' === $this->get_export_type() ) {
-			$where = '1 = 1';
+			$where  = '1 = 1';
+			$params = array();
 			if ( ! empty( $this->selected_users ) ) {
-				$user_ids = implode( ', ', $this->selected_users );
-				$where   .= " AND transactions.user_id IN ({$user_ids})";
+				$placeholders = implode( ', ', array_fill( 0, count( $this->selected_users ), '%d' ) );
+				$where       .= " AND transactions.user_id IN ({$placeholders})"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				foreach ( $this->selected_users as $uid ) {
+					$params[] = absint( $uid );
+				}
 			}
 			if ( ! empty( $this->start_date ) || ! empty( $this->end_date ) ) {
-				$after  = empty( $this->start_date ) ? '0000-00-00' : $this->start_date;
-				$before = empty( $this->end_date ) ? current_time( 'mysql', 1 ) : $this->end_date;
-				$where .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ))";
+				$after    = empty( $this->start_date ) ? '0000-00-00' : $this->start_date;
+				$before   = empty( $this->end_date ) ? current_time( 'mysql', 1 ) : $this->end_date;
+				$where   .= " AND ( transactions.date BETWEEN STR_TO_DATE( %s, '%%Y-%%m-%%d %%H:%%i:%%s' ) AND STR_TO_DATE( %s, '%%Y-%%m-%%d %%H:%%i:%%s' ))";
+				$params[] = $after;
+				$params[] = $before;
 			}
-			$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where};";
+			$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where}";
+			if ( ! empty( $params ) ) {
+				$sql = $wpdb->prepare( $sql, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			}
 			return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 		} else {
 			if ( ! empty( $this->selected_users ) ) {
@@ -299,18 +308,30 @@ class TeraWallet_CSV_Exporter {
 	public function get_records() {
 		global $wpdb;
 		if ( 'transactions' === $this->get_export_type() ) {
-			$where = '1 = 1';
+			$where  = '1 = 1';
+			$params = array();
 			if ( ! empty( $this->selected_users ) ) {
-				$user_ids = implode( ', ', $this->selected_users );
-				$where   .= " AND transactions.user_id IN ({$user_ids})";
+				$placeholders = implode( ', ', array_fill( 0, count( $this->selected_users ), '%d' ) );
+				$where       .= " AND transactions.user_id IN ({$placeholders})"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				foreach ( $this->selected_users as $uid ) {
+					$params[] = absint( $uid );
+				}
 			}
 			if ( ! empty( $this->start_date ) || ! empty( $this->end_date ) ) {
-				$after  = empty( $this->start_date ) ? '0000-00-00' : $this->start_date;
-				$before = empty( $this->end_date ) ? current_time( 'mysql', 1 ) : $this->end_date;
-				$where .= " AND ( transactions.date BETWEEN STR_TO_DATE( '" . $after . "', '%Y-%m-%d %H:%i:%s' ) AND STR_TO_DATE( '" . $before . "', '%Y-%m-%d %H:%i:%s' ))";
+				$after    = empty( $this->start_date ) ? '0000-00-00' : $this->start_date;
+				$before   = empty( $this->end_date ) ? current_time( 'mysql', 1 ) : $this->end_date;
+				$where   .= " AND ( transactions.date BETWEEN STR_TO_DATE( %s, '%%Y-%%m-%%d %%H:%%i:%%s' ) AND STR_TO_DATE( %s, '%%Y-%%m-%%d %%H:%%i:%%s' ))";
+				$params[] = $after;
+				$params[] = $before;
 			}
-			$offset = $this->per_page * ( $this->get_step() - 1 );
-			$sql    = "SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where} ORDER BY transactions.transaction_id DESC LIMIT {$offset}, {$this->per_page};";
+			$offset   = absint( $this->per_page * ( $this->get_step() - 1 ) );
+			$per_page = absint( $this->per_page );
+			$params[] = $offset;
+			$params[] = $per_page;
+			$sql      = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+				"SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where} ORDER BY transactions.transaction_id DESC LIMIT %d, %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				...$params
+			);
 			return $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 		} else {
 			$args = array(

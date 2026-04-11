@@ -289,7 +289,6 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					'user_id'    => $this->user_id,
 					'type'       => $type,
 					'amount'     => $amount,
-					'balance'    => $balance,
 					'currency'   => get_woocommerce_currency(),
 					'details'    => $details,
 					'date'       => current_time( 'mysql' ),
@@ -308,13 +307,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							'user_id'    => $parsed_args['user_id'],
 							'type'       => $parsed_args['type'],
 							'amount'     => $parsed_args['amount'],
-							'balance'    => $parsed_args['balance'],
 							'currency'   => $parsed_args['currency'],
 							'details'    => $parsed_args['details'],
 							'date'       => $parsed_args['date'],
 							'created_by' => $parsed_args['created_by'],
 						),
-						array( '%d', '%d', '%s', '%f', '%f', '%s', '%s', '%s', '%d' )
+						array( '%d', '%d', '%s', '%f', '%s', '%s', '%s', '%d' )
 					)
 				) ) {
 					$transaction_id = $wpdb->insert_id;
