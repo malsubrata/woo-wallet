@@ -7,6 +7,25 @@
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
+if ( ! function_exists( 'terawallet_pro_page_callback' ) ) {
+
+	/**
+	 * Render the TeraWallet "Go Pro" admin page.
+	 *
+	 * Convenience alias that instantiates Woo_Wallet_Go_Pro_Page and renders
+	 * its `plugin_page()` output. Useful when external code needs to call the
+	 * renderer directly (e.g. a top-level callback).
+	 *
+	 * @return void
+	 */
+	function terawallet_pro_page_callback() {
+		if ( class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) {
+			$page = new Woo_Wallet_Go_Pro_Page();
+			$page->plugin_page();
+		}
+	}
+}
+
 if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
 
 	/**

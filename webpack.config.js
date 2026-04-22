@@ -1,6 +1,7 @@
 const path = require('path');
 const defaultConfig = require('@wordpress/scripts/config/webpack.config');
 const WooCommerceDependencyExtractionWebpackPlugin = require('@woocommerce/dependency-extraction-webpack-plugin');
+const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extraction-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const RtlCssPlugin = require('rtlcss-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -101,7 +102,7 @@ const vanillaAssetsConfig = {
         minimize: true,
         minimizer: [
             '...',
-            new CssMinimizerPlugin() // Minify CSS files
+            new CssMinimizerPlugin()
         ],
     },
     plugins: [
@@ -110,7 +111,9 @@ const vanillaAssetsConfig = {
         }),
         new RtlCssPlugin({
             filename: '[name]-rtl.css',
-        })
+        }),
+        // Generate .asset.php files for proper WordPress dependency versioning
+        new DependencyExtractionWebpackPlugin(),
     ]
 };
 

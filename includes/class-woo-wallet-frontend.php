@@ -171,17 +171,11 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * Register and enqueue frontend styles and scripts
 		 */
 		public function woo_wallet_styles() {
-			wp_register_style( 'woo-wallet-payment-jquery-ui', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery-ui.css', false, WOO_WALLET_PLUGIN_VERSION, false );
-			wp_register_style( 'jquery-datatables-style', woo_wallet()->plugin_url() . '/assets/jquery/css/jquery.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
-			wp_register_style( 'jquery-datatables-responsive-style', woo_wallet()->plugin_url() . '/assets/jquery/css/responsive.dataTables.min.css', false, WOO_WALLET_PLUGIN_VERSION, false );
-			wp_register_style( 'jquery-daterangepicker-style', woo_wallet()->plugin_url() . '/assets/jquery/css/daterangepicker.css', false, WOO_WALLET_PLUGIN_VERSION, false );
 			wp_register_style( 'woo-wallet-style', woo_wallet()->plugin_url() . '/build/frontend/main.css', array(), WOO_WALLET_PLUGIN_VERSION );
 			// Add RTL support.
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );
-			wp_register_script( 'jquery-datatables-script', woo_wallet()->plugin_url() . '/assets/jquery/js/jquery.dataTables.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'jquery-datatables-responsive-script', woo_wallet()->plugin_url() . '/assets/jquery/js/dataTables.responsive.min.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'jquery-daterangepicker-script', woo_wallet()->plugin_url() . '/assets/jquery/js/daterangepicker.min.js', array( 'jquery', 'moment' ), WOO_WALLET_PLUGIN_VERSION, true );
-			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array( 'jquery', 'jquery-datatables-script', 'moment' ), WOO_WALLET_PLUGIN_VERSION, true );
+			$frontend_asset = include WOO_WALLET_ABSPATH . 'build/frontend/main.asset.php';
+			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array_merge( $frontend_asset['dependencies'], array( 'jquery' ) ), $frontend_asset['version'], true );
 			$data_table_columns = apply_filters(
 				'woo_wallet_transactons_datatable_columns',
 				array(
@@ -284,18 +278,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			);
 			wp_localize_script( 'wc-endpoint-wallet', 'wallet_param', $wallet_localize_param );
 			if ( is_account_page() ) {
-				wp_enqueue_style( 'woo-wallet-payment-jquery-ui' );
 				wp_enqueue_style( 'dashicons' );
 				wp_enqueue_style( 'select2' );
-				wp_enqueue_style( 'jquery-datatables-style' );
-				wp_enqueue_style( 'jquery-datatables-responsive-style' );
-				wp_enqueue_style( 'jquery-daterangepicker-style' );
 				wp_enqueue_style( 'woo-wallet-style' );
-				wp_enqueue_script( 'jquery-ui-datepicker' );
 				wp_enqueue_script( 'selectWoo' );
-				wp_enqueue_script( 'jquery-datatables-script' );
-				wp_enqueue_script( 'jquery-datatables-responsive-script' );
-				wp_enqueue_script( 'jquery-daterangepicker-script' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 			}
 			$add_to_cart_variation = "jQuery(function ($) { $(document).on('show_variation', function (event, variation, purchasable) { if(variation.cashback_amount) { $('.on-woo-wallet-cashback').show(); $('.on-woo-wallet-cashback').html(variation.cashback_html); } else { $('.on-woo-wallet-cashback').hide(); } }) });";
@@ -687,8 +673,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				return;
 			}
 			wp_enqueue_style( 'dashicons' );
-			wp_enqueue_style( 'woo-wallet-payment-jquery-ui' );
-			wp_enqueue_script( 'jquery-ui-tooltip' );
 			woo_wallet()->get_template( 'woo-wallet-partial-payment.php' );
 		}
 
@@ -844,18 +828,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			} elseif ( is_wallet_account_locked() ) {
 				woo_wallet()->get_template( 'no-access.php' );
 			} else {
-				wp_enqueue_style( 'jquery-daterangepicker-style' );
-				wp_enqueue_style( 'woo-wallet-payment-jquery-ui' );
 				wp_enqueue_style( 'dashicons' );
 				wp_enqueue_style( 'select2' );
-				wp_enqueue_style( 'jquery-datatables-style' );
-				wp_enqueue_style( 'jquery-datatables-responsive-style' );
 				wp_enqueue_style( 'woo-wallet-style' );
-				wp_enqueue_script( 'jquery-datatables-script' );
-				wp_enqueue_script( 'jquery-datatables-responsive-script' );
 				wp_enqueue_script( 'selectWoo' );
-				wp_enqueue_script( 'jquery-ui-datepicker' );
-				wp_enqueue_script( 'jquery-daterangepicker-script' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 				woo_wallet()->get_template( 'wc-endpoint-wallet.php' );
 			}

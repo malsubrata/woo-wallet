@@ -1,78 +1,98 @@
 /* global wallet_param */
 import '../scss/frontend.scss';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
+import 'tabulator-tables/dist/css/tabulator.min.css';
+
 jQuery(function ($) {
-    var transactionDetailsDataTable = $('#wc-wallet-transaction-details').DataTable(
-        {
-            dom: '<"dt-controls"lf>rt<"dt-controls"ip>',
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: wallet_param.ajax_url,
-                type: 'POST',
-                data: {
+    const tableEl = document.getElementById('wc-wallet-transaction-details');
+
+    if (tableEl) {
+        const columns = (wallet_param.columns || []).map(function (col) {
+            return {
+                title: col.title,
+                field: col.data,
+                headerSort: false,
+                formatter: 'html',
+                responsive: col.data === 'details' ? 0 : 2,
+            };
+        });
+
+        const table = new Tabulator(tableEl, {
+            layout: 'fitColumns',
+            responsiveLayout: 'collapse',
+            placeholder: wallet_param.i18n.emptyTable,
+            columns: columns,
+            pagination: true,
+            paginationMode: 'remote',
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            ajaxURL: wallet_param.ajax_url,
+            ajaxConfig: {
+                method: 'POST',
+            },
+            ajaxContentType: 'form',
+            ajaxParams: {
+                action: 'draw_wallet_transaction_details_table',
+                security: wallet_param.transaction_table_nonce,
+            },
+            ajaxResponse: function (_url, _params, response) {
+                return {
+                    last_page: response.last_page || 1,
+                    data: response.data || [],
+                };
+            },
+            langs: {
+                default: {
+                    pagination: {
+                        first: wallet_param.i18n.paginate.first,
+                        last: wallet_param.i18n.paginate.last,
+                        prev: wallet_param.i18n.paginate.previous,
+                        next: wallet_param.i18n.paginate.next,
+                        page_size: wallet_param.i18n.lengthMenu.replace('_MENU_', '').trim() || 'Page Size',
+                    },
+                },
+            },
+        });
+
+        // Build date-range filter controls outside the table.
+        const controlsWrap = document.createElement('div');
+        controlsWrap.className = 'woo-wallet-table-controls';
+        controlsWrap.innerHTML =
+            '<input type="date" class="wc-wallet-filter-from" aria-label="' + wallet_param.i18n.apply + '" max="' + new Date().toISOString().slice(0, 10) + '">' +
+            '<span class="woo-wallet-filter-sep">&ndash;</span>' +
+            '<input type="date" class="wc-wallet-filter-to" max="' + new Date().toISOString().slice(0, 10) + '">' +
+            '<button type="button" class="button wc-wallet-filter-clear">&times;</button>';
+        tableEl.parentNode.insertBefore(controlsWrap, tableEl);
+
+        const fromInput = controlsWrap.querySelector('.wc-wallet-filter-from');
+        const toInput = controlsWrap.querySelector('.wc-wallet-filter-to');
+        const clearBtn = controlsWrap.querySelector('.wc-wallet-filter-clear');
+
+        function applyDateFilter() {
+            const from = fromInput.value;
+            const to = toInput.value;
+            if (from && to) {
+                table.setData(wallet_param.ajax_url, {
                     action: 'draw_wallet_transaction_details_table',
-                    security: wallet_param.transaction_table_nonce
-                }
-            },
-            columns: wallet_param.columns,
-            responsive: true,
-            searching: true,
-            language: {
-                emptyTable: wallet_param.i18n.emptyTable,
-                zeroRecords: wallet_param.i18n.zeroRecords,
-                lengthMenu: wallet_param.i18n.lengthMenu,
-                info: wallet_param.i18n.info,
-                infoEmpty: wallet_param.i18n.infoEmpty,
-                infoFiltered: wallet_param.i18n.infoFiltered,
-                paginate: wallet_param.i18n.paginate,
-                processing: wallet_param.i18n.processing,
-                search: wallet_param.i18n.search
-            },
-            initComplete: function () {
-                // Remove datatable default search input text
-                $('#wc-wallet-transaction-details_filter input')
-                    .attr('placeholder', 'Select Date Range')
-                    .prop('readonly', true);
-                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').daterangepicker({
-                    opens: 'left',
-                    drops: 'auto',
-                    maxDate: moment(),
-                    autoUpdateInput: false,
-                    parentEl: 'body', // very important for responsive popup
-                    alwaysShowCalendars: true,
-                    locale: {
-                        format: wallet_param.js_date_format,
-                        cancelLabel: wallet_param.i18n.cancel,
-                        applyLabel: wallet_param.i18n.apply,
-                        customRangeLabel: wallet_param.i18n.customRangeLabel,
-                        weekLabel: wallet_param.i18n.weekLabel,
-                        daysOfWeek: wallet_param.i18n.daysOfWeek,
-                        monthNames: wallet_param.i18n.monthNames,
-                    },
-                    ranges: {
-                        'Today': [moment(), moment()],
-                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-                        'This Year': [moment().startOf('year'), moment().endOf('year')],
-                    },
-                    alwaysShowCalendars: true,
-                });
-
-                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').on('apply.daterangepicker', function (ev, picker) {
-                    transactionDetailsDataTable.search(picker.startDate.format('YYYY-MM-DD') + '|' + picker.endDate.format('YYYY-MM-DD')).draw();
-                    $(this).val(picker.startDate.format(wallet_param.js_date_format) + ' - ' + picker.endDate.format(wallet_param.js_date_format));
-                });
-
-                $('#wc-wallet-transaction-details_wrapper .dataTables_filter input').on('cancel.daterangepicker', function (ev, picker) {
-                    transactionDetailsDataTable.search('').draw();
-                    $(this).val('');
+                    security: wallet_param.transaction_table_nonce,
+                    date_from: from,
+                    date_to: to,
                 });
             }
         }
-    );
+
+        fromInput.addEventListener('change', applyDateFilter);
+        toInput.addEventListener('change', applyDateFilter);
+        clearBtn.addEventListener('click', function () {
+            fromInput.value = '';
+            toInput.value = '';
+            table.setData(wallet_param.ajax_url, {
+                action: 'draw_wallet_transaction_details_table',
+                security: wallet_param.transaction_table_nonce,
+            });
+        });
+    }
+
     $('.woo-wallet-select2').selectWoo({
         language: {
             inputTooShort: function () {
@@ -106,7 +126,6 @@ jQuery(function ($) {
                 };
             },
             processResults: function (data) {
-                // Tranforms the top-level key of the response object from 'items' to 'results'
                 return {
                     results: $.map(data, function (item) {
                         return {
@@ -118,12 +137,11 @@ jQuery(function ($) {
             }
         }
     });
+
     $('#woo_wallet_transfer_form').submit(function () {
-        // submit more than once return false
         $(this).submit(function () {
             return false;
         });
-        // submit once return true
         return true;
     });
 
@@ -133,16 +151,13 @@ jQuery(function ($) {
         var $submenu = $(this).siblings('.woo-wallet-submenu');
         var $icon = $(this).find('.woo-wallet-submenu-toggle');
 
-        // Close other submenus
         $('.woo-wallet-submenu').not($submenu).slideUp();
         $('.woo-wallet-submenu-toggle').not($icon).removeClass('rotate');
 
-        // Toggle current
         $submenu.slideToggle();
         $icon.toggleClass('rotate');
     });
 
-    // Close submenu when clicking outside
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.woo-wallet-nav-item-wrapper.has-submenu').length) {
             $('.woo-wallet-submenu').slideUp();

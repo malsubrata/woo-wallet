@@ -580,168 +580,467 @@ $wallet-border-color: #eee;
             min-width: 600px;
         }
 
-        .dt-controls {
-            flex-direction: column;
-            align-items: flex-start;
+        // Tabulator responsive tweaks
+        .tabulator {
+            font-size: 0.88rem;
+            border-radius: 10px;
+
+            .tabulator-header .tabulator-col {
+                padding: 12px 14px;
+                font-size: 0.72rem;
+            }
+
+            .tabulator-row .tabulator-cell {
+                padding: 12px 14px;
+                font-size: 0.88rem;
+            }
+
+            .tabulator-row .tabulator-responsive-collapse {
+                padding: 10px 14px;
+            }
+
+            .tabulator-footer {
+                padding: 10px 6px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+
+                .tabulator-footer-contents {
+                    flex-wrap: nowrap !important;
+                    justify-content: flex-start;
+                    white-space: nowrap;
+                    min-width: min-content;
+                }
+
+                .tabulator-paginator {
+                    flex-wrap: nowrap !important;
+                    justify-content: flex-start;
+                    white-space: nowrap;
+                    width: 100%;
+
+                    label {
+                        display: none;
+                    }
+
+                    .tabulator-page {
+                        padding: 5px 9px;
+                        min-width: 30px;
+                        margin: 0 1px;
+                        flex: 0 0 auto;
+                    }
+
+                    .tabulator-page-size {
+                        padding: 5px 8px;
+                        flex: 0 0 auto;
+                    }
+                }
+            }
         }
 
-        .dt-controls>*:not(:last-child) {
-            margin-bottom: 10px;
-        }
+        .woo-wallet-table-controls {
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 8px 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
 
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter {
-            width: 100% !important;
-            padding: 0 !important;
+            input[type="date"] {
+                flex: 0 0 auto;
+                min-width: 0;
+                width: auto;
+                max-width: 140px;
+                padding: 6px 8px;
+                font-size: 0.82rem;
+            }
+
+            .woo-wallet-filter-sep {
+                flex: 0 0 auto;
+            }
+
+            .wc-wallet-filter-clear {
+                flex: 0 0 auto;
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
         }
     }
 
-    // DataTables Overrides
-    .dataTables_wrapper {
-        color: var(--wallet-text-color);
+    // Very narrow: drop First/Last page buttons to declutter the paginator
+    @media (max-width: 480px) {
+        .tabulator .tabulator-footer .tabulator-paginator {
 
-        .dataTables_paginate {
-            font-size: 14px;
-            padding: 0 1rem !important;
+            .tabulator-page[data-page="first"],
+            .tabulator-page[data-page="last"] {
+                display: none;
+            }
         }
 
-        .dataTables_info {
-            padding: 0 1rem !important;
-            float: left;
-            color: var(--wallet-text-color);
-            font-size: 0.9rem;
+        .woo-wallet-table-controls input[type="date"] {
+            max-width: 120px;
         }
+    }
 
-        .dataTables_paginate .paginate_button {
-            border-radius: 6px !important;
-            border: 1px solid transparent !important;
-            color: #555 !important;
-            font-weight: 600;
-            background: transparent !important;
-            cursor: pointer;
-            transition: all 0.2s;
+    .woo-wallet-table-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+        background: #f9fafc;
+        border-radius: 10px;
+        padding: 10px 14px;
+
+        input[type="date"] {
+            padding: 7px 12px !important;
+            border: 1px solid var(--wallet-border-color) !important;
+            border-radius: 8px !important;
+            font-size: 0.9rem !important;
+            background: #fff !important;
+            color: #2c3e50 !important;
+            outline: none !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            line-height: normal !important;
+            min-height: 0 !important;
+            height: auto !important;
+            width: auto;
+            margin: 0;
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
             &:hover {
-                background: #f0f0f0 !important;
-                color: #333 !important;
-                border: 1px solid #ddd !important;
+                border-color: #d0d4db !important;
             }
 
-            &.current,
-            &.current:hover {
+            &:focus {
+                border-color: var(--wallet-primary-color) !important;
+                box-shadow: 0 0 0 3px rgba(72, 61, 224, 0.12) !important;
+            }
+
+            &::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+                opacity: 0.6;
+                transition: opacity 0.2s ease;
+            }
+
+            &:hover::-webkit-calendar-picker-indicator {
+                opacity: 1;
+            }
+        }
+
+        .woo-wallet-filter-sep {
+            color: #9ba3af;
+            font-weight: 600;
+        }
+
+        .wc-wallet-filter-clear {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 32px !important;
+            height: 32px !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0;
+            line-height: 1 !important;
+            border: 1px solid var(--wallet-border-color) !important;
+            border-radius: 8px !important;
+            background: #fff !important;
+            background-image: none !important;
+            color: #7f8c8d !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            font-family: inherit !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
                 background: var(--wallet-primary-color) !important;
+                border-color: var(--wallet-primary-color) !important;
                 color: #fff !important;
-                border: 1px solid var(--wallet-primary-color) !important;
-                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2);
+                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
             }
-
-            &.disabled,
-            &.disabled:hover,
-            &.disabled:active {
-                color: #aaa !important;
-                background: transparent !important;
-                border: 1px solid transparent !important;
-                cursor: default;
-                box-shadow: none;
-            }
-        }
-
-        &::after {
-            content: "";
-            display: block;
-            clear: both;
         }
     }
 
-    // Length & Filter Controls
-    .dataTables_length,
-    .dataTables_filter {
-        color: #2c3e50;
-        display: inline-block;
-        vertical-align: middle;
-        padding: 0 1rem;
-        font-size: 14px;
-    }
+    // Tabulator - Wallet themed skin
+    // Theme-independence reset: neutralize common theme overrides (Astra, Storefront, etc.)
+    // targeting native elements (button/select/input/a/table) inside Tabulator.
+    .tabulator {
+        button,
+        select,
+        input {
+            font-family: inherit !important;
+            line-height: normal !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            min-height: 0 !important;
+            height: auto !important;
+            width: auto;
+            margin: 0;
+        }
 
-    .dataTables_length {
-        float: left;
+        button {
+            background-image: none !important;
+            text-decoration: none !important;
+        }
 
         select {
-            border: 1px solid var(--wallet-border-color) !important;
-            border-radius: 6px !important;
-            outline: none;
-            color: #555;
-            background: #fff;
-            cursor: pointer;
+            appearance: auto !important;
+            -webkit-appearance: auto !important;
+            -moz-appearance: auto !important;
+            background-image: none !important;
+        }
 
-            &:focus {
-                border-color: var(--wallet-primary-color) !important;
-            }
+        a {
+            text-decoration: none !important;
+            box-shadow: none !important;
+            background: none !important;
+        }
+
+        // Collapse table used for responsive rows
+        .tabulator-responsive-collapse table,
+        .tabulator-responsive-collapse tr,
+        .tabulator-responsive-collapse td,
+        .tabulator-responsive-collapse th {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
         }
     }
 
-    .dataTables_filter {
-        float: right;
+    .tabulator {
+        background: #fff;
+        border: 1px solid var(--wallet-border-color);
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        overflow: visible;
+        font-size: 0.95rem;
+        color: var(--wallet-text-color);
+        font-family: inherit;
 
-        label {
-            font-size: 0;
+        .tabulator-header {
+            background: #f9f9f9;
+            border-bottom: 1px solid var(--wallet-border-color);
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+            color: #7f8c8d;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+
+            .tabulator-col {
+                background: transparent;
+                border-right: 0;
+                padding: 15px 20px;
+
+                .tabulator-col-content {
+                    padding: 0;
+                }
+
+                .tabulator-col-title {
+                    white-space: normal;
+                    color: #7f8c8d;
+                }
+            }
         }
 
-        input {
-            border: 1px solid var(--wallet-border-color) !important;
-            border-radius: 6px !important;
-            padding: 8px 12px 8px 35px !important;
-            outline: none;
-            color: #555;
-            background: #fff;
-            width: 200px;
-            font-size: 14px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: 10px center;
+        .tabulator-tableholder {
+            .tabulator-placeholder {
+                color: #7f8c8d;
+                padding: 40px 20px;
+                font-style: italic;
+            }
+        }
 
-            &:focus {
-                border-color: var(--wallet-primary-color) !important;
+        .tabulator-row {
+            background: #fff;
+            border-bottom: 1px solid var(--wallet-border-color);
+            min-height: 48px;
+            transition: background 0.2s ease;
+
+            &.tabulator-row-even {
                 background: #fff;
             }
+
+            &:hover {
+                background: #fafafa !important;
+            }
+
+            &:last-child {
+                border-bottom: 0;
+            }
+
+            .tabulator-cell {
+                border-right: 0;
+                padding: 15px 20px;
+                color: #2c3e50;
+                font-size: 0.95rem;
+                vertical-align: middle;
+
+                &.tabulator-row-handle {
+                    padding: 15px 20px;
+                }
+            }
+
+            // Responsive collapse toggle pill
+            .tabulator-responsive-collapse-toggle {
+                background: var(--wallet-primary-color) !important;
+                color: #fff !important;
+                border-radius: 50% !important;
+                width: 22px !important;
+                height: 22px !important;
+                min-height: 0 !important;
+                line-height: 22px !important;
+                text-align: center;
+                font-weight: 700 !important;
+                font-size: 14px !important;
+                padding: 0 !important;
+                margin: 0;
+                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.25) !important;
+
+                svg {
+                    stroke: #fff !important;
+                    fill: none;
+                }
+            }
+
+            .tabulator-responsive-collapse {
+                border-top: 1px dashed var(--wallet-border-color);
+                padding: 12px 20px;
+                background: #fafbfc;
+
+                table {
+                    width: 100%;
+
+                    tr td {
+                        border: 0;
+                        padding: 4px 0;
+                        color: #2c3e50;
+                        font-size: 0.9rem;
+
+                        &:first-child {
+                            font-weight: 600;
+                            color: #7f8c8d;
+                            text-transform: uppercase;
+                            font-size: 0.72rem;
+                            letter-spacing: 0.3px;
+                            padding-right: 12px;
+                            white-space: nowrap;
+                            width: 35%;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Footer / pagination
+        .tabulator-footer {
+            background: #fff;
+            border-top: 1px solid var(--wallet-border-color);
+            border-radius: 0 0 12px 12px;
+            padding: 12px 20px;
+            color: var(--wallet-text-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+
+            .tabulator-footer-contents {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-wrap: nowrap;
+                gap: 8px;
+                min-width: min-content;
+            }
+
+            .tabulator-paginator {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-wrap: nowrap;
+                gap: 6px;
+                color: var(--wallet-text-color);
+                white-space: nowrap;
+
+                label {
+                    color: #7f8c8d;
+                    font-size: 0.85rem;
+                    margin-right: 4px;
+                    margin-top: 4px;
+                }
+
+                .tabulator-page-size {
+                    border: 1px solid var(--wallet-border-color) !important;
+                    border-radius: 6px !important;
+                    padding: 6px 10px !important;
+                    font-size: 0.9rem !important;
+                    color: #555 !important;
+                    background: #fff !important;
+                    outline: none !important;
+                    cursor: pointer;
+                    margin-right: 6px;
+
+                    &:focus {
+                        border-color: var(--wallet-primary-color) !important;
+                    }
+                }
+
+                .tabulator-page {
+                    background: transparent !important;
+                    border: 1px solid transparent !important;
+                    border-radius: 6px !important;
+                    padding: 6px 12px !important;
+                    margin: 0 2px;
+                    color: #555 !important;
+                    font-weight: 600 !important;
+                    font-size: 0.9rem !important;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    min-width: 34px;
+
+                    &:not(.disabled):hover {
+                        background: #f0f0f0 !important;
+                        color: #333 !important;
+                        border-color: #ddd !important;
+                    }
+
+                    &.active {
+                        background: var(--wallet-primary-color) !important;
+                        color: #fff !important;
+                        border-color: var(--wallet-primary-color) !important;
+                        box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
+                    }
+
+                    &.disabled {
+                        color: #bbb !important;
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+                }
+            }
+        }
+
+        mark.credit {
+            background: none;
+            color: #27ae60;
+            font-weight: 700;
+        }
+
+        mark.debit {
+            background: none;
+            color: #c0392b;
+            font-weight: 700;
         }
     }
 
-    // Table Styling
-    table.dataTable.no-footer {
-        border-bottom: 1px solid var(--wallet-border-color) !important;
-        border-collapse: collapse !important;
-        margin-top: 10px !important;
-    }
-
-    table,
-    td,
-    th {
-        border: 0;
-    }
-
-    table.dataTable thead th,
-    table.dataTable thead td {
-        border-bottom: 1px solid var(--wallet-border-color) !important;
-        background: #f9f9f9;
-        color: #7f8c8d;
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        padding: 15px 20px !important;
-        letter-spacing: 0.5px;
-    }
-
-    table.dataTable tbody th,
-    table.dataTable tbody td {
-        padding: 15px 20px !important;
-        border-bottom: 1px solid var(--wallet-border-color);
-        color: #2c3e50;
-        font-size: 1rem;
-        vertical-align: middle;
-    }
-
-    // Credit/Debit Colors
     #wc-wallet-transaction-details mark.credit {
         background: none;
         color: #27ae60;
@@ -752,133 +1051,5 @@ $wallet-border-color: #eee;
         background: none;
         color: #c0392b;
         font-weight: 700;
-    }
-
-    table.dataTable.row-border tbody th,
-    table.dataTable.row-border tbody td,
-    table.dataTable.display tbody th,
-    table.dataTable.display tbody td {
-        border-top: none !important;
-    }
-
-    table.dataTable thead {
-        border-top: 1px solid var(--wallet-border-color) !important;
-    }
-
-    table.dataTable tbody tr:hover {
-        background-color: #fafafa !important;
-    }
-
-    .dt-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 1rem 0;
-    }
-}
-
-// Date Range Picker Overrides
-.daterangepicker {
-    border: 1px solid $wallet-border-color !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
-    z-index: 99999 !important;
-    border-radius: 12px !important;
-
-    .calendar-table {
-        background: #fff !important;
-        border: none !important;
-    }
-
-    table,
-    td,
-    th {
-        border: 0 !important;
-    }
-
-    td.active,
-    td.active:hover {
-        background-color: $wallet-primary-color !important;
-    }
-
-    .drp-buttons {
-        border-top: 1px solid $wallet-border-color !important;
-        padding: 15px !important;
-
-        .btn {
-            font-weight: 600 !important;
-            padding: 8px 20px !important;
-            border-radius: 6px !important;
-            font-size: 13px !important;
-            margin-left: 10px !important;
-        }
-
-        .btn-primary {
-            background-color: $wallet-primary-color !important;
-            border-color: $wallet-primary-color !important;
-            color: #fff !important;
-        }
-
-        .btn-default {
-            background-color: $wallet-bg-color !important;
-            border: 1px solid #ddd !important;
-            color: #333 !important;
-        }
-    }
-
-    .ranges li.active {
-        background-color: $wallet-primary-color !important;
-    }
-
-    .ranges li:hover {
-        background-color: $wallet-bg-color !important;
-    }
-
-    table {
-        margin: 0 !important;
-        width: 100% !important;
-        border-collapse: collapse !important;
-
-        td,
-        th {
-            padding: 3px !important;
-            font-size: 13px !important;
-            border: none !important;
-            border-radius: 4px !important;
-        }
-    }
-
-    th.month {
-        font-weight: 600 !important;
-        color: #2c3e50 !important;
-    }
-
-    td.in-range {
-        background-color: #f0f0f0 !important;
-        color: #333 !important;
-        border-radius: 0 !important;
-    }
-
-    td.start-date {
-        border-radius: 4px 0 0 4px !important;
-    }
-
-    td.end-date {
-        border-radius: 0 4px 4px 0 !important;
-    }
-
-    td.start-date.end-date {
-        border-radius: 4px !important;
-    }
-
-    @media (max-width: 480px) {
-        left: 2% !important;
-        right: 2% !important;
-        width: 96% !important;
-
-        .ranges,
-        .calendar {
-            width: 100% !important;
-            float: none !important;
-        }
     }
 }

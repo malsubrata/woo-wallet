@@ -386,7 +386,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
 				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
 			}
-			update_option( '_woo_wallet_promotion_dismissed', true );
+			update_option( '_woo_wallet_promotion_snoozed_until', time() + ( 14 * DAY_IN_SECONDS ) );
 			wp_send_json_success();
 		}
 
@@ -395,28 +395,26 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function draw_wallet_transaction_details_table() {
 			check_ajax_referer( 'woo-wallet-transactions', 'security' );
-			$start  = isset( $_POST['start'] ) ? sanitize_text_field( wp_unslash( $_POST['start'] ) ) : 0;
-			$length = isset( $_POST['length'] ) ? sanitize_text_field( wp_unslash( $_POST['length'] ) ) : 10;
-			$search = isset( $_POST['search'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['search'] ) ) : '';
-			$args   = array(
-				'limit' => "$start,$length",
+			$page      = isset( $_POST['page'] ) ? max( 1, absint( wp_unslash( $_POST['page'] ) ) ) : 1;
+			$size      = isset( $_POST['size'] ) ? max( 1, absint( wp_unslash( $_POST['size'] ) ) ) : 10;
+			$start     = ( $page - 1 ) * $size;
+			$date_from = isset( $_POST['date_from'] ) ? sanitize_text_field( wp_unslash( $_POST['date_from'] ) ) : '';
+			$date_to   = isset( $_POST['date_to'] ) ? sanitize_text_field( wp_unslash( $_POST['date_to'] ) ) : '';
+			$args      = array(
+				'limit' => "$start,$size",
 			);
-			if ( isset( $search['value'] ) && ! empty( $search['value'] ) ) {
-				$date_rage = explode( '|', $search['value'] );
-				if ( count( $date_rage ) === 2 && ! empty( $date_rage[0] ) && ! empty( $date_rage[1] ) ) {
-					$args['after']  = $date_rage[0] . ' 00:00:00';
-					$args['before'] = $date_rage[1] . ' 23:59:59';
-				}
+			if ( $date_from && $date_to ) {
+				$args['after']  = $date_from . ' 00:00:00';
+				$args['before'] = $date_to . ' 23:59:59';
 			}
 			$transactions = get_wallet_transactions( $args );
 			unset( $args['limit'] );
-			$records_total = get_wallet_transactions_count( get_current_user_id() );
+			$records_filtered = count( get_wallet_transactions( $args ) );
+			$last_page        = max( 1, (int) ceil( $records_filtered / $size ) );
 
 			$response = array(
-				'draw'            => isset( $_POST['draw'] ) ? sanitize_text_field( wp_unslash( $_POST['draw'] ) ) : 1,
-				'recordsTotal'    => $records_total,
-				'recordsFiltered' => count( get_wallet_transactions( $args ) ),
-				'data'            => array(),
+				'last_page' => $last_page,
+				'data'      => array(),
 			);
 			if ( $transactions ) {
 				foreach ( $transactions as $transaction ) {

@@ -137,7 +137,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			 *
 			 * @since 1.4.6
 			 */
-			$premium_plugings_url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/products/' );
+			$premium_plugings_url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/product/woocommerce-wallet-pro/?utm_source=free_plugin&utm_medium=plugin_page&utm_campaign=upgrade' );
 
 			/**
 			 * The TeraWallet API documentation URL.
@@ -151,10 +151,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			 *
 			 * @since 1.4.6
 			 */
-			$community_support_url = apply_filters( 'terawallet_community_support_url', 'https://standalonetech.com/forum/terawallet/' );
+			$community_support_url = apply_filters( 'terawallet_community_support_url', 'https://standalonetech.com/support-forum/' );
 
 			$row_meta = array(
-				'plugins' => '<a href="' . esc_url( $premium_plugings_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet premium plugins', 'woo-wallet' ) . '">' . esc_html__( 'Premium plugins', 'woo-wallet' ) . '</a>',
+				'plugins' => '<a style="font-weight: 600;" href="' . esc_url( $premium_plugings_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet pro plugins', 'woo-wallet' ) . '"><span class="dashicons dashicons-admin-network"></span> ' . esc_html__( 'Upgrade to Pro', 'woo-wallet' ) . '</a>',
 				'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet docs', 'woo-wallet' ) . '">' . esc_html__( 'Docs', 'woo-wallet' ) . '</a>',
 				'support' => '<a href="' . esc_url( $community_support_url ) . '" aria-label="' . esc_attr__( 'Visit community forums', 'woo-wallet' ) . '">' . esc_html__( 'Support forum', 'woo-wallet' ) . '</a>',
 			);
@@ -1201,97 +1201,342 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( ! current_user_can( 'manage_options' ) ) {
 				return;
 			}
-			if ( get_option( '_woo_wallet_promotion_dismissed' ) ) {
+			if ( ! function_exists( 'is_plugin_active' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+			if ( is_plugin_active( 'woo-wallet-pro/woo-wallet-pro.php' ) ) {
 				return;
 			}
+			$snoozed_until = (int) get_option( '_woo_wallet_promotion_snoozed_until', 0 );
+			if ( $snoozed_until && time() < $snoozed_until ) {
+				return;
+			}
+			$pro_url = 'https://standalonetech.com/product/woocommerce-wallet-pro/?utm_source=free_plugin&utm_medium=admin_promo&utm_campaign=upgrade';
 			?>
-			<div class="notice woo-wallet-promotional-notice">
-				<div class="thumbnail">
-					<img src="//plugins.svn.wordpress.org/woo-wallet/assets/icon-256x256.png" alt="Obtain Superpowers to get the best out of TeraWallet" class="">
+			<div class="notice tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">
+				<button type="button" class="tw-pro-promo__dismiss" aria-label="<?php esc_attr_e( 'Remind me in 14 days', 'woo-wallet' ); ?>" title="<?php esc_attr_e( 'Remind me in 14 days', 'woo-wallet' ); ?>">
+					<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
+				</button>
+
+				<div class="tw-pro-promo__icon" aria-hidden="true">
+					<svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M20 7H5a2 2 0 0 1-2-2 2 2 0 0 1 2-2h14v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M3 5v14a2 2 0 0 0 2 2h16V7H5a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="16.5" cy="14" r="1.5" fill="currentColor"/>
+					</svg>
+					<span class="tw-pro-promo__sparkle" aria-hidden="true">
+						<svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+							<path d="M12 2 L13.6 9.2 L21 10.8 L13.6 12.4 L12 22 L10.4 12.4 L3 10.8 L10.4 9.2 Z" fill="#fbbf24"/>
+						</svg>
+					</span>
 				</div>
-				<div class="content">
-					<h2 class=""><?php esc_html_e( 'Obtain Superpowers to get the best out of TeraWallet', 'woo-wallet' ); ?></h2>
-					<p><?php esc_html_e( 'Use superpowers to stand above the crowd. our high-octane add-ons are designed to boost your store wallet features.', 'woo-wallet' ); ?></p>
-					<a href="https://standalonetech.com/products/" class="button button-primary promo-btn" target="_blank"><?php esc_html_e( 'Learn More', 'woo-wallet' ); ?> →</a>
+
+				<div class="tw-pro-promo__body">
+					<h2 class="tw-pro-promo__title">
+						<?php esc_html_e( 'Upgrade to TeraWallet Pro', 'woo-wallet' ); ?>
+						<span class="tw-pro-promo__tag"><?php esc_html_e( '5 add-ons · 1 plugin', 'woo-wallet' ); ?></span>
+					</h2>
+					<p class="tw-pro-promo__lede">
+						<?php esc_html_e( 'Everything you need to run a profitable wallet program — unified in one premium plugin. No more juggling separate add-ons.', 'woo-wallet' ); ?>
+					</p>
+					<ul class="tw-pro-promo__features">
+						<li>
+							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
+							<strong><?php esc_html_e( 'Withdrawals', 'woo-wallet' ); ?></strong>
+							<?php esc_html_e( '— let customers cash out via PayPal, Stripe, Razorpay, BACS & more', 'woo-wallet' ); ?>
+						</li>
+						<li>
+							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
+							<strong><?php esc_html_e( 'Credit Expiry', 'woo-wallet' ); ?></strong>
+							<?php esc_html_e( '— auto-expire unused balance to drive repeat purchases', 'woo-wallet' ); ?>
+						</li>
+						<li>
+							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
+							<strong><?php esc_html_e( 'Wallet Coupons', 'woo-wallet' ); ?></strong>
+							<?php esc_html_e( '— redeemable top-up codes for campaigns & promotions', 'woo-wallet' ); ?>
+						</li>
+					</ul>
 				</div>
-				<span class="prmotion-close-icon dashicons dashicons-no-alt"></span>
-				<div class="clear"></div>
+
+				<div class="tw-pro-promo__cta">
+					<div class="tw-pro-promo__price">
+						<span class="tw-pro-promo__price-amount">$79</span>
+						<span class="tw-pro-promo__price-period"><?php esc_html_e( '/ year', 'woo-wallet' ); ?></span>
+					</div>
+					<div class="tw-pro-promo__price-note"><?php esc_html_e( 'Bulk Import & AffiliateWP included', 'woo-wallet' ); ?></div>
+					<a href="<?php echo esc_url( $pro_url ); ?>" class="tw-pro-promo__btn" target="_blank" rel="noopener">
+						<?php esc_html_e( 'Upgrade to Pro', 'woo-wallet' ); ?>
+						<span aria-hidden="true">→</span>
+					</a>
+					<a href="<?php echo esc_url( $pro_url ); ?>" class="tw-pro-promo__link" target="_blank" rel="noopener"><?php esc_html_e( 'See all features', 'woo-wallet' ); ?></a>
+				</div>
 			</div>
 			<style>
-				.woo-wallet-promotional-notice {
-					padding: 20px;
-					box-sizing: border-box;
+				.tw-pro-promo {
 					position: relative;
-				}
-
-				.woo-wallet-promotional-notice .prmotion-close-icon{
-					position: absolute;
-					top: 20px;
-					right: 20px;
-					cursor: pointer;
-				}
-
-				.woo-wallet-promotional-notice .thumbnail {
-					width: 9.3%;
-					float: left;
-				}
-
-				.woo-wallet-promotional-notice .thumbnail img{
-					width: 100%;
-					height: auto;
-					box-shadow: 0px 0px 25px #bbbbbb;
-					margin-right: 20px;
+					display: flex;
+					align-items: stretch;
+					gap: 24px;
+					margin: 16px 20px 16px 2px;
+					padding: 22px 28px;
+					border: 0 !important;
+					border-radius: 12px;
+					background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
+					box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.45), 0 4px 12px -4px rgba(124, 58, 237, 0.35);
+					color: #fff;
+					overflow: hidden;
 					box-sizing: border-box;
-					border-radius: 10px;
+				}
+				.tw-pro-promo::before {
+					content: '';
+					position: absolute;
+					top: -40%;
+					right: -10%;
+					width: 420px;
+					height: 420px;
+					background: radial-gradient(closest-side, rgba(255,255,255,0.14), rgba(255,255,255,0));
+					pointer-events: none;
+				}
+				.tw-pro-promo::after {
+					content: '';
+					position: absolute;
+					bottom: -60%;
+					left: -5%;
+					width: 380px;
+					height: 380px;
+					background: radial-gradient(closest-side, rgba(255,255,255,0.08), rgba(255,255,255,0));
+					pointer-events: none;
+				}
+				.tw-pro-promo > * { position: relative; z-index: 1; }
+
+				.tw-pro-promo__dismiss {
+					position: absolute;
+					top: 10px;
+					right: 12px;
+					background: transparent;
+					border: 0;
+					padding: 4px;
+					margin: 0;
+					color: rgba(255,255,255,0.75);
+					cursor: pointer;
+					border-radius: 4px;
+					transition: color 0.15s, background 0.15s;
+					line-height: 0;
+				}
+				.tw-pro-promo__dismiss:hover,
+				.tw-pro-promo__dismiss:focus {
+					color: #fff;
+					background: rgba(255,255,255,0.15);
+					outline: 0;
+				}
+				.tw-pro-promo__dismiss .dashicons { font-size: 18px; width: 18px; height: 18px; }
+
+				.tw-pro-promo__icon {
+					position: relative;
+					flex: 0 0 auto;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 64px;
+					height: 64px;
+					margin-top: 18px;
+					background: rgba(255,255,255,0.15);
+					border: 1px solid rgba(255,255,255,0.25);
+					border-radius: 14px;
+					color: #fff;
+					backdrop-filter: blur(4px);
+					overflow: visible;
+				}
+				.tw-pro-promo__sparkle {
+					position: absolute;
+					top: -10px;
+					left: -10px;
+					width: 24px;
+					height: 24px;
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.55));
+					animation: tw-pro-promo-sparkle 2.4s ease-in-out infinite;
+					transform-origin: center;
+				}
+				@keyframes tw-pro-promo-sparkle {
+					0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+					50% { transform: scale(1.15) rotate(12deg); opacity: 0.92; }
+				}
+				@media (prefers-reduced-motion: reduce) {
+					.tw-pro-promo__sparkle { animation: none; }
 				}
 
-				.woo-wallet-promotional-notice .content {
-					float:left;
-					margin-left: 20px;
-					width: 75%;
+				.tw-pro-promo__body {
+					flex: 1 1 auto;
+					min-width: 0;
+					padding-top: 14px;
 				}
 
-				.woo-wallet-promotional-notice .content h2 {
-					margin: 3px 0px 5px;
-					font-size: 17px;
-					font-weight: bold;
-					color: #555;
-					line-height: 25px;
+				.tw-pro-promo__title {
+					margin: 0 0 6px;
+					padding: 0;
+					color: #fff;
+					font-size: 20px;
+					font-weight: 700;
+					line-height: 1.3;
+					letter-spacing: -0.2px;
+				}
+				.tw-pro-promo__tag {
+					display: inline-block;
+					margin-left: 10px;
+					padding: 3px 10px;
+					font-size: 11px;
+					font-weight: 600;
+					letter-spacing: 0.3px;
+					background: rgba(255,255,255,0.18);
+					border: 1px solid rgba(255,255,255,0.3);
+					border-radius: 12px;
+					vertical-align: middle;
+					white-space: nowrap;
 				}
 
-				.woo-wallet-promotional-notice .content p {
-					font-size: 14px;
-					text-align: justify;
-					color: #666;
-					margin-bottom: 10px;
+				.tw-pro-promo__lede {
+					margin: 0 0 12px;
+					color: rgba(255,255,255,0.92);
+					font-size: 13.5px;
+					line-height: 1.55;
+					max-width: 620px;
 				}
 
-				.woo-wallet-promotional-notice .content a {
-					border: none;
-					box-shadow: none;
-					height: 31px;
-					line-height: 30px;
-					border-radius: 3px;
-					background: #a46396;
-					text-shadow: none;
-					padding: 0px 20px;
+				.tw-pro-promo__features {
+					margin: 0;
+					padding: 0;
+					list-style: none;
+					display: grid;
+					grid-template-columns: 1fr;
+					gap: 4px;
+				}
+				.tw-pro-promo__features li {
+					margin: 0;
+					font-size: 13px;
+					line-height: 1.5;
+					color: rgba(255,255,255,0.95);
+				}
+				.tw-pro-promo__features strong { color: #fff; font-weight: 600; }
+				.tw-pro-promo__check {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					width: 16px;
+					height: 16px;
+					margin-right: 8px;
+					background: rgba(255,255,255,0.2);
+					border-radius: 50%;
+					font-size: 10px;
+					font-weight: 700;
+					vertical-align: -2px;
+				}
+
+				.tw-pro-promo__cta {
+					flex: 0 0 auto;
+					width: 200px;
+					display: flex;
+					flex-direction: column;
+					align-items: stretch;
+					justify-content: center;
 					text-align: center;
+					padding: 8px 0;
 				}
+				.tw-pro-promo__price {
+					display: flex;
+					align-items: baseline;
+					justify-content: center;
+					gap: 4px;
+					margin-bottom: 2px;
+					color: #fff;
+				}
+				.tw-pro-promo__price-amount {
+					font-size: 34px;
+					font-weight: 800;
+					line-height: 1;
+					letter-spacing: -1px;
+				}
+				.tw-pro-promo__price-period {
+					font-size: 13px;
+					font-weight: 500;
+					color: rgba(255,255,255,0.8);
+				}
+				.tw-pro-promo__price-note {
+					margin-bottom: 12px;
+					font-size: 11px;
+					color: rgba(255,255,255,0.75);
+					letter-spacing: 0.2px;
+				}
+				.tw-pro-promo__btn {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					gap: 6px;
+					padding: 10px 18px;
+					background: #fff;
+					color: #4f46e5 !important;
+					font-size: 13.5px;
+					font-weight: 700;
+					text-decoration: none;
+					border-radius: 8px;
+					box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+					transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
+				}
+				.tw-pro-promo__btn:hover,
+				.tw-pro-promo__btn:focus {
+					transform: translateY(-1px);
+					box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+					background: #f9fafb;
+					color: #4338ca !important;
+					outline: 0;
+				}
+				.tw-pro-promo__btn:active { transform: translateY(0); }
+				.tw-pro-promo__link {
+					display: inline-block;
+					margin-top: 8px;
+					color: rgba(255,255,255,0.85) !important;
+					font-size: 12px;
+					text-decoration: underline;
+					text-underline-offset: 2px;
+				}
+				.tw-pro-promo__link:hover,
+				.tw-pro-promo__link:focus { color: #fff !important; outline: 0; }
 
+				@media screen and (max-width: 960px) {
+					.tw-pro-promo {
+						flex-wrap: wrap;
+						padding: 20px;
+						gap: 16px;
+					}
+					.tw-pro-promo__icon { margin-top: 22px; }
+					.tw-pro-promo__body { flex: 1 1 100%; order: 2; padding-top: 0; }
+					.tw-pro-promo__cta { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 14px; order: 3; text-align: left; }
+					.tw-pro-promo__price { margin-bottom: 0; }
+					.tw-pro-promo__price-note { margin-bottom: 0; flex: 1 1 auto; }
+					.tw-pro-promo__btn { padding: 9px 20px; }
+					.tw-pro-promo__link { margin-top: 0; width: 100%; }
+				}
+				@media screen and (max-width: 600px) {
+					.tw-pro-promo { padding: 18px; }
+					.tw-pro-promo__icon { display: none; }
+					.tw-pro-promo__title { font-size: 17px; }
+					.tw-pro-promo__tag { display: inline-block; margin-left: 0; margin-top: 6px; }
+					.tw-pro-promo__price-amount { font-size: 28px; }
+				}
 			</style>
 			<script type='text/javascript'>
 				jQuery(document).ready(function($){
-					$('body').on('click', '.woo-wallet-promotional-notice span.prmotion-close-icon', function(e) {
+					$('body').on('click', '.tw-pro-promo .tw-pro-promo__dismiss', function(e) {
 						e.preventDefault();
-
-						var self = $(this);
-
+						var $banner = $(this).closest('.tw-pro-promo');
 						wp.ajax.send( 'woo-wallet-dismiss-promotional-notice', {
 							data: {
 								nonce: '<?php echo esc_attr( wp_create_nonce( 'woo_wallet_admin' ) ); ?>'
 							},
-							complete: function( resp ) {
-								self.closest('.woo-wallet-promotional-notice').fadeOut(200);
+							complete: function() {
+								$banner.fadeOut(200);
 							}
 						} );
 					});
