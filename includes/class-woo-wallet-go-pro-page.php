@@ -28,7 +28,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		const PRO_BASENAME   = 'woo-wallet-pro/woo-wallet-pro.php';
 		const LICENSE_OPTION = '_wallet_settings_extensions_woo_wallet_pro_license';
 		const LICENSE_FLAG   = 'woo_wallet_pro_license_activated';
-		const UPGRADE_URL    = 'https://standalonetech.com/product/woocommerce-wallet-pro/?utm_source=free_plugin&utm_medium=go_pro_page&utm_campaign=upgrade';
+		const UPGRADE_URL    = 'https://standalonetech.com/product/woocommerce-wallet-pro/';
 		const API_KEYS_URL   = 'https://standalonetech.com/my-account/';
 		const DOCS_URL       = 'https://docs.standalonetech.com/';
 		const SUPPORT_URL    = 'https://standalonetech.com/support-forum/';
@@ -296,10 +296,38 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<?php esc_html_e( 'Withdrawals, coupons, bulk imports, credit expiry and AffiliateWP payouts — everything you need to run a complete wallet economy, in one premium upgrade.', 'woo-wallet' ); ?>
 					</p>
 					<div class="tw-hero__cta">
-						<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( self::UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer">
+						<a class="tw-btn tw-btn--primary" href="
+						<?php
+						echo esc_url(
+							add_query_arg(
+								array(
+									'utm_source'   => 'free_plugin',
+									'utm_medium'   => 'go_pro_page',
+									'utm_campaign' => 'upgrade',
+									'utm_site_id'  => md5( home_url( '/' ) ),
+								),
+								self::UPGRADE_URL
+							)
+						);
+						?>
+																" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e( 'Upgrade to Pro', 'woo-wallet' ); ?>
 						</a>
-						<a class="tw-btn tw-btn--ghost" href="<?php echo esc_url( self::UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer">
+						<a class="tw-btn tw-btn--ghost" href="
+						<?php
+						echo esc_url(
+							add_query_arg(
+								array(
+									'utm_source'   => 'free_plugin',
+									'utm_medium'   => 'go_pro_page',
+									'utm_campaign' => 'upgrade',
+									'utm_site_id'  => md5( home_url( '/' ) ),
+								),
+								self::UPGRADE_URL
+							)
+						);
+						?>
+						" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e( 'View Pricing', 'woo-wallet' ); ?>
 						</a>
 					</div>
@@ -425,7 +453,21 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			<section class="tw-bottom-cta">
 				<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
 				<p><?php esc_html_e( 'Join thousands of stores running a full-featured wallet economy on TeraWallet Pro.', 'woo-wallet' ); ?></p>
-				<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( self::UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer">
+				<a class="tw-btn tw-btn--primary" href="
+				<?php
+				echo esc_url(
+					add_query_arg(
+						array(
+							'utm_source'   => 'free_plugin',
+							'utm_medium'   => 'go_pro_page',
+							'utm_campaign' => 'upgrade',
+							'utm_site_id'  => md5( home_url( '/' ) ),
+						),
+						self::UPGRADE_URL
+					)
+				);
+				?>
+						" target="_blank" rel="noopener noreferrer">
 					<?php esc_html_e( 'Upgrade to Pro Now', 'woo-wallet' ); ?>
 				</a>
 			</section>
