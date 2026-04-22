@@ -101,7 +101,7 @@ class Woo_Wallet_Install {
             KEY user_id (user_id ),
             KEY idx_user_deleted (user_id, deleted ),
             KEY idx_user_date (user_id, date )
-        ) $collate;
+        ) ENGINE=InnoDB $collate;
         CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,
             transaction_id BIGINT UNSIGNED NOT NULL,
@@ -110,7 +110,7 @@ class Woo_Wallet_Install {
             PRIMARY KEY  (meta_id ),
             KEY transaction_id (transaction_id ),
             KEY meta_key (meta_key(32 ) )
-        ) $collate;";
+        ) ENGINE=InnoDB $collate;";
 		return $tables;
 	}
 	/**

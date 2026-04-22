@@ -242,6 +242,190 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Atomically move funds from one user's wallet to another.
+		 *
+		 * Wraps the debit + credit pair in a single InnoDB transaction and
+		 * holds per-user GET_LOCKs (in deterministic id order, to avoid
+		 * deadlock when A→B and B→A interleave) so that a concurrent
+		 * recode_transaction() on either user serializes against the transfer.
+		 * The balance check is inside the lock — there is no TOCTOU window.
+		 *
+		 * On failure, both inserts are rolled back so the ledger is never
+		 * left half-applied. Cache updates and hooks fire only after COMMIT.
+		 *
+		 * @param int    $from_user_id Sender user id.
+		 * @param int    $to_user_id   Recipient user id.
+		 * @param float  $amount       Positive amount to move (sender-side; charge is included by caller).
+		 * @param string $debit_note   Detail string for the sender's debit row.
+		 * @param string $credit_note  Detail string for the recipient's credit row.
+		 * @param float  $credit_amount Optional recipient credit amount (defaults to $amount). Caller passes a smaller value when a transfer charge is taken.
+		 * @param array  $args         Extra args forwarded to the inserted rows.
+		 * @return array|false { 'debit' => int, 'credit' => int } on success, false on any failure.
+		 * @throws Exception Re-throws any exception raised by underlying $wpdb calls after rolling back.
+		 */
+		public function transfer( $from_user_id, $to_user_id, $amount, $debit_note, $credit_note, $credit_amount = null, $args = array() ) {
+			global $wpdb;
+
+			$from_user_id  = absint( $from_user_id );
+			$to_user_id    = absint( $to_user_id );
+			$amount        = (float) $amount;
+			$credit_amount = null === $credit_amount ? $amount : (float) $credit_amount;
+
+			if ( ! $from_user_id || ! $to_user_id || $from_user_id === $to_user_id ) {
+				return false;
+			}
+			if ( $amount <= 0 || $credit_amount < 0 ) {
+				return false;
+			}
+			if ( is_wallet_account_locked( $from_user_id ) || is_wallet_account_locked( $to_user_id ) ) {
+				return false;
+			}
+
+			$first_id     = min( $from_user_id, $to_user_id );
+			$second_id    = max( $from_user_id, $to_user_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $from_user_id );
+			$lock1_name   = 'woo_wallet_lock_user_' . $first_id;
+			$lock2_name   = 'woo_wallet_lock_user_' . $second_id;
+
+			$got_lock1 = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock1_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			if ( '1' !== $got_lock1 && 1 !== $got_lock1 ) {
+				return false;
+			}
+			$got_lock2 = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock2_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			if ( '1' !== $got_lock2 && 1 !== $got_lock2 ) {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock1_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				return false;
+			}
+
+			$debit_id         = false;
+			$credit_id        = false;
+			$new_from_balance = 0;
+			$new_to_balance   = 0;
+			$committed        = false;
+
+			try {
+				$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				// Security gate uses the raw ledger SUM only, NOT apply_filters('woo_wallet_current_balance').
+				// Third-party balance filters (e.g. credit-expiry) recompute balance from a separate
+				// `amount_redeemed` column that is only updated by the post-commit
+				// 'woo_wallet_transaction_recorded' hook — which fires AFTER our lock is released.
+				// A second concurrent transfer that ran the filter between our RELEASE_LOCK and the
+				// async amount_redeemed update would see the pre-debit balance and proceed to debit
+				// again. The raw SUM is the only authoritative, race-free source of truth.
+				$from_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $from_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+				if ( $from_balance <= 0 || $amount > $from_balance ) {
+					$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				} else {
+					$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $args );
+					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $args ) : 0;
+
+					if ( $debit_id && ( $credit_id || 0 === $credit_amount ) ) {
+						$new_from_balance = $from_balance - $amount;
+						$new_to_balance   = $to_balance + $credit_amount;
+						$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+						$committed = true;
+					} else {
+						$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+						$debit_id  = false;
+						$credit_id = false;
+					}
+				}
+			} catch ( Exception $e ) {
+				$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock2_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock1_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				throw $e;
+			}
+
+			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock2_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock1_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+
+			if ( ! $committed ) {
+				return false;
+			}
+
+			update_user_meta( $from_user_id, $this->meta_key, $new_from_balance );
+			update_user_meta( $to_user_id, $this->meta_key, $new_to_balance );
+			clear_woo_wallet_cache( $from_user_id );
+			clear_woo_wallet_cache( $to_user_id );
+
+			do_action( 'woo_wallet_transaction_recorded', $debit_id, $from_user_id, $amount, 'debit' );
+			if ( $credit_id ) {
+				do_action( 'woo_wallet_transaction_recorded', $credit_id, $to_user_id, $credit_amount, 'credit' );
+			}
+
+			return array(
+				'debit'  => $debit_id,
+				'credit' => $credit_id,
+			);
+		}
+
+		/**
+		 * Insert a single ledger row. Used by transfer() inside an active DB transaction.
+		 * Does not acquire locks, fire emails, or update the user_meta cache — those are
+		 * handled by the caller after COMMIT so a ROLLBACK leaves no side-effects behind.
+		 *
+		 * @param int    $user_id  Owner of the row.
+		 * @param string $type     'credit' or 'debit'.
+		 * @param float  $amount   Positive amount.
+		 * @param string $details  Detail string.
+		 * @param array  $args     Optional overrides.
+		 * @return int|false Inserted transaction_id, or false on insert failure.
+		 */
+		private function insert_transaction_row( $user_id, $type, $amount, $details, $args = array() ) {
+			global $wpdb;
+
+			$defaults    = array(
+				'blog_id'    => get_current_blog_id(),
+				'user_id'    => $user_id,
+				'type'       => $type,
+				'amount'     => $amount,
+				'currency'   => get_woocommerce_currency(),
+				'details'    => $details,
+				'date'       => current_time( 'mysql' ),
+				'created_by' => get_current_user_id(),
+				'for'        => '',
+			);
+			$parsed_args = wp_parse_args( $args, $defaults );
+
+			$row_data = apply_filters(
+				'woo_wallet_transactions_args',
+				array(
+					'blog_id'    => $parsed_args['blog_id'],
+					'user_id'    => $parsed_args['user_id'],
+					'type'       => $parsed_args['type'],
+					'amount'     => $parsed_args['amount'],
+					'currency'   => $parsed_args['currency'],
+					'details'    => $parsed_args['details'],
+					'date'       => $parsed_args['date'],
+					'created_by' => $parsed_args['created_by'],
+				),
+				array(
+					'%d',
+					'%d',
+					'%s',
+					'%f',
+					'%s',
+					'%s',
+					'%s',
+					'%d',
+				)
+			);
+			$inserted = $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_data ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( ! $inserted ) {
+				return false;
+			}
+			$transaction_id = (int) $wpdb->insert_id;
+			if ( $parsed_args['for'] ) {
+				update_wallet_transaction_meta( $transaction_id, '_type', $parsed_args['for'], $parsed_args['user_id'] );
+			}
+			return $transaction_id;
+		}
+
+		/**
 		 * Record wallet transactions
 		 *
 		 * @global object $wpdb wpdb.

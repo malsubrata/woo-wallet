@@ -18,6 +18,14 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+
+$woo_wallet_transfer_idem_key = '';
+if ( is_user_logged_in() && class_exists( 'Woo_Wallet_Frontend' ) ) {
+	$woo_wallet_frontend_instance = Woo_Wallet_Frontend::instance();
+	if ( method_exists( $woo_wallet_frontend_instance, 'issue_transfer_idempotency_key' ) ) {
+		$woo_wallet_transfer_idem_key = $woo_wallet_frontend_instance->issue_transfer_idempotency_key( get_current_user_id() );
+	}
+}
 ?>
 <!-- Transfer Form -->
 <div class="woo-wallet-form-wrapper">
@@ -43,6 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</p>
 		<p class="woo-wallet-field-container form-row">
 			<?php wp_nonce_field( 'woo_wallet_transfer', 'woo_wallet_transfer' ); ?>
+			<input type="hidden" name="woo_wallet_idempotency_key" value="<?php echo esc_attr( $woo_wallet_transfer_idem_key ); ?>" />
 			<input type="submit" class="button" name="woo_wallet_transfer_fund" value="<?php esc_html_e( 'Proceed to Transfer', 'woo-wallet' ); ?>" />
 		</p>
 	</form>
