@@ -1,4 +1,12 @@
 *** Changelog ***
+= v1.5.18 (April 23, 2026) =
+– **New:-** Added Go Pro admin page showcasing Pro features with a Free vs Pro comparison and license activation UI, replacing the legacy Extensions page.
+– **Security:-** Implement idempotency key for wallet transfers to prevent duplicate submissions and TOCTOU race condition vulnerabilities.
+– **Tweak:-** Enhanced partial payment tooltip to provide a clearer breakdown of amounts debited from the wallet and paid via other gateways.
+– **Tweak:-** Enhance database schema and optimize wallet transaction queries for improved performance.
+– **Tweak:-** Improved CSV exporter for wallet transactions with better query handling.
+– **Tweak:-** Update Pro upgrade URLs with UTM parameters for better tracking.
+
 =v1.5.17 (March 12, 2026)=
 - **Fix:-** Remove space in limit parameter for wallet transactions query.
 - **Fix:-** Simplify wallet transactions query preparation by removing redundant parameter checks.

@@ -4,12 +4,14 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 1.5.17
+Stable tag: 1.5.18
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-= ✨ Powerful WooCommerce wallet with cashback, store credit, and partial payment. Simplify checkout and boost customer loyalty with ease. =
+✨ WooCommerce wallet with cashback rewards, store credit, partial payment & top-ups. Boost customer loyalty effortlessly.
+
+== Description ==
 
 Maximize convenience and savings for your customers with **Wallet for WooCommerce** (TeraWallet). This all-in-one digital wallet and store credit system is specifically designed to streamline the checkout process and boost customer loyalty.
 
@@ -17,12 +19,12 @@ TeraWallet empowers your customers to deposit funds into their personal accounts
 
 Beyond core wallet functionality, TeraWallet features a robust **Cashback Rewards System**. Incentivize purchases by offering rewards based on cart totals, specific products, or categories. You can even convert WooCommerce coupons into wallet rewards, providing a unique way to drive engagement.
 
-== ==
-
 👉 **Try the live demo:** [https://demo.standalonetech.com/](https://demo.standalonetech.com/)
 👉 **Read full documentation:** [https://docs.standalonetech.com/](https://docs.standalonetech.com/)
+👉 **[Upgrade to Pro](https://standalonetech.com/product/woocommerce-wallet-pro/?utm_source=wordpress&utm_medium=plugin_page&utm_campaign=upgrade)** — unlock withdrawals, expiry, coupons, importer & AffiliateWP integration.
 
 == ✨ Why choose Wallet for WooCommerce? ==
+
 *   🚀 **Frictionless Checkout:** One-click payments via wallet balance reduce cart abandonment.
 *   💰 **Automated Cashback:** Automated rewards keep customers coming back for more.
 *   🏦 **Store Credit System:** Easily handle refunds by crediting the user's wallet instantly.
@@ -31,7 +33,7 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
 == 🛠 Features ==
 
 *   🏦 **Core Wallet Management:** A centralized ledger system that tracks every credit and debit with 100% accuracy using SQL-level locking to prevent race conditions.
-*   💰 **Dynamic Cashback System:** 
+*   💰 **Dynamic Cashback System:**
     *   **Cart-Wise:** Rewards based on the total order value.
     *   **Product-Wise:** Granular control over rewards for individual items.
     *   **Category-Wise:** Rewards based on product taxonomies.
@@ -57,15 +59,13 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
 
 == 🚀 Pro Features ==
 
-Upgrade to unlock advanced wallet features and specialized integrations:
+**[⭐ Upgrade to Pro](https://standalonetech.com/product/woocommerce-wallet-pro/?utm_source=wordpress&utm_medium=plugin_page&utm_campaign=upgrade)** to unlock advanced wallet features and specialized integrations:
 
 *   💸 **Wallet Withdrawal:** Allow customers to request withdrawals from their wallet balance to their bank or other payment methods.
 *   ⌛ **Wallet Expiry:** Set expiration dates for wallet balance or cashback to encourage timely spending.
 *   🎟️ **Wallet Coupons:** Create exclusive coupons that can only be redeemed into the user's wallet.
 *   📥 **Wallet Importer:** Easily bulk import wallet balances and transaction history from CSV files.
 *   🤝 **AffiliateWP Integration:** Automatically credit affiliate commissions directly to the user's wallet.
-
-"Upgrade to unlock advanced wallet features and integrations."
 
 == Installation ==
 
@@ -78,9 +78,9 @@ Upgrade to unlock advanced wallet features and specialized integrations:
 
 = Automatic installation =
 
-Automatic installation is the easiest option as WordPress handles the file transfers itself and you don’t need to leave your web browser. To do an automatic install of WooCommerce Wallet Payment, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
+Automatic installation is the easiest option as WordPress handles the file transfers itself and you don't need to leave your web browser. To do an automatic install of WooCommerce Wallet Payment, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
 
-In the search field type “WooCommerce Wallet Payment” and click Search Plugins. Once you’ve found our WooCommerce Wallet Payment plugin you can view details about it such as the point release, rating and description. Most importantly of course, you can install it by simply clicking “Install Now”.
+In the search field type "Wallet for WooCommerce" and click Search Plugins. Once you've found the plugin you can view details about it such as the point release, rating and description. Most importantly of course, you can install it by simply clicking "Install Now".
 
 = Manual installation =
 
@@ -127,9 +127,17 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 7. Admin wallet transaction details page.
 8. Wallet payment gateway.
 9. WooCommerce refund.
-10. Wallet actions. 
+10. Wallet actions.
 
 == Changelog ==
+
+= v1.5.18 (April 23, 2026) =
+– **New:-** Added Go Pro admin page showcasing Pro features with a Free vs Pro comparison and license activation UI, replacing the legacy Extensions page.
+– **Security:-** Implement idempotency key for wallet transfers to prevent duplicate submissions and TOCTOU race condition vulnerabilities.
+– **Tweak:-** Enhanced partial payment tooltip to provide a clearer breakdown of amounts debited from the wallet and paid via other gateways.
+– **Tweak:-** Enhance database schema and optimize wallet transaction queries for improved performance.
+– **Tweak:-** Improved CSV exporter for wallet transactions with better query handling.
+– **Tweak:-** Update Pro upgrade URLs with UTM parameters for better tracking.
 
 = v1.5.17 (March 12, 2026) =
 – **Fix:-** Remove space in limit parameter for wallet transactions query.
@@ -171,5 +179,5 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Upgrade Notice ==
 
-= 1.5.17 =
-Performance improvements and stability fixes.
+= 1.5.18 =
+Security fix for wallet transfer race conditions, new Go Pro admin page, and database query optimizations.

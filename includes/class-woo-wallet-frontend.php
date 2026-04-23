@@ -76,7 +76,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_filter( 'woocommerce_cart_totals_get_fees_from_cart_taxes', array( $this, 'woocommerce_cart_totals_get_fees_from_cart_taxes' ), 999, 2 );
 			add_action( 'woocommerce_thankyou', array( $this, 'restore_woocommerce_cart_items' ) );
 			add_filter( 'woo_wallet_is_enable_transfer', array( $this, 'woo_wallet_is_enable_transfer' ) );
-			add_filter( 'woo_wallet_is_enable_top_up', array( $this, 'woo_wallet_is_enable_top_up' ) );
+			add_filter( 'woo_wallet_is_enable_add', array( $this, 'woo_wallet_is_enable_top_up' ) );
 
 			add_filter( 'wp_nav_menu_objects', array( $this, 'wp_nav_menu_objects' ), 10 );
 
