@@ -140,7 +140,6 @@ final class Woo_Wallet {
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
 		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
-		add_action( 'rest_api_init', array( $this, 'rest_api_init' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
 		do_action( 'woo_wallet_init' );
@@ -246,14 +245,6 @@ final class Woo_Wallet {
 		$this->rest_api = new WooWallet_API();
 	}
 
-	/**
-	 * WP REST API init.
-	 */
-	public function rest_api_init() {
-		include_once WOO_WALLET_ABSPATH . 'includes/api/class-woo-wallet-rest-controller.php';
-		$rest_controller = new WOO_Wallet_REST_Controller();
-		$rest_controller->register_routes();
-	}
 	/**
 	 * Add settings link to plugin list.
 	 *

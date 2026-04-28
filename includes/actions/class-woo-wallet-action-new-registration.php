@@ -63,5 +63,4 @@ class Action_New_Registration extends WooWalletAction {
 			}
 		}
 	}
-
 }

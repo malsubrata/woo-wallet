@@ -44,8 +44,31 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 		 * @since 1.2.5
 		 */
 		private function rest_api_includes() {
-			include_once dirname( __FILE__ ) . '/api/class-wc-rest-woo-wallet-controller.php';
-			include_once dirname( __FILE__ ) . '/api/Controllers/Version3/class-wc-rest-wallet-controller.php';
+			// Shared bases.
+			include_once __DIR__ . '/rest-api/class-terawallet-rest-controller-base.php';
+			include_once __DIR__ . '/rest-api/class-terawallet-rest-me-controller-base.php';
+
+			// wc/v3/* — admin/server-to-server.
+			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-transactions-controller.php';
+			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-settings-controller.php';
+
+			// terawallet/v1/* — customer (React dashboard). Files are conditionally
+			// included; missing files are skipped so partial PRs don't fatal.
+			$me_dir = __DIR__ . '/rest-api/Controllers/TeraWalletV1/';
+			foreach ( array(
+				'class-terawallet-rest-me-controller.php',
+				'class-terawallet-rest-me-balance-controller.php',
+				'class-terawallet-rest-me-transactions-controller.php',
+				'class-terawallet-rest-me-topup-controller.php',
+				'class-terawallet-rest-me-transfer-controller.php',
+				'class-terawallet-rest-me-referrals-controller.php',
+				'class-terawallet-rest-me-cashback-rules-controller.php',
+				'class-terawallet-rest-public-settings-controller.php',
+			) as $file ) {
+				if ( file_exists( $me_dir . $file ) ) {
+					include_once $me_dir . $file;
+				}
+			}
 		}
 
 		/**
@@ -56,17 +79,28 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 		public function register_rest_routes() {
 			$this->rest_api_includes();
 			$controllers = array(
-				// v2 controllers.
-				'WC_REST_Woo_Wallet_Controller',
-				// v3 controllers.
-				'WC_REST_TeraWallet_V3_Controller',
+				// wc/v3 controllers.
+				'TeraWallet_REST_Transactions_Controller',
+				'TeraWallet_REST_Settings_Controller',
+				// terawallet/v1 controllers (instantiated only if the class exists,
+				// so a partial PR4 rollout doesn't crash REST init).
+				'TeraWallet_REST_Me_Controller',
+				'TeraWallet_REST_Me_Balance_Controller',
+				'TeraWallet_REST_Me_Transactions_Controller',
+				'TeraWallet_REST_Me_Topup_Controller',
+				'TeraWallet_REST_Me_Transfer_Controller',
+				'TeraWallet_REST_Me_Referrals_Controller',
+				'TeraWallet_REST_Me_Cashback_Rules_Controller',
+				'TeraWallet_REST_Public_Settings_Controller',
 			);
 			foreach ( $controllers as $controller ) {
+				if ( ! class_exists( $controller ) ) {
+					continue;
+				}
 				$woo_wallet_api = new $controller();
 				$woo_wallet_api->register_routes();
 			}
 		}
-
 	}
 
 }

@@ -90,6 +90,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback' ) );
 
 			add_action( 'admin_notices', array( $this, 'show_promotions' ) );
+			// Redirect old ?page=woo-wallet-actions bookmarks to the unified settings page.
+			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
 			add_filter( 'woocommerce_settings_pages', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
 
 			add_action( 'wp_nav_menu_item_custom_fields', array( $this, 'wp_nav_menu_item_custom_fields' ) );
@@ -332,9 +334,20 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
 			$woo_wallet_menu_page_hook_view = add_submenu_page( 'null', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
-			add_submenu_page( 'woo-wallet', __( 'Actions', 'woo-wallet' ), __( 'Actions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-actions', array( $this, 'plugin_actions_page' ) );
+			// Actions submenu removed — actions are now part of the unified Settings page (React app).
 
 			add_submenu_page( 'null', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
+		}
+
+		/**
+		 * Redirect legacy ?page=woo-wallet-actions bookmarks to the unified Settings page.
+		 */
+		public function redirect_legacy_actions_page() {
+			// phpcs:ignore WordPress.Security.NonceVerification
+			if ( isset( $_GET['page'] ) && 'woo-wallet-actions' === $_GET['page'] ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=woo-wallet-settings' ) );
+				exit;
+			}
 		}
 		/**
 		 * Load exporter files.
@@ -974,7 +987,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 			$current_screen                = get_current_screen();
 			$woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-actions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
+			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
 			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages, true ) ) {
 				if ( ! get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
 					$footer_text = sprintf(
@@ -1147,7 +1160,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function woocommerce_screen_ids_callback( $screen_ids ) {
 			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			$screen_ids[]         = "{$woo_wallet_screen_id}_page_woo-wallet-actions";
+			// woo-wallet-actions submenu removed; Actions are part of the unified Settings page.
 			return $screen_ids;
 		}
 		/**

@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+/* ── CSS custom properties ──────────────────────────────────────── */
+:root {
+  --ww-accent:          oklch(0.55 0.16 185);
+  --ww-accent-light:    oklch(0.95 0.04 185);
+  --ww-accent-mid:      oklch(0.7 0.12 185);
+  --ww-accent-bg:       oklch(0.97 0.015 185);
+
+  --ww-app-bg:          oklch(0.963 0.006 260);
+  --ww-surface:         white;
+  --ww-surface-2:       oklch(0.97 0.005 260);
+  --ww-header-bg:       white;
+  --ww-sidebar-bg:      white;
+  --ww-section-body-bg: oklch(0.988 0.004 260);
+
+  --ww-border:          oklch(0.91 0.01 260);
+  --ww-border-input:    oklch(0.88 0.01 260);
+
+  --ww-text:            oklch(0.18 0.015 260);
+  --ww-text-heading:    oklch(0.15 0.015 260);
+  --ww-text-label:      oklch(0.3 0.015 260);
+  --ww-text-muted:      oklch(0.55 0.015 260);
+  --ww-text-hint:       oklch(0.58 0.015 260);
+  --ww-text-placeholder: oklch(0.68 0.01 260);
+
+  --ww-input-bg:        white;
+  --ww-input-prefix-bg: oklch(0.97 0.005 260);
+  --ww-hover-bg:        oklch(0.97 0.008 260);
+  --ww-nav-active-bg:   var(--ww-accent-light);
+  --ww-toggle-off-bg:   oklch(0.82 0.01 260);
+}
+
+/* Dark theme — base tone #1D2327 (WP admin dark) */
+[data-theme="dark"] {
+  --ww-app-bg:          #161b1e;
+  --ww-surface:         #1d2327;
+  --ww-surface-2:       #232a2f;
+  --ww-header-bg:       #1d2327;
+  --ww-sidebar-bg:      #1d2327;
+  --ww-section-body-bg: #232a2f;
+
+  --ww-accent-light:    oklch(0.22 0.06 185);
+  --ww-accent-mid:      oklch(0.38 0.1 185);
+  --ww-accent-bg:       oklch(0.2 0.04 185);
+
+  --ww-border:          #2c3338;
+  --ww-border-input:    #3a4249;
+
+  --ww-text:            #e0e4e7;
+  --ww-text-heading:    #f0f3f5;
+  --ww-text-label:      #c5cdd3;
+  --ww-text-muted:      #8c9aA3;
+  --ww-text-hint:       #7a8a93;
+  --ww-text-placeholder: #5a6a73;
+
+  --ww-input-bg:        #2c3338;
+  --ww-input-prefix-bg: #1d2327;
+  --ww-hover-bg:        #2c3338;
+  --ww-nav-active-bg:   oklch(0.25 0.06 185);
+  --ww-toggle-off-bg:   #3a4249;
+}
+
+/* ── WP parent chain — make every wrapper fill height ────────────── */
+.terawallet_page_woo-wallet-settings #wpcontent {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.terawallet_page_woo-wallet-settings #wpfooter {
+  display: none;
+}
+
+.terawallet_page_woo-wallet-settings #wpbody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.terawallet_page_woo-wallet-settings #wpbody-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+}
+
+.terawallet_page_woo-wallet-settings .wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 !important;
+}
+
+.terawallet_page_woo-wallet-settings #woo-wallet-settings-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Root reset ──────────────────────────────────────────────────── */
+#woo-wallet-settings-root {
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ww-text);
+}
+
+#woo-wallet-settings-root * {
+  box-sizing: border-box;
+}
+
+/* Dark-mode panel border — separates from WP admin chrome */
+#woo-wallet-settings-root .ww-app[data-theme="dark"] {
+  border-left: 1px solid #3a4249;
+  border-top:  1px solid #3a4249;
+}
+
+/* App fills all remaining flex space from the parent chain above */
+#woo-wallet-settings-root .ww-app {
+  flex: 1;
+  background: var(--ww-app-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+
+#woo-wallet-settings-root .ww-app--fill {
+  flex: 1;
+  background: var(--ww-app-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+/* ── MultiSelect portal — needs theme vars outside the app root ──── */
+.ww-multiselect-portal {
+  font-family: 'DM Sans', sans-serif;
+  box-sizing: border-box;
+}
+.ww-multiselect-portal * {
+  box-sizing: border-box;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+#woo-wallet-settings-root ::-webkit-scrollbar {
+  width: 5px;
+  background: transparent;
+}
+#woo-wallet-settings-root ::-webkit-scrollbar-thumb {
+  background: oklch(0.78 0.01 260);
+  border-radius: 3px;
+}
+
+/* ── Animations ─────────────────────────────────────────────────── */
+@keyframes ww-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ww-fade-up {
+  animation: ww-fade-up 0.22s ease;
+}
+
+/* ── Placeholder ─────────────────────────────────────────────────── */
+#woo-wallet-settings-root input::placeholder {
+  color: var(--ww-text-placeholder);
+}
+#woo-wallet-settings-root select:focus,
+#woo-wallet-settings-root input:focus,
+#woo-wallet-settings-root textarea:focus {
+  outline: none;
+}

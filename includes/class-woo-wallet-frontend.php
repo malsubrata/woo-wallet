@@ -423,6 +423,10 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		/**
 		 * Do transfer wallet amount.
 		 *
+		 * Form-side wrapper: validates nonce + form-render idempotency claim, parses
+		 * `$_POST`, then delegates to `WooWallet_Transfer_Service::execute()` which
+		 * runs the same logic as the REST `POST /me/transfer` handler.
+		 *
 		 * @return array
 		 */
 		public function do_wallet_transfer() {
@@ -445,6 +449,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			// Nonces alone are not consumed on use, so an attacker can fire N concurrent POSTs
 			// with one captured nonce. The transient is created per-form-render and must be
 			// claimed atomically here; a second concurrent submission with the same key fails.
+			// (REST `POST /me/transfer` uses a different mechanism — `Idempotency-Key` header
+			// stored by `WooWallet_Idempotency` — so the two surfaces don't collide.)
 			$idem_key = isset( $_POST['woo_wallet_idempotency_key'] ) ? sanitize_key( wp_unslash( $_POST['woo_wallet_idempotency_key'] ) ) : '';
 			if ( $idem_key && ! $this->claim_transfer_idempotency_key( $current_user_id, $idem_key ) ) {
 				return array(
@@ -453,99 +459,19 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				);
 			}
 
-			// Per-user soft rate limit: blocks bursts before they reach the ledger.
-			$rate_limit = (int) apply_filters( 'woo_wallet_transfer_rate_limit_per_minute', 5, $current_user_id );
-			$rate_key   = 'woo_wallet_xfer_rate_' . $current_user_id;
-			$rate_count = (int) get_transient( $rate_key );
-			if ( $rate_limit > 0 && $rate_count >= $rate_limit ) {
-				return array(
-					'is_valid' => false,
-					'message'  => __( 'Too many transfers in a short time. Please wait a minute and try again.', 'woo-wallet' ),
-				);
-			}
-			set_transient( $rate_key, $rate_count + 1, MINUTE_IN_SECONDS );
-
 			$whom_id = isset( $_POST['woo_wallet_transfer_user_id'] ) ? absint( sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_user_id'] ) ) ) : 0;
 			$amount  = isset( $_POST['woo_wallet_transfer_amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_amount'] ) ) ) : 0;
-			$whom_id = absint( apply_filters( 'woo_wallet_transfer_user_id', $whom_id ) );
+			$note    = isset( $_POST['woo_wallet_transfer_note'] ) && ! empty( $_POST['woo_wallet_transfer_note'] ) ? sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_note'] ) ) : '';
 
-			// Reject non-positive amounts at the boundary instead of silently coercing them
-			// inside the ledger — keeps any third-party sign-flipping filter from creating credits.
-			if ( $amount <= 0 ) {
-				return array(
-					'is_valid' => false,
-					'message'  => __( 'Transfer amount must be greater than zero.', 'woo-wallet' ),
-				);
+			if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-transfer-service.php';
 			}
+			$result = WooWallet_Transfer_Service::execute( $current_user_id, $whom_id, $amount, $note );
 
-			$whom = $whom_id ? get_userdata( $whom_id ) : false;
-			if ( ! $whom ) {
-				return array(
-					'is_valid' => false,
-					'message'  => __( 'Invalid user', 'woo-wallet' ),
-				);
-			}
-			if ( $current_user_id === (int) $whom->ID ) {
-				return array(
-					'is_valid' => false,
-					'message'  => sprintf( __( 'Invalid user', 'woo-wallet' ) ),
-				);
-			}
-
-			$min_transfer_amount = woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 );
-			if ( $min_transfer_amount && $min_transfer_amount > $amount ) {
-				return array(
-					'is_valid' => false,
-					/* translators: Max transfer amount */
-					'message'  => sprintf( __( 'Minimum transfer amount is %s', 'woo-wallet' ), wc_price( $min_transfer_amount, woo_wallet_wc_price_args() ) ),
-				);
-			}
-
-			$current_user_obj = get_userdata( $current_user_id );
-			/* translators: user_email */
-			$credit_note = isset( $_POST['woo_wallet_transfer_note'] ) && ! empty( $_POST['woo_wallet_transfer_note'] ) ? sanitize_text_field( wp_unslash( $_POST['woo_wallet_transfer_note'] ) ) : sprintf( __( 'Wallet funds received from %s', 'woo-wallet' ), $current_user_obj->user_email );
-			/* translators: user_email */
-			$debit_note  = sprintf( __( 'Wallet funds transfer to %s', 'woo-wallet' ), $whom->user_email );
-			$credit_note = apply_filters( 'woo_wallet_transfer_credit_transaction_note', $credit_note, $whom, $amount );
-			$debit_note  = apply_filters( 'woo_wallet_transfer_debit_transaction_note', $debit_note, $whom, $amount );
-
-			$transfer_charge_type   = woo_wallet()->settings_api->get_option( 'transfer_charge_type', '_wallet_settings_general', 'percent' );
-			$transfer_charge_amount = woo_wallet()->settings_api->get_option( 'transfer_charge_amount', '_wallet_settings_general', 0 );
-			if ( 'percent' === $transfer_charge_type ) {
-				$transfer_charge = ( $amount * $transfer_charge_amount ) / 100;
-			} else {
-				$transfer_charge = $transfer_charge_amount;
-			}
-			$transfer_charge = (float) apply_filters( 'woo_wallet_transfer_charge_amount', $transfer_charge, $whom );
-			$credit_amount   = (float) apply_filters( 'woo_wallet_transfer_credit_amount', $amount, $whom );
-			$debit_amount    = (float) apply_filters( 'woo_wallet_transfer_debit_amount', $amount + $transfer_charge, $whom );
-
-			if ( $debit_amount <= 0 ) {
-				return array(
-					'is_valid' => false,
-					'message'  => __( 'Transfer amount must be greater than zero.', 'woo-wallet' ),
-				);
-			}
-
-			// Atomic move: balance check + debit + credit run inside a single InnoDB transaction
-			// guarded by per-user GET_LOCKs on both sender and recipient. No TOCTOU window.
-			$result = woo_wallet()->wallet->transfer( $current_user_id, (int) $whom->ID, $debit_amount, $debit_note, $credit_note, $credit_amount );
-			if ( ! $result ) {
-				return array(
-					'is_valid' => false,
-					'message'  => __( 'Entered amount is greater than current wallet amount.', 'woo-wallet' ),
-				);
-			}
-
-			update_wallet_transaction_meta( $result['debit'], '_wallet_transfer_charge', $transfer_charge, $current_user_id );
-			do_action( 'woo_wallet_transfer_amount_debited', $result['debit'], $current_user_id, $whom->ID );
-			if ( ! empty( $result['credit'] ) ) {
-				do_action( 'woo_wallet_transfer_amount_credited', $result['credit'], $whom->ID, $current_user_id );
-			}
-
+			// Form callers only inspect is_valid + message; service returns extra fields safely.
 			return array(
-				'is_valid' => true,
-				'message'  => __( 'Amount transferred successfully!', 'woo-wallet' ),
+				'is_valid' => (bool) $result['is_valid'],
+				'message'  => isset( $result['message'] ) ? $result['message'] : '',
 			);
 		}
 

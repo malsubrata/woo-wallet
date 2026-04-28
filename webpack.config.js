@@ -55,6 +55,7 @@ const wcBuildConfig = {
     entry: {
         'payment-method/index': './src/payment-method/index.js',
         'partial-payment/index': './src/partial-payment/index.js',
+        'admin/settings/index': './src/admin/settings/index.js',
     },
     output: {
         path: path.resolve(__dirname, 'build'),
@@ -84,7 +85,7 @@ const vanillaAssetsConfig = {
         'admin/actions': './src/admin/actions.js',
         'admin/order': './src/admin/order.js',
         'admin/product': './src/admin/product.js',
-        'admin/settings': './src/admin/settings.js',
+        // 'admin/settings' replaced by React bundle in wcBuildConfig above
         'admin/export': './src/admin/export.js',
         'admin/main': './src/admin/main.js',
 

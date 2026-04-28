@@ -26,6 +26,8 @@ if ( is_user_logged_in() && class_exists( 'Woo_Wallet_Frontend' ) ) {
 		$woo_wallet_transfer_idem_key = $woo_wallet_frontend_instance->issue_transfer_idempotency_key( get_current_user_id() );
 	}
 }
+$minimum_transfer_amount = woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 );
+$maximum_transfer_amount = woo_wallet()->settings_api->get_option( 'max_transfer_amount', '_wallet_settings_general', 0 );
 ?>
 <!-- Transfer Form -->
 <div class="woo-wallet-form-wrapper">
@@ -43,7 +45,16 @@ if ( is_user_logged_in() && class_exists( 'Woo_Wallet_Frontend' ) ) {
 		</p>
 		<p class="woo-wallet-field-container form-row form-row-wide">
 			<label for="woo_wallet_transfer_amount"><?php esc_html_e( 'Amount', 'woo-wallet' ); ?></label>
-			<input id="woo_wallet_transfer_amount" type="number" step="0.01" min="<?php echo woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="woo_wallet_transfer_amount" required="" placeholder="0.00"/>
+			<input id="woo_wallet_transfer_amount" type="number" step="0.01" 
+			<?php
+			if ( $minimum_transfer_amount > 0 ) {
+				echo 'min="' . esc_attr( $minimum_transfer_amount ) . '"'; }
+			?>
+			<?php
+			if ( $maximum_transfer_amount > 0 ) {
+							echo 'max="' . esc_attr( $maximum_transfer_amount ) . '"'; }
+			?>
+			name="woo_wallet_transfer_amount" required="" placeholder="0.00"/>
 		</p>
 		<p class="woo-wallet-field-container form-row form-row-wide">
 			<label for="woo_wallet_transfer_note"><?php esc_html_e( 'What\'s this for?', 'woo-wallet' ); ?></label>

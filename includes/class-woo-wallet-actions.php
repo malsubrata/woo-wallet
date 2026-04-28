@@ -105,20 +105,11 @@ class WOO_Wallet_Actions {
 	}
 	/**
 	 * Load scripts for action page.
+	 * Actions are now rendered via the unified React settings page (Actions tab).
 	 *
 	 * @return void
 	 */
-	public function admin_scripts() {
-		$screen    = get_current_screen();
-		$screen_id = $screen ? $screen->id : '';
-		$suffix    = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-		// Register scripts.
-		wp_register_script( 'woo_wallet_admin_actions', woo_wallet()->plugin_url() . '/build/admin/actions.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
-		$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-		if ( in_array( $screen_id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) ) {
-			wp_enqueue_script( 'woo_wallet_admin_actions' );
-		}
-	}
+	public function admin_scripts() {}
 }
 
 WOO_Wallet_Actions::instance();
