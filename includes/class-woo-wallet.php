@@ -355,14 +355,35 @@ final class Woo_Wallet {
 	}
 	/**
 	 * Load multicurrency supported file.
+	 *
+	 * Boots the provider abstraction (interface + manager + first-class
+	 * providers + generic fallback), fires the public registration hook
+	 * for third-party adapters, then constructs the unified integration
+	 * that owns every wallet-side currency hook.
 	 */
 	public function add_multicurrency_support() {
-		if ( class_exists( 'WOOCS' ) ) {
-			include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/woocommerce-currency-switcher/class-wallet-multi-currency.php';
-		}
-		if ( class_exists( 'WCML_Multi_Currency' ) ) {
-			include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/woocommerce-multilingual/class-wallet-wpml-multi-currency.php';
-		}
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/interface-woo-wallet-currency-provider.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/class-woo-wallet-abstract-currency-provider.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/class-woo-wallet-currency-manager.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-generic.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-woocs.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-wcml.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-curcy.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-aelia.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/providers/class-woo-wallet-currency-provider-yaycurrency.php';
+
+		$manager = Woo_Wallet_Currency_Manager::instance();
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_WOOCS(), 10 );
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_WCML(), 10 );
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_CURCY(), 10 );
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_Aelia(), 10 );
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_YayCurrency(), 10 );
+		$manager->register_provider( new Woo_Wallet_Currency_Provider_Generic(), 100 );
+
+		do_action( 'woo_wallet_register_currency_providers', $manager );
+
+		include_once WOO_WALLET_ABSPATH . 'includes/multicurrency/class-woo-wallet-multicurrency-integration.php';
+		new Woo_Wallet_Multicurrency_Integration();
 	}
 	/**
 	 * Store fee key to order item meta.
