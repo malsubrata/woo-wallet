@@ -32,21 +32,52 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 	class Woo_Wallet_Multicurrency_Integration {
 
 		/**
+		 * Idempotency guard. The wallet's bootstrap path is supposed to
+		 * instantiate this class exactly once per request, but `init` actions
+		 * that are re-fired by other plugins (or duplicate plugin loads) can
+		 * trigger a second construction. Hook registrations are global state
+		 * — registering them twice produces compounded conversions on every
+		 * `apply_filters('woo_wallet_*')` call. Tracking this with a static
+		 * flag means the second-and-subsequent constructions are silent
+		 * no-ops.
+		 *
+		 * @var bool
+		 */
+		private static $hooks_registered = false;
+
+		/**
 		 * Register hooks.
 		 *
 		 * Currency hooks register only when a real provider (not the generic
 		 * fallback) is active. The WPML product-id translation shim is a
 		 * separate concern and registers whenever WPML's `wpml_object_id`
 		 * filter exists, regardless of the currency provider.
+		 *
+		 * Some multi-currency plugins (notably YayCurrency, but the same
+		 * pattern applies to any third party) ship their own TeraWallet
+		 * compatibility modules that hook the same `woo_wallet_*` filters this
+		 * integration owns. Stacking both produces compounded conversions
+		 * (e.g. 10 EUR → 1111.11 → 123,456.79), which is how this manifests as
+		 * a wildly inflated topup order amount. Before registering our own
+		 * hooks we sweep any known third-party copies via
+		 * `unregister_third_party_wallet_hooks()` so the manager-backed
+		 * abstraction is the sole owner.
 		 */
 		public function __construct() {
+			if ( self::$hooks_registered ) {
+				return;
+			}
+			self::$hooks_registered = true;
+
 			$manager  = Woo_Wallet_Currency_Manager::instance();
 			$provider = $manager->get_active_provider();
 
 			if ( $provider && 'generic' !== $provider->get_id() ) {
+				$this->unregister_third_party_wallet_hooks();
+
 				add_filter( 'woo_wallet_amount', array( $this, 'filter_woo_wallet_amount' ), 10, 3 );
 				add_filter( 'woo_wallet_rechargeable_amount', array( $this, 'filter_woo_wallet_rechargeable_amount' ) );
-				add_filter( 'woo_wallet_current_balance', array( $this, 'filter_woo_wallet_current_balance' ), 10, 2 );
+				add_filter( 'woo_wallet_current_balance', array( $this, 'filter_woo_wallet_current_balance' ), 10, 3 );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_max_topup_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_topup_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_transfer_amount', array( $this, 'filter_settings_option' ) );
@@ -59,11 +90,69 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 		}
 
 		/**
+		 * Drop wallet-side hooks registered by third-party multi-currency
+		 * plugins so our manager-backed handlers are the only ones that fire.
+		 *
+		 * Currently sweeps:
+		 *  - YayCurrency's `\Yay_Currency\Engine\Compatibles\WooCommerceTeraWallet`
+		 *  - CURCY's `WOOMULTI_CURRENCY_F_Plugin_Woo_Wallet`
+		 *
+		 * The second one is instantiated anonymously by VillaTheme's
+		 * `vi_include_folder()` autoloader, so we don't have a singleton
+		 * handle to call `remove_filter` against — instead we walk the
+		 * `$wp_filter` callback list for each wallet hook and rip any
+		 * callback whose owner is one of the known compat classes.
+		 * Add new entries to `$known_compat_classes` when another MC
+		 * plugin's adapter is found stacking on these filters.
+		 *
+		 * @return void
+		 */
+		private function unregister_third_party_wallet_hooks() {
+			$known_compat_classes = array(
+				'\Yay_Currency\Engine\Compatibles\WooCommerceTeraWallet',
+				'WOOMULTI_CURRENCY_F_Plugin_Woo_Wallet',
+			);
+			$wallet_hooks         = array(
+				'woo_wallet_rechargeable_amount',
+				'woo_wallet_amount',
+				'woo_wallet_current_balance',
+				'woo_wallet_form_cart_cashback_amount',
+				'woo_wallet_credit_purchase_amount',
+				'woo_wallet_get_option__wallet_settings_general_max_topup_amount',
+				'woo_wallet_get_option__wallet_settings_general_min_topup_amount',
+				'woo_wallet_get_option__wallet_settings_general_min_transfer_amount',
+				'woo_wallet_new_user_registration_credit_amount',
+				'woo_wallet_cashback_notice_text',
+			);
+
+			global $wp_filter;
+			foreach ( $wallet_hooks as $hook ) {
+				if ( empty( $wp_filter[ $hook ] ) || ! isset( $wp_filter[ $hook ]->callbacks ) ) {
+					continue;
+				}
+				foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
+					foreach ( $callbacks as $cb_entry ) {
+						$fn = isset( $cb_entry['function'] ) ? $cb_entry['function'] : null;
+						if ( ! is_array( $fn ) || ! is_object( $fn[0] ) ) {
+							continue;
+						}
+						foreach ( $known_compat_classes as $compat_class ) {
+							if ( is_a( $fn[0], ltrim( $compat_class, '\\' ) ) ) {
+								remove_filter( $hook, $fn, $priority );
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		/**
 		 * Convert a stored amount into the storefront's active currency.
 		 *
-		 * @param float       $amount   Amount in $currency.
-		 * @param string      $currency Source ISO code.
-		 * @param int|null    $user_id  Customer id (unused — kept for filter signature compatibility).
+		 * @param float    $amount   Amount in $currency.
+		 * @param string   $currency Source ISO code.
+		 * @param int|null $user_id  Customer id (unused — kept for filter signature compatibility).
 		 * @return float
 		 */
 		public function filter_woo_wallet_amount( $amount, $currency, $user_id = null ) {
@@ -85,22 +174,43 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 		}
 
 		/**
-		 * Recompute wallet balance by re-summing each row in the active
-		 * currency.
+		 * Recompute wallet balance for display in the active storefront currency.
 		 *
-		 * Workaround for the mixed-currency `SUM()` issue in
-		 * `Woo_Wallet_Wallet::get_wallet_balance()` (which sums credits and
-		 * debits without filtering on `currency`). PR2 fixes the underlying
-		 * read; this filter then becomes redundant and can go away.
+		 * Pre-1.6 the underlying `SUM(...)` in `Woo_Wallet_Wallet::get_wallet_balance()`
+		 * had no `currency` filter, so on stores with mixed-currency rows the raw
+		 * SUM was meaningless. This filter re-summed each row through the converter
+		 * to coerce the result into a single (active) currency.
 		 *
-		 * @param float $balance Current SUM-based balance.
-		 * @param int   $user_id User id.
+		 * After 1.6:
+		 *  - In per_currency mode, the raw SUM is already scoped to a single
+		 *    currency (the one the caller passed via `$balance_currency`), so we
+		 *    pass it through. Re-summing across all currencies would silently
+		 *    blend sub-balances and give a wrong answer.
+		 *  - In single_base mode, every new row is normalized to base on write
+		 *    so the raw SUM is the balance in base. We still need to convert to
+		 *    the active currency for the storefront display, which is what the
+		 *    per-row loop does — and it also remains correct for legacy pre-1.6
+		 *    rows that may carry a non-base `currency` because of the asymmetry
+		 *    bugs the line-level fixes in this PR address.
+		 *
+		 * @param float  $balance          Current SUM-based balance.
+		 * @param int    $user_id          User id.
+		 * @param string $balance_currency Currency the balance is denominated in
+		 *                                 (passed through as the third filter arg
+		 *                                 by `get_wallet_balance()` from 1.6).
 		 * @return float
 		 */
-		public function filter_woo_wallet_current_balance( $balance, $user_id ) {
-			unset( $balance );
+		public function filter_woo_wallet_current_balance( $balance, $user_id, $balance_currency = '' ) {
 			$manager = Woo_Wallet_Currency_Manager::instance();
-			$active  = $manager->get_active_currency();
+			$active  = '' !== $balance_currency ? strtoupper( (string) $balance_currency ) : $manager->get_active_currency();
+
+			// per_currency mode: raw SUM is already scoped to $balance_currency.
+			if ( apply_filters( 'woo_wallet_enable_per_currency_mode', false )
+				&& 'per_currency' === woo_wallet()->settings_api->get_option( 'wallet_currency_mode', '_wallet_settings_general', 'single_base' ) ) {
+				return (float) $balance;
+			}
+
+			unset( $balance );
 
 			$credit_total = 0;
 			$debit_total  = 0;

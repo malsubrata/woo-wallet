@@ -39,6 +39,9 @@ class Woo_Wallet_Install {
 		'1.5.18' => array(
 			'woo_wallet_update_1518_db_schema',
 		),
+		'1.6.0'  => array(
+			'woo_wallet_update_160_db_schema',
+		),
 	);
 	/**
 	 * Class constructor.
@@ -92,6 +95,10 @@ class Woo_Wallet_Install {
             user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             type ENUM('credit', 'debit') NOT NULL,
             amount DECIMAL( 16,8 ) NOT NULL,
+            original_amount DECIMAL( 16,8 ) NULL,
+            original_currency varchar(20 ) NULL,
+            original_rate DECIMAL( 20,10 ) NULL,
+            mode TINYINT UNSIGNED NOT NULL DEFAULT 0,
             currency varchar(20 ) NOT NULL,
             details longtext NULL,
             created_by BIGINT UNSIGNED NOT NULL DEFAULT 1,
@@ -100,7 +107,8 @@ class Woo_Wallet_Install {
             PRIMARY KEY  (transaction_id ),
             KEY user_id (user_id ),
             KEY idx_user_deleted (user_id, deleted ),
-            KEY idx_user_date (user_id, date )
+            KEY idx_user_date (user_id, date ),
+            KEY idx_user_currency (user_id, currency, deleted )
         ) ENGINE=InnoDB $collate;
         CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,

@@ -54,8 +54,16 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
     *   Lock/Unlock user wallets for security and fraud prevention.
 *   🔗 **Seamless Integrations:**
     *   Full support for WooCommerce Blocks checkout.
-    *   Compatible with WPML, Multi Currency switchers, and WooCommerce Subscriptions.
+    *   Compatible with WPML and WooCommerce Subscriptions.
     *   Built-in support for Dokan, WCFM, and WCMarketplace.
+
+*   🌍 **Multi-Currency Support:** First-class integrations with the most-used WooCommerce currency switchers. Wallet balances, top-ups, transfers, and cashback are all converted through the active provider's live rates.
+    *   [WOOCS – WooCommerce Currency Switcher (FOX)](https://wordpress.org/plugins/woocommerce-currency-switcher/)
+    *   [WPML Multilingual & Multi-Currency](https://wpml.org/) (WCML)
+    *   [CURCY – Multi Currency for WooCommerce](https://wordpress.org/plugins/woo-multi-currency/) (VillaTheme)
+    *   [Aelia Currency Switcher](https://aelia.co/shop/currency-switcher-woocommerce/)
+    *   [YayCurrency – Multi-Currency Switcher](https://wordpress.org/plugins/yaycurrency/)
+    *   **Generic fallback** for any other plugin that filters `woocommerce_currency` — active-currency detection still works, conversion falls open to the stored amount with an audit-log warning.
 
 == 🚀 Pro Features ==
 

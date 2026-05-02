@@ -43,25 +43,92 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
-		 * Get user wallet balance or display
+		 * Get user wallet balance or display.
+		 *
+		 * Mode-aware:
+		 *  - single_base (default): SUM over all rows, unfiltered by currency.
+		 *    Every row is stored in shop base in this mode, so the SUM is meaningful.
+		 *  - per_currency: SUM scoped to a single currency. Defaults to the active
+		 *    provider's `get_active_currency()` when the caller does not pass one.
+		 *
+		 * The third filter arg `$balance_currency` is additive — existing 2-arg
+		 * callbacks continue to receive what they always have, since WordPress
+		 * only passes as many args as the callback declares.
 		 *
 		 * @global object $wpdb wpdb.
-		 * @param int    $user_id user_id.
-		 * @param string $context context.
+		 * @param int    $user_id  user_id.
+		 * @param string $context  'view' for wc_price-formatted, otherwise raw.
+		 * @param string $currency Optional ISO code. Only consulted in per_currency mode.
 		 * @return mixed
 		 */
-		public function get_wallet_balance( $user_id = '', $context = 'view' ) {
+		public function get_wallet_balance( $user_id = '', $context = 'view', $currency = '' ) {
 			global $wpdb;
 			if ( empty( $user_id ) ) {
 				$user_id = get_current_user_id();
 			}
 			$this->set_user_id( $user_id );
 			$this->wallet_balance = 0;
+
+			$mode             = $this->get_currency_mode();
+			$balance_currency = '' !== $currency ? strtoupper( (string) $currency ) : $this->resolve_active_currency();
+
 			if ( $this->user_id ) {
-				$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // @codingStandardsIgnoreLine
-				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id );
+				if ( 'per_currency' === $mode ) {
+					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0 AND t.currency=%s", $this->user_id, $balance_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				} else {
+					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				}
+				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 			}
 			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
+		}
+
+		/**
+		 * Currency mode for ledger reads/writes.
+		 *
+		 * Returns 'single_base' or 'per_currency'. Per-currency mode is gated by
+		 * the `woo_wallet_enable_per_currency_mode` filter (default `false`)
+		 * so PR2 can ship the storage schema and code paths without flipping
+		 * semantics on existing sites. PR4 unhides the setting and flips the
+		 * filter default.
+		 *
+		 * @return string
+		 */
+		private function get_currency_mode() {
+			if ( ! apply_filters( 'woo_wallet_enable_per_currency_mode', false ) ) {
+				return 'single_base';
+			}
+			$setting = woo_wallet()->settings_api->get_option( 'wallet_currency_mode', '_wallet_settings_general', 'single_base' );
+			return 'per_currency' === $setting ? 'per_currency' : 'single_base';
+		}
+
+		/**
+		 * Resolve the active storefront currency without crashing if the
+		 * currency manager is somehow not loaded yet (e.g. during activation
+		 * hooks before `init`).
+		 *
+		 * @return string ISO 4217 code.
+		 */
+		private function resolve_active_currency() {
+			if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				return Woo_Wallet_Currency_Manager::instance()->get_active_currency();
+			}
+			$base = get_option( 'woocommerce_currency' );
+			return is_string( $base ) && '' !== $base ? strtoupper( $base ) : 'USD';
+		}
+
+		/**
+		 * Resolve the shop base currency, with the same defensive fallback as
+		 * `resolve_active_currency()`.
+		 *
+		 * @return string ISO 4217 code.
+		 */
+		private function resolve_base_currency() {
+			if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				return Woo_Wallet_Currency_Manager::instance()->get_base_currency();
+			}
+			$base = get_option( 'woocommerce_currency' );
+			return is_string( $base ) && '' !== $base ? strtoupper( $base ) : 'USD';
 		}
 
 		/**
@@ -108,7 +175,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( ! is_wallet_rechargeable_order( $order ) ) {
 				return;
 			}
-			$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
+			$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal(), $order_id );
 			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
 				$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
 				if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {
@@ -191,7 +258,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			// Deduct partial payment amount.
 			$partial_payment_amount = get_order_partial_payment_amount( $order->get_id() );
 			if ( $partial_payment_amount && ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
-				$transaction_id = $this->debit( $order->get_customer_id(), $partial_payment_amount, __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), array( 'for' => 'partial_payment' ) );
+				$transaction_id = $this->debit(
+					$order->get_customer_id(),
+					$partial_payment_amount,
+					__( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(),
+					array(
+						'for'      => 'partial_payment',
+						'currency' => $order->get_currency( 'edit' ),
+					)
+				);
 				if ( $transaction_id ) {
 					/* translators: wallet amount */
 					$order->add_order_note( sprintf( __( '%s paid through wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
@@ -232,7 +307,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$total_cashback_amount = get_total_order_cashback_amount( $order_id );
 				if ( $total_cashback_amount ) {
 					/* translators: Order number */
-					if ( $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ) ) ) {
+					if ( $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) ) ) {
 						$order->delete_meta_data( '_general_cashback_transaction_id' );
 						$order->delete_meta_data( '_coupon_cashback_transaction_id' );
 						$order->save();
@@ -281,11 +356,28 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return false;
 			}
 
+			$mode              = $this->get_currency_mode();
+			$base_currency     = $this->resolve_base_currency();
+			$transfer_currency = isset( $args['currency'] ) && '' !== $args['currency']
+				? strtoupper( (string) $args['currency'] )
+				: ( 'per_currency' === $mode ? $this->resolve_active_currency() : $base_currency );
+
+			// v1.6 supports intra-currency transfers only. Cross-currency goes via
+			// the explicit topup→debit flow rather than implicit conversion in transfer().
+			if ( 'per_currency' === $mode ) {
+				$args['currency'] = $transfer_currency;
+			}
+
 			$first_id     = min( $from_user_id, $to_user_id );
 			$second_id    = max( $from_user_id, $to_user_id );
 			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $from_user_id );
-			$lock1_name   = 'woo_wallet_lock_user_' . $first_id;
-			$lock2_name   = 'woo_wallet_lock_user_' . $second_id;
+			// Lock-key suffix is the SAME on both participants, so the deterministic
+			// min/max ordering above still yields a strict total order across all
+			// transfers regardless of currency. Two transfers in different currencies
+			// for the same pair therefore proceed in parallel without deadlocking.
+			$lock_suffix = 'per_currency' === $mode ? '_' . $transfer_currency : '';
+			$lock1_name  = 'woo_wallet_lock_user_' . $first_id . $lock_suffix;
+			$lock2_name  = 'woo_wallet_lock_user_' . $second_id . $lock_suffix;
 
 			$got_lock1 = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock1_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			if ( '1' !== $got_lock1 && 1 !== $got_lock1 ) {
@@ -312,12 +404,20 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// A second concurrent transfer that ran the filter between our RELEASE_LOCK and the
 				// async amount_redeemed update would see the pre-debit balance and proceed to debit
 				// again. The raw SUM is the only authoritative, race-free source of truth.
-				$from_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $from_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				if ( 'per_currency' === $mode ) {
+					$from_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $from_user_id, $transfer_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				} else {
+					$from_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $from_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				}
 
 				if ( $from_balance <= 0 || $amount > $from_balance ) {
 					$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 				} else {
-					$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					if ( 'per_currency' === $mode ) {
+						$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $to_user_id, $transfer_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					} else {
+						$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					}
 
 					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $args );
 					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $args ) : 0;
@@ -378,36 +478,69 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		private function insert_transaction_row( $user_id, $type, $amount, $details, $args = array() ) {
 			global $wpdb;
 
+			$mode              = $this->get_currency_mode();
+			$base_currency     = $this->resolve_base_currency();
+			$incoming_currency = isset( $args['currency'] ) && '' !== $args['currency']
+				? strtoupper( (string) $args['currency'] )
+				: $this->resolve_active_currency();
+			$incoming_amount   = (float) $amount;
+			$stored_currency   = 'per_currency' === $mode ? $incoming_currency : $base_currency;
+			$stored_amount     = $incoming_amount;
+			$original_rate     = 1.0;
+
+			if ( 'single_base' === $mode && $incoming_currency !== $base_currency && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				$stored_amount = (float) Woo_Wallet_Currency_Manager::instance()->convert( $incoming_amount, $incoming_currency, $base_currency );
+				if ( $incoming_amount > 0 ) {
+					$original_rate = $stored_amount / $incoming_amount;
+				}
+			}
+
 			$defaults    = array(
-				'blog_id'    => get_current_blog_id(),
-				'user_id'    => $user_id,
-				'type'       => $type,
-				'amount'     => $amount,
-				'currency'   => get_woocommerce_currency(),
-				'details'    => $details,
-				'date'       => current_time( 'mysql' ),
-				'created_by' => get_current_user_id(),
-				'for'        => '',
+				'blog_id'           => get_current_blog_id(),
+				'user_id'           => $user_id,
+				'type'              => $type,
+				'amount'            => $stored_amount,
+				'original_amount'   => $incoming_amount,
+				'original_currency' => $incoming_currency,
+				'original_rate'     => $original_rate,
+				'mode'              => 'per_currency' === $mode ? 1 : 0,
+				'currency'          => $stored_currency,
+				'details'           => $details,
+				'date'              => current_time( 'mysql' ),
+				'created_by'        => get_current_user_id(),
+				'for'               => '',
 			);
 			$parsed_args = wp_parse_args( $args, $defaults );
+			// Caller-supplied 'currency' is always the source-side currency; derived
+			// `currency` and `amount` columns must reflect storage decisions.
+			$parsed_args['currency'] = $stored_currency;
+			$parsed_args['amount']   = $stored_amount;
 
 			$row_data = apply_filters(
 				'woo_wallet_transactions_args',
 				array(
-					'blog_id'    => $parsed_args['blog_id'],
-					'user_id'    => $parsed_args['user_id'],
-					'type'       => $parsed_args['type'],
-					'amount'     => $parsed_args['amount'],
-					'currency'   => $parsed_args['currency'],
-					'details'    => $parsed_args['details'],
-					'date'       => $parsed_args['date'],
-					'created_by' => $parsed_args['created_by'],
+					'blog_id'           => $parsed_args['blog_id'],
+					'user_id'           => $parsed_args['user_id'],
+					'type'              => $parsed_args['type'],
+					'amount'            => $parsed_args['amount'],
+					'original_amount'   => $parsed_args['original_amount'],
+					'original_currency' => $parsed_args['original_currency'],
+					'original_rate'     => $parsed_args['original_rate'],
+					'mode'              => $parsed_args['mode'],
+					'currency'          => $parsed_args['currency'],
+					'details'           => $parsed_args['details'],
+					'date'              => $parsed_args['date'],
+					'created_by'        => $parsed_args['created_by'],
 				),
 				array(
 					'%d',
 					'%d',
 					'%s',
 					'%f',
+					'%f',
+					'%s',
+					'%f',
+					'%d',
 					'%s',
 					'%s',
 					'%s',
@@ -426,7 +559,26 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
-		 * Record wallet transactions
+		 * Record wallet transactions.
+		 *
+		 * Mode-aware writer:
+		 *  - single_base: row stored in shop base. The amount the caller passed
+		 *    is treated as denominated in `$args['currency']` (or the active
+		 *    storefront currency); we convert it through the currency manager
+		 *    to base before persisting. Audit columns capture the source-side
+		 *    presentation so receipts can render the original number alongside
+		 *    the canonical ledger value.
+		 *  - per_currency: row stored in the source currency unchanged; audit
+		 *    columns mirror the canonical fields (rate=1.0). Lock keys are
+		 *    suffixed with the currency so concurrent transactions in two
+		 *    different currencies can proceed in parallel.
+		 *
+		 * Pre-debit balance check uses the canonical (post-conversion) value in
+		 * single_base, or the per-currency scoped balance in per_currency. In
+		 * both modes the gate uses the raw SUM via `get_wallet_balance(...,'edit', $currency)`,
+		 * which is consistent with the property documented at the top of
+		 * `transfer()` (third-party balance filters fire post-commit, so the
+		 * raw SUM is the only race-free source of truth).
 		 *
 		 * @global object $wpdb wpdb.
 		 * @param int    $amount amount.
@@ -448,9 +600,27 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$amount = 0;
 			}
 
-			// Acquire a per-user DB lock to serialize concurrent requests for the same user.
+			$mode              = $this->get_currency_mode();
+			$base_currency     = $this->resolve_base_currency();
+			$incoming_currency = isset( $args['currency'] ) && '' !== $args['currency']
+				? strtoupper( (string) $args['currency'] )
+				: $this->resolve_active_currency();
+			$incoming_amount   = (float) $amount;
+			$stored_currency   = 'per_currency' === $mode ? $incoming_currency : $base_currency;
+			$stored_amount     = $incoming_amount;
+			$original_rate     = 1.0;
+
+			if ( 'single_base' === $mode && $incoming_currency !== $base_currency && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				$stored_amount = (float) Woo_Wallet_Currency_Manager::instance()->convert( $incoming_amount, $incoming_currency, $base_currency );
+				if ( $incoming_amount > 0 ) {
+					$original_rate = $stored_amount / $incoming_amount;
+				}
+			}
+
+			// Acquire a per-user (per-currency in mode B) DB lock to serialize concurrent requests.
 			$lock_acquired = false;
-			$lock_name     = 'woo_wallet_lock_user_' . $this->user_id;
+			$lock_suffix   = 'per_currency' === $mode ? '_' . $stored_currency : '';
+			$lock_name     = 'woo_wallet_lock_user_' . $this->user_id . $lock_suffix;
 			$lock_timeout  = apply_filters( 'woo_wallet_db_lock_timeout', 5, $this->user_id );
 			$got_lock      = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			if ( '1' !== $got_lock && 1 !== $got_lock ) {
@@ -459,44 +629,56 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$lock_acquired = true;
 
 			try {
-				$balance = $this->get_wallet_balance( $this->user_id, 'edit' );
-				if ( 'debit' === $type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+				$balance = (float) $this->get_wallet_balance( $this->user_id, 'edit', $stored_currency );
+				if ( 'debit' === $type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $stored_amount > $balance ), $stored_amount, $balance ) ) {
 					return false;
 				}
 				if ( 'credit' === $type ) {
-					$balance += $amount;
+					$balance += $stored_amount;
 				} elseif ( 'debit' === $type ) {
-					$balance -= $amount;
+					$balance -= $stored_amount;
 				}
 				$defaults = array(
-					'blog_id'    => get_current_blog_id(),
-					'user_id'    => $this->user_id,
-					'type'       => $type,
-					'amount'     => $amount,
-					'currency'   => get_woocommerce_currency(),
-					'details'    => $details,
-					'date'       => current_time( 'mysql' ),
-					'created_by' => get_current_user_id(),
-					'for'        => '',
+					'blog_id'           => get_current_blog_id(),
+					'user_id'           => $this->user_id,
+					'type'              => $type,
+					'amount'            => $stored_amount,
+					'original_amount'   => $incoming_amount,
+					'original_currency' => $incoming_currency,
+					'original_rate'     => $original_rate,
+					'mode'              => 'per_currency' === $mode ? 1 : 0,
+					'currency'          => $stored_currency,
+					'details'           => $details,
+					'date'              => current_time( 'mysql' ),
+					'created_by'        => get_current_user_id(),
+					'for'               => '',
 				);
 
 				$parsed_args = wp_parse_args( $args, $defaults );
+				// Caller-supplied 'currency' is always the source-side currency; derived
+				// `currency` and `amount` columns must reflect storage decisions.
+				$parsed_args['currency'] = $stored_currency;
+				$parsed_args['amount']   = $stored_amount;
 
 				if ( $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 					"{$wpdb->base_prefix}woo_wallet_transactions",
 					apply_filters(
 						'woo_wallet_transactions_args',
 						array(
-							'blog_id'    => $parsed_args['blog_id'],
-							'user_id'    => $parsed_args['user_id'],
-							'type'       => $parsed_args['type'],
-							'amount'     => $parsed_args['amount'],
-							'currency'   => $parsed_args['currency'],
-							'details'    => $parsed_args['details'],
-							'date'       => $parsed_args['date'],
-							'created_by' => $parsed_args['created_by'],
+							'blog_id'           => $parsed_args['blog_id'],
+							'user_id'           => $parsed_args['user_id'],
+							'type'              => $parsed_args['type'],
+							'amount'            => $parsed_args['amount'],
+							'original_amount'   => $parsed_args['original_amount'],
+							'original_currency' => $parsed_args['original_currency'],
+							'original_rate'     => $parsed_args['original_rate'],
+							'mode'              => $parsed_args['mode'],
+							'currency'          => $parsed_args['currency'],
+							'details'           => $parsed_args['details'],
+							'date'              => $parsed_args['date'],
+							'created_by'        => $parsed_args['created_by'],
 						),
-						array( '%d', '%d', '%s', '%f', '%s', '%s', '%s', '%d' )
+						array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' )
 					)
 				) ) {
 					$transaction_id = $wpdb->insert_id;
@@ -505,7 +687,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					}
 					update_user_meta( $this->user_id, $this->meta_key, $balance );
 					clear_woo_wallet_cache( $this->user_id );
-					do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $amount, $type );
+					do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $stored_amount, $type );
 					$email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
 					if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
 						$email_admin->trigger( $transaction_id );

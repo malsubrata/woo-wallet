@@ -65,6 +65,37 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 		/**
 		 * {@inheritDoc}
 		 *
+		 * YayCurrency only hooks `woocommerce_currency` when
+		 * `YayCurrencyHelper::is_reload_permitted()` is true — that's the
+		 * storefront and a small whitelist of AJAX actions. The wallet's
+		 * own AJAX action `draw_wallet_transaction_details_table` is not
+		 * on that whitelist, so the inherited filter-based default
+		 * (`apply_filters('woocommerce_currency', $base)`) silently
+		 * returns base in that context. Result: every per-row conversion
+		 * in the dashboard transaction list ran INR -> INR (identity)
+		 * and rendered the canonical-base value with the active EUR
+		 * symbol — i.e. unconverted.
+		 *
+		 * `YayCurrencyHelper::detect_current_currency()` reads the
+		 * `yay_currency_widget` cookie directly, so it works in every
+		 * request context that carries the customer's session
+		 * (storefront, AJAX, REST cookie-auth). Falls back to the
+		 * filter-based default if YayCurrency isn't loaded or the
+		 * cookie is missing (cron, server-to-server REST).
+		 */
+		public function get_active_currency() {
+			if ( $this->is_available() ) {
+				$detected = \Yay_Currency\Helpers\YayCurrencyHelper::detect_current_currency();
+				if ( is_array( $detected ) && ! empty( $detected['currency'] ) ) {
+					return strtoupper( (string) $detected['currency'] );
+				}
+			}
+			return parent::get_active_currency();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 *
 		 * Best-effort: enumerate the `yay-currency-manage` custom post type
 		 * to get the configured currency codes. Falls back to the base
 		 * currency on any unexpected shape.
@@ -103,15 +134,20 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Conversion strategy:
+		 * Conversion strategy (in order):
 		 *   1. identity (from === to) — return $amount.
-		 *   2. base -> active — `yay_currency_convert_price` filter.
-		 *   3. active -> base — `yay_currency_revert_price` filter.
-		 *   4. base -> non-active or non-active -> base — read the per-currency
-		 *      rate from the YayCurrency CPT and apply WOOCS-style math
-		 *      (rate is "units of currency per 1 unit of base").
-		 *   5. non-base -> non-base — compose via base in two steps.
-		 *   6. any case where a rate is unknown — return null (manager fails open).
+		 *   2. CPT rate-map — deterministic, session-independent. Each
+		 *      currency's published `rate` post meta is the units-per-base
+		 *      multiplier; we compose any pair via base.
+		 *   3. Published filters (`yay_currency_convert_price` /
+		 *      `yay_currency_revert_price`) — only as a last-resort fallback,
+		 *      because they internally call `detect_current_currency()` which
+		 *      is cookie/session-dependent and unreliable outside the
+		 *      storefront request lifecycle. Without this guard the filter
+		 *      silently multiplies by the base rate (=1) for any caller that
+		 *      isn't carrying the right session state — REST endpoints, AJAX
+		 *      datatables, admin order-completion hooks, etc.
+		 *   4. unknown rate — return null so the manager fails open.
 		 */
 		public function convert( $amount, $from, $to ) {
 			$from = strtoupper( (string) $from );
@@ -124,20 +160,7 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 				return null;
 			}
 
-			$base   = $this->get_base_currency();
-			$active = $this->get_active_currency();
-
-			// Cheap path: published filters cover the base <-> active cases.
-			if ( $from === $base && $to === $active && has_filter( 'yay_currency_convert_price' ) ) {
-				$converted = apply_filters( 'yay_currency_convert_price', (float) $amount, array() );
-				return is_numeric( $converted ) ? (float) $converted : null;
-			}
-			if ( $from === $active && $to === $base && has_filter( 'yay_currency_revert_price' ) ) {
-				$reverted = apply_filters( 'yay_currency_revert_price', (float) $amount, array() );
-				return is_numeric( $reverted ) ? (float) $reverted : null;
-			}
-
-			// General path: per-currency rate lookup via the CPT.
+			$base  = $this->get_base_currency();
 			$rates = $this->get_rate_map();
 			if ( ! isset( $rates[ $base ] ) ) {
 				$rates[ $base ] = 1.0;
@@ -152,6 +175,18 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 			if ( isset( $rates[ $from ], $rates[ $to ] ) && $rates[ $from ] > 0 && $rates[ $to ] > 0 ) {
 				$in_base = (float) $amount / (float) $rates[ $from ];
 				return $in_base * (float) $rates[ $to ];
+			}
+
+			// Fallback: published filters. Only useful in storefront contexts
+			// where YayCurrency's session detection works.
+			$active = $this->get_active_currency();
+			if ( $from === $base && $to === $active && has_filter( 'yay_currency_convert_price' ) ) {
+				$converted = apply_filters( 'yay_currency_convert_price', (float) $amount, array() );
+				return is_numeric( $converted ) ? (float) $converted : null;
+			}
+			if ( $from === $active && $to === $base && has_filter( 'yay_currency_revert_price' ) ) {
+				$reverted = apply_filters( 'yay_currency_revert_price', (float) $amount, array() );
+				return is_numeric( $reverted ) ? (float) $reverted : null;
 			}
 
 			return null;
@@ -212,13 +247,18 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 		/**
 		 * Pull the ISO currency code out of a YayCurrency CPT post.
 		 *
-		 * Tries the meta keys YayCurrency has used across versions, in
-		 * order. Returns '' on miss.
+		 * YayCurrency stores the code as `post_title` (e.g. "EUR").
+		 * The meta-key fallbacks cover older/forked versions that
+		 * persisted the code as post meta instead. Returns '' on miss.
 		 *
 		 * @param int $post_id Post id.
 		 * @return string Uppercase ISO code, or '' if not found.
 		 */
 		private function extract_currency_code_from_post( $post_id ) {
+			$title = get_the_title( $post_id );
+			if ( is_string( $title ) && preg_match( '/^[A-Za-z]{3}$/', trim( $title ) ) ) {
+				return strtoupper( trim( $title ) );
+			}
 			foreach ( array( 'currency', 'currency_code', 'yay_currency_code' ) as $key ) {
 				$value = get_post_meta( $post_id, $key, true );
 				if ( is_array( $value ) ) {

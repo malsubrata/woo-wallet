@@ -1,13 +1,28 @@
 <?php
 /**
- * CURCY provider (WPClever's "WPC Multi Currency for WooCommerce").
+ * CURCY provider — wraps VillaTheme's "CURCY - Multi Currency for WooCommerce".
  *
- * CURCY ships its settings (including the currency list and per-currency
- * rates) under one option blob and exposes its data layer via the
- * `WOOMULTI_CURRENCY_Data` class. This provider is conservative: it
- * reads what is reliably available across CURCY versions (option blob
- * + the `woocommerce_currency` filter for the active code) and refuses
- * to convert when it does not have a positive rate for both sides.
+ * The plugin's WordPress.org slug is `woo-multi-currency`. Its public data
+ * surface is the `WOOMULTI_CURRENCY_F_Data` class (NOT
+ * `WOOMULTI_CURRENCY_Data` — that name was used in earlier scaffold drafts
+ * and never shipped). Singleton accessor is `::get_ins()`. The methods we
+ * rely on:
+ *
+ *   - `get_default_currency()`   — shop base.
+ *   - `get_current_currency()`   — customer's currently-selected currency.
+ *                                  Reads the `wmc_current_currency` cookie
+ *                                  directly, so it's context-independent
+ *                                  (works on storefront, AJAX, REST, admin
+ *                                  order-completion).
+ *   - `get_list_currencies()`    — `[code => ['rate' => float, ...]]`. The
+ *                                  rate is stored as "units of currency
+ *                                  per 1 unit of base", same shape WOOCS
+ *                                  uses.
+ *
+ * Conversion math is identical to the WOOCS provider's: divide by the
+ * from-rate, multiply by the to-rate. Reading the rate map from the Data
+ * class instead of the option blob means we automatically pick up any
+ * runtime overrides VillaTheme applies (currency-rate-fee, etc).
  *
  * @package StandaloneTech
  * @since 1.6.0
@@ -24,11 +39,11 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_CURCY' ) ) {
 	class Woo_Wallet_Currency_Provider_CURCY extends Woo_Wallet_Abstract_Currency_Provider {
 
 		/**
-		 * Cached settings array (per-request).
+		 * Cached "code => rate" map (per-request).
 		 *
-		 * @var array|null
+		 * @var array<string, float>|null
 		 */
-		private $settings_cache = null;
+		private $rate_cache = null;
 
 		/**
 		 * {@inheritDoc}
@@ -41,92 +56,122 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_CURCY' ) ) {
 		 * {@inheritDoc}
 		 */
 		public function get_label() {
-			return __( 'CURCY — WPC Multi Currency', 'woo-wallet' );
+			return __( 'CURCY — Multi Currency for WooCommerce', 'woo-wallet' );
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
 		public function is_available() {
-			return class_exists( 'WOOMULTI_CURRENCY_Data' ) || class_exists( 'WOOMULTI_CURRENCY_F' );
+			return class_exists( 'WOOMULTI_CURRENCY_F_Data' );
 		}
 
 		/**
-		 * Lazy-load CURCY settings.
+		 * Lazy CURCY data-class accessor.
 		 *
-		 * Tries the data class first (the public, supported entry point),
-		 * then falls back to reading the raw option used by all CURCY
-		 * versions to date.
-		 *
-		 * @return array
+		 * @return WOOMULTI_CURRENCY_F_Data|null
 		 */
-		private function get_settings() {
-			if ( null !== $this->settings_cache ) {
-				return $this->settings_cache;
+		private function data() {
+			if ( ! $this->is_available() || ! method_exists( 'WOOMULTI_CURRENCY_F_Data', 'get_ins' ) ) {
+				return null;
 			}
-			$settings = array();
-			if ( class_exists( 'WOOMULTI_CURRENCY_Data' ) && method_exists( 'WOOMULTI_CURRENCY_Data', 'get_instance' ) ) {
-				$data = WOOMULTI_CURRENCY_Data::get_instance();
-				if ( $data && method_exists( $data, 'get_settings' ) ) {
-					$settings = $data->get_settings();
-				}
-			}
-			if ( empty( $settings ) ) {
-				$settings = get_option( 'woocommerce_multi_currency_params', array() );
-			}
-			$this->settings_cache = is_array( $settings ) ? $settings : array();
-			return $this->settings_cache;
+			$ins = WOOMULTI_CURRENCY_F_Data::get_ins();
+			return is_object( $ins ) ? $ins : null;
 		}
 
 		/**
-		 * Map of currency code -> rate (relative to the shop base currency).
+		 * {@inheritDoc}
 		 *
-		 * @return array<string, float>
+		 * Read base from CURCY's data class so we agree with whatever
+		 * CURCY itself considers "default" — usually the same as
+		 * `get_option('woocommerce_currency')` but kept consistent with
+		 * the plugin's source of truth.
 		 */
-		private function get_currencies_map() {
-			$settings = $this->get_settings();
-			$map      = array();
-			if ( isset( $settings['currency'] ) && is_array( $settings['currency'] ) ) {
-				foreach ( $settings['currency'] as $code ) {
-					$code = strtoupper( (string) $code );
-					if ( '' === $code ) {
-						continue;
-					}
-					$rate         = isset( $settings['rate'][ $code ] ) ? (float) $settings['rate'][ $code ] : 0;
-					$map[ $code ] = $rate;
-				}
-			} elseif ( isset( $settings['currencies'] ) && is_array( $settings['currencies'] ) ) {
-				foreach ( $settings['currencies'] as $code => $row ) {
-					$code = strtoupper( (string) $code );
-					if ( '' === $code ) {
-						continue;
-					}
-					$rate         = is_array( $row ) && isset( $row['rate'] ) ? (float) $row['rate'] : 0;
-					$map[ $code ] = $rate;
+		public function get_base_currency() {
+			$data = $this->data();
+			if ( $data && method_exists( $data, 'get_default_currency' ) ) {
+				$code = $data->get_default_currency();
+				if ( is_string( $code ) && '' !== $code ) {
+					return strtoupper( $code );
 				}
 			}
-			$base = $this->get_base_currency();
-			if ( ! isset( $map[ $base ] ) ) {
-				$map[ $base ] = 1.0;
+			return parent::get_base_currency();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 *
+		 * Reading directly from the data class is context-independent —
+		 * `get_current_currency()` consults the `wmc_current_currency`
+		 * cookie, so AJAX / admin-order-completion / REST cookie-auth
+		 * all see the customer's actual selection. The inherited
+		 * `apply_filters('woocommerce_currency', $base)` default is a
+		 * trap on storefronts that gate that filter behind a context
+		 * check (which CURCY does for a few request paths).
+		 */
+		public function get_active_currency() {
+			$data = $this->data();
+			if ( $data && method_exists( $data, 'get_current_currency' ) ) {
+				$code = $data->get_current_currency();
+				if ( is_string( $code ) && '' !== $code ) {
+					return strtoupper( $code );
+				}
 			}
-			return $map;
+			return parent::get_active_currency();
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
 		public function get_supported_currencies() {
-			$map = $this->get_currencies_map();
-			$out = array_keys( $map );
-			$out[] = $this->get_base_currency();
+			$out  = array_keys( $this->get_rate_map() );
+			$base = $this->get_base_currency();
+			if ( ! in_array( $base, $out, true ) ) {
+				$out[] = $base;
+			}
 			return array_values( array_unique( $out ) );
+		}
+
+		/**
+		 * Build a "code => rate-relative-to-base" map from CURCY.
+		 *
+		 * @return array<string, float>
+		 */
+		private function get_rate_map() {
+			if ( null !== $this->rate_cache ) {
+				return $this->rate_cache;
+			}
+			$map  = array();
+			$data = $this->data();
+			if ( $data && method_exists( $data, 'get_list_currencies' ) ) {
+				$list = $data->get_list_currencies();
+				if ( is_array( $list ) ) {
+					foreach ( $list as $code => $row ) {
+						$code = strtoupper( (string) $code );
+						if ( '' === $code ) {
+							continue;
+						}
+						$rate = is_array( $row ) && isset( $row['rate'] ) ? (float) $row['rate'] : 0;
+						if ( $rate > 0 ) {
+							$map[ $code ] = $rate;
+						}
+					}
+				}
+			}
+			$base = $this->get_base_currency();
+			if ( ! isset( $map[ $base ] ) ) {
+				$map[ $base ] = 1.0;
+			}
+			$this->rate_cache = $map;
+			return $this->rate_cache;
 		}
 
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Rates are relative to the shop base, so the conversion path
-		 * matches WOOCS's: divide by from-rate, multiply by to-rate.
+		 * Same WOOCS-style math the wallet has used since 1.0: divide by
+		 * the from-rate, multiply by the to-rate. Returns null on any
+		 * unknown rate so the manager can fail open.
 		 */
 		public function convert( $amount, $from, $to ) {
 			$from = strtoupper( (string) $from );
@@ -137,7 +182,7 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_CURCY' ) ) {
 			if ( ! $this->is_available() ) {
 				return null;
 			}
-			$map = $this->get_currencies_map();
+			$map = $this->get_rate_map();
 			if ( ! isset( $map[ $from ], $map[ $to ] ) ) {
 				return null;
 			}

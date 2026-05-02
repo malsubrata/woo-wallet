@@ -113,3 +113,55 @@ function woo_wallet_update_1518_db_schema() {
 		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP COLUMN `balance`', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 }
+/**
+ * DB update 1.6.0: per-row currency audit trail + per-currency covering index.
+ *
+ * Adds four nullable columns and one composite index. Pre-1.6 rows leave the
+ * new columns NULL and `mode=0` (= single_base, the legacy semantics).
+ *
+ *   original_amount   — the amount the user actually saw on the source surface
+ *                       (e.g. €90 on the order page) before normalization.
+ *   original_currency — ISO of that source surface.
+ *   original_rate     — rate snapshot at write time, so historical conversions
+ *                       are reproducible after admin changes provider rates.
+ *   mode              — 0 = single_base (row stored in shop base, originals
+ *                       carry the source-surface presentation), 1 = per_currency
+ *                       (row stored in its own currency; originals == canonical).
+ *   idx_user_currency — covers per-currency SUM reads and DISTINCT currency
+ *                       enumeration in mode=1.
+ *
+ * Idempotent — each ALTER is gated by a SHOW guard.
+ */
+function woo_wallet_update_160_db_schema() {
+	global $wpdb;
+	$table = $wpdb->base_prefix . 'woo_wallet_transactions';
+
+	if ( $table !== $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return;
+	}
+
+	$has_original_amount = $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table, 'original_amount' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_original_amount ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD COLUMN `original_amount` DECIMAL(16,8) NULL AFTER `amount`', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	$has_original_currency = $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table, 'original_currency' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_original_currency ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD COLUMN `original_currency` VARCHAR(20) NULL AFTER `original_amount`', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	$has_original_rate = $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table, 'original_rate' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_original_rate ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD COLUMN `original_rate` DECIMAL(20,10) NULL AFTER `original_currency`', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	$has_mode = $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table, 'mode' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_mode ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD COLUMN `mode` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `original_rate`', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	$has_user_currency_idx = $wpdb->get_var( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'idx_user_currency' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_user_currency_idx ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD INDEX idx_user_currency (user_id, currency, deleted)', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+}

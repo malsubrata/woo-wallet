@@ -339,11 +339,36 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				'field'  => 'is_enable_cashback_reward_program',
 				'equals' => 'on',
 			);
+
+			// Per-currency ledger mode is gated by a filter through PR2 — when the
+			// flag flips on, this field appears under General Options and admins can
+			// switch the storage semantics. Surfaced as an empty array otherwise so
+			// the array_merge below stays uniform.
+			$currency_handling_fields = array();
+			if ( apply_filters( 'woo_wallet_enable_per_currency_mode', false ) ) {
+				$currency_handling_fields[] = array(
+					'name'              => 'wallet_currency_mode',
+					'label'             => __( 'Wallet Currency Mode', 'woo-wallet' ),
+					'desc'              => __( 'How wallet transactions are stored across currencies. "Single base currency" normalizes every credit/debit to the shop base on write — safest default. "Per-currency sub-balances" stores each transaction in its own currency so customers see balances per currency.', 'woo-wallet' ),
+					'type'              => 'select',
+					'options'           => array(
+						'single_base'  => __( 'Single base currency (recommended)', 'woo-wallet' ),
+						'per_currency' => __( 'Per-currency sub-balances', 'woo-wallet' ),
+					),
+					'default'           => 'single_base',
+					'size'              => 'regular-text',
+					'group'             => 'currency_handling',
+					'group_title'       => __( 'Currency Handling', 'woo-wallet' ),
+					'group_description' => __( 'Multi-currency storage and display behaviour', 'woo-wallet' ),
+				);
+			}
+
 			$settings_fields = array(
 				'_wallet_settings_general' => array_merge(
 					$topup_fields,
 					$partial_fields,
 					$transfer_fields,
+					$currency_handling_fields,
 					$this->wp_menu_locations()
 				),
 				'_wallet_settings_credit'  => array_merge(
