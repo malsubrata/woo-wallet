@@ -51,6 +51,10 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 			// wc/v3/* — admin/server-to-server.
 			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-transactions-controller.php';
 			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-settings-controller.php';
+			$multicurrency_controller = __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-multicurrency-controller.php';
+			if ( file_exists( $multicurrency_controller ) ) {
+				include_once $multicurrency_controller;
+			}
 
 			// terawallet/v1/* — customer (React dashboard). Files are conditionally
 			// included; missing files are skipped so partial PRs don't fatal.
@@ -82,6 +86,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 				// wc/v3 controllers.
 				'TeraWallet_REST_Transactions_Controller',
 				'TeraWallet_REST_Settings_Controller',
+				'TeraWallet_REST_Multicurrency_Controller',
 				// terawallet/v1 controllers (instantiated only if the class exists,
 				// so a partial PR4 rollout doesn't crash REST init).
 				'TeraWallet_REST_Me_Controller',

@@ -74,6 +74,17 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transfer_Controller' ) ) {
 								'sanitize_callback' => 'sanitize_textarea_field',
 								'validate_callback' => 'rest_validate_request_arg',
 							),
+							'currency'        => array(
+								'type'              => 'string',
+								'description'       => __( 'Optional ISO 4217 currency code. In per_currency mode, scopes the balance check and the resulting ledger rows; cross-currency transfers are rejected.', 'woo-wallet' ),
+								'pattern'           => '^[A-Z]{3}$',
+								'sanitize_callback' => function ( $v ) {
+									return is_string( $v ) ? strtoupper( trim( $v ) ) : '';
+								},
+								'validate_callback' => function ( $v ) {
+									return '' === $v || ( is_string( $v ) && (bool) preg_match( '/^[A-Z]{3}$/', strtoupper( trim( $v ) ) ) );
+								},
+							),
 						),
 					),
 				)
@@ -167,6 +178,7 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transfer_Controller' ) ) {
 			$recipient_email = (string) $request->get_param( 'recipient_email' );
 			$amount          = (float) $request->get_param( 'amount' );
 			$note            = (string) $request->get_param( 'note' );
+			$currency        = (string) $request->get_param( 'currency' );
 
 			if ( ! $recipient_id && '' !== $recipient_email ) {
 				$user = get_user_by( 'email', $recipient_email );
@@ -181,7 +193,7 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transfer_Controller' ) ) {
 			if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-transfer-service.php';
 			}
-			$result = WooWallet_Transfer_Service::execute( $from_user_id, $recipient_id, $amount, $note );
+			$result = WooWallet_Transfer_Service::execute( $from_user_id, $recipient_id, $amount, $note, $currency );
 
 			if ( empty( $result['is_valid'] ) ) {
 				$status = isset( $result['status'] ) ? (int) $result['status'] : 400;
@@ -189,7 +201,8 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transfer_Controller' ) ) {
 				return $this->error( $code, $result['message'], $status );
 			}
 
-			$balance_after = (float) woo_wallet()->wallet->get_wallet_balance( $from_user_id, 'edit' );
+			$balance_after = (float) woo_wallet()->wallet->get_wallet_balance( $from_user_id, 'edit', $currency );
+			$balance_args  = '' !== $currency ? array( 'currency' => $currency ) : array();
 			$response      = new WP_REST_Response(
 				array(
 					'transaction_id' => (int) $result['debit_id'],
@@ -198,7 +211,8 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transfer_Controller' ) ) {
 					'message'        => $result['message'],
 					'balance'        => array(
 						'amount'    => $balance_after,
-						'formatted' => wp_strip_all_tags( wc_price( $balance_after, woo_wallet_wc_price_args( $from_user_id ) ) ),
+						'currency'  => '' !== $currency ? $currency : '',
+						'formatted' => wp_strip_all_tags( wc_price( $balance_after, woo_wallet_wc_price_args( $from_user_id, $balance_args ) ) ),
 					),
 				),
 				201

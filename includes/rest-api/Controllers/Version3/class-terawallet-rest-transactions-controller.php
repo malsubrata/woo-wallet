@@ -202,6 +202,18 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			'sanitize_callback' => 'sanitize_key',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
+		$params['currency'] = array(
+			'required'          => false,
+			'type'              => 'string',
+			'description'       => __( 'Filter rows by ISO 4217 currency code (post-1.6 ledger only).', 'woo-wallet' ),
+			'pattern'           => '^[A-Z]{3}$',
+			'sanitize_callback' => function ( $v ) {
+				return is_string( $v ) ? strtoupper( trim( $v ) ) : '';
+			},
+			'validate_callback' => function ( $v ) {
+				return '' === $v || ( is_string( $v ) && (bool) preg_match( '/^[A-Z]{3}$/', strtoupper( trim( $v ) ) ) );
+			},
+		);
 		return $params;
 	}
 
@@ -259,12 +271,17 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			'order'    => strtoupper( $params['order'] ),
 		);
 		if ( ! empty( $params['type'] ) ) {
-			$args['where'] = array(
-				array(
-					'key'      => 'type',
-					'value'    => $params['type'],
-					'operator' => '=',
-				),
+			$args['where'][] = array(
+				'key'      => 'type',
+				'value'    => $params['type'],
+				'operator' => '=',
+			);
+		}
+		if ( ! empty( $params['currency'] ) ) {
+			$args['where'][] = array(
+				'key'      => 'currency',
+				'value'    => $params['currency'],
+				'operator' => '=',
 			);
 		}
 		$args = apply_filters( 'woo_wallet_rest_api_get_items_args', $args, $request );
@@ -383,14 +400,19 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	 */
 	public function prepare_item_for_response( $transaction, $request ) {
 		$data = array(
-			'id'       => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
-			'user_id'  => isset( $transaction->user_id ) ? (int) $transaction->user_id : 0,
-			'type'     => isset( $transaction->type ) ? $transaction->type : '',
-			'amount'   => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
-			'currency' => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
-			'details'  => isset( $transaction->details ) ? $transaction->details : '',
-			'date'     => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
-			'deleted'  => isset( $transaction->deleted ) ? (bool) $transaction->deleted : false,
+			'id'                => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
+			'user_id'           => isset( $transaction->user_id ) ? (int) $transaction->user_id : 0,
+			'type'              => isset( $transaction->type ) ? $transaction->type : '',
+			'amount'            => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
+			'currency'          => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
+			// PR2 audit columns — null on pre-1.6 rows that haven't been backfilled.
+			'original_amount'   => isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null,
+			'original_currency' => isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null,
+			'original_rate'     => isset( $transaction->original_rate ) && null !== $transaction->original_rate ? (float) $transaction->original_rate : null,
+			'mode'              => isset( $transaction->mode ) ? (int) $transaction->mode : 0,
+			'details'           => isset( $transaction->details ) ? $transaction->details : '',
+			'date'              => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
+			'deleted'           => isset( $transaction->deleted ) ? (bool) $transaction->deleted : false,
 		);
 
 		$context = ! empty( $request['context'] ) ? $request['context'] : 'view';
@@ -463,8 +485,33 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 					'context'     => array( 'view', 'edit' ),
 				),
 				'currency' => array(
-					'description' => __( 'Currency code.', 'woo-wallet' ),
+					'description' => __( 'Currency code (canonical ledger currency for this row).', 'woo-wallet' ),
 					'type'        => 'string',
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'original_amount'   => array(
+					'description' => __( 'Source amount as the customer saw it before any currency conversion. Null on pre-1.6 rows.', 'woo-wallet' ),
+					'type'        => array( 'number', 'null' ),
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'original_currency' => array(
+					'description' => __( 'Source currency the customer transacted in. Null on pre-1.6 rows.', 'woo-wallet' ),
+					'type'        => array( 'string', 'null' ),
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'original_rate'     => array(
+					'description' => __( 'Conversion rate applied at write time (original_currency → currency). Null on pre-1.6 rows.', 'woo-wallet' ),
+					'type'        => array( 'number', 'null' ),
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'mode'              => array(
+					'description' => __( 'Storage mode this row was written in: 0 = single_base, 1 = per_currency.', 'woo-wallet' ),
+					'type'        => 'integer',
+					'enum'        => array( 0, 1 ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),

@@ -224,15 +224,32 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 		 * @return WP_REST_Response
 		 */
 		public function prepare_item_for_response( $transaction, $request ) {
+			$row_currency      = isset( $transaction->currency ) && '' !== $transaction->currency ? $transaction->currency : get_woocommerce_currency();
+			$original_amount   = isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null;
+			$original_currency = isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null;
+
+			$amount_formatted = isset( $transaction->amount )
+				? wp_strip_all_tags( wc_price( (float) $transaction->amount, woo_wallet_wc_price_args( $this->current_user_id(), array( 'currency' => $row_currency ) ) ) )
+				: '';
+			// "Original" formatted is only meaningful when the source currency
+			// differs from the canonical ledger currency — otherwise the SPA
+			// would render the same amount twice.
+			$original_formatted = ( null !== $original_amount && null !== $original_currency && $original_currency !== $row_currency )
+				? wp_strip_all_tags( wc_price( $original_amount, woo_wallet_wc_price_args( $this->current_user_id(), array( 'currency' => $original_currency ) ) ) )
+				: null;
+
 			$data = array(
-				'id'        => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
-				'type'      => isset( $transaction->type ) ? $transaction->type : '',
-				'amount'    => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
-				'currency'  => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
-				'details'   => isset( $transaction->details ) ? $transaction->details : '',
-				'date'      => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
-				'formatted' => array(
-					'amount' => isset( $transaction->amount ) ? wp_strip_all_tags( wc_price( $transaction->amount, woo_wallet_wc_price_args( $this->current_user_id() ) ) ) : '',
+				'id'                => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
+				'type'              => isset( $transaction->type ) ? $transaction->type : '',
+				'amount'            => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
+				'currency'          => $row_currency,
+				'original_amount'   => $original_amount,
+				'original_currency' => $original_currency,
+				'details'           => isset( $transaction->details ) ? $transaction->details : '',
+				'date'              => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
+				'formatted'         => array(
+					'amount'   => $amount_formatted,
+					'original' => $original_formatted,
 				),
 			);
 
@@ -274,10 +291,22 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'currency'  => array(
+					'currency'          => array(
 						'type'     => 'string',
 						'context'  => array( 'view' ),
 						'readonly' => true,
+					),
+					'original_amount'   => array(
+						'description' => __( 'Source amount the customer transacted in (only set on post-1.6 rows where source != canonical currency).', 'woo-wallet' ),
+						'type'        => array( 'number', 'null' ),
+						'context'     => array( 'view' ),
+						'readonly'    => true,
+					),
+					'original_currency' => array(
+						'description' => __( 'Source currency code (only set on post-1.6 rows).', 'woo-wallet' ),
+						'type'        => array( 'string', 'null' ),
+						'context'     => array( 'view' ),
+						'readonly'    => true,
 					),
 					'details'   => array(
 						'type'     => 'string',
@@ -295,7 +324,8 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 						'context'    => array( 'view' ),
 						'readonly'   => true,
 						'properties' => array(
-							'amount' => array( 'type' => 'string' ),
+							'amount'   => array( 'type' => 'string' ),
+							'original' => array( 'type' => array( 'string', 'null' ) ),
 						),
 					),
 				),

@@ -401,7 +401,7 @@ function GatewayCredentialsSection( { groups, values, onChange } ) {
 	);
 }
 
-export default function Panel( { sectionId, schema, values, onChange, onSave, saving, saved } ) {
+export default function Panel( { sectionId, schema, values, onChange, onSave, saving, saved, appendChildren = null } ) {
 	const fields = ( schema.fields?.[ sectionId ] ) || [];
 	const sectionValues = values[ sectionId ] || {};
 	const { groups, gatewayGroups, loose } = partitionFields( fields );
@@ -455,6 +455,8 @@ export default function Panel( { sectionId, schema, values, onChange, onSave, sa
 					</p>
 				</div>
 			) }
+
+			{ appendChildren }
 
 			<div style={ { display: 'flex', justifyContent: 'flex-end' } }>
 				<SaveButton

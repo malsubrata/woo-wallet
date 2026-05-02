@@ -33,12 +33,22 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 		 * @param int    $user_id        Customer user id.
 		 * @param float  $amount         Top-up amount (gross — gateway fee handled by WC at checkout).
 		 * @param string $payment_method Optional payment method id (set on the order; gateway handles redirect).
-		 * @return array { is_valid, code?, message?, status?, order_id?, payment_url? }
+		 * @param string $currency       Optional ISO 4217 code. When supplied, the WC order is created
+		 *                               in this currency (`$order->set_currency()` before
+		 *                               `calculate_totals()`) so the chosen gateway charges in the
+		 *                               requested currency and the eventual `wallet_credit_purchase`
+		 *                               callback writes a row whose `original_currency` reflects what
+		 *                               the customer actually paid.
+		 * @return array { is_valid, code?, message?, status?, order_id?, payment_url?, currency? }
 		 */
-		public static function create_order( $user_id, $amount, $payment_method = '' ) {
+		public static function create_order( $user_id, $amount, $payment_method = '', $currency = '' ) {
 			$user_id        = (int) $user_id;
 			$amount         = (float) $amount;
 			$payment_method = sanitize_key( (string) $payment_method );
+			$currency       = is_string( $currency ) ? strtoupper( trim( $currency ) ) : '';
+			if ( '' !== $currency && ! preg_match( '/^[A-Z]{3}$/', $currency ) ) {
+				return self::fail( 'rest_invalid_currency', __( 'Invalid currency code.', 'woo-wallet' ) );
+			}
 
 			if ( ! $user_id ) {
 				return self::fail( 'rest_not_logged_in', __( 'You must be logged in to top up.', 'woo-wallet' ), 401 );
@@ -72,14 +82,21 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 
 			$rechargeable_amount = (float) apply_filters( 'woo_wallet_rechargeable_amount', round( $amount, 2 ) );
 
-			$order = wc_create_order(
-				array(
-					'customer_id' => $user_id,
-					'created_via' => 'terawallet_rest',
-				)
+			$order_args = array(
+				'customer_id' => $user_id,
+				'created_via' => 'terawallet_rest',
 			);
+			$order      = wc_create_order( $order_args );
 			if ( is_wp_error( $order ) || ! $order ) {
 				return self::fail( 'rest_order_create_failed', __( 'Could not create top-up order.', 'woo-wallet' ), 500 );
+			}
+
+			// Pin the order's currency BEFORE add_product / calculate_totals so the
+			// rechargeable line item is priced in the customer-selected currency
+			// rather than store base. Set on the order object directly because
+			// wc_create_order() does not accept a `currency` arg.
+			if ( '' !== $currency && method_exists( $order, 'set_currency' ) ) {
+				$order->set_currency( $currency );
 			}
 
 			$item_id = $order->add_product(
@@ -127,6 +144,7 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				'is_valid'    => true,
 				'order_id'    => (int) $order->get_id(),
 				'amount'      => $rechargeable_amount,
+				'currency'    => method_exists( $order, 'get_currency' ) ? $order->get_currency() : $currency,
 				'payment_url' => $order->get_checkout_payment_url(),
 			);
 		}

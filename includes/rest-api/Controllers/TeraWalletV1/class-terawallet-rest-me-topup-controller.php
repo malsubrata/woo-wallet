@@ -59,6 +59,17 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Topup_Controller' ) ) {
 								'sanitize_callback' => 'sanitize_key',
 								'validate_callback' => 'rest_validate_request_arg',
 							),
+							'currency'       => array(
+								'type'              => 'string',
+								'description'       => __( 'Optional ISO 4217 currency code. When supplied, the top-up order is created in this currency so the gateway charges in the requested currency.', 'woo-wallet' ),
+								'pattern'           => '^[A-Z]{3}$',
+								'sanitize_callback' => function ( $v ) {
+									return is_string( $v ) ? strtoupper( trim( $v ) ) : '';
+								},
+								'validate_callback' => function ( $v ) {
+									return '' === $v || ( is_string( $v ) && (bool) preg_match( '/^[A-Z]{3}$/', strtoupper( trim( $v ) ) ) );
+								},
+							),
 						),
 					),
 				)
@@ -89,11 +100,12 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Topup_Controller' ) ) {
 		protected function run_topup( WP_REST_Request $request ) {
 			$amount         = (float) $request->get_param( 'amount' );
 			$payment_method = (string) $request->get_param( 'payment_method' );
+			$currency       = (string) $request->get_param( 'currency' );
 
 			if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-topup-service.php';
 			}
-			$result = WooWallet_Topup_Service::create_order( $this->current_user_id(), $amount, $payment_method );
+			$result = WooWallet_Topup_Service::create_order( $this->current_user_id(), $amount, $payment_method, $currency );
 
 			if ( empty( $result['is_valid'] ) ) {
 				$status = isset( $result['status'] ) ? (int) $result['status'] : 400;
@@ -105,6 +117,7 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Topup_Controller' ) ) {
 				array(
 					'order_id'    => (int) $result['order_id'],
 					'amount'      => (float) $result['amount'],
+					'currency'    => isset( $result['currency'] ) ? (string) $result['currency'] : '',
 					'payment_url' => $result['payment_url'],
 				),
 				201

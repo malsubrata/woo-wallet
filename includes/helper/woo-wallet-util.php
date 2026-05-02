@@ -804,20 +804,43 @@ if ( ! function_exists( 'woo_wallet_wc_price_args' ) ) {
 	/**
 	 * Get WC price args.
 	 *
-	 * @param int $user_id user_id.
+	 * In single_base mode the default `currency` stays empty so wc_price falls
+	 * through to base — preserving 1.5.x behaviour for sites that haven't
+	 * migrated to the per-currency ledger model. In per_currency mode the
+	 * default becomes the active provider's `get_active_currency()` so balance
+	 * pills and transaction rows render with the customer's selected symbol
+	 * even when the calling code hasn't been audited to pass an explicit row
+	 * currency. Callers that DO pass `'currency' => $tx->currency` still win
+	 * via wp_parse_args.
+	 *
+	 * @param int   $user_id user_id.
+	 * @param array $args    Optional overrides forwarded into wp_parse_args.
 	 * @return array
 	 */
 	function woo_wallet_wc_price_args( $user_id = '', $args = array() ) {
 		if ( ! $user_id ) {
 			$user_id = get_current_user_id();
 		}
+
+		$default_currency = '';
+		if (
+			apply_filters( 'woo_wallet_enable_per_currency_mode', false )
+			&& class_exists( 'Woo_Wallet_Currency_Manager' )
+			&& 'per_currency' === woo_wallet()->settings_api->get_option( 'wallet_currency_mode', '_wallet_settings_general', 'single_base' )
+		) {
+			$active = Woo_Wallet_Currency_Manager::instance()->get_active_currency();
+			if ( is_string( $active ) && '' !== $active ) {
+				$default_currency = $active;
+			}
+		}
+
 		$args = apply_filters(
 			'woo_wallet_wc_price_args',
 			wp_parse_args(
 				$args,
 				array(
 					'ex_tax_label'       => false,
-					'currency'           => '',
+					'currency'           => $default_currency,
 					'decimal_separator'  => wc_get_price_decimal_separator(),
 					'thousand_separator' => wc_get_price_thousand_separator(),
 					'decimals'           => wc_get_price_decimals(),

@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Panel from './components/Panel';
 import ActionsPanel from './components/ActionsPanel';
+import CurrencyModePanel from './components/CurrencyModePanel';
 import ToastStack from './components/Toast';
 import useSettings from './hooks/useSettings';
 
@@ -141,15 +142,25 @@ export default function App() {
 								saved={ saved }
 							/>
 						) : activeTab ? (
-							<Panel
-								sectionId={ activeTab }
-								schema={ resolvedSchema }
-								values={ values }
-								onChange={ setFieldValue }
-								onSave={ saveSection }
-								saving={ saving[ activeTab ] }
-								saved={ saved[ activeTab ] }
-							/>
+							<>
+								<Panel
+									sectionId={ activeTab }
+									schema={ resolvedSchema }
+									values={ values }
+									onChange={ setFieldValue }
+									onSave={ saveSection }
+									saving={ saving[ activeTab ] }
+									saved={ saved[ activeTab ] }
+									appendChildren={
+										activeTab === '_wallet_settings_general' ? (
+											<CurrencyModePanel
+												value={ values?._wallet_settings_general?.wallet_currency_mode }
+												onChange={ ( next ) => setFieldValue( '_wallet_settings_general', 'wallet_currency_mode', next ) }
+											/>
+										) : null
+									}
+								/>
+							</>
 						) : null }
 					</div>
 				</main>

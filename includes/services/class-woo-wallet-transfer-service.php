@@ -46,13 +46,22 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 		 * @param int    $to_user_id   Recipient.
 		 * @param float  $amount       Transfer amount (gross, before charge).
 		 * @param string $note         Optional credit-side note. Empty → default sender-email note.
+		 * @param string $currency     Optional ISO 4217 code. In per_currency mode this scopes
+		 *                             both the balance check and the resulting ledger rows. In
+		 *                             single_base mode it is forwarded to recode_transaction()
+		 *                             so the row's `original_currency` audit column reflects
+		 *                             what the customer actually requested.
 		 * @return array
 		 */
-		public static function execute( $from_user_id, $to_user_id, $amount, $note = '' ) {
+		public static function execute( $from_user_id, $to_user_id, $amount, $note = '', $currency = '' ) {
 			$from_user_id = (int) $from_user_id;
 			$to_user_id   = (int) absint( apply_filters( 'woo_wallet_transfer_user_id', $to_user_id ) );
 			$amount       = (float) $amount;
 			$note         = is_string( $note ) ? sanitize_text_field( $note ) : '';
+			$currency     = is_string( $currency ) ? strtoupper( trim( $currency ) ) : '';
+			if ( '' !== $currency && ! preg_match( '/^[A-Z]{3}$/', $currency ) ) {
+				return self::fail( 'rest_invalid_currency', __( 'Invalid currency code.', 'woo-wallet' ) );
+			}
 
 			if ( ! $from_user_id ) {
 				return self::fail( 'rest_not_logged_in', __( 'You must be logged in to transfer funds.', 'woo-wallet' ) );
@@ -120,7 +129,11 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 				return self::fail( 'rest_invalid_amount', __( 'Transfer amount must be greater than zero.', 'woo-wallet' ) );
 			}
 
-			$result = woo_wallet()->wallet->transfer( $from_user_id, (int) $whom->ID, $debit_amount, $debit_note, $credit_note, $credit_amount );
+			$transfer_args = array();
+			if ( '' !== $currency ) {
+				$transfer_args['currency'] = $currency;
+			}
+			$result = woo_wallet()->wallet->transfer( $from_user_id, (int) $whom->ID, $debit_amount, $debit_note, $credit_note, $credit_amount, $transfer_args );
 			if ( ! $result ) {
 				return self::fail( 'rest_insufficient_balance', __( 'Entered amount is greater than current wallet amount.', 'woo-wallet' ), 422 );
 			}
