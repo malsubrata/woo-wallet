@@ -1,6 +1,5 @@
 const path = require('path');
 const defaultConfig = require('@wordpress/scripts/config/webpack.config');
-const WooCommerceDependencyExtractionWebpackPlugin = require('@woocommerce/dependency-extraction-webpack-plugin');
 const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extraction-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const RtlCssPlugin = require('rtlcss-webpack-plugin');
@@ -11,14 +10,21 @@ const defaultRules = defaultConfig.module.rules.filter((rule) => {
     return String(rule.test) !== String(/\.(sc|sa)ss$/);
 });
 
+// WooCommerce external mappings – used by the WP dependency extraction plugin
+// directly, avoiding the broken @woocommerce/dependency-extraction-webpack-plugin
+// which has an incompatible method-signature override with the current WP plugin.
 const wcDepMap = {
     '@woocommerce/blocks-registry': ['wc', 'wcBlocksRegistry'],
+    '@woocommerce/blocks-checkout': ['wc', 'blocksCheckout'],
+    '@woocommerce/blocks-components': ['wc', 'blocksComponents'],
     '@woocommerce/price-format': ['wc', 'priceFormat'],
     '@woocommerce/settings': ['wc', 'wcSettings']
 };
 
 const wcHandleMap = {
     '@woocommerce/blocks-registry': 'wc-blocks-registry',
+    '@woocommerce/blocks-checkout': 'wc-blocks-checkout',
+    '@woocommerce/blocks-components': 'wc-blocks-components',
     '@woocommerce/price-format': 'wc-price-format',
     '@woocommerce/settings': 'wc-settings'
 };
@@ -69,7 +75,7 @@ const wcBuildConfig = {
         ...defaultConfig.plugins.filter(
             (plugin) => plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
         ),
-        new WooCommerceDependencyExtractionWebpackPlugin({
+        new DependencyExtractionWebpackPlugin({
             requestToExternal,
             requestToHandle
         }),
