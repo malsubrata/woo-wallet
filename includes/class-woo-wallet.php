@@ -185,14 +185,6 @@ final class Woo_Wallet {
 		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
 
 		add_action( 'woocommerce_order_item_fee_after_calculate_taxes', array( $this, 'woocommerce_order_item_fee_after_calculate_taxes_callback' ), 10 );
-
-		$is_active = get_option( 'woo_wallet_is_active', false );
-
-		if ( false === $is_active ) {
-			update_option( 'woo_wallet_is_active', true );
-			flush_rewrite_rules();
-			do_action( 'woo_wallet_activated' );
-		}
 	}
 
 	/**
