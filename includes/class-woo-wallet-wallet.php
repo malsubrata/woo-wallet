@@ -166,39 +166,61 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 * @return void
 		 */
 		public function wallet_credit_purchase( $order_id ) {
+			global $wpdb;
 			$order          = wc_get_order( $order_id );
 			$wallet_product = get_wallet_rechargeable_product();
 			$charge_amount  = 0;
-			if ( $order->get_meta( '_wc_wallet_purchase_credited' ) || ! $wallet_product ) {
+			if ( ! $order || ! $wallet_product ) {
 				return;
 			}
 			if ( ! is_wallet_rechargeable_order( $order ) ) {
 				return;
 			}
-			$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal(), $order_id );
-			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
-				$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
-				if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {
-					$recharge_amount -= $recharge_amount * ( $charge_amount / 100 );
-				} else {
-					$recharge_amount -= $charge_amount;
-				}
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_gateway_charge', $charge_amount );
+
+			// Serialize concurrent IPN deliveries for the same order. Without this, two webhooks
+			// arriving inside the meta read→write window both pass the `_wc_wallet_purchase_credited`
+			// guard and credit the wallet twice. The lock is released in the `finally` block so a
+			// fatal mid-flow does not strand the order.
+			$lock_name    = 'woo_wallet_credit_purchase_' . absint( $order_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return;
 			}
-			$transaction_id = $this->credit(
-				$order->get_customer_id(),
-				$recharge_amount,
-				__( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(),
-				array(
-					'for'      => 'credit_purchase',
-					'currency' => $order->get_currency( 'edit' ),
-				)
-			);
-			if ( $transaction_id ) {
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_credited', true, false );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_payment_transaction_id', $transaction_id );
-				update_wallet_transaction_meta( $transaction_id, '_wc_wallet_purchase_gateway_charge', $charge_amount, $order->get_customer_id() );
-				do_action( 'woo_wallet_credit_purchase_completed', $transaction_id, $order );
+
+			try {
+				// Re-fetch the order inside the lock so we observe any meta the prior holder wrote.
+				$order = wc_get_order( $order_id );
+				if ( ! $order || $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
+					return;
+				}
+				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal(), $order_id );
+				if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
+					$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
+					if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {
+						$recharge_amount -= $recharge_amount * ( $charge_amount / 100 );
+					} else {
+						$recharge_amount -= $charge_amount;
+					}
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_gateway_charge', $charge_amount );
+				}
+				$transaction_id = $this->credit(
+					$order->get_customer_id(),
+					$recharge_amount,
+					__( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(),
+					array(
+						'for'      => 'credit_purchase',
+						'currency' => $order->get_currency( 'edit' ),
+					)
+				);
+				if ( $transaction_id ) {
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_credited', true, false );
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wallet_payment_transaction_id', $transaction_id );
+					update_wallet_transaction_meta( $transaction_id, '_wc_wallet_purchase_gateway_charge', $charge_amount, $order->get_customer_id() );
+					do_action( 'woo_wallet_credit_purchase_completed', $transaction_id, $order );
+				}
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
 		}
 		/**
@@ -575,10 +597,11 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 *
 		 * Pre-debit balance check uses the canonical (post-conversion) value in
 		 * single_base, or the per-currency scoped balance in per_currency. In
-		 * both modes the gate uses the raw SUM via `get_wallet_balance(...,'edit', $currency)`,
-		 * which is consistent with the property documented at the top of
-		 * `transfer()` (third-party balance filters fire post-commit, so the
-		 * raw SUM is the only race-free source of truth).
+		 * both modes the gate runs an inline raw SUM directly against the ledger —
+		 * NOT `get_wallet_balance()`, which applies `woo_wallet_current_balance` filters.
+		 * This matches the property documented at the top of `transfer()`: third-party
+		 * balance filters fire post-commit, so the raw SUM is the only race-free
+		 * source of truth.
 		 *
 		 * @global object $wpdb wpdb.
 		 * @param int    $amount amount.
@@ -629,7 +652,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$lock_acquired = true;
 
 			try {
-				$balance = (float) $this->get_wallet_balance( $this->user_id, 'edit', $stored_currency );
+				// Security gate uses the raw ledger SUM only, NOT apply_filters('woo_wallet_current_balance').
+				// Third-party balance filters (credit-expiry, redeemed-totals plugins) recompute balance from
+				// columns updated by the post-commit `woo_wallet_transaction_recorded` hook — which fires AFTER
+				// our lock is released. A concurrent debit that ran the filter between RELEASE_LOCK and the
+				// async post-commit update would see an inflated balance and overdraft. The raw SUM is the
+				// only race-free source of truth — same property documented at the top of transfer().
+				if ( 'per_currency' === $mode ) {
+					$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $this->user_id, $stored_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				} else {
+					$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				}
 				if ( 'debit' === $type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $stored_amount > $balance ), $stored_amount, $balance ) ) {
 					return false;
 				}

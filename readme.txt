@@ -150,6 +150,8 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **New:-** Per-row currency audit columns (`original_amount`, `original_currency`, `original_rate`, `mode`) and a `(user_id, currency, deleted)` index on the wallet transactions table for accurate historical reporting.
 – **New:-** Additive REST surface: `/terawallet/v1/me/balance` now returns `base_currency`, `base_amount`, `mode`, and a `balances[]` array; `/me/transfer` and `/me/topup` accept an optional `currency` argument; `/wc/v3/wallet` exposes the new audit fields and a `currency` query filter.
 – **New:-** Admin endpoint `GET /wc/v3/wallet/multicurrency` and a Currency Mode panel in the React settings app that surfaces the active provider, base/active currencies, and the effective ledger mode.
+– **Security:-** Hardened the debit balance gate in `recode_transaction()` to read the raw ledger SUM directly instead of the filtered `get_wallet_balance()` value. Closes an overdraft window where any third-party hook on `woo_wallet_current_balance` (credit-expiry, redeemed-totals plugins) could inflate the perceived balance and let a user debit into negative territory.
+– **Security:-** Wrapped `wallet_credit_purchase()` in a per-order `GET_LOCK` with re-fetch inside the lock so duplicate gateway IPN deliveries (PayPal/Stripe webhook retries) can no longer both pass the `_wc_wallet_purchase_credited` meta guard and double-credit the wallet.
 – **Fix:-** Partial-payment debit now records the order currency, matching the cancellation refund — no more debit/refund pairs landing in different currencies.
 – **Fix:-** Cashback debit on order cancellation now passes the order currency, eliminating a second source of mixed-currency rows.
 – **Fix:-** Mode-aware balance reads — single-base sites continue to sum normalized rows; per-currency sites filter by the active currency, so a user with EUR and USD activity no longer sees an undefined-currency total.
@@ -206,7 +208,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Upgrade Notice ==
 
 = 1.6.0 =
-Adds multi-currency provider adapters (WOOCS, WCML, CURCY, Aelia, YayCurrency + generic fallback), fixes ledger currency bugs in partial-payment and cashback flows, and extends the REST API with per-currency fields. Schema migration is automatic and idempotent — back up before upgrading.
+Security: closes an overdraft window in the debit balance gate and a duplicate-IPN double-credit window in the top-up callback — recommended upgrade for all sites. Also adds multi-currency provider adapters (WOOCS, WCML, CURCY, Aelia, YayCurrency + generic fallback), fixes ledger currency bugs in partial-payment and cashback flows, and extends the REST API with per-currency fields. Schema migration is automatic and idempotent — back up before upgrading.
 
 = 1.5.18 =
 Security fix for wallet transfer race conditions, new Go Pro admin page, and database query optimizations.
