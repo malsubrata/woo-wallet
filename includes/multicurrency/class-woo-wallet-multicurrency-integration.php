@@ -342,8 +342,8 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				return $cashback_amount;
 			}
 
-			$manager       = Woo_Wallet_Currency_Manager::instance();
-			$base          = $manager->get_base_currency();
+			$manager        = Woo_Wallet_Currency_Manager::instance();
+			$base           = $manager->get_base_currency();
 			$order_currency = $order->get_currency( 'edit' );
 
 			if ( $order_currency === $base ) {

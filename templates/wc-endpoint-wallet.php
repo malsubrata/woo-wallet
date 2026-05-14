@@ -11,7 +11,7 @@
  * the readme will list any important changes.
  *
  * @author  Subrata Mal
- * @version     1.1.8
+ * @version     1.1.9
  * @package StandaleneTech
  */
 
@@ -136,6 +136,11 @@ if ( ! function_exists( 'is_wallet_tab_active' ) ) {
 				<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Balance History', 'woo-wallet' ); ?></h3>
 				<?php $transactions = get_wallet_transactions( array( 'limit' => apply_filters( 'woo_wallet_transactions_count', 10 ) ) ); ?>
 				<?php if ( ! empty( $transactions ) ) { ?>
+					<?php
+					$active_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
+						? Woo_Wallet_Currency_Manager::instance()->get_active_currency()
+						: strtoupper( (string) get_woocommerce_currency() );
+					?>
 					<table class="woo-wallet-transactions-table">
 						<thead>
 							<tr>
@@ -145,14 +150,14 @@ if ( ! function_exists( 'is_wallet_tab_active' ) ) {
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $transactions as $transaction ) : ?> 
+							<?php foreach ( $transactions as $transaction ) : ?>
 								<tr>
 									<td><?php echo esc_html( wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ) ); ?></td>
 									<td><?php echo wp_kses_post( $transaction->details ); ?></td>
 									<td class="amount <?php echo esc_attr( $transaction->type ); ?>">
 										<?php
 										echo 'credit' === $transaction->type ? '+' : '-';
-										echo wp_kses_post( wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) );
+										echo wp_kses_post( wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id, array( 'currency' => $active_currency ) ) ) );
 										?>
 									</td>
 								</tr>

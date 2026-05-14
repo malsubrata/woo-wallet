@@ -363,8 +363,8 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 			'fields'          => 'all', // Support all | all_with_meta.
 			'nocache'         => is_multisite() ? true : false,
 		);
-		$args = apply_filters( 'woo_wallet_transactions_query_args', $args );
-		$args = wp_parse_args( $args, $default_args );
+		$args         = apply_filters( 'woo_wallet_transactions_query_args', $args );
+		$args         = wp_parse_args( $args, $default_args );
 
 		// R8: translate `category` arg into a where_meta clause on `_type`.
 		// The allowed values mirror the REST schema enum; unknown values are mapped to `other`

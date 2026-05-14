@@ -31,7 +31,17 @@ export default function App() {
 		() => window.matchMedia( '(prefers-color-scheme: dark)' ).matches
 	);
 	const [ activeTab, setActiveTab ] = useState( () => {
-		try { return localStorage.getItem( 'ww_admin_tab' ) || ''; } catch ( e ) { return ''; }
+		// Honour `#_wallet_settings_*` deep-links (e.g. from admin notices) first,
+		// then fall back to the last persisted tab.
+		try {
+			const hash = ( window.location.hash || '' ).replace( /^#/, '' );
+			if ( hash && /^[\w-]+$/.test( hash ) ) {
+				return hash;
+			}
+			return localStorage.getItem( 'ww_admin_tab' ) || '';
+		} catch ( e ) {
+			return '';
+		}
 	} );
 	const [ sidebarOpen, setSidebarOpen ] = useState( true );
 
@@ -48,9 +58,16 @@ export default function App() {
 		try { localStorage.setItem( 'ww_admin_theme', theme ); } catch ( e ) { /**/ }
 	}, [ theme ] );
 
-	// Set default active tab when schema loads
+	// Set default active tab when schema loads. Also reconcile against the
+	// schema: if the value seeded from URL hash / localStorage points to a
+	// section that no longer exists, fall back to the first section so the
+	// page doesn't render empty.
 	useEffect( () => {
-		if ( schema && ! activeTab && schema.sections && schema.sections.length > 0 ) {
+		if ( ! schema || ! schema.sections || schema.sections.length === 0 ) {
+			return;
+		}
+		const knownIds = schema.sections.map( ( s ) => s.id );
+		if ( ! activeTab || ! knownIds.includes( activeTab ) ) {
 			setActiveTab( schema.sections[ 0 ].id );
 		}
 	}, [ schema ] );

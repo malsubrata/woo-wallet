@@ -581,9 +581,12 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Admin add wallet balance form
 		 */
 		public function add_balance_to_user_wallet() {
-			$user_id  = filter_input( INPUT_GET, 'user_id' );
-			$currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
-			$user     = new WP_User( $user_id );
+			$user_id       = filter_input( INPUT_GET, 'user_id' );
+			$currency      = apply_filters( 'woo_wallet_user_currency', '', $user_id );
+			$user          = new WP_User( $user_id );
+			$base_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
+				? Woo_Wallet_Currency_Manager::instance()->get_base_currency()
+				: strtoupper( (string) get_option( 'woocommerce_currency', 'USD' ) );
 			?>
 			<div class="wrap">
 				<?php settings_errors(); ?>
@@ -591,7 +594,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<p>
 					<?php
 					esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
-					echo woo_wallet()->wallet->get_wallet_balance( $user_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					echo woo_wallet()->wallet->get_wallet_balance( $user_id, 'view', $base_currency ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					?>
 				</p>
 				<form id="posts-filter" method="post">
@@ -651,14 +654,17 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Display transaction details page
 		 */
 		public function transaction_details_page() {
-			$user_id = filter_input( INPUT_GET, 'user_id' );
+			$user_id       = filter_input( INPUT_GET, 'user_id' );
+			$base_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
+				? Woo_Wallet_Currency_Manager::instance()->get_base_currency()
+				: strtoupper( (string) get_option( 'woocommerce_currency', 'USD' ) );
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
 				<p>
 				<?php
 				esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
-				echo woo_wallet()->wallet->get_wallet_balance( $user_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo woo_wallet()->wallet->get_wallet_balance( $user_id, 'view', $base_currency ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				?>
 				</p>
 				<?php do_action( 'before_woo_wallet_transaction_details_page', $user_id ); ?>
@@ -1266,7 +1272,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				return;
 			}
 
-			$settings_url = admin_url( 'admin.php?page=woo-wallet-settings#wallet_cashback' );
+			$settings_url = admin_url( 'admin.php?page=woo-wallet-settings#_wallet_settings_credit' );
 
 			if ( get_transient( 'tw_161_cashback_refund_notice' ) ) {
 				$nonce = wp_create_nonce( 'woowallet_dismiss_notice' );

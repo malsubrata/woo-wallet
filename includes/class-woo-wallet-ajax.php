@@ -421,12 +421,15 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				'data'      => array(),
 			);
 			if ( $transactions ) {
+				$active_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
+					? Woo_Wallet_Currency_Manager::instance()->get_active_currency()
+					: strtoupper( (string) get_woocommerce_currency() );
 				foreach ( $transactions as $transaction ) {
 					$response['data'][] = apply_filters(
 						'woo_wallet_transactons_datatable_row_data',
 						array(
 							'id'      => $transaction->transaction_id,
-							'amount'  => '<mark class="' . esc_attr( $transaction->type ) . '">' . ( 'credit' === $transaction->type ? '+' : '-' ) . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id ) ) . '</mark>',
+							'amount'  => '<mark class="' . esc_attr( $transaction->type ) . '">' . ( 'credit' === $transaction->type ? '+' : '-' ) . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id, array( 'currency' => $active_currency ) ) ) . '</mark>',
 							'details' => wp_kses_post( $transaction->details ),
 							'date'    => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ),
 							'type'    => esc_html( ucfirst( $transaction->type ) ),

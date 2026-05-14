@@ -80,7 +80,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 			}
-			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
+			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
 		}
 
 		/**
@@ -559,7 +559,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					};
 					add_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX, 3 );
 					/* translators: Order number */
-					$debit_result = $this->debit( $customer_id, $clawback_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+					$debit_result = $this->debit(
+						$customer_id,
+						$clawback_amount,
+						sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
+						array(
+							'currency' => $order->get_currency( 'edit' ),
+							'for'      => 'refund',
+						)
+					);
 					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
 
 					if ( $debit_result ) {
@@ -570,7 +578,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				} elseif ( 'full_or_skip' === $strategy ) {
 					if ( $balance >= $clawback_amount ) {
 						/* translators: Order number */
-						$debit_result = $this->debit( $customer_id, $clawback_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+						$debit_result = $this->debit(
+							$customer_id,
+							$clawback_amount,
+							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
+							array(
+								'currency' => $order->get_currency( 'edit' ),
+								'for'      => 'refund',
+							)
+						);
 						if ( $debit_result ) {
 							/* translators: 1: formatted amount */
 							$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
@@ -582,12 +598,20 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					}
 				} else {
 					// 'partial' (default): debit whatever is available.
-					$available   = max( 0.0, $balance );
+					$available    = max( 0.0, $balance );
 					$debit_amount = min( $available, $clawback_amount );
 
 					if ( $debit_amount > 0 ) {
 						/* translators: Order number */
-						$debit_result = $this->debit( $customer_id, $debit_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+						$debit_result = $this->debit(
+							$customer_id,
+							$debit_amount,
+							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
+							array(
+								'currency' => $order->get_currency( 'edit' ),
+								'for'      => 'refund',
+							)
+						);
 						if ( $debit_result ) {
 							$moved = true;
 						}
