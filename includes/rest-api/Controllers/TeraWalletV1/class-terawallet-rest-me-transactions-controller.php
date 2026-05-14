@@ -116,6 +116,12 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 				'sanitize_callback' => 'sanitize_key',
 				'validate_callback' => 'rest_validate_request_arg',
 			);
+			$params['category'] = array(
+				'type'              => 'string',
+				'description'       => __( 'Filter by transaction category (maps to the _type transaction meta).', 'woo-wallet' ),
+				'sanitize_callback' => 'sanitize_text_field',
+				'validate_callback' => 'rest_validate_request_arg',
+			);
 			$params['search']   = array(
 				'type'              => 'string',
 				'description'       => __( 'Filter by note text (substring).', 'woo-wallet' ),
@@ -153,6 +159,11 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 						'operator' => '=',
 					),
 				);
+			}
+
+			$category = $request->get_param( 'category' );
+			if ( ! empty( $category ) ) {
+				$args['category'] = sanitize_text_field( $category );
 			}
 
 			$args = apply_filters( 'terawallet_rest_me_transactions_query_args', $args, $request );
@@ -238,16 +249,43 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 				? wp_strip_all_tags( wc_price( $original_amount, woo_wallet_wc_price_args( $this->current_user_id(), array( 'currency' => $original_currency ) ) ) )
 				: null;
 
+			// R8: project _type meta into a typed category field.
+			$category = 'other';
+			if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
+				foreach ( $transaction->meta as $meta_row ) {
+					if ( '_type' === $meta_row->meta_key ) {
+						$category = $this->normalize_category( $meta_row->meta_value );
+						break;
+					}
+				}
+			}
+
+			// R9: project cashback_expires_at transaction meta.
+			$cashback_expires_at = null;
+			if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
+				foreach ( $transaction->meta as $meta_row ) {
+					if ( 'cashback_expires_at' === $meta_row->meta_key ) {
+						$ts = (int) $meta_row->meta_value;
+						if ( $ts > 0 ) {
+							$cashback_expires_at = gmdate( 'Y-m-d\TH:i:s', $ts );
+						}
+						break;
+					}
+				}
+			}
+
 			$data = array(
-				'id'                => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
-				'type'              => isset( $transaction->type ) ? $transaction->type : '',
-				'amount'            => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
-				'currency'          => $row_currency,
-				'original_amount'   => $original_amount,
-				'original_currency' => $original_currency,
-				'details'           => isset( $transaction->details ) ? $transaction->details : '',
-				'date'              => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
-				'formatted'         => array(
+				'id'                  => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
+				'type'                => isset( $transaction->type ) ? $transaction->type : '',
+				'amount'              => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
+				'currency'            => $row_currency,
+				'original_amount'     => $original_amount,
+				'original_currency'   => $original_currency,
+				'details'             => isset( $transaction->details ) ? $transaction->details : '',
+				'date'                => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
+				'category'            => $category,
+				'cashback_expires_at' => $cashback_expires_at,
+				'formatted'           => array(
 					'amount'   => $amount_formatted,
 					'original' => $original_formatted,
 				),
@@ -319,7 +357,21 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'formatted' => array(
+					'category'            => array(
+						'description' => __( 'Typed category derived from the _type transaction meta.', 'woo-wallet' ),
+						'type'        => 'string',
+						'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
+						'context'     => array( 'view' ),
+						'readonly'    => true,
+					),
+					'cashback_expires_at' => array(
+						'description' => __( 'ISO-8601 timestamp at which this cashback row expires. Null when no expiry is set. Core does not enforce expiry; intended for Pro/addon use.', 'woo-wallet' ),
+						'type'        => array( 'string', 'null' ),
+						'format'      => 'date-time',
+						'context'     => array( 'view' ),
+						'readonly'    => true,
+					),
+					'formatted'           => array(
 						'type'       => 'object',
 						'context'    => array( 'view' ),
 						'readonly'   => true,
@@ -331,6 +383,32 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 				),
 			);
 			return $this->add_additional_fields_schema( $schema );
+		}
+
+		/**
+		 * Normalize a raw `_type` meta value into a known category enum value.
+		 *
+		 * Maps legacy/internal stored values to the REST-facing enum. Unknown values
+		 * fall through to `other` so the field is always typed.
+		 *
+		 * @param string $raw_type Raw `_type` meta value.
+		 * @return string
+		 *
+		 * @since 1.6.1
+		 */
+		protected function normalize_category( $raw_type ) {
+			$known = array(
+				'topup'               => 'topup',
+				'credit_purchase'     => 'topup',
+				'cashback'            => 'cashback',
+				'cashback_adjustment' => 'cashback_adjustment',
+				'cashback_refund'     => 'cashback_refund',
+				'partial_payment'     => 'partial_payment',
+				'transfer'            => 'transfer',
+				'refund'              => 'refund',
+				'adjustment'          => 'adjustment',
+			);
+			return isset( $known[ $raw_type ] ) ? $known[ $raw_type ] : 'other';
 		}
 	}
 }

@@ -46,7 +46,12 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			add_action( 'wp_ajax_woo-wallet-dismiss-promotional-notice', array( $this, 'woo_wallet_dismiss_promotional_notice' ) );
 			add_action( 'wp_ajax_draw_wallet_transaction_details_table', array( $this, 'draw_wallet_transaction_details_table' ) );
 
-			add_action( 'woocommerce_order_after_calculate_totals', array( $this, 'recalculate_order_cashback_after_calculate_totals' ), 10, 2 );
+			// NOTE: woocommerce_order_after_calculate_totals was removed in 1.6.1 (R4).
+		// It fired on every cart calculation in admin, rewrote the cashback row amount
+		// directly via update_wallet_transaction(), bypassed the lock, and desynchronised
+		// the _current_woo_wallet_balance cache. The explicit "Recalculate cashback" order
+		// action (woocommerce_order_action_recalculate_order_cashback) now performs the
+		// same recalculation via a compensating ledger row through adjust_cashback().
 
 			add_action( 'wp_ajax_terawallet_export_user_search', array( $this, 'terawallet_export_user_search' ) );
 
@@ -186,18 +191,17 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		/**
 		 * Recalculate and send order cashback.
 		 *
-		 * @param Bool     $and_taxes Description.
-		 * @param WC_Order $order order.
+		 * @deprecated 1.6.1 Hook was removed in 1.6.1 (R4). This method stub is
+		 *   kept so any code that references it by name doesn't fatal. The real
+		 *   recompute path is now the explicit "Recalculate cashback" order action
+		 *   in Woo_Wallet_Admin::recalculate_order_cashback() which writes a
+		 *   compensating ledger row via Woo_Wallet_Wallet::adjust_cashback().
+		 *
+		 * @param bool     $and_taxes Description.
+		 * @param WC_Order $order     order.
 		 */
 		public function recalculate_order_cashback_after_calculate_totals( $and_taxes, $order ) {
-			if ( ! is_a( $order, 'WC_Order' ) ) {
-				return;
-			}
-			$cashback_amount = woo_wallet()->cashback->calculate_cashback( false, $order->get_id(), true );
-			$transaction_id  = $order->get_meta( '_general_cashback_transaction_id' );
-			if ( $transaction_id ) {
-				update_wallet_transaction( $transaction_id, $order->get_customer_id(), array( 'amount' => $cashback_amount ), array( '%f' ) );
-			}
+			// No-op since 1.6.1 — hook was removed to stop silent in-place amount mutations.
 		}
 
 		/**

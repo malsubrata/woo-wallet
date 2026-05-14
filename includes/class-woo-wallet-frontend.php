@@ -624,11 +624,33 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				}
 			}
 			if ( $_coupon_cashback_amount ) {
-				$discount_total  = $order->get_discount_total( 'edit' );
-				$discount_total -= $_coupon_cashback_amount;
-				$order->set_discount_total( $discount_total );
-				$order->set_total( $order->get_total( 'edit' ) + $_coupon_cashback_amount );
+				// Always snapshot the coupon cashback amount for the credit-time recompute fallback.
 				WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_amount', $_coupon_cashback_amount );
+
+				// R7: the legacy discount_total/total mutation was replaced with a non-discount
+				// fee item so reportable order totals are not rewritten. Existing upgraded sites
+				// may have woo_wallet_legacy_coupon_cashback_total_mutation=yes (set by 1.6.1
+				// migration) and retain the old behaviour via the flag below.
+				$legacy_mutation = woo_wallet()->settings_api->get_option( 'woo_wallet_legacy_coupon_cashback_total_mutation', '_wallet_settings_credit', 'no' );
+				if ( 'yes' === $legacy_mutation ) {
+					// Legacy path preserved for upgraded sites.
+					$discount_total  = $order->get_discount_total( 'edit' );
+					$discount_total -= $_coupon_cashback_amount;
+					$order->set_discount_total( $discount_total );
+					$order->set_total( $order->get_total( 'edit' ) + $_coupon_cashback_amount );
+				} else {
+					// New path: attach a non-discount fee item so the total reflects the
+					// cashback amount without rewriting discount_total / order total fields.
+					$fee = new WC_Order_Item_Fee();
+					$fee->set_name( __( 'Wallet Cashback (coupon)', 'woo-wallet' ) );
+					$fee->set_amount( $_coupon_cashback_amount );
+					$fee->set_total( $_coupon_cashback_amount );
+					$fee->set_tax_class( '' );
+					$fee->set_tax_status( 'none' );
+					$fee->update_meta_data( '_wc_wallet_cashback_fee', '1' );
+					$order->add_item( $fee );
+					$order->calculate_totals( false );
+				}
 			}
 		}
 
@@ -715,13 +737,12 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 */
 		public function display_cashback() {
 			$user_id = get_current_user_id();
-			if ( ! is_user_logged_in() ) {
-				return;
-			}
-			$user         = new WP_User( $user_id );
-			$exclude_role = woo_wallet()->settings_api->get_option( 'exclude_role', '_wallet_settings_credit', array() );
-			if ( ! array_diff( $user->roles, $exclude_role ) ) {
-				return;
+			if ( $user_id ) {
+				$user         = new WP_User( $user_id );
+				$exclude_role = woo_wallet()->settings_api->get_option( 'exclude_role', '_wallet_settings_credit', array() );
+				if ( ! array_diff( $user->roles, $exclude_role ) ) {
+					return;
+				}
 			}
 			$product = wc_get_product( get_the_ID() );
 			if ( ! $product || is_wallet_account_locked() ) {

@@ -82,6 +82,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_topup_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_transfer_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_form_cart_cashback_amount', array( $this, 'filter_cashback_amount' ) );
+				add_filter( 'woo_wallet_form_order_cashback_amount', array( $this, 'filter_order_cashback_amount' ), 10, 2 );
 			}
 
 			if ( has_filter( 'wpml_object_id' ) ) {
@@ -312,6 +313,78 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 			}
 
 			return $cashback_amount;
+		}
+
+		/**
+		 * Convert order-side cashback settings from base currency to the order's
+		 * currency so `min_cart_amount` and `max_cashback_amount` are evaluated
+		 * against the correct amount for non-base orders.
+		 *
+		 * Mirrors `filter_cashback_amount()` (cart-side) for the order path.
+		 *
+		 * @param float $cashback_amount Default cashback amount computed for the order.
+		 * @param int   $order_id        Order id.
+		 * @return float
+		 *
+		 * @since 1.6.1 (R5)
+		 */
+		public function filter_order_cashback_amount( $cashback_amount, $order_id ) {
+			$cashback_rule = woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' );
+			if ( 'cart' !== $cashback_rule ) {
+				// Per-product / per-category rules compute per-line amounts that are
+				// not directly comparable to a currency-converted threshold, so the
+				// post-loop cap is handled in calculate_cashback_form_order() for now.
+				return $cashback_amount;
+			}
+
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return $cashback_amount;
+			}
+
+			$manager       = Woo_Wallet_Currency_Manager::instance();
+			$base          = $manager->get_base_currency();
+			$order_currency = $order->get_currency( 'edit' );
+
+			if ( $order_currency === $base ) {
+				return $cashback_amount;
+			}
+
+			$global_cashbak_type   = woo_wallet()->settings_api->get_option( 'cashback_type', '_wallet_settings_credit', 'percent' );
+			$global_cashbak_amount = woo_wallet()->settings_api->get_option( 'cashback_amount', '_wallet_settings_credit', 0 );
+
+			$max_cashback_amount = $manager->convert(
+				floatval( woo_wallet()->settings_api->get_option( 'max_cashback_amount', '_wallet_settings_credit', 0 ) ),
+				$base,
+				$order_currency
+			);
+
+			$min_cart_existence = woo_wallet()->settings_api->get_option( 'min_cart_amount', '_wallet_settings_credit', 10 );
+			$min_cart_threshold = $manager->convert(
+				floatval( woo_wallet()->settings_api->get_option( 'min_cart_amount', '_wallet_settings_credit', 0 ) ),
+				$base,
+				$order_currency
+			);
+
+			$order_total = (float) $order->get_total( 'edit' );
+
+			if ( 0 == $min_cart_existence || $order_total < $min_cart_threshold ) { // phpcs:ignore Universal.Operators.StrictComparisons.LooseNotEqual
+				return 0;
+			}
+
+			$recomputed = 0;
+			if ( 'percent' === $global_cashbak_type ) {
+				$percent_cashback = $order_total * ( (float) $global_cashbak_amount / 100 );
+				if ( $max_cashback_amount && $percent_cashback > $max_cashback_amount ) {
+					$recomputed = $max_cashback_amount;
+				} else {
+					$recomputed = $percent_cashback;
+				}
+			} else {
+				$recomputed = $manager->convert( floatval( $global_cashbak_amount ), $base, $order_currency );
+			}
+
+			return $recomputed;
 		}
 
 		/**

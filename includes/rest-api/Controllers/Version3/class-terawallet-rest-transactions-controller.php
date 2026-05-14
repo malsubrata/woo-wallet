@@ -214,6 +214,13 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 				return '' === $v || ( is_string( $v ) && (bool) preg_match( '/^[A-Z]{3}$/', strtoupper( trim( $v ) ) ) );
 			},
 		);
+		$params['category'] = array(
+			'required'          => false,
+			'type'              => 'string',
+			'description'       => __( 'Filter by transaction category. Matches the _type transaction meta. Accepts a single value or a comma-separated list.', 'woo-wallet' ),
+			'sanitize_callback' => 'sanitize_text_field',
+			'validate_callback' => 'rest_validate_request_arg',
+		);
 		return $params;
 	}
 
@@ -283,6 +290,9 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 				'value'    => $params['currency'],
 				'operator' => '=',
 			);
+		}
+		if ( ! empty( $params['category'] ) ) {
+			$args['category'] = sanitize_text_field( $params['category'] );
 		}
 		$args = apply_filters( 'woo_wallet_rest_api_get_items_args', $args, $request );
 
@@ -399,20 +409,47 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	 * @return WP_REST_Response
 	 */
 	public function prepare_item_for_response( $transaction, $request ) {
+		// R8: project _type meta into a typed category field.
+		$category = 'other';
+		if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
+			foreach ( $transaction->meta as $meta_row ) {
+				if ( '_type' === $meta_row->meta_key ) {
+					$category = $this->normalize_category( $meta_row->meta_value );
+					break;
+				}
+			}
+		}
+
+		// R9: project cashback_expires_at transaction meta.
+		$cashback_expires_at = null;
+		if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
+			foreach ( $transaction->meta as $meta_row ) {
+				if ( 'cashback_expires_at' === $meta_row->meta_key ) {
+					$ts = (int) $meta_row->meta_value;
+					if ( $ts > 0 ) {
+						$cashback_expires_at = gmdate( 'Y-m-d\TH:i:s', $ts );
+					}
+					break;
+				}
+			}
+		}
+
 		$data = array(
-			'id'                => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
-			'user_id'           => isset( $transaction->user_id ) ? (int) $transaction->user_id : 0,
-			'type'              => isset( $transaction->type ) ? $transaction->type : '',
-			'amount'            => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
-			'currency'          => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
+			'id'                  => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
+			'user_id'             => isset( $transaction->user_id ) ? (int) $transaction->user_id : 0,
+			'type'                => isset( $transaction->type ) ? $transaction->type : '',
+			'amount'              => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
+			'currency'            => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
 			// PR2 audit columns — null on pre-1.6 rows that haven't been backfilled.
-			'original_amount'   => isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null,
-			'original_currency' => isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null,
-			'original_rate'     => isset( $transaction->original_rate ) && null !== $transaction->original_rate ? (float) $transaction->original_rate : null,
-			'mode'              => isset( $transaction->mode ) ? (int) $transaction->mode : 0,
-			'details'           => isset( $transaction->details ) ? $transaction->details : '',
-			'date'              => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
-			'deleted'           => isset( $transaction->deleted ) ? (bool) $transaction->deleted : false,
+			'original_amount'     => isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null,
+			'original_currency'   => isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null,
+			'original_rate'       => isset( $transaction->original_rate ) && null !== $transaction->original_rate ? (float) $transaction->original_rate : null,
+			'mode'                => isset( $transaction->mode ) ? (int) $transaction->mode : 0,
+			'details'             => isset( $transaction->details ) ? $transaction->details : '',
+			'date'                => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
+			'deleted'             => isset( $transaction->deleted ) ? (bool) $transaction->deleted : false,
+			'category'            => $category,
+			'cashback_expires_at' => $cashback_expires_at,
 		);
 
 		$context = ! empty( $request['context'] ) ? $request['context'] : 'view';
@@ -527,15 +564,55 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'deleted'  => array(
+				'deleted'             => array(
 					'description' => __( 'Whether the transaction is marked deleted.', 'woo-wallet' ),
 					'type'        => 'boolean',
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'category'            => array(
+					'description' => __( 'Typed category derived from the _type transaction meta. Both namespaces use the same enum values.', 'woo-wallet' ),
+					'type'        => 'string',
+					'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
+					'context'     => array( 'view' ),
+					'readonly'    => true,
+				),
+				'cashback_expires_at' => array(
+					'description' => __( 'ISO-8601 timestamp at which this cashback row expires. Null when no expiry is set. Core does not enforce expiry; intended for Pro/addon use.', 'woo-wallet' ),
+					'type'        => array( 'string', 'null' ),
+					'format'      => 'date-time',
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
 			),
 		);
 		return $this->add_additional_fields_schema( $schema );
+	}
+
+	/**
+	 * Normalize a raw `_type` meta value into a known category enum value.
+	 *
+	 * Maps legacy/internal stored values to the REST-facing enum. Unknown values
+	 * fall through to `other` so the field is always typed.
+	 *
+	 * @param string $raw_type Raw `_type` meta value.
+	 * @return string
+	 *
+	 * @since 1.6.1
+	 */
+	protected function normalize_category( $raw_type ) {
+		$known = array(
+			'topup'               => 'topup',
+			'credit_purchase'     => 'topup',
+			'cashback'            => 'cashback',
+			'cashback_adjustment' => 'cashback_adjustment',
+			'cashback_refund'     => 'cashback_refund',
+			'partial_payment'     => 'partial_payment',
+			'transfer'            => 'transfer',
+			'refund'              => 'refund',
+			'adjustment'          => 'adjustment',
+		);
+		return isset( $known[ $raw_type ] ) ? $known[ $raw_type ] : 'other';
 	}
 }
 
