@@ -779,23 +779,34 @@ if ( ! function_exists( 'get_total_order_cashback_amount' ) ) {
 			$transaction_ids = array_unique( array_filter( $transaction_ids ) );
 
 			if ( ! empty( $transaction_ids ) ) {
-				$total_cashback_amount = array_sum(
-					wp_list_pluck(
-						get_wallet_transactions(
+				$rows = get_wallet_transactions(
+					array(
+						'user_id' => $order->get_customer_id(),
+						'where'   => array(
 							array(
-								'user_id' => $order->get_customer_id(),
-								'where'   => array(
-									array(
-										'key'      => 'transaction_id',
-										'value'    => $transaction_ids,
-										'operator' => 'IN',
-									),
-								),
-							)
+								'key'      => 'transaction_id',
+								'value'    => $transaction_ids,
+								'operator' => 'IN',
+							),
 						),
-						'amount'
 					)
 				);
+
+				// Every caller (admin order-screen display, cancellation clawback,
+				// refund-proportional clawback, recalculation delta) treats the
+				// return value as if it were denominated in the order's currency.
+				// In single_base mode the credited rows were normalized to base
+				// on write, so on a non-base order their raw `amount` is wrong by
+				// the exchange rate; in per_currency mode rows usually match the
+				// order currency already and the conversion is a no-op. Either
+				// way, converting per row into the order currency yields the
+				// answer the callers expect.
+				$order_currency = strtoupper( (string) $order->get_currency( 'edit' ) );
+				$manager        = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance() : null;
+				foreach ( $rows as $row ) {
+					$row_currency           = isset( $row->currency ) && '' !== $row->currency ? strtoupper( $row->currency ) : $order_currency;
+					$total_cashback_amount += $manager ? (float) $manager->convert( $row->amount, $row_currency, $order_currency ) : (float) $row->amount;
+				}
 			}
 		}
 		return apply_filters( 'woo_wallet_total_order_cashback_amount', $total_cashback_amount );
