@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -139,6 +139,19 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
+= v1.6.1 (May 14, 2026) =
+– **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.
+– **Security:-** Cashback clawback on cancellation no longer fails silently when the customer has spent the credit. Default policy: debit whatever balance remains and log the gap to a new `_cashback_unreversed_amount` order meta + order note. Opt-in setting `cashback_clawback_allow_negative` allows sites to drive the wallet negative for exact reversal.
+– **New:-** New refund handler on `woocommerce_order_refunded` clawing back cashback prorated against the refunded fraction. Off by default for upgrade safety; enable in Settings → Wallet Credit → Refund clawback. New filter `woo_wallet_cashback_refund_clawback_amount` for marketplace overrides.
+– **Fix:-** Order-side cashback recompute (`recalculate_order_cashback`) now writes a compensating `cashback_adjustment` ledger row instead of mutating the original cashback row's `amount` in place. Restores the append-only ledger invariant and keeps the `_current_woo_wallet_balance` cache in sync. Removed the noisy `woocommerce_order_after_calculate_totals` recompute hook.
+– **Fix:-** Multi-currency parity for order-side cashback: `min_cart_amount` and `max_cashback_amount` are now converted from base to the order's currency on `woo_wallet_form_order_cashback_amount` (matches the existing cart-side filter). Non-base orders no longer compute against raw base-currency settings.
+– **New:-** New `max_cashback_scope` setting (`per_item` | `per_order`). Defaults to `per_order` on fresh installs so the global cap applies once per cart; existing sites are migrated to `per_item` to preserve current behaviour.
+– **Fix:-** Coupon cashback amount is now recomputed at credit time from the live order's coupons rather than trusting the checkout-time meta. Order edits no longer desync stored coupon cashback. The legacy `discount_total`/`total` rewrite is replaced with a non-discount fee item; gated by `woo_wallet_legacy_coupon_cashback_total_mutation` so existing reports are not affected on upgrade.
+– **New:-** REST transactions endpoints (`/terawallet/v1/me/transactions` and `/wc/v3/wallet/transactions`) now expose a typed `category` field (`topup`, `cashback`, `cashback_adjustment`, `cashback_refund`, `partial_payment`, `transfer`, `refund`, `adjustment`, `other`) and accept a `category=` query argument.
+– **New:-** Cashback expiry seam: new filter `woo_wallet_cashback_expiry_timestamp` lets Pro and addons mark a cashback row as expiring on a given timestamp; the value is stored in transaction meta and projected as `cashback_expires_at` in the REST response. Core does not enforce expiry.
+– **Tweak:-** New filter `woo_wallet_cashback_clawback_strategy` lets sites override the partial / full-or-skip / force-negative reversal policy.
+– **Tweak:-** Database migration `1.6.1` is idempotent — fresh installs default to per-order cap scope; upgraded installs preserve per-item cap scope and legacy coupon-cashback total mutation behaviour.
+
 = v1.6.0 (May 04, 2026) =
 – **New:-** add new settings fields and hooks for Woo Wallet
 – **New:-** Implemented various input fields including AttachmentField, CheckboxField, ColorField, HtmlField, MultiSelectField, MulticheckField, NumberField, PasswordField, RadioField, SelectField, TextField, and TextareaField.
@@ -206,6 +219,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **Fix:-** Refund issue.
 
 == Upgrade Notice ==
+
+= 1.6.1 =
+Two new opt-in settings added: enable *Refund clawback* (Settings → Wallet Credit) to claw back cashback when orders are refunded; enable *Allow negative clawback* to permit exact reversal when the customer has already spent the credit. The `max_cashback_scope` setting defaults to `per_order` on fresh installs; upgraded sites are automatically migrated to `per_item` to preserve existing behaviour. Schema migration is automatic and idempotent — back up before upgrading.
 
 = 1.6.0 =
 Security: closes an overdraft window in the debit balance gate and a duplicate-IPN double-credit window in the top-up callback — recommended upgrade for all sites. Also adds multi-currency provider adapters (WOOCS, WCML, CURCY, Aelia, YayCurrency + generic fallback), fixes ledger currency bugs in partial-payment and cashback flows, and extends the REST API with per-currency fields. Schema migration is automatic and idempotent — back up before upgrading.

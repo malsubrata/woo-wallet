@@ -165,3 +165,47 @@ function woo_wallet_update_160_db_schema() {
 		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD INDEX idx_user_currency (user_id, currency, deleted)', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 }
+
+/**
+ * DB update 1.6.1: cashback subsystem hardening settings migration.
+ *
+ * Responsibilities:
+ *  (a) Set `max_cashback_scope` to `per_item` on upgrades (preserves existing per-line behaviour).
+ *      Fresh installs land on `per_order` (the new default, set by the settings field's `default`
+ *      key) — this callback only runs when the option already existed, meaning it is an upgrade.
+ *  (b) Set `woo_wallet_legacy_coupon_cashback_total_mutation` to `yes` on upgrades so sites that
+ *      already rely on the discount_total/total rewrite continue to behave as before.
+ *  (c) Seed dismissible admin-notice transients so merchants are nudged to review the two new
+ *      opt-in settings (refund clawback, allow-negative clawback).
+ *
+ * Idempotent — all writes are conditional.
+ *
+ * @since 1.6.1
+ */
+function woo_wallet_update_161_db_schema() {
+	$settings = get_option( '_wallet_settings_credit', null );
+
+	// Only runs on true upgrades (option already existed before 1.6.1).
+	if ( ! is_null( $settings ) ) {
+		// (a) Preserve per-item cap scope for existing sites.
+		if ( ! isset( $settings['max_cashback_scope'] ) ) {
+			$settings['max_cashback_scope'] = 'per_item';
+		}
+
+		// (b) Gate coupon-cashback total mutation behind a legacy flag so upgrading
+		//     merchants' revenue reports are not surprised.
+		if ( ! isset( $settings['woo_wallet_legacy_coupon_cashback_total_mutation'] ) ) {
+			$settings['woo_wallet_legacy_coupon_cashback_total_mutation'] = 'yes';
+		}
+
+		update_option( '_wallet_settings_credit', $settings );
+
+		// (c) Seed admin-notice transients for the two new opt-in features.
+		if ( false === get_transient( 'tw_161_cashback_refund_notice_dismissed' ) ) {
+			set_transient( 'tw_161_cashback_refund_notice', '1', 0 ); // 0 = no expiry; dismissed via AJAX.
+		}
+		if ( false === get_transient( 'tw_161_coupon_cashback_totals_notice_dismissed' ) ) {
+			set_transient( 'tw_161_coupon_cashback_totals_notice', '1', 0 );
+		}
+	}
+}

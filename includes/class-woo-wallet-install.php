@@ -42,6 +42,9 @@ class Woo_Wallet_Install {
 		'1.6.0'  => array(
 			'woo_wallet_update_160_db_schema',
 		),
+		'1.6.1'  => array(
+			'woo_wallet_update_161_db_schema',
+		),
 	);
 	/**
 	 * Class constructor.
