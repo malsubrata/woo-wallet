@@ -363,15 +363,54 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 			'fields'          => 'all', // Support all | all_with_meta.
 			'nocache'         => is_multisite() ? true : false,
 		);
-		$args         = apply_filters( 'woo_wallet_transactions_query_args', $args );
-		$args         = wp_parse_args( $args, $default_args );
+		$args = apply_filters( 'woo_wallet_transactions_query_args', $args );
+		$args = wp_parse_args( $args, $default_args );
+
+		// R8: translate `category` arg into a where_meta clause on `_type`.
+		// The allowed values mirror the REST schema enum; unknown values are mapped to `other`
+		// which is a client-side projection default and is NOT stored in meta, so filtering by
+		// `other` intentionally returns rows with no `_type` meta — achieved via a different path
+		// if needed; for now we simply pass it through and the join will find no rows.
+		$allowed_categories = array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' );
+		if ( ! empty( $args['category'] ) ) {
+			$raw_cats = is_array( $args['category'] ) ? $args['category'] : explode( ',', $args['category'] );
+			$cats     = array();
+			foreach ( $raw_cats as $c ) {
+				$c = trim( sanitize_key( $c ) );
+				if ( in_array( $c, $allowed_categories, true ) && 'other' !== $c ) {
+					$cats[] = $c;
+				}
+			}
+			if ( ! empty( $cats ) ) {
+				if ( ! isset( $args['where_meta'] ) ) {
+					$args['where_meta'] = array();
+				}
+				if ( 1 === count( $cats ) ) {
+					$args['where_meta'][] = array(
+						'key'      => '_type',
+						'value'    => $cats[0],
+						'operator' => '=',
+					);
+				} else {
+					$args['where_meta'][] = array(
+						'key'      => '_type',
+						'value'    => $cats,
+						'operator' => 'IN',
+					);
+				}
+				// Ensure LEFT JOIN so transaction_meta is required (we're filtering on it).
+				$args['join_type'] = 'INNER';
+			}
+			unset( $args['category'] );
+		}
+
 		extract( $args ); // @codingStandardsIgnoreLine
 		// Build query safely: validate identifiers and use prepared statements for values.
 		$select = 'SELECT transactions.*';
 		$from   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
 
 		// Validate and whitelist inputs that become SQL identifiers.
-		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'date', 'type', 'deleted' );
+		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'date', 'type', 'deleted' );
 		if ( ! in_array( $order_by, $allowed_order_cols, true ) ) {
 			$order_by = 'transaction_id';
 		}
@@ -720,15 +759,25 @@ if ( ! function_exists( 'get_total_order_cashback_amount' ) ) {
 		$order                 = wc_get_order( $order_id );
 		$total_cashback_amount = 0;
 		if ( $order ) {
-			$transaction_ids                  = array();
-			$_general_cashback_transaction_id = $order->get_meta( '_general_cashback_transaction_id' );
-			$_coupon_cashback_transaction_id  = $order->get_meta( '_coupon_cashback_transaction_id' );
-			if ( $_general_cashback_transaction_id ) {
-				$transaction_ids[] = $_general_cashback_transaction_id;
+			$transaction_ids = array();
+
+			// Coerce to array — supports both the legacy scalar (pre-1.6.1) and
+			// the new array-of-ids format introduced in 1.6.1 (R1).
+			foreach ( array( '_general_cashback_transaction_id', '_coupon_cashback_transaction_id' ) as $meta_key ) {
+				$val = $order->get_meta( $meta_key, true );
+				if ( is_array( $val ) ) {
+					foreach ( $val as $id ) {
+						if ( $id ) {
+							$transaction_ids[] = (int) $id;
+						}
+					}
+				} elseif ( $val ) {
+					$transaction_ids[] = (int) $val;
+				}
 			}
-			if ( $_coupon_cashback_transaction_id ) {
-				$transaction_ids[] = $_coupon_cashback_transaction_id;
-			}
+
+			$transaction_ids = array_unique( array_filter( $transaction_ids ) );
+
 			if ( ! empty( $transaction_ids ) ) {
 				$total_cashback_amount = array_sum(
 					wp_list_pluck(
