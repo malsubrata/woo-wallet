@@ -169,6 +169,7 @@ final class Woo_Wallet {
 		}
 
 		add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
+		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_refunded_order' ), 10, 2 );
 
 		add_filter( 'woocommerce_reports_get_order_report_query', array( $this, 'woocommerce_reports_get_order_report_query' ) );
 		add_filter( 'woocommerce_analytics_revenue_query_args', array( $this, 'remove_wallet_rechargable_order_from_analytics' ) );

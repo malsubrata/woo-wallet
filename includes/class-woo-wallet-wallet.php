@@ -224,48 +224,183 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 		}
 		/**
-		 * Process wallet cashback
+		 * Append a cashback transaction id to the order meta array marker.
+		 *
+		 * The marker is stored as an array under the same keys used in earlier
+		 * versions (`_general_cashback_transaction_id`,
+		 * `_coupon_cashback_transaction_id`). Legacy scalar values are coerced
+		 * to a single-element array on read so callers do not need to branch.
+		 *
+		 * @param WC_Order $order          Order object (must already be read inside the lock).
+		 * @param string   $meta_key       Meta key to append to.
+		 * @param int      $transaction_id Transaction id to append.
+		 * @return void
+		 *
+		 * @since 1.6.1
+		 */
+		private function append_cashback_transaction_id( $order, $meta_key, $transaction_id ) {
+			$existing = $order->get_meta( $meta_key, true );
+			if ( is_array( $existing ) ) {
+				$ids = $existing;
+			} elseif ( $existing ) {
+				$ids = array( (int) $existing );
+			} else {
+				$ids = array();
+			}
+			$ids[] = (int) $transaction_id;
+			WOO_Wallet_Helper::update_order_meta_data( $order, $meta_key, $ids );
+		}
+
+		/**
+		 * Process wallet cashback.
+		 *
+		 * Serialized via a per-order GET_LOCK so that duplicate `processing`/
+		 * `completed` status transitions or replayed gateway webhooks cannot
+		 * double-credit cashback. The marker meta is re-read inside the lock
+		 * to eliminate the TOCTOU window present before 1.6.1.
 		 *
 		 * @param integer $order_id order_id.
 		 * @return void
+		 *
+		 * @since 1.0.0
+		 * @since 1.6.1 Wrapped in per-order GET_LOCK; marker meta stored as array;
+		 *              expiry seam filter added.
 		 */
 		public function wallet_cashback( $order_id ) {
+			global $wpdb;
 			$order = wc_get_order( $order_id );
-			/* General Cashback */
-			if ( apply_filters( 'process_woo_wallet_general_cashback', ! $order->get_meta( '_general_cashback_transaction_id' ) && $order->get_customer_id(), $order ) && woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ) ) {
-				$transaction_id = $this->credit(
-					$order->get_customer_id(),
-					woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ),
-					__( 'Wallet credit through cashback #', 'woo-wallet' ) . $order->get_order_number(),
-					array(
-						'for'      => 'cashback',
-						'currency' => $order->get_currency( 'edit' ),
-					)
-				);
-				if ( $transaction_id ) {
-					WOO_Wallet_Helper::update_order_meta_data( $order, '_general_cashback_transaction_id', $transaction_id );
-					do_action( 'woo_wallet_general_cashback_credited', $transaction_id, $order );
-				}
+			if ( ! $order ) {
+				return;
 			}
-			/* Coupon Cashback */
-			if ( apply_filters( 'process_woo_wallet_coupon_cashback', ! $order->get_meta( '_coupon_cashback_transaction_id' ) && $order->get_customer_id(), $order ) && $order->get_meta( '_coupon_cashback_amount' ) ) {
-				$coupon_cashback_amount = apply_filters( 'woo_wallet_coupon_cashback_amount', $order->get_meta( '_coupon_cashback_amount' ), $order );
-				if ( $coupon_cashback_amount ) {
+
+			// Serialize concurrent status transitions for the same order.
+			// Without this, two near-simultaneous webhooks can both pass the
+			// marker check before either writes back — mirroring the fix in
+			// wallet_credit_purchase() from 1.6.0.
+			$lock_name    = 'woo_wallet_cashback_' . absint( $order_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return;
+			}
+
+			try {
+				// Re-fetch the order inside the lock so we observe meta written
+				// by any prior lock holder (e.g. an earlier concurrent delivery).
+				$order = wc_get_order( $order_id );
+				if ( ! $order ) {
+					return;
+				}
+
+				$existing_general_ids = $order->get_meta( '_general_cashback_transaction_id', true );
+				$has_general          = ! empty( $existing_general_ids );
+
+				/* General Cashback */
+				if ( apply_filters( 'process_woo_wallet_general_cashback', ! $has_general && $order->get_customer_id(), $order ) && woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ) ) {
 					$transaction_id = $this->credit(
 						$order->get_customer_id(),
-						$coupon_cashback_amount,
-						__( 'Wallet credit through cashback by applying coupon', 'woo-wallet' ),
+						woo_wallet()->cashback->calculate_cashback( false, $order->get_id() ),
+						__( 'Wallet credit through cashback #', 'woo-wallet' ) . $order->get_order_number(),
 						array(
 							'for'      => 'cashback',
 							'currency' => $order->get_currency( 'edit' ),
 						)
 					);
 					if ( $transaction_id ) {
-						WOO_Wallet_Helper::update_order_meta_data( $order, '_coupon_cashback_transaction_id', $transaction_id );
-						do_action( 'woo_wallet_coupon_cashback_credited', $transaction_id, $order );
+						$this->append_cashback_transaction_id( $order, '_general_cashback_transaction_id', $transaction_id );
+
+						/**
+						 * Cashback expiry seam (R9).
+						 *
+						 * Return a Unix timestamp from this filter to mark the cashback row as
+						 * expiring. Core does not enforce expiry — that is a Pro/addon concern.
+						 * Return null (default) to skip writing any expiry meta.
+						 *
+						 * @since 1.6.1
+						 * @param int|null $timestamp   Expiry timestamp, or null for no expiry.
+						 * @param int      $transaction_id Transaction id just credited.
+						 * @param WC_Order $order           The order object.
+						 * @param string   $kind            'general' or 'coupon'.
+						 */
+						$expiry = apply_filters( 'woo_wallet_cashback_expiry_timestamp', null, $transaction_id, $order, 'general' );
+						if ( ! is_null( $expiry ) && is_numeric( $expiry ) ) {
+							update_wallet_transaction_meta( $transaction_id, 'cashback_expires_at', (int) $expiry, $order->get_customer_id() );
+						}
+
+						do_action( 'woo_wallet_general_cashback_credited', $transaction_id, $order );
 					}
 				}
+
+				$existing_coupon_ids = $order->get_meta( '_coupon_cashback_transaction_id', true );
+				$has_coupon          = ! empty( $existing_coupon_ids );
+
+				/* Coupon Cashback — recompute from live order coupons at credit time (R7) */
+				$legacy_mutation = woo_wallet()->settings_api->get_option( 'woo_wallet_legacy_coupon_cashback_total_mutation', '_wallet_settings_credit', 'no' );
+				if ( 'yes' === $legacy_mutation ) {
+					// Legacy path: trust the checkout-frozen meta value.
+					$coupon_cashback_amount = $order->get_meta( '_coupon_cashback_amount' );
+				} else {
+					// R7 path: recompute from the live order's coupons so order edits are reflected.
+					$coupon_cashback_amount = $this->compute_order_coupon_cashback( $order );
+					// Fall back to the stored meta for historical orders that pre-date live recompute.
+					if ( ! $coupon_cashback_amount && $order->get_meta( '_coupon_cashback_amount' ) ) {
+						$coupon_cashback_amount = (float) $order->get_meta( '_coupon_cashback_amount' );
+					}
+				}
+
+				if ( apply_filters( 'process_woo_wallet_coupon_cashback', ! $has_coupon && $order->get_customer_id(), $order ) && $coupon_cashback_amount ) {
+					$coupon_cashback_amount = apply_filters( 'woo_wallet_coupon_cashback_amount', $coupon_cashback_amount, $order );
+					if ( $coupon_cashback_amount ) {
+						$transaction_id = $this->credit(
+							$order->get_customer_id(),
+							$coupon_cashback_amount,
+							__( 'Wallet credit through cashback by applying coupon', 'woo-wallet' ),
+							array(
+								'for'      => 'cashback',
+								'currency' => $order->get_currency( 'edit' ),
+							)
+						);
+						if ( $transaction_id ) {
+							$this->append_cashback_transaction_id( $order, '_coupon_cashback_transaction_id', $transaction_id );
+
+							/** @see woo_wallet_cashback_expiry_timestamp above */
+							$expiry = apply_filters( 'woo_wallet_cashback_expiry_timestamp', null, $transaction_id, $order, 'coupon' );
+							if ( ! is_null( $expiry ) && is_numeric( $expiry ) ) {
+								update_wallet_transaction_meta( $transaction_id, 'cashback_expires_at', (int) $expiry, $order->get_customer_id() );
+							}
+
+							do_action( 'woo_wallet_coupon_cashback_credited', $transaction_id, $order );
+						}
+					}
+				}
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
+		}
+
+		/**
+		 * Compute coupon cashback from live order coupons (R7 helper).
+		 *
+		 * Iterates the order's applied coupons and sums the discount amounts for
+		 * coupons that carry the `_is_coupon_cashback=yes` flag. This replicates
+		 * the cart-side logic in `get_woowallet_coupon_cashback_amount()` but
+		 * operates against a WC_Order instead of WC()->cart.
+		 *
+		 * @param WC_Order $order The order.
+		 * @return float
+		 *
+		 * @since 1.6.1
+		 */
+		private function compute_order_coupon_cashback( $order ) {
+			$amount = 0.0;
+			foreach ( $order->get_coupons() as $coupon_item ) {
+				$coupon              = new WC_Coupon( $coupon_item->get_code() );
+				$_is_coupon_cashback = get_post_meta( $coupon->get_id(), '_is_coupon_cashback', true );
+				if ( 'yes' === $_is_coupon_cashback ) {
+					$amount += (float) $coupon_item->get_discount();
+				}
+			}
+			return $amount;
 		}
 		/**
 		 * Actions after woocommerce create order from checkout page.
@@ -306,13 +441,36 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			update_wallet_partial_payment_session();
 		}
 		/**
-		 * Process cancle order.
+		 * Process cancelled order.
+		 *
+		 * Refunds the partial-payment amount and claws back cashback using the
+		 * strategy defined by the `woo_wallet_cashback_clawback_strategy` filter.
+		 *
+		 * Strategy values:
+		 *  - `partial`       (default): debit min(balance, cashback_total); log
+		 *                    any gap to `_cashback_unreversed_amount` order meta
+		 *                    and add an order note.
+		 *  - `full_or_skip`  : debit only when balance >= cashback_total; otherwise
+		 *                    skip with an explanatory order note (closes silent-
+		 *                    failure bug C2 from the audit).
+		 *  - `force_negative`: drive balance negative regardless of gate; requires
+		 *                    the `cashback_clawback_allow_negative` setting to be
+		 *                    enabled, otherwise falls back to `partial`.
 		 *
 		 * @param integer $order_id order_id.
 		 * @return void
+		 *
+		 * @since 1.0.0
+		 * @since 1.6.1 Replaced silent-fail with partial-debit + order-note policy;
+		 *              added `woo_wallet_cashback_clawback_strategy` filter.
 		 */
 		public function process_cancelled_order( $order_id ) {
+			global $wpdb;
 			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
+
 			/** Credit partial payment amount * */
 			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
 			if ( $partial_payment_amount && $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
@@ -325,17 +483,287 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 
 			/** Debit cashback amount * */
-			if ( apply_filters( 'woo_wallet_debit_cashback_upon_cancellation', get_total_order_cashback_amount( $order_id ) ) ) {
-				$total_cashback_amount = get_total_order_cashback_amount( $order_id );
-				if ( $total_cashback_amount ) {
-					/* translators: Order number */
-					if ( $this->debit( $order->get_customer_id(), $total_cashback_amount, sprintf( __( 'Cashback for #%s has been debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) ) ) {
-						$order->delete_meta_data( '_general_cashback_transaction_id' );
-						$order->delete_meta_data( '_coupon_cashback_transaction_id' );
-						$order->save();
-					}
+			if ( ! apply_filters( 'woo_wallet_debit_cashback_upon_cancellation', get_total_order_cashback_amount( $order_id ) ) ) {
+				return;
+			}
+
+			$total_cashback_amount = get_total_order_cashback_amount( $order_id );
+			if ( ! $total_cashback_amount ) {
+				return;
+			}
+
+			$this->execute_cashback_clawback( $order, $total_cashback_amount, 'cancelled' );
+		}
+
+		/**
+		 * Execute cashback clawback with strategy resolution.
+		 *
+		 * Central helper used by both `process_cancelled_order` and
+		 * `process_refunded_order`. Reads the raw ledger SUM inside the per-user
+		 * lock (never via `apply_filters('woo_wallet_current_balance')`) to
+		 * determine available balance before deciding how much to debit.
+		 *
+		 * @param WC_Order $order         The order being clawed back.
+		 * @param float    $clawback_amount Amount to attempt to debit.
+		 * @param string   $reason         'cancelled' or 'refunded' — used in order notes.
+		 * @param bool     $clear_markers  Whether to delete the cashback meta markers on success.
+		 * @return bool True if any ledger movement was recorded; false otherwise.
+		 *
+		 * @since 1.6.1
+		 */
+		private function execute_cashback_clawback( $order, $clawback_amount, $reason = 'cancelled', $clear_markers = true ) {
+			global $wpdb;
+
+			$customer_id = (int) $order->get_customer_id();
+			if ( ! $customer_id || $clawback_amount <= 0 ) {
+				return false;
+			}
+
+			/**
+			 * Filter the cashback clawback strategy.
+			 *
+			 * @since 1.6.1
+			 * @param string   $strategy     'partial' | 'full_or_skip' | 'force_negative'.
+			 * @param WC_Order $order         The order being clawed back.
+			 * @param float    $clawback_amount Amount being reversed.
+			 */
+			$strategy = apply_filters( 'woo_wallet_cashback_clawback_strategy', 'partial', $order, $clawback_amount );
+
+			// `force_negative` requires opt-in setting; fall back to `partial` when not enabled.
+			if ( 'force_negative' === $strategy ) {
+				$allow_negative = woo_wallet()->settings_api->get_option( 'cashback_clawback_allow_negative', '_wallet_settings_credit', 'no' );
+				if ( 'on' !== $allow_negative ) {
+					$strategy = 'partial';
 				}
 			}
+
+			// Read raw balance inside a lock — see CLAUDE.md guidance on why we never
+			// call apply_filters('woo_wallet_current_balance') inside a locked region.
+			$lock_name    = 'woo_wallet_lock_user_' . $customer_id;
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $customer_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return false;
+			}
+
+			$moved = false;
+
+			try {
+				// Raw SUM — the only race-free source of truth (see recode_transaction comment at line 661).
+				$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+				if ( 'force_negative' === $strategy ) {
+					// Allow the debit to go negative for this single call only.
+					$allow_negative_cb = function ( $disallow, $amount, $bal ) {
+						return false; // never disallow.
+					};
+					add_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX, 3 );
+					/* translators: Order number */
+					$debit_result = $this->debit( $customer_id, $clawback_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
+
+					if ( $debit_result ) {
+						/* translators: 1: formatted amount */
+						$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation (wallet driven negative by setting).', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+						$moved = true;
+					}
+				} elseif ( 'full_or_skip' === $strategy ) {
+					if ( $balance >= $clawback_amount ) {
+						/* translators: Order number */
+						$debit_result = $this->debit( $customer_id, $clawback_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+						if ( $debit_result ) {
+							/* translators: 1: formatted amount */
+							$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+							$moved = true;
+						}
+					} else {
+						/* translators: 1: formatted cashback total, 2: formatted available balance */
+						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id ) ) ) );
+					}
+				} else {
+					// 'partial' (default): debit whatever is available.
+					$available   = max( 0.0, $balance );
+					$debit_amount = min( $available, $clawback_amount );
+
+					if ( $debit_amount > 0 ) {
+						/* translators: Order number */
+						$debit_result = $this->debit( $customer_id, $debit_amount, sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ), 'for' => 'refund' ) );
+						if ( $debit_result ) {
+							$moved = true;
+						}
+					}
+
+					$unreversed = $clawback_amount - ( $moved ? $debit_amount : 0 );
+					if ( $unreversed > 0.001 ) {
+						WOO_Wallet_Helper::update_order_meta_data( $order, '_cashback_unreversed_amount', $unreversed );
+						/* translators: 1: formatted debit amount, 2: formatted unreversed amount */
+						$order->add_order_note( sprintf( __( 'Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback.', 'woo-wallet' ), wc_price( $moved ? $debit_amount : 0, woo_wallet_wc_price_args( $customer_id ) ), wc_price( $unreversed, woo_wallet_wc_price_args( $customer_id ) ) ) );
+					} elseif ( $moved ) {
+						/* translators: 1: formatted amount */
+						$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+					}
+				}
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+
+			if ( $moved && $clear_markers ) {
+				$order->delete_meta_data( '_general_cashback_transaction_id' );
+				$order->delete_meta_data( '_coupon_cashback_transaction_id' );
+				$order->save();
+			} elseif ( $clear_markers && 'full_or_skip' !== $strategy ) {
+				// Even when no movement was recorded in partial mode, save the
+				// order to persist the unreversed-amount meta and the order note.
+				$order->save();
+			} else {
+				// full_or_skip skip case — just save the note.
+				$order->save();
+			}
+
+			return $moved;
+		}
+
+		/**
+		 * Process refunded order (R3).
+		 *
+		 * Hooks `woocommerce_order_refunded`. Off by default — merchants opt in via
+		 * the `cashback_clawback_on_refund` setting. When enabled, claws back
+		 * cashback prorated against the refunded fraction of the order total.
+		 *
+		 * @param int $order_id  Order id.
+		 * @param int $refund_id Refund id (WC_Order_Refund post id).
+		 * @return void
+		 *
+		 * @since 1.6.1
+		 */
+		public function process_refunded_order( $order_id, $refund_id ) {
+			global $wpdb;
+
+			// Feature is off by default for upgrade safety.
+			if ( 'on' !== woo_wallet()->settings_api->get_option( 'cashback_clawback_on_refund', '_wallet_settings_credit', 'no' ) ) {
+				return;
+			}
+
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
+
+			$total_cashback = get_total_order_cashback_amount( $order_id );
+			if ( ! $total_cashback ) {
+				return;
+			}
+
+			$order_total = (float) $order->get_total( 'edit' );
+			if ( $order_total <= 0 ) {
+				return;
+			}
+
+			$refund = wc_get_order( $refund_id );
+			if ( ! $refund ) {
+				return;
+			}
+			$refund_amount = abs( (float) $refund->get_amount() );
+			if ( $refund_amount <= 0 ) {
+				return;
+			}
+
+			// Prorated clawback: clawback = total_cashback * ( refund / order_total ).
+			$proration = min( 1.0, $refund_amount / $order_total );
+			$clawback  = round( $total_cashback * $proration, wc_get_price_decimals() );
+
+			/**
+			 * Filter the cashback clawback amount on refund.
+			 *
+			 * Marketplace plugins (e.g. Dokan vendor refunds) can zero this out so
+			 * platform-funded cashback is not clawed back for vendor-side refunds.
+			 *
+			 * @since 1.6.1
+			 * @param float            $clawback Prorated cashback amount to reverse.
+			 * @param WC_Order         $order    Parent order.
+			 * @param WC_Order_Refund  $refund   Refund object.
+			 */
+			$clawback = (float) apply_filters( 'woo_wallet_cashback_refund_clawback_amount', $clawback, $order, $refund );
+			if ( $clawback <= 0 ) {
+				return;
+			}
+
+			// Acquire the same per-order cashback lock from R1 so that a concurrent
+			// re-credit (e.g. a late webhook) serializes against this reversal.
+			$lock_name    = 'woo_wallet_cashback_' . absint( $order_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return;
+			}
+
+			try {
+				// Route through the shared clawback helper (same partial/skip/negative strategy logic).
+				$this->execute_cashback_clawback( $order, $clawback, 'refunded', false );
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+		}
+
+		/**
+		 * Adjust cashback by writing a compensating ledger row (R4).
+		 *
+		 * Replaces the old direct `update_wallet_transaction(amount=...)` pattern
+		 * with an append-only credit or debit row tagged `cashback_adjustment`.
+		 * Acquiring the per-order lock ensures the adjustment serializes with
+		 * any concurrent `wallet_cashback()` call for the same order.
+		 *
+		 * When `$delta === 0.0` the method is a no-op and returns false.
+		 *
+		 * @param WC_Order $order   Order whose cashback is being adjusted.
+		 * @param float    $delta   Positive = credit extra; negative = debit back.
+		 * @param string   $reason  Human-readable reason stored in transaction details.
+		 * @return int|false New adjustment transaction id, or false on no-op / failure.
+		 *
+		 * @since 1.6.1
+		 */
+		public function adjust_cashback( $order, $delta, $reason = '' ) {
+			global $wpdb;
+
+			$delta = (float) $delta;
+			if ( abs( $delta ) < 0.001 ) {
+				return false; // No-op: skip writing a zero-amount row.
+			}
+
+			$order_id     = (int) $order->get_id();
+			$customer_id  = (int) $order->get_customer_id();
+			$lock_name    = 'woo_wallet_cashback_' . $order_id;
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $customer_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return false;
+			}
+
+			$transaction_id = false;
+
+			try {
+				$amount = abs( $delta );
+				$note   = $reason
+					/* translators: 1: order number, 2: reason */
+					? sprintf( __( 'Cashback adjustment for order #%1$s (%2$s)', 'woo-wallet' ), $order->get_order_number(), $reason )
+					/* translators: 1: order number */
+					: sprintf( __( 'Cashback adjustment for order #%s', 'woo-wallet' ), $order->get_order_number() );
+
+				$args = array(
+					'for'      => 'cashback_adjustment',
+					'currency' => $order->get_currency( 'edit' ),
+				);
+
+				if ( $delta > 0 ) {
+					$transaction_id = $this->credit( $customer_id, $amount, $note, $args );
+				} else {
+					$transaction_id = $this->debit( $customer_id, $amount, $note, $args );
+				}
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+
+			return $transaction_id;
 		}
 
 		/**
