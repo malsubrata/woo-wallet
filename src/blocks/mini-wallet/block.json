@@ -1,0 +1,66 @@
+{
+	"apiVersion": 3,
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"name": "woo-wallet/mini-wallet",
+	"version": "1.0.0",
+	"title": "Mini-Wallet",
+	"category": "woocommerce",
+	"icon": "money-alt",
+	"description": "Display the current user's wallet balance with a customizable icon.",
+	"keywords": [ "wallet", "balance", "terawallet", "money", "mini-wallet" ],
+	"textdomain": "woo-wallet",
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true
+		},
+		"color": {
+			"text": true,
+			"background": false,
+			"link": false
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"example": {
+		"attributes": {
+			"walletIcon": "classic-wallet",
+			"showBalance": true
+		}
+	},
+	"attributes": {
+		"walletIcon": {
+			"type": "string",
+			"default": "classic-wallet"
+		},
+		"iconSize": {
+			"type": "number",
+			"default": 24
+		},
+		"iconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"balanceColor": {
+			"type": "string",
+			"default": ""
+		},
+		"linkUrl": {
+			"type": "string",
+			"default": ""
+		},
+		"showBalance": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php",
+	"viewScript": "file:./view.js"
+}

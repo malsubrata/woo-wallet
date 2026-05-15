@@ -142,6 +142,8 @@ final class Woo_Wallet {
 		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
+		// Register Gutenberg blocks.
+		add_action( 'init', array( $this, 'register_wallet_balance_block' ) );
 		do_action( 'woo_wallet_init' );
 	}
 
@@ -214,6 +216,24 @@ final class Woo_Wallet {
 	 */
 	public function woo_wallet_widget_init() {
 		register_widget( 'Woo_Wallet_Topup' );
+	}
+
+	/**
+	 * Register the Wallet Balance Gutenberg block.
+	 *
+	 * Uses the block.json metadata in the build directory. WordPress auto-discovers
+	 * scripts, styles, and the render callback from the metadata file.
+	 *
+	 * @since 1.7.0
+	 */
+	public function register_wallet_balance_block() {
+		if ( ! function_exists( 'register_block_type' ) ) {
+			return;
+		}
+		$block_dir = WOO_WALLET_ABSPATH . 'build/blocks/mini-wallet';
+		if ( file_exists( $block_dir . '/block.json' ) ) {
+			register_block_type( $block_dir );
+		}
 	}
 	/**
 	 * Override WooCommerce email template directory.

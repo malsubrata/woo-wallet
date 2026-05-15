@@ -1,0 +1,98 @@
+/**
+ * Wallet Balance Block – Frontend + Editor Shared Styles
+ *
+ * These styles load on both the frontend and in the editor. Designed to
+ * match the WooCommerce mini-cart block's compact, inline appearance.
+ *
+ * @package woo-wallet
+ */
+
+// ── Block Container ───────────────────────────────────────────────────────
+.wc-block-mini-wallet {
+	display: inline-flex;
+	align-items: center;
+	line-height: 1;
+
+	// ── Link Wrapper ──────────────────────────────────────────────────────
+	&__link {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		text-decoration: none;
+		color: inherit;
+		padding: 6px 10px;
+		border-radius: 6px;
+		transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+		line-height: 1;
+		white-space: nowrap;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			background-color: rgba(0, 0, 0, 0.05);
+			text-decoration: none;
+			color: inherit;
+			outline: none;
+		}
+
+		&:focus-visible {
+			box-shadow: 0 0 0 2px var(--wp--preset--color--primary, #007cba);
+		}
+	}
+
+	// ── Icon ──────────────────────────────────────────────────────────────
+	&__icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		line-height: 1;
+		color: currentColor;
+
+		svg {
+			display: block;
+			width: inherit;
+			height: inherit;
+		}
+	}
+
+	// ── Balance Amount ────────────────────────────────────────────────────
+	&__amount {
+		font-weight: 600;
+		font-size: inherit;
+		line-height: 1;
+		color: currentColor;
+		font-variant-numeric: tabular-nums;
+
+		// WooCommerce price wrapper reset.
+		.woocommerce-Price-amount {
+			font-weight: inherit;
+			font-size: inherit;
+			color: inherit;
+		}
+
+		.woocommerce-Price-currencySymbol {
+			font-weight: inherit;
+			color: inherit;
+		}
+	}
+
+	// ── Focus State (set by view.js) ──────────────────────────────────────
+	&.is-focused &__link {
+		box-shadow: 0 0 0 2px var(--wp--preset--color--primary, #007cba);
+	}
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 480px) {
+	.wc-block-mini-wallet {
+		&__link {
+			padding: 4px 6px;
+			gap: 4px;
+		}
+
+		&__amount {
+			font-size: 0.9em;
+		}
+	}
+}

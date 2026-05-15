@@ -4,6 +4,7 @@ const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extract
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const RtlCssPlugin = require('rtlcss-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Remove SASS rule from the default config so we can define our own.
 const defaultRules = defaultConfig.module.rules.filter((rule) => {
@@ -124,4 +125,45 @@ const vanillaAssetsConfig = {
     ]
 };
 
-module.exports = [wcBuildConfig, vanillaAssetsConfig];
+// ── Gutenberg Blocks ──────────────────────────────────────────────────────
+// Compiles blocks under src/blocks/ and copies static assets (block.json,
+// render.php) to the build directory so register_block_type() can discover them.
+const blocksBuildConfig = {
+    ...defaultConfig,
+    entry: {
+        'blocks/mini-wallet/index': './src/blocks/mini-wallet/index.js',
+        'blocks/mini-wallet/view':  './src/blocks/mini-wallet/view.js',
+    },
+    output: {
+        path: path.resolve(__dirname, 'build'),
+        filename: '[name].js',
+    },
+    module: {
+        ...defaultConfig.module,
+        rules: sharedRules,
+    },
+    plugins: [
+        ...defaultConfig.plugins.filter(
+            (plugin) => plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
+        ),
+        new DependencyExtractionWebpackPlugin(),
+        new MiniCssExtractPlugin({
+            filename: '[name].css',
+        }),
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: 'src/blocks/mini-wallet/block.json',
+                    to: 'blocks/mini-wallet/block.json',
+                },
+                {
+                    from: 'src/blocks/mini-wallet/render.php',
+                    to: 'blocks/mini-wallet/render.php',
+                },
+            ],
+        }),
+    ],
+};
+
+module.exports = [wcBuildConfig, vanillaAssetsConfig, blocksBuildConfig];
+
