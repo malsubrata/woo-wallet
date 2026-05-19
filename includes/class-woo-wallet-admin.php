@@ -91,6 +91,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			add_action( 'admin_notices', array( $this, 'show_promotions' ) );
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
+			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
 			// Redirect old ?page=woo-wallet-actions bookmarks to the unified settings page.
 			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
@@ -360,91 +361,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			include_once WOO_WALLET_ABSPATH . 'templates/admin/html-exporter.php';
 		}
-		/**
-		 * Plugin action settings page
-		 */
-		public function plugin_actions_page() {
-			$screen               = get_current_screen();
-			$wallet_actions       = new WOO_Wallet_Actions();
-			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			if ( in_array( $screen->id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) && isset( $_GET['action'] ) && isset( $wallet_actions->actions[ $_GET['action'] ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-				$this->display_action_settings();
-			} else {
-				$this->display_actions_table();
-			}
-		}
-		/**
-		 * Plugin action setting init
-		 */
-		public function display_action_settings() {
-			$wallet_actions = WOO_Wallet_Actions::instance();
-			?>
-			<div class="wrap woocommerce">
-				<form method="post">
-					<?php
-					$wallet_actions->actions[ $_GET['action'] ]->init_settings(); //phpcs:ignore
-					$wallet_actions->actions[ $_GET['action'] ]->admin_options(); //phpcs:ignore
-					?>
-					<p class="submit">
-						<button name="save" class="button button-primary" type="submit" value="<?php esc_attr_e( 'Save changes', 'woo-wallet' ); ?>"><?php esc_html_e( 'Save changes', 'woo-wallet' ); ?></button>
-						<?php wp_nonce_field( 'wallet-action-settings' ); ?>
-					</p>
-				</form>
-			</div>
-			<?php
-		}
-		/**
-		 * Plugin action setting table
-		 */
-		public function display_actions_table() {
-			$wallet_actions = WOO_Wallet_Actions::instance();
-			echo '<div class="wrap">';
-			echo '<h2>' . esc_html__( 'Wallet actions', 'woo-wallet' ) . '</h2>';
-			settings_errors();
-			?>
-			<p><?php esc_html_e( 'Integrated wallet actions are listed below. If active those actions will be triggered with respective WordPress hook.', 'woo-wallet' ); ?></p>
-			<table class="wc_emails widefat" cellspacing="0">
-				<thead>
-					<tr>
-						<th class="wc-email-settings-table-status"></th>
-						<th class="wc-email-settings-table-name"><?php esc_html_e( 'Action', 'woo-wallet' ); ?></th>
-						<th class="wc-email-settings-table-name"><?php esc_html_e( 'Description', 'woo-wallet' ); ?></th>
-						<th class="wc-email-settings-table-actions"></th>						
-					</tr>
-				</thead>
-				<tbody class="ui-sortable">
-					<?php foreach ( $wallet_actions->actions as $action ) : ?>
-						<tr data-gateway_id="<?php echo esc_attr( $action->get_action_id() ); ?>">
-							<td>
-								<?php
-								if ( $action->is_enabled() ) {
-									echo '<span class="status-enabled tips" data-tip="' . esc_attr__( 'Enabled', 'woo-wallet' ) . '">' . esc_html__( 'Yes', 'woo-wallet' ) . '</span>';
-								} else {
-									echo '<span class="status-disabled tips" data-tip="' . esc_attr__( 'Disabled', 'woo-wallet' ) . '">-</span>';
-								}
-								?>
-							</td>
-							<td class="name" width=""><a href="<?php echo esc_url( admin_url( 'admin.php?page=woo-wallet-actions&action=' . strtolower( $action->id ) ) ); ?>" class="wc-payment-gateway-method-title"><?php echo esc_html( $action->get_action_title() ); ?></a></td>
-							<td class="description" width=""><?php echo $action->get_action_description(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-							<td class="action" width="1%">
-								<a class="button alignright" href="<?php echo esc_url( admin_url( 'admin.php?page=woo-wallet-actions&action=' . strtolower( $action->id ) ) ); ?>">
-									<?php
-									if ( $action->is_enabled() ) {
-										esc_html_e( 'Manage', 'woo-wallet' );
-									} else {
-										esc_html_e( 'Setup', 'woo-wallet' );
-									}
-									?>
-								</a>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-			<?php
-			echo '</div>';
-		}
-
 		/**
 		 * Register and enqueue admin styles and scripts
 		 *
@@ -1353,6 +1269,29 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			wp_send_json_success();
+		}
+		/**
+		 * Render any errors stashed by the Delete Logs bulk action on the
+		 * TeraWallet admin screen, then clear them.
+		 *
+		 * @since 1.6.1
+		 */
+		public function show_purge_errors() {
+			$screen = get_current_screen();
+			if ( ! $screen || 'toplevel_page_woo-wallet' !== $screen->id ) {
+				return;
+			}
+			$transient_key = 'woo_wallet_purge_error_' . get_current_user_id();
+			$errors        = get_transient( $transient_key );
+			if ( ! $errors || ! is_array( $errors ) ) {
+				return;
+			}
+			delete_transient( $transient_key );
+			echo '<div class="notice notice-error is-dismissible"><p><strong>' . esc_html__( 'TeraWallet: some users could not be purged.', 'woo-wallet' ) . '</strong></p><ul style="list-style:disc;margin-left:20px;">';
+			foreach ( $errors as $error ) {
+				echo '<li>' . esc_html( $error ) . '</li>';
+			}
+			echo '</ul></div>';
 		}
 		/**
 		 * Show promotional message.

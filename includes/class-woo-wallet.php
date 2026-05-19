@@ -63,6 +63,14 @@ final class Woo_Wallet {
 	 * Class constructor
 	 */
 	public function __construct() {
+		// Self-assign before doing anything else so a re-entrant
+		// `woo_wallet()` call (e.g. `Woo_Wallet_Frontend::instance()`
+		// auto-instantiating during `includes()` and dereferencing
+		// `woo_wallet()->settings_api` from its constructor) returns this
+		// same instance instead of triggering a second `new self()` that
+		// double-registers every hook in `init_hooks()`.
+		self::$_instance = $this;
+
 		$this->includes();
 		$this->init_hooks();
 		do_action( 'woo_wallet_loaded' );

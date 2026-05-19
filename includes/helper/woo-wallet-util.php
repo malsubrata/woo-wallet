@@ -956,6 +956,146 @@ if ( ! function_exists( 'delete_user_wallet_transactions' ) ) {
 	}
 }
 
+if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
+	/**
+	 * Purge a user's wallet transaction history with explicit delete + balance handling.
+	 *
+	 * Single-lock atomic op. SUM(pre-balance), the delete (soft or hard), and the
+	 * optional balancing-row insert all run under GET_LOCK('woo_wallet_lock_user_<id>')
+	 * + a MySQL transaction — closing the race window in the legacy bulk-delete path
+	 * where a concurrent top-up between the read and the re-credit was silently lost.
+	 *
+	 * Negative balances are handled symmetrically: a debt of -25 is preserved by
+	 * inserting a balancing **debit** of 25 (the legacy path skipped negatives
+	 * because $balance was falsy, silently zeroing them out).
+	 *
+	 * @since 1.6.1
+	 *
+	 * @param int    $user_id          Target user id.
+	 * @param string $delete_mode      'soft' (set deleted=1, recoverable) or 'hard' (DELETE FROM, permanent). Default 'soft'.
+	 * @param string $balance_handling 'keep' (insert balancing entry so post-op balance equals pre-op) or 'wipe' (let balance settle to zero). Default 'keep'.
+	 * @return array|WP_Error
+	 */
+	function woo_wallet_purge_user_transactions( $user_id, $delete_mode = 'soft', $balance_handling = 'keep' ) {
+		global $wpdb;
+
+		$user_id = absint( $user_id );
+		if ( ! $user_id || ! get_userdata( $user_id ) ) {
+			return new WP_Error( 'woo_wallet_invalid_user', __( 'Invalid user id.', 'woo-wallet' ) );
+		}
+		$delete_mode      = 'hard' === $delete_mode ? 'hard' : 'soft';
+		$balance_handling = 'wipe' === $balance_handling ? 'wipe' : 'keep';
+
+		$lock_name    = 'woo_wallet_lock_user_' . $user_id;
+		$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $user_id );
+		$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( '1' !== $got_lock && 1 !== $got_lock ) {
+			return new WP_Error(
+				'woo_wallet_lock_timeout',
+				/* translators: %d: user id */
+				sprintf( __( 'Could not acquire wallet lock for user #%d. Try again.', 'woo-wallet' ), $user_id )
+			);
+		}
+
+		$pre_balance      = 0.0;
+		$balancing_txn_id = 0;
+		$caught           = null;
+
+		try {
+			$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+
+			// Raw ledger SUM — same source-of-truth pattern as recode_transaction() and transfer().
+			// Intentionally NOT through apply_filters('woo_wallet_current_balance'); see the comment
+			// at class-woo-wallet-wallet.php:1107 for the TOCTOU reasoning.
+			$pre_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+			if ( 'soft' === $delete_mode ) {
+				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					"{$wpdb->base_prefix}woo_wallet_transactions",
+					array( 'deleted' => 1 ),
+					array(
+						'user_id' => $user_id,
+						'deleted' => 0,
+					),
+					array( '%d' ),
+					array( '%d', '%d' )
+				);
+			} else {
+				// Hard delete via existing helper — idempotent, also drops meta rows.
+				delete_user_wallet_transactions( $user_id, true );
+			}
+
+			$should_insert_balancing = 'keep' === $balance_handling
+				&& abs( $pre_balance ) > 0.00001
+				&& apply_filters( 'woo_wallet_credit_user_after_delete_log', true );
+
+			if ( $should_insert_balancing ) {
+				$is_credit = $pre_balance > 0;
+				$row_args  = array(
+					'blog_id'           => get_current_blog_id(),
+					'user_id'           => $user_id,
+					'type'              => $is_credit ? 'credit' : 'debit',
+					'amount'            => abs( $pre_balance ),
+					'original_amount'   => abs( $pre_balance ),
+					'original_currency' => get_woocommerce_currency(),
+					'original_rate'     => 1.0,
+					'mode'              => 0,
+					'currency'          => get_woocommerce_currency(),
+					'details'           => __( 'Balance carried over after deleting transaction logs', 'woo-wallet' ),
+					'date'              => current_time( 'mysql' ),
+					'created_by'        => get_current_user_id(),
+				);
+				if ( $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_args, array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					$balancing_txn_id = (int) $wpdb->insert_id;
+					update_user_meta( $user_id, '_current_woo_wallet_balance', $is_credit ? abs( $pre_balance ) : -abs( $pre_balance ) );
+				}
+			} else {
+				// Wipe, or keep-but-zero, or filter said don't credit — cached meta must reflect the new ledger.
+				update_user_meta( $user_id, '_current_woo_wallet_balance', 0 );
+			}
+
+			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		} catch ( Exception $e ) {
+			$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$caught = $e;
+		} finally {
+			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		}
+
+		if ( $caught ) {
+			return new WP_Error( 'woo_wallet_purge_failed', $caught->getMessage() );
+		}
+
+		clear_woo_wallet_cache( $user_id );
+
+		if ( $balancing_txn_id ) {
+			// Fired outside the lock so third-party listeners can call back into the
+			// ledger without contending on a lock we no longer hold.
+			do_action( 'woo_wallet_transaction_recorded', $balancing_txn_id, $user_id, abs( $pre_balance ), $pre_balance > 0 ? 'credit' : 'debit' );
+		}
+
+		/**
+		 * Fires after woo_wallet_purge_user_transactions() completes for a user.
+		 *
+		 * @since 1.6.1
+		 *
+		 * @param int    $user_id          Target user id.
+		 * @param string $delete_mode      'soft' or 'hard'.
+		 * @param string $balance_handling 'keep' or 'wipe'.
+		 * @param float  $pre_balance      Pre-purge ledger balance.
+		 * @param int    $balancing_txn_id Inserted balancing-row id, or 0.
+		 */
+		do_action( 'woo_wallet_user_transactions_purged', $user_id, $delete_mode, $balance_handling, $pre_balance, $balancing_txn_id );
+
+		return array(
+			'pre_balance'      => $pre_balance,
+			'balancing_txn_id' => $balancing_txn_id,
+			'mode'             => $delete_mode,
+			'handling'         => $balance_handling,
+		);
+	}
+}
+
 if ( ! function_exists( 'is_wallet_account_locked' ) ) {
 	/**
 	 * Check if user wallet account is locked.
@@ -968,5 +1108,35 @@ if ( ! function_exists( 'is_wallet_account_locked' ) ) {
 			$user_id = get_current_user_id();
 		}
 		return apply_filters( 'woo_wallet_is_user_wallet_locked', get_user_meta( $user_id, '_is_wallet_locked', true ), $user_id );
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_get_setting' ) ) {
+	/**
+	 * Read a single field's value from a wallet settings tab — works for the
+	 * built-in tabs (`_wallet_settings_general` / `_wallet_settings_credit` /
+	 * `_wallet_settings_withdrawal`), legacy PHP-filter-registered tabs, and
+	 * JS-registered tabs (`wallet_ext_*`). All three use the same
+	 * one-option-per-tab storage convention, so a single helper is enough.
+	 *
+	 * Canonical read API for third-party plugins extending the settings page —
+	 * see docs/EXTENDING_SETTINGS.md.
+	 *
+	 * @param string $tab_id     Tab/section ID (the WordPress option key).
+	 * @param string $field_name Field name within the tab.
+	 * @param mixed  $default    Value to return when the field is unset.
+	 * @return mixed
+	 */
+	function woo_wallet_get_setting( $tab_id, $field_name, $default = null ) {
+		$tab_id     = sanitize_key( $tab_id );
+		$field_name = sanitize_key( $field_name );
+		if ( '' === $tab_id || '' === $field_name ) {
+			return $default;
+		}
+		$values = get_option( $tab_id, array() );
+		if ( ! is_array( $values ) || ! array_key_exists( $field_name, $values ) ) {
+			return $default;
+		}
+		return $values[ $field_name ];
 	}
 }

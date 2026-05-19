@@ -120,6 +120,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'title' => __( 'Credit Options', 'woo-wallet' ),
 					'icon'  => 'dashicons-money-alt',
 				),
+				array(
+					'id'          => '_wallet_settings_actions',
+					'title'       => __( 'Actions', 'woo-wallet' ),
+					'description' => __( 'Automated wallet events', 'woo-wallet' ),
+					'icon'        => 'actions',
+				),
 			);
 			return apply_filters( 'woo_wallet_settings_sections', $sections );
 		}
@@ -364,6 +370,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			}
 
 			$settings_fields = array(
+				'_wallet_settings_actions' => $this->get_actions_settings_fields(),
 				'_wallet_settings_general' => array_merge(
 					$topup_fields,
 					$partial_fields,
@@ -532,6 +539,142 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			$settings_fields = apply_filters( 'woo_wallet_settings_filds', $settings_fields );
 			// Corrected-spelling alias — new plugins should use this name.
 			return apply_filters( 'woo_wallet_settings_fields', $settings_fields );
+		}
+
+		/**
+		 * Build flattened action fields for the unified `_wallet_settings_actions` tab.
+		 *
+		 * Each WooWalletAction's form_fields are reshaped to the schema dialect used
+		 * by the React Panel (label/desc/group) and prefixed with `{action_id}__` so
+		 * every action's fields live in a single option row alongside the standard
+		 * sections. The first field of each action carries `group_title`,
+		 * `group_description`, `group_type=action`, and `group_enabled_field` so the
+		 * frontend can render it as a collapsible action card with a master toggle.
+		 *
+		 * @return array
+		 */
+		public function get_actions_settings_fields() {
+			$fields = array();
+
+			if ( ! class_exists( 'WOO_Wallet_Actions' ) ) {
+				return $fields;
+			}
+
+			$currency_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+			foreach ( WOO_Wallet_Actions::instance()->actions as $action ) {
+				if ( empty( $action->form_fields ) ) {
+					$action->init_form_fields();
+				}
+				if ( empty( $action->form_fields ) ) {
+					continue;
+				}
+
+				$group_id    = $action->id;
+				$is_first    = true;
+				$enabled_key = $group_id . '__enabled';
+
+				foreach ( $action->form_fields as $key => $field ) {
+					$normalized = $this->normalize_action_form_field( $key, $field, $currency_symbol );
+					$normalized['name']  = $group_id . '__' . $normalized['name'];
+					$normalized['group'] = $group_id;
+
+					if ( $is_first ) {
+						$normalized['group_title']         = $action->get_action_title();
+						$normalized['group_description']   = $action->get_action_description();
+						$normalized['group_type']          = 'action';
+						$normalized['group_enabled_field'] = $enabled_key;
+						$is_first                          = false;
+					}
+
+					$fields[] = $normalized;
+				}
+			}
+
+			return $fields;
+		}
+
+		/**
+		 * Reshape a single WC_Settings_API form_field into the React panel dialect.
+		 *
+		 * `title` becomes `label`, `description` becomes `desc`, `price` is split into
+		 * `number` + `prefix`, and checkbox fields are marked `bool_format=yes_no` so
+		 * the saver can preserve the legacy `'yes'/'no'` storage that the action
+		 * subclasses' `is_enabled()` and per-field reads expect.
+		 *
+		 * @param string $key Original form field key.
+		 * @param array  $field WC_Settings_API field definition.
+		 * @param string $currency_symbol Pre-decoded currency symbol for `price` fields.
+		 * @return array
+		 */
+		private function normalize_action_form_field( $key, array $field, $currency_symbol ) {
+			$type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+			$result = array(
+				'name'    => $key,
+				'label'   => isset( $field['title'] ) ? $field['title'] : '',
+				'desc'    => isset( $field['description'] ) ? $field['description'] : '',
+				'type'    => $type,
+				'default' => isset( $field['default'] ) ? $field['default'] : '',
+			);
+
+			if ( 'price' === $type ) {
+				$result['type']   = 'number';
+				$result['prefix'] = $currency_symbol;
+				if ( ! isset( $field['step'] ) ) {
+					$result['step'] = '0.01';
+				}
+			}
+
+			if ( 'checkbox' === $type ) {
+				$result['bool_format'] = 'yes_no';
+			}
+
+			if ( isset( $field['options'] ) ) {
+				$result['options'] = $field['options'];
+			}
+			if ( isset( $field['placeholder'] ) ) {
+				$result['placeholder'] = $field['placeholder'];
+			}
+			if ( isset( $field['min'] ) ) {
+				$result['min'] = $field['min'];
+			}
+			if ( isset( $field['max'] ) ) {
+				$result['max'] = $field['max'];
+			}
+			if ( isset( $field['step'] ) ) {
+				$result['step'] = $field['step'];
+			}
+			if ( isset( $field['size'] ) ) {
+				$result['size'] = $field['size'];
+			}
+
+			return $result;
+		}
+
+		/**
+		 * Convert the stored `_wallet_settings_actions` row into the shape the React
+		 * UI expects: `'yes'`/`'no'` toggles flipped to `'on'`/`'off'` so the standard
+		 * CheckboxField renders correctly. The saver performs the inverse mapping on
+		 * write — see `TeraWallet_REST_Settings_Controller::save_section()`.
+		 *
+		 * @param array $stored Raw `_wallet_settings_actions` values.
+		 * @return array
+		 */
+		public function prepare_actions_values_for_react( array $stored ) {
+			$prepared = $stored;
+			foreach ( $this->get_actions_settings_fields() as $field ) {
+				if ( empty( $field['bool_format'] ) || 'yes_no' !== $field['bool_format'] ) {
+					continue;
+				}
+				$name = $field['name'];
+				if ( ! array_key_exists( $name, $prepared ) ) {
+					$prepared[ $name ] = ( isset( $field['default'] ) && 'yes' === $field['default'] ) ? 'on' : 'off';
+					continue;
+				}
+				$prepared[ $name ] = ( 'yes' === $prepared[ $name ] ) ? 'on' : 'off';
+			}
+			return $prepared;
 		}
 
 		/**

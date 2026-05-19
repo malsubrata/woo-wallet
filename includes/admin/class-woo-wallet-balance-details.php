@@ -537,15 +537,20 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			}
 
 			if ( 'delete_log' === $this->current_action() ) {
-				$delete_ids = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
+				$delete_ids       = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
+				$delete_mode      = isset( $_POST['delete_mode'] ) && 'hard' === $_POST['delete_mode'] ? 'hard' : 'soft';
+				$balance_handling = isset( $_POST['balance_handling'] ) && 'wipe' === $_POST['balance_handling'] ? 'wipe' : 'keep';
+				$errors           = array();
 				if ( $delete_ids ) {
 					foreach ( $delete_ids as $id ) {
-						$current_balance = woo_wallet()->wallet->get_wallet_balance( $id, 'edit' );
-						delete_user_wallet_transactions( $id, true );
-						if ( $current_balance && apply_filters( 'woo_wallet_credit_user_after_delete_log', true ) ) {
-							woo_wallet()->wallet->credit( $id, $current_balance, __( 'Balance after deleting transaction logs', 'woo-wallet' ) );
+						$result = woo_wallet_purge_user_transactions( $id, $delete_mode, $balance_handling );
+						if ( is_wp_error( $result ) ) {
+							$errors[] = $result->get_error_message();
 						}
 					}
+				}
+				if ( $errors ) {
+					set_transient( 'woo_wallet_purge_error_' . get_current_user_id(), $errors, 30 );
 				}
 				header( 'Refresh: 0' );
 			}
@@ -586,19 +591,38 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		if ( 'toplevel_page_woo-wallet' === $screen->id ) {
 			ob_start();
 			woo_wallet()->get_template( 'admin/edit-balance.php' );
+			woo_wallet()->get_template( 'admin/delete-log-modal.php' );
 			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			wp_enqueue_script( 'wc-backbone-modal' );
 		}
-
-		$bulk_delete_log_msg = __( 'You are about to delete transaction records from database for selected users.', 'woo-wallet' );
 		?>
 		<script type="text/javascript">
 			jQuery(function ($) {
-				$('.toplevel_page_woo-wallet #posts-filter').submit(function(){
-					if($('[name="action"]').val()=='delete_log' || $('[name="action2"]').val()=='delete_log'){
-						return confirm('<?php echo esc_html( $bulk_delete_log_msg ); ?>');
+				var $deleteLogForm = $('.toplevel_page_woo-wallet #posts-filter');
+				$deleteLogForm.on('submit', function (e) {
+					var action  = $(this).find('[name="action"]').val();
+					var action2 = $(this).find('[name="action2"]').val();
+					if ('delete_log' !== action && 'delete_log' !== action2) {
+						return true;
 					}
-					return true;
+					if ($(this).data('wooWalletDeleteConfirmed')) {
+						return true;
+					}
+					e.preventDefault();
+					$(this).WCBackboneModal({ template: 'woo-wallet-modal-delete-log' });
+					return false;
+				});
+				$(document).on('click', '#woo-wallet-confirm-delete-log', function (e) {
+					e.preventDefault();
+					var $modal    = $(this).closest('.wc-backbone-modal');
+					var mode      = $modal.find('input[name="woo_wallet_delete_mode"]:checked').val() || 'soft';
+					var handling  = $modal.find('input[name="woo_wallet_balance_handling"]:checked').val() || 'keep';
+					$deleteLogForm.find('input[name="delete_mode"], input[name="balance_handling"]').remove();
+					$deleteLogForm.append($('<input>').attr({ type: 'hidden', name: 'delete_mode', value: mode }));
+					$deleteLogForm.append($('<input>').attr({ type: 'hidden', name: 'balance_handling', value: handling }));
+					$deleteLogForm.data('wooWalletDeleteConfirmed', true);
+					$('.wc-backbone-modal-backdrop.modal-close').trigger('click');
+					$deleteLogForm[0].submit();
 				});
 				$(document).on('click', '.toplevel_page_woo-wallet .edit-wallet-balance', function (event) {
 					event.preventDefault();

@@ -209,3 +209,59 @@ function woo_wallet_update_161_db_schema() {
 		}
 	}
 }
+
+/**
+ * DB update 1.6.1: merge per-action settings into the unified
+ * `_wallet_settings_actions` option.
+ *
+ * Pre-1.6.1 each earning action persisted its own option row
+ * (`woo_wallet_daily_visits_settings`, `woo_wallet_new_registration_settings`,
+ * …). The React Actions tab now reads/writes a single `_wallet_settings_actions`
+ * row with namespaced keys (`daily_visits__amount`, etc.) so it can flow through
+ * the standard `/wc/v3/wallet/settings/section` endpoint exactly like the
+ * General and Credit tabs.
+ *
+ * This callback copies any pre-existing per-action values into the merged
+ * option without removing the legacy rows — the rows act as a rollback safety
+ * net and are also still consulted by `WooWalletAction::init_settings()` as a
+ * fallback for third-party action subclasses that have not yet migrated.
+ *
+ * Idempotent: a merged key already present in `_wallet_settings_actions` is
+ * never overwritten, so re-running the callback is a no-op.
+ *
+ * @since 1.6.1
+ */
+function woo_wallet_update_161_merge_action_settings() {
+	// Install runs before `woocommerce_loaded`, so the actions loader hasn't
+	// fired yet. Load the abstract + registry up-front (idempotent require_once)
+	// so we can enumerate the real action ids instead of guessing.
+	if ( ! class_exists( 'WooWalletAction' ) ) {
+		require_once WOO_WALLET_ABSPATH . 'includes/abstracts/abstract-woo-wallet-actions.php';
+	}
+	if ( ! class_exists( 'WOO_Wallet_Actions' ) ) {
+		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-actions.php';
+	}
+
+	$merged = get_option( '_wallet_settings_actions', array() );
+	if ( ! is_array( $merged ) ) {
+		$merged = array();
+	}
+
+	foreach ( WOO_Wallet_Actions::instance()->actions as $action ) {
+		$legacy_key   = $action->plugin_id . $action->id . '_settings';
+		$legacy_value = get_option( $legacy_key, null );
+		if ( ! is_array( $legacy_value ) ) {
+			continue;
+		}
+		foreach ( $legacy_value as $field_key => $field_value ) {
+			$merged_key = $action->id . '__' . $field_key;
+			if ( ! array_key_exists( $merged_key, $merged ) ) {
+				$merged[ $merged_key ] = $field_value;
+			}
+		}
+	}
+
+	if ( ! empty( $merged ) ) {
+		update_option( '_wallet_settings_actions', $merged );
+	}
+}
