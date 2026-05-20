@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -138,6 +138,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.2 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.
