@@ -140,7 +140,12 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.2 (Unreleased) =
-– **Tweak:-** Development in progress.
+– **Fix:-** New-user-registration and referral signup bonuses are now credited for users created via SSO / SAML, social login, the REST API, WP-CLI or any programmatic `wp_insert_user()`. A new early `user_register` capture (`Woo_Wallet_Signup_Handler`) defers crediting until the earning-action registry is loaded, so signups created before `woocommerce_init` are no longer missed.
+– **Fix:-** Referral visit and signup bonuses are now credited in the store base currency, matching the amount entered in settings — no more unwanted active-currency conversion in multi-currency stores.
+– **Fix:-** The referral "Signups" limit now counts credited signups instead of registrations, so a referred customer who never completes the minimum spend no longer consumes a limit slot.
+– **Fix:-** Crediting a referral signup whose referrer account was deleted no longer credits user ID 0.
+– **Tweak:-** Referral "Minimum Order Amount" setting renamed to "Minimum Spend" with a clearer description — it gates on the referred customer's total lifetime spend.
+– **Tweak:-** Loader for action/REST classes now hooks `woocommerce_init` instead of `init`, removing the WooCommerce-existence guard while keeping both the WC-inactive fatal and the WP 6.7 translation notice fixed.
 
 = v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.

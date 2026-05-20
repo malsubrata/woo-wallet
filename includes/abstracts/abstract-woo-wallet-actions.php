@@ -1,9 +1,17 @@
 <?php
+/**
+ * Abstract class for WooWallet actions.
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+/**
+ * Abstract class for WooWallet actions.
+ */
 abstract class WooWalletAction extends WC_Settings_API {
 
 	/**
@@ -114,4 +122,26 @@ abstract class WooWalletAction extends WC_Settings_API {
 		$this->enabled = ! empty( $this->settings['enabled'] ) && 'yes' === $this->settings['enabled'] ? 'yes' : 'no';
 	}
 
+	/**
+	 * Resolve the store base currency.
+	 *
+	 * Earning-action `amount` settings are entered and saved in the store's
+	 * base currency. When crediting the wallet, the amount must therefore be
+	 * recorded against the base currency — otherwise `recode_transaction()`
+	 * defaults the incoming currency to the active storefront currency and
+	 * applies an unwanted conversion to a value that is already in base.
+	 *
+	 * Guarded with `class_exists` because actions can be instantiated before
+	 * the multi-currency stack is loaded; falls back to the raw WooCommerce
+	 * currency option.
+	 *
+	 * @return string ISO 4217 currency code.
+	 */
+	protected function get_base_currency() {
+		if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+			return Woo_Wallet_Currency_Manager::instance()->get_base_currency();
+		}
+		$currency = get_option( 'woocommerce_currency' );
+		return is_string( $currency ) && '' !== $currency ? strtoupper( $currency ) : 'USD';
+	}
 }

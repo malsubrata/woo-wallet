@@ -186,7 +186,7 @@ function woo_wallet_update_161_db_schema() {
 	$settings = get_option( '_wallet_settings_credit', null );
 
 	// Only runs on true upgrades (option already existed before 1.6.1).
-	if ( ! is_null( $settings ) ) {
+	if ( ! is_null( $settings ) && is_array( $settings ) ) {
 		// (a) Preserve per-item cap scope for existing sites.
 		if ( ! isset( $settings['max_cashback_scope'] ) ) {
 			$settings['max_cashback_scope'] = 'per_item';

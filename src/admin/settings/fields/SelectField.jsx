@@ -12,7 +12,6 @@ export default function SelectField( { value, onChange, field } ) {
 				onChange={ ( e ) => onChange( e.target.value ) }
 				style={ {
 					display: 'block', width: '100%', maxWidth: '100%', boxSizing: 'border-box',
-					padding: '10px 36px 10px 14px',
 					border: '1.5px solid var(--ww-border-input)', borderRadius: 10,
 					fontSize: 14, fontFamily: 'inherit',
 					background: 'var(--ww-input-bg)', color: 'var(--ww-text)',

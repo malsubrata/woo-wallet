@@ -34,21 +34,6 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		 * Class constructor
 		 */
 		public function __construct() {
-			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 15 );
-		}
-
-		/**
-		 * Enqueue scripts and styles used by the (now React-driven) settings page.
-		 */
-		public function admin_enqueue_scripts() {
-			wp_enqueue_style( 'dashicons' );
-			wp_enqueue_style( 'wp-color-picker' );
-			wp_enqueue_style( 'woocommerce_admin_styles' );
-
-			wp_enqueue_media();
-			wp_enqueue_script( 'wp-color-picker' );
-			wp_enqueue_script( 'jquery' );
-			wp_enqueue_script( 'wc-enhanced-select' );
 		}
 
 		/**
@@ -87,11 +72,15 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 		/**
 		 * Add Field to settings page.
 		 *
-		 * @param array $section section.
-		 * @param array $field field.
+		 * @param array|string $section section or section config.
+		 * @param array        $field field.
 		 * @return object
 		 */
 		public function add_field( $section, $field ) {
+			if ( is_array( $section ) ) {
+				$section = isset( $section['id'] ) ? $section['id'] : '';
+			}
+
 			$defaults = array(
 				'name'  => '',
 				'label' => '',

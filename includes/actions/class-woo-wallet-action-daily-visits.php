@@ -1,4 +1,9 @@
 <?php
+/**
+ * Daily visits action class.
+ *
+ * @package woo-wallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -16,7 +21,6 @@ class Action_Daily_Visits extends WooWalletAction {
 		$this->init_settings();
 		// Actions.
 		add_action( 'wp', array( $this, 'woo_wallet_site_visit_credit' ), 100 );
-
 	}
 
 	/**
@@ -89,9 +93,15 @@ class Action_Daily_Visits extends WooWalletAction {
 		}
 
 		if ( $this->settings['amount'] && apply_filters( 'woo_wallet_site_visit_credit', true ) ) {
-			woo_wallet()->wallet->credit( $user_id, $this->settings['amount'], sanitize_textarea_field( $this->settings['description'] ) );
+			// The configured amount is saved in the store base currency, so
+			// credit it against the base currency to skip active-currency
+			// conversion in the ledger.
+			woo_wallet()->wallet->credit(
+				$user_id,
+				$this->settings['amount'],
+				sanitize_textarea_field( $this->settings['description'] ),
+				array( 'currency' => $this->get_base_currency() )
+			);
 		}
 	}
-
 }
-

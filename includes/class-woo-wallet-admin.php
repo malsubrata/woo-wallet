@@ -415,6 +415,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					wp_localize_script( 'woo_wallet_admin_order', 'woo_wallet_admin_order_param', $order_localizer );
 				}
 			}
+			wp_enqueue_style( 'woocommerce_admin_styles' );
 			wp_enqueue_style( 'woo_wallet_admin_styles' );
 
 			// register exporter styles.
