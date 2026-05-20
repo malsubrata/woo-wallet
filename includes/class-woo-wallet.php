@@ -147,7 +147,7 @@ final class Woo_Wallet {
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
-		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
+		add_action( 'woocommerce_loaded', array( $this, 'woocommerce_loaded_callback' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
 		// Register Gutenberg blocks.
@@ -260,6 +260,12 @@ final class Woo_Wallet {
 	 * Load WooCommerce dependent class file.
 	 */
 	public function woocommerce_loaded_callback() {
+		// This runs on `init`, which fires even when WooCommerce is inactive.
+		// The files below extend WooCommerce classes (WooWalletAction extends
+		// WC_Settings_API) and would fatal if WooCommerce is not loaded.
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
 		include_once WOO_WALLET_ABSPATH . 'includes/abstracts/abstract-woo-wallet-actions.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-actions.php';
 		include_once WOO_WALLET_ABSPATH . '/includes/class-woo-wallet-api.php';
