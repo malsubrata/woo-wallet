@@ -314,6 +314,42 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 	}
 
 	/**
+	 * type:title entries become section_heading fields, and half / show_if
+	 * metadata survives the transform with show_if references re-prefixed.
+	 */
+	public function test_actions_transform_emits_section_headings_and_layout_meta() {
+		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';
+		$settings = new Woo_Wallet_Settings( woo_wallet()->settings_api );
+		$fields   = $settings->get_actions_settings_fields();
+
+		$by_name = array();
+		foreach ( $fields as $field ) {
+			if ( isset( $field['name'] ) ) {
+				$by_name[ $field['name'] ] = $field;
+			}
+		}
+
+		// type:title entries are converted to renderable section headings.
+		$this->assertArrayHasKey( 'referrals__heading_referring_visitors', $by_name );
+		$this->assertSame(
+			'section_heading',
+			$by_name['referrals__heading_referring_visitors']['type']
+		);
+		$this->assertArrayHasKey( 'referrals__heading_referral_intro', $by_name );
+
+		// half passes through.
+		$this->assertArrayHasKey( 'referrals__referring_visitors_limit', $by_name );
+		$this->assertTrue( $by_name['referrals__referring_visitors_limit']['half'] );
+
+		// show_if passes through with the field reference re-prefixed to the
+		// flattened {action_id}__ name the React panel keys on.
+		$this->assertSame(
+			'referrals__referring_visitors_limit_duration',
+			$by_name['referrals__referring_visitors_limit']['show_if']['field']
+		);
+	}
+
+	/**
 	 * Woo_Wallet_Signup_Handler::process() dispatches both the registration
 	 * credit and the referral signup bonus for a pending user.
 	 */
