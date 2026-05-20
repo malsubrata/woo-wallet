@@ -56,9 +56,24 @@ class Action_New_Registration extends WooWalletAction {
 	 */
 	public function woo_wallet_new_user_registration_credit( $user_id ) {
 		if ( $this->is_enabled() && $this->settings['amount'] && apply_filters( 'woo_wallet_new_user_registration_credit', true, $user_id ) ) {
-			$amount         = apply_filters( 'woo_wallet_new_user_registration_credit_amount', $this->settings['amount'], $user_id );
+			// Security Improvement: Prevent duplicate credits (Idempotency)
+			$already_credited = get_user_meta( $user_id, '_woo_wallet_new_registration_credited', true );
+			if ( $already_credited ) {
+				return;
+			}
+
+			$amount = apply_filters( 'woo_wallet_new_user_registration_credit_amount', $this->settings['amount'], $user_id );
+			
+			// Security Improvement: Validate amount
+			$amount = floatval( $amount );
+			if ( $amount <= 0 ) {
+				return;
+			}
+
 			$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, sanitize_textarea_field( $this->settings['description'] ) );
 			if ( $transaction_id ) {
+				// Record that the credit has been applied
+				update_user_meta( $user_id, '_woo_wallet_new_registration_credited', 'yes' );
 				do_action( 'woo_wallet_action_new_registration_credited', $transaction_id, $user_id, $this );
 			}
 		}

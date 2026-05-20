@@ -64,6 +64,7 @@ function ConfirmDialog( { open, title, body, confirmLabel, onConfirm, onCancel }
 			position: 'fixed', inset: 0, zIndex: 99999,
 			background: 'oklch(0.2 0.03 260 / 0.4)',
 			display: 'flex', alignItems: 'center', justifyContent: 'center',
+			padding: 16,
 		} } onClick={ onCancel }>
 			<div
 				onClick={ ( e ) => e.stopPropagation() }
@@ -73,6 +74,7 @@ function ConfirmDialog( { open, title, body, confirmLabel, onConfirm, onCancel }
 					borderRadius: 14,
 					padding: 24,
 					maxWidth: 460,
+					width: '100%',
 					boxShadow: '0 12px 40px oklch(0.2 0.03 260 / 0.18)',
 				} }
 			>

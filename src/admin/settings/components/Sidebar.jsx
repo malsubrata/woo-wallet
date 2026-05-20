@@ -13,7 +13,13 @@ const SECTION_DESC = {
 	_wallet_settings_actions: __( 'Automated wallet events', 'woo-wallet' ),
 };
 
-export default function Sidebar( { sections, activeTab, onTabChange, open } ) {
+export default function Sidebar( {
+	sections,
+	activeTab,
+	onTabChange,
+	open,
+	isCompact = false,
+} ) {
 	const navItems = sections.map( ( s ) => ( {
 		id: s.id,
 		label: s.title || s.id,
@@ -24,24 +30,47 @@ export default function Sidebar( { sections, activeTab, onTabChange, open } ) {
 		icon: SECTION_ICONS[ s.id ] || s.icon || 'settings',
 	} ) );
 
-	return (
-		<nav
-			style={ {
+	const baseStyle = {
+		background: 'var(--ww-sidebar-bg)',
+		display: 'flex',
+		flexDirection: 'column',
+		gap: 4,
+		overflowY: 'auto',
+		overflowX: 'hidden',
+	};
+
+	// Compact: an absolutely-positioned overlay drawer that slides over the
+	// content. Wide: a docked column that collapses its own width.
+	const navStyle = isCompact
+		? {
+				...baseStyle,
+				position: 'absolute',
+				top: 0,
+				left: 0,
+				bottom: 0,
+				width: 240,
+				zIndex: 50,
+				padding: '16px 12px',
+				borderRight: '1px solid var(--ww-border)',
+				boxShadow: open
+					? '4px 0 24px oklch(0.2 0.05 260 / 0.18)'
+					: 'none',
+				transform: open ? 'translateX(0)' : 'translateX(-100%)',
+				transition: 'transform 0.28s cubic-bezier(.4,0,.2,1)',
+		  }
+		: {
+				...baseStyle,
 				width: open ? 240 : 0,
 				flexShrink: 0,
-				background: 'var(--ww-sidebar-bg)',
 				borderRight: open ? '1px solid var(--ww-border)' : 'none',
 				padding: open ? '16px 12px' : 0,
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 4,
 				transition:
 					'width 0.28s cubic-bezier(.4,0,.2,1), padding 0.28s, opacity 0.2s',
-				overflowY: 'auto',
-				overflowX: 'hidden',
 				opacity: open ? 1 : 0,
-			} }
-		>
+		  };
+
+	return (
+		<nav style={ navStyle }>
 			<p
 				style={ {
 					fontSize: 10,

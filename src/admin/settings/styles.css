@@ -165,6 +165,22 @@
   animation: ww-fade-up 0.22s ease;
 }
 
+/* ── Responsive: paired field rows ───────────────────────────────── */
+/* `half`-width fields render two per row; they collapse to a single
+   column on narrow viewports. Defined in CSS (not inline styles) so the
+   media query can take effect. */
+#woo-wallet-settings-root .ww-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 640px) {
+  #woo-wallet-settings-root .ww-field-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+
 /* ── Placeholder ─────────────────────────────────────────────────── */
 #woo-wallet-settings-root input::placeholder {
   color: var(--ww-text-placeholder);

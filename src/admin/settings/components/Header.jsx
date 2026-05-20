@@ -2,14 +2,14 @@ import { __ } from '@wordpress/i18n';
 import Icon from './Icon';
 import ThemeSwitcher from './ThemeSwitcher';
 
-export default function Header( { sidebarOpen, onToggleSidebar, theme, onThemeChange, version } ) {
+export default function Header( { sidebarOpen, onToggleSidebar, theme, onThemeChange, version, isCompact = false, isPhone = false } ) {
 	return (
 		<header style={ {
 			background: 'var(--ww-header-bg)',
 			borderBottom: '1px solid var(--ww-border)',
-			padding: '0 20px', height: 60,
+			padding: isCompact ? '0 12px' : '0 20px', height: 60,
 			display: 'flex', alignItems: 'center',
-			gap: 12, flexShrink: 0,
+			gap: isCompact ? 8 : 12, flexShrink: 0,
 			transition: 'background 0.3s',
 			boxShadow: '0 1px 0 var(--ww-border)',
 		} }>
@@ -37,14 +37,17 @@ export default function Header( { sidebarOpen, onToggleSidebar, theme, onThemeCh
 				<Icon name="wallet" size={ 18 } color="white"/>
 			</div>
 
-			<div>
+			<div style={ { minWidth: 0, overflow: 'hidden' } }>
 				<h1 style={ {
 					fontSize: 15, fontWeight: 700, color: 'var(--ww-text-heading)',
 					letterSpacing: '-0.01em', margin: 0,
+					whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
 				} }>TeraWallet</h1>
-				<p style={ { fontSize: 11, color: 'var(--ww-text-hint)', margin: 0 } }>
-					{ __( 'Plugin Settings', 'woo-wallet' ) }
-				</p>
+				{ ! isPhone && (
+					<p style={ { fontSize: 11, color: 'var(--ww-text-hint)', margin: 0 } }>
+						{ __( 'Plugin Settings', 'woo-wallet' ) }
+					</p>
+				) }
 			</div>
 
 			<div style={ { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 } }>

@@ -23,19 +23,18 @@ export default function ThemeSwitcher( { theme, onChange } ) {
 						type="button"
 						onClick={ () => onChange( o.value ) }
 						title={ o.label }
+						aria-label={ o.label }
+						aria-pressed={ active }
 						style={ {
-							display: 'flex', alignItems: 'center', gap: 5,
-							padding: '5px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+							display: 'flex', alignItems: 'center', justifyContent: 'center',
+							padding: 7, borderRadius: 7, border: 'none', cursor: 'pointer',
 							background: active ? 'var(--ww-surface)' : 'transparent',
 							color: active ? 'var(--ww-accent)' : 'var(--ww-text-muted)',
-							fontFamily: 'inherit', fontSize: 12,
-							fontWeight: active ? 600 : 400,
 							boxShadow: active ? '0 1px 3px oklch(0.2 0.05 260 / 0.1)' : 'none',
-							transition: 'all 0.15s', whiteSpace: 'nowrap',
+							transition: 'all 0.15s',
 						} }
 					>
-						<Icon name={ o.icon } size={ 13 } color={ active ? 'var(--ww-accent)' : 'var(--ww-text-muted)' }/>
-						<span>{ o.label }</span>
+						<Icon name={ o.icon } size={ 15 } color={ active ? 'var(--ww-accent)' : 'var(--ww-text-muted)' }/>
 					</button>
 				);
 			} ) }

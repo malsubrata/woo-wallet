@@ -142,14 +142,7 @@ function renderFieldRows( fields, sectionValues, onChange ) {
 	return rows.map( ( row, idx ) => {
 		if ( row.length === 2 ) {
 			return (
-				<div
-					key={ idx }
-					style={ {
-						display: 'grid',
-						gridTemplateColumns: '1fr 1fr',
-						gap: 20,
-					} }
-				>
+				<div key={ idx } className="ww-field-grid">
 					{ row.map( ( field ) => (
 						<StackedField
 							key={ field.name }

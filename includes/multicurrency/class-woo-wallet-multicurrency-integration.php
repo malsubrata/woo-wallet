@@ -246,7 +246,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				$debit_total += (float) $manager->convert( $row->amount, $row->currency, $active );
 			}
 
-			return max( 0, $credit_total - $debit_total );
+			return apply_filters( 'woo_wallet_disallow_negative_transaction', true ) ? max( 0, $credit_total - $debit_total ) : $credit_total - $debit_total;
 		}
 
 		/**

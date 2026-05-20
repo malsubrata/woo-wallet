@@ -7,6 +7,7 @@ import Panel from './components/Panel';
 import CurrencyModePanel from './components/CurrencyModePanel';
 import ToastStack from './components/Toast';
 import useSettings from './hooks/useSettings';
+import useViewport from './hooks/useViewport';
 
 const SECTION_TITLES = {
 	_wallet_settings_general: __( 'General Options', 'woo-wallet' ),
@@ -57,7 +58,18 @@ export default function App() {
 			return '';
 		}
 	} );
-	const [ sidebarOpen, setSidebarOpen ] = useState( true );
+	const { isCompact, isPhone } = useViewport();
+	// Below WP admin's 782px breakpoint the sidebar becomes an overlay drawer
+	// and starts collapsed; on wider screens it is docked open.
+	const [ sidebarOpen, setSidebarOpen ] = useState(
+		() => typeof window === 'undefined' || window.innerWidth > 782
+	);
+
+	// Reconcile the sidebar with the viewport whenever it crosses the
+	// compact breakpoint: collapse it on shrink, re-dock it on grow.
+	useEffect( () => {
+		setSidebarOpen( ! isCompact );
+	}, [ isCompact ] );
 
 	// OS theme listener
 	useEffect( () => {
@@ -152,28 +164,63 @@ export default function App() {
 				theme={ theme }
 				onThemeChange={ setTheme }
 				version={ version }
+				isCompact={ isCompact }
+				isPhone={ isPhone }
 			/>
 
-			<div style={ { display: 'flex', flex: 1, overflow: 'hidden' } }>
+			<div
+				style={ {
+					display: 'flex',
+					flex: 1,
+					overflow: 'hidden',
+					position: 'relative',
+				} }
+			>
 				<Sidebar
 					sections={ sections }
 					activeTab={ activeTab }
-					onTabChange={ setActiveTab }
+					onTabChange={ ( id ) => {
+						setActiveTab( id );
+						// On the overlay drawer, picking a tab dismisses it.
+						if ( isCompact ) {
+							setSidebarOpen( false );
+						}
+					} }
 					open={ sidebarOpen }
+					isCompact={ isCompact }
 				/>
+
+				{ isCompact && sidebarOpen && (
+					<div
+						onClick={ () => setSidebarOpen( false ) }
+						aria-hidden="true"
+						style={ {
+							position: 'absolute',
+							inset: 0,
+							zIndex: 40,
+							background: 'oklch(0.2 0.03 260 / 0.4)',
+						} }
+					/>
+				) }
 
 				<main
 					style={ {
 						flex: 1,
 						overflowY: 'auto',
-						padding: '28px 32px',
+						padding: isCompact
+							? isPhone
+								? '16px 14px'
+								: '20px 18px'
+							: '28px 32px',
 						minWidth: 0,
 					} }
 				>
-					<div style={ { marginBottom: 24 } }>
+					<div
+						style={ { marginBottom: isCompact ? 16 : 24 } }
+					>
 						<h2
 							style={ {
-								fontSize: 20,
+								fontSize: isCompact ? 17 : 20,
 								fontWeight: 700,
 								color: 'var(--ww-text-heading)',
 								letterSpacing: '-0.02em',
