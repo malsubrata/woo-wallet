@@ -139,7 +139,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.1 (May 19, 2026) =
+= v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.
 – **Security:-** Cashback clawback on cancellation no longer fails silently when the customer has spent the credit. Default policy: debit whatever balance remains and log the gap to a new `_cashback_unreversed_amount` order meta + order note. Opt-in setting `cashback_clawback_allow_negative` allows sites to drive the wallet negative for exact reversal.
 – **Security:-** The Delete Logs bulk operation is now wrapped in `GET_LOCK('woo_wallet_lock_user_<id>')` + `START TRANSACTION`, matching `recode_transaction()` and `transfer()`. Closes a race where a concurrent top-up landing between the pre-delete `SUM` and the post-delete re-credit was silently lost.
