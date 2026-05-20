@@ -263,6 +263,57 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The referral form fields are labelled, grouped and free of the
+	 * daily-visits copy-paste bug.
+	 */
+	public function test_referral_form_fields_are_admin_friendly() {
+		$action = new Action_Referrals();
+		$fields = $action->form_fields;
+
+		// Section headings exist with stable ids.
+		$heading_ids = array();
+		foreach ( $fields as $field ) {
+			if ( isset( $field['type'], $field['id'] ) && 'title' === $field['type'] ) {
+				$heading_ids[] = $field['id'];
+			}
+		}
+		$this->assertContains( 'referral_intro', $heading_ids );
+		$this->assertContains( 'referring_visitors', $heading_ids );
+		$this->assertContains( 'referring_signups', $heading_ids );
+		$this->assertContains( 'referring_links', $heading_ids );
+
+		// Previously-unlabelled limit fields now carry titles.
+		$this->assertNotEmpty( $fields['referring_visitors_limit']['title'] );
+		$this->assertNotEmpty( $fields['referring_signups_limit']['title'] );
+
+		// Limit controls are paired side-by-side.
+		$this->assertTrue( $fields['referring_visitors_limit_duration']['half'] );
+		$this->assertTrue( $fields['referring_visitors_limit']['half'] );
+		$this->assertTrue( $fields['referring_signups_limit_duration']['half'] );
+		$this->assertTrue( $fields['referring_signups_limit']['half'] );
+
+		// Cap fields are conditional on a limit period being chosen.
+		$this->assertSame(
+			'referring_visitors_limit_duration',
+			$fields['referring_visitors_limit']['show_if']['field']
+		);
+		$this->assertSame(
+			'referring_signups_limit_duration',
+			$fields['referring_signups_limit']['show_if']['field']
+		);
+
+		// The daily-visits copy-paste bug is gone.
+		$this->assertStringNotContainsStringIgnoringCase(
+			'daily',
+			$fields['referring_visitors_amount']['description']
+		);
+
+		// enabled remains the first form field (master-toggle metadata target).
+		$first_key = array_key_first( $fields );
+		$this->assertSame( 'enabled', $first_key );
+	}
+
+	/**
 	 * Woo_Wallet_Signup_Handler::process() dispatches both the registration
 	 * credit and the referral signup bonus for a pending user.
 	 */
