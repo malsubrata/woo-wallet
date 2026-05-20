@@ -9,7 +9,8 @@ skills-lock.json
 /build/
 
 # Claude/AI
-.claude/
+.claude/*
+!.claude/commands/
 CLAUDE.md
 .agents
 
