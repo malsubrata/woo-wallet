@@ -130,6 +130,11 @@ function renderFieldRows( fields, sectionValues, onChange ) {
 		if ( ! isVisible( field, sectionValues ) ) {
 			return;
 		}
+		if ( field.type === 'section_heading' ) {
+			flushHalf();
+			rows.push( [ field ] );
+			return;
+		}
 		if ( field.half ) {
 			pushHalf( field );
 		} else {
@@ -159,6 +164,12 @@ function renderFieldRows( fields, sectionValues, onChange ) {
 			);
 		}
 		const field = row[ 0 ];
+		if ( field.type === 'section_heading' ) {
+			const HeadingComponent = getFieldTypes().section_heading;
+			return HeadingComponent ? (
+				<HeadingComponent key={ field.name } field={ field } />
+			) : null;
+		}
 		return (
 			<StackedField
 				key={ field.name }
