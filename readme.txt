@@ -146,6 +146,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **Fix:-** Crediting a referral signup whose referrer account was deleted no longer credits user ID 0.
 – **Tweak:-** Referral "Minimum Order Amount" setting renamed to "Minimum Spend" with a clearer description — it gates on the referred customer's total lifetime spend.
 – **Tweak:-** Loader for action/REST classes now hooks `woocommerce_init` instead of `init`, removing the WooCommerce-existence guard while keeping both the WC-inactive fatal and the WP 6.7 translation notice fixed.
+– **Tweak:-** Redesigned the Referrals action settings for clarity — labelled fields, section headings, inline help text, and side-by-side limit controls with the cap hidden until a limit period is chosen.
 
 = v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.
