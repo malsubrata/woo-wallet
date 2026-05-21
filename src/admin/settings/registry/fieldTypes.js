@@ -12,6 +12,7 @@ import TextareaField from '../fields/TextareaField';
 import HtmlField from '../fields/HtmlField';
 import AttachmentField from '../fields/AttachmentField';
 import ColorField from '../fields/ColorField';
+import SectionHeading from '../fields/SectionHeading';
 
 const BUILT_IN_TYPES = {
 	text:        TextField,
@@ -32,6 +33,7 @@ const BUILT_IN_TYPES = {
 	attachment:  AttachmentField,
 	file:        AttachmentField,
 	color:       ColorField,
+	section_heading: SectionHeading,
 };
 
 export function getFieldTypes() {
