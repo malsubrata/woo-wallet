@@ -57,6 +57,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'admin_init', array( $this, 'admin_init' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10 );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ), 50 );
+			add_action( 'admin_post_woo_wallet_export_referrals', array( $this, 'export_referrals_csv' ) );
 			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) && 'product' === woo_wallet()->settings_api->get_option( 'cashback_rule', '_wallet_settings_credit', 'cart' ) ) {
 				add_filter( 'woocommerce_product_data_tabs', array( $this, 'woocommerce_product_data_tabs' ) );
 				add_action( 'woocommerce_product_data_panels', array( $this, 'woocommerce_product_data_panels' ) );
@@ -340,6 +341,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			// Actions submenu removed — actions are now part of the unified Settings page (React app).
 
 			add_submenu_page( 'null', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
+
+			if ( $this->is_referral_action_enabled() ) {
+				add_submenu_page( 'woo-wallet', __( 'Referral Report', 'woo-wallet' ), __( 'Referral Report', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-referral-report', array( $this, 'referral_report_page' ) );
+			}
 		}
 
 		/**
@@ -360,6 +365,134 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		public function terawallet_exporter_page() {
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			include_once WOO_WALLET_ABSPATH . 'templates/admin/html-exporter.php';
+		}
+		/**
+		 * Whether the referrals earning action is enabled.
+		 *
+		 * @return bool
+		 */
+		protected function is_referral_action_enabled() {
+			$actions = class_exists( 'WOO_Wallet_Actions' ) ? WOO_Wallet_Actions::instance()->actions : array();
+			return isset( $actions['referrals'] ) && $actions['referrals']->is_enabled();
+		}
+		/**
+		 * Render the Referral Report admin screen.
+		 *
+		 * Prints a store-wide summary header (independent of the table filters)
+		 * above the filterable WP_List_Table of referral rows.
+		 *
+		 * @return void
+		 */
+		public function referral_report_page() {
+			if ( ! class_exists( 'Woo_Wallet_Referral_Report' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-referral-report.php';
+			}
+			$table = new Woo_Wallet_Referral_Report();
+			$table->prepare_items();
+
+			// Store-wide summary — deliberately ignores the table filters.
+			$total_referrals = get_wallet_referrals_count();
+			$total_signups   = get_wallet_referrals_count(
+				array(
+					'type'   => 'signup',
+					'status' => 'completed',
+				)
+			);
+			$base_currency = get_option( 'woocommerce_currency' );
+			$paid          = 0.0;
+			foreach ( (array) get_wallet_referrals( array( 'status' => 'completed' ) ) as $row ) {
+				$paid += (float) $row->amount;
+			}
+
+			// Carry the active filters onto the CSV export link.
+			$export_args = array( 'action' => 'woo_wallet_export_referrals' );
+			foreach ( array( 'referral_referrer', 'referral_type', 'referral_status', 'referral_after', 'referral_before' ) as $filter_key ) {
+				if ( ! empty( $_GET[ $filter_key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					$export_args[ $filter_key ] = sanitize_text_field( wp_unslash( $_GET[ $filter_key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				}
+			}
+			$export_url = wp_nonce_url( add_query_arg( $export_args, admin_url( 'admin-post.php' ) ), 'woo_wallet_export_referrals' );
+			?>
+			<div class="wrap">
+				<h1 class="wp-heading-inline"><?php esc_html_e( 'Referral Report', 'woo-wallet' ); ?></h1>
+				<a href="<?php echo esc_url( $export_url ); ?>" class="page-title-action"><?php esc_html_e( 'Download CSV', 'woo-wallet' ); ?></a>
+				<hr class="wp-header-end" />
+				<p>
+					<strong><?php esc_html_e( 'Summary:', 'woo-wallet' ); ?></strong>
+					<?php
+					/* translators: %s: total number of referral records. */
+					echo esc_html( sprintf( _n( '%s referral', '%s referrals', $total_referrals, 'woo-wallet' ), number_format_i18n( $total_referrals ) ) );
+					echo ' &middot; ';
+					/* translators: %s: number of credited sign-up referrals. */
+					echo esc_html( sprintf( _n( '%s credited sign-up', '%s credited sign-ups', $total_signups, 'woo-wallet' ), number_format_i18n( $total_signups ) ) );
+					echo ' &middot; ';
+					/* translators: %s: total rewards paid. */
+					echo wp_kses_post( sprintf( __( '%s paid', 'woo-wallet' ), wc_price( $paid, array( 'currency' => $base_currency ) ) ) );
+					?>
+				</p>
+				<form method="get">
+					<input type="hidden" name="page" value="woo-wallet-referral-report" />
+					<?php $table->display(); ?>
+				</form>
+			</div>
+			<?php
+		}
+		/**
+		 * Stream the referral report as a CSV download.
+		 *
+		 * Honours the same filter set as the on-screen report. The reward is
+		 * exported as the stored amount + currency (the audited value), not the
+		 * display-currency conversion.
+		 *
+		 * @return void
+		 */
+		public function export_referrals_csv() {
+			if ( ! current_user_can( get_wallet_user_capability() ) ) {
+				wp_die( esc_html__( 'You do not have permission to export referrals.', 'woo-wallet' ) );
+			}
+			check_admin_referer( 'woo_wallet_export_referrals' );
+
+			if ( ! class_exists( 'Woo_Wallet_Referral_Report' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-referral-report.php';
+			}
+			$args = Woo_Wallet_Referral_Report::get_filter_args();
+			$rows = ( false === $args )
+				? array()
+				: (array) get_wallet_referrals(
+					array_merge(
+						$args,
+						array(
+							'order_by' => 'referral_id',
+							'order'    => 'DESC',
+						)
+					)
+				);
+
+			nocache_headers();
+			header( 'Content-Type: text/csv; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename=referral-report-' . gmdate( 'Y-m-d' ) . '.csv' );
+
+			$output = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+			fputcsv( $output, array( 'ID', 'Referrer', 'Referred', 'Type', 'Status', 'Reward', 'Currency', 'Order', 'Date created', 'Date credited' ) );
+			foreach ( $rows as $row ) {
+				fputcsv(
+					$output,
+					array(
+						$row->referral_id,
+						woo_wallet_referral_user_label( $row->referrer_id ),
+						woo_wallet_referral_user_label( $row->referred_user_id ),
+						$row->type,
+						$row->status,
+						$row->amount,
+						$row->currency,
+						$row->order_id ? $row->order_id : '',
+						$row->date_created,
+						$row->date_credited ? $row->date_credited : '',
+					)
+				);
+			}
+			fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			exit;
 		}
 		/**
 		 * Register and enqueue admin styles and scripts

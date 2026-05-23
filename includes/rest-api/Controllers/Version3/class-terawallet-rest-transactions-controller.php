@@ -307,7 +307,10 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			$items[]  = $this->prepare_response_for_collection( $prepared );
 		}
 
-		$total    = function_exists( 'get_wallet_transactions_count' ) ? (int) get_wallet_transactions_count( $user->ID ) : count( $items );
+		// Filter-aware total: pass the same args so X-WP-Total reflects type/currency/category/date filters.
+		$count_args = $args;
+		unset( $count_args['limit'], $count_args['order_by'], $count_args['order'], $count_args['fields'], $count_args['nocache'] );
+		$total    = function_exists( 'get_wallet_transactions_count' ) ? (int) get_wallet_transactions_count( $count_args ) : count( $items );
 		$response = new WP_REST_Response( $items, 200 );
 		return $this->add_pagination_headers( $response, $total, $page, $per_page );
 	}
@@ -409,49 +412,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	 * @return WP_REST_Response
 	 */
 	public function prepare_item_for_response( $transaction, $request ) {
-		// R8: project _type meta into a typed category field.
-		$category = 'other';
-		if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
-			foreach ( $transaction->meta as $meta_row ) {
-				if ( '_type' === $meta_row->meta_key ) {
-					$category = $this->normalize_category( $meta_row->meta_value );
-					break;
-				}
-			}
-		}
-
-		// R9: project cashback_expires_at transaction meta.
-		$cashback_expires_at = null;
-		if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
-			foreach ( $transaction->meta as $meta_row ) {
-				if ( 'cashback_expires_at' === $meta_row->meta_key ) {
-					$ts = (int) $meta_row->meta_value;
-					if ( $ts > 0 ) {
-						$cashback_expires_at = gmdate( 'Y-m-d\TH:i:s', $ts );
-					}
-					break;
-				}
-			}
-		}
-
-		$data = array(
-			'id'                  => isset( $transaction->transaction_id ) ? (int) $transaction->transaction_id : 0,
-			'user_id'             => isset( $transaction->user_id ) ? (int) $transaction->user_id : 0,
-			'type'                => isset( $transaction->type ) ? $transaction->type : '',
-			'amount'              => isset( $transaction->amount ) ? (float) $transaction->amount : 0,
-			'currency'            => isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency(),
-			// PR2 audit columns — null on pre-1.6 rows that haven't been backfilled.
-			'original_amount'     => isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null,
-			'original_currency'   => isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null,
-			'original_rate'       => isset( $transaction->original_rate ) && null !== $transaction->original_rate ? (float) $transaction->original_rate : null,
-			'mode'                => isset( $transaction->mode ) ? (int) $transaction->mode : 0,
-			'details'             => isset( $transaction->details ) ? $transaction->details : '',
-			'date'                => isset( $transaction->date ) ? mysql_to_rfc3339( $transaction->date ) : '',
-			'deleted'             => isset( $transaction->deleted ) ? (bool) $transaction->deleted : false,
-			'category'            => $category,
-			'cashback_expires_at' => $cashback_expires_at,
-		);
-
+		$data    = $this->build_transaction_data( $transaction, $request );
 		$context = ! empty( $request['context'] ) ? $request['context'] : 'view';
 		$data    = $this->add_additional_fields_to_object( $data, $request );
 		$data    = $this->filter_response_by_context( $data, $context );
@@ -509,6 +470,24 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 					'description' => __( 'User ID this transaction belongs to.', 'woo-wallet' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' ),
+				),
+				'user'                => array(
+					'description' => __( 'Embedded user block (login, email, display_name, avatar_url).', 'woo-wallet' ),
+					'type'        => array( 'object', 'null' ),
+					'context'     => array( 'view', 'edit' ),
+					'readonly'    => true,
+				),
+				'created_by'          => array(
+					'description' => __( 'User id that recorded the transaction (admin or 0 for system).', 'woo-wallet' ),
+					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' ),
+					'readonly'    => true,
+				),
+				'formatted'           => array(
+					'description' => __( 'Server-rendered display strings (amount, original_amount, date, type/category labels).', 'woo-wallet' ),
+					'type'        => 'object',
+					'context'     => array( 'view', 'edit' ),
+					'readonly'    => true,
 				),
 				'type'     => array(
 					'description' => __( 'Transaction type: credit or debit.', 'woo-wallet' ),
@@ -589,31 +568,6 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		return $this->add_additional_fields_schema( $schema );
 	}
 
-	/**
-	 * Normalize a raw `_type` meta value into a known category enum value.
-	 *
-	 * Maps legacy/internal stored values to the REST-facing enum. Unknown values
-	 * fall through to `other` so the field is always typed.
-	 *
-	 * @param string $raw_type Raw `_type` meta value.
-	 * @return string
-	 *
-	 * @since 1.6.1
-	 */
-	protected function normalize_category( $raw_type ) {
-		$known = array(
-			'topup'               => 'topup',
-			'credit_purchase'     => 'topup',
-			'cashback'            => 'cashback',
-			'cashback_adjustment' => 'cashback_adjustment',
-			'cashback_refund'     => 'cashback_refund',
-			'partial_payment'     => 'partial_payment',
-			'transfer'            => 'transfer',
-			'refund'              => 'refund',
-			'adjustment'          => 'adjustment',
-		);
-		return isset( $known[ $raw_type ] ) ? $known[ $raw_type ] : 'other';
-	}
 }
 
 // Back-compat alias for the pre-rename class name. Remove in 2.1.

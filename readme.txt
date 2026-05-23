@@ -147,6 +147,10 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **Tweak:-** Referral "Minimum Order Amount" setting renamed to "Minimum Spend" with a clearer description — it gates on the referred customer's total lifetime spend.
 – **Tweak:-** Loader for action/REST classes now hooks `woocommerce_init` instead of `init`, removing the WooCommerce-existence guard while keeping both the WC-inactive fatal and the WP 6.7 translation notice fixed.
 – **Tweak:-** Redesigned the Referrals action settings for clarity — labelled fields, section headings, inline help text, and side-by-side limit controls with the cap hidden until a limit period is chosen.
+– **New:-** Referral activity is now recorded in a dedicated `woo_wallet_referrals` database table — one row per visitor or sign-up referral, with status, reward amount and the currency it was credited in. Replaces the scattered `_woo_wallet_referring_*` user meta and gives referrals a full audit trail.
+– **New:-** The customer Referrals page now shows a referral history — who was referred, the reward type, amount, status (pending / credited / rejected) and date — alongside a converted earnings summary.
+– **New:-** New admin Referral Report screen (TeraWallet → Referral Report) listing every referral with referrer / type / status / date-range filters, a store-wide summary header and a filtered CSV export.
+– **Fix:-** Referral earnings shown to customers now carry their currency and reconvert to the active storefront currency on a currency switch — previously the total was a raw untagged number that could display incorrectly and never reconverted.
 
 = v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.

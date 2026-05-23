@@ -2,9 +2,11 @@
 /**
  * GET /terawallet/v1/me/referrals
  *
- * Customer's referral snapshot — share URL, visitor/signup/earning counters
- * tracked in user_meta. Wraps `Woo_Wallet_Action_Referrals` rather than
- * reading meta keys directly so changes to the action class flow through.
+ * Customer's referral snapshot — share URL plus visitor/signup/earning figures
+ * read from the dedicated `woo_wallet_referrals` table (via
+ * woo_wallet_get_referral_summary()). Every money figure is reconverted to the
+ * active storefront currency, and the frozen pre-1.6.2 user-meta total is
+ * surfaced separately as a read-only `legacy_earning`.
  *
  * @package StandaleneTech
  * @since   2.0.0
@@ -89,18 +91,26 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Referrals_Controller' ) ) {
 
 			$share_url = add_query_arg( $handle, $identifier, wc_get_page_permalink( 'myaccount' ) );
 
-			$earning = (float) get_user_meta( $user_id, '_woo_wallet_referring_earning', true );
+			$summary  = woo_wallet_get_referral_summary( $user_id );
+			$currency = $summary['currency'];
 
 			$data = array(
 				'handle'    => $handle,
 				'code'      => (string) $identifier,
 				'share_url' => $share_url,
 				'stats'     => array(
-					'visitors' => (int) get_user_meta( $user_id, '_woo_wallet_referring_visitor', true ),
-					'signups'  => (int) get_user_meta( $user_id, '_woo_wallet_referring_signup', true ),
-					'earning'  => array(
-						'amount'    => $earning,
-						'formatted' => wp_strip_all_tags( wc_price( $earning, woo_wallet_wc_price_args( $user_id ) ) ),
+					'visitors'       => (int) $summary['visitors'],
+					'signups'        => (int) $summary['signups'],
+					'pending'        => (int) $summary['pending'],
+					'earning'        => array(
+						'amount'    => (float) $summary['earned'],
+						'currency'  => $currency,
+						'formatted' => wp_strip_all_tags( woo_wallet_referral_format_amount( $summary['earned'], $currency, $user_id ) ),
+					),
+					'legacy_earning' => array(
+						'amount'    => (float) $summary['legacy_earned'],
+						'currency'  => $currency,
+						'formatted' => wp_strip_all_tags( woo_wallet_referral_format_amount( $summary['legacy_earned'], $currency, $user_id ) ),
 					),
 				),
 			);
@@ -165,12 +175,23 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Referrals_Controller' ) ) {
 						'context'    => array( 'view' ),
 						'readonly'   => true,
 						'properties' => array(
-							'visitors' => array( 'type' => 'integer' ),
-							'signups'  => array( 'type' => 'integer' ),
-							'earning'  => array(
+							'visitors'       => array( 'type' => 'integer' ),
+							'signups'        => array( 'type' => 'integer' ),
+							'pending'        => array( 'type' => 'integer' ),
+							'earning'        => array(
 								'type'       => 'object',
 								'properties' => array(
 									'amount'    => array( 'type' => 'number' ),
+									'currency'  => array( 'type' => 'string' ),
+									'formatted' => array( 'type' => 'string' ),
+								),
+							),
+							'legacy_earning' => array(
+								'type'        => 'object',
+								'description' => __( 'Frozen referral earnings recorded before 1.6.2 history tracking. Read-only.', 'woo-wallet' ),
+								'properties'  => array(
+									'amount'    => array( 'type' => 'number' ),
+									'currency'  => array( 'type' => 'string' ),
 									'formatted' => array( 'type' => 'string' ),
 								),
 							),

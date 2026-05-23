@@ -198,7 +198,17 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 		$action->woo_wallet_referring_signup( $customer );
 
 		$this->assertRowInBaseCurrency( $this->latest_transaction( $referrer ), 9.0 );
-		$this->assertEquals( $referrer, (int) get_user_meta( $customer, '_referral_user_id', true ) );
+
+		// Attribution is now a referral table row, not user meta.
+		$rows = get_wallet_referrals(
+			array(
+				'referred_user_id' => $customer,
+				'type'             => 'signup',
+			)
+		);
+		$this->assertCount( 1, $rows );
+		$this->assertEquals( $referrer, (int) $rows[0]->referrer_id );
+		$this->assertSame( 'completed', $rows[0]->status );
 	}
 
 	/**
@@ -229,8 +239,17 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 
 		// Only one signup may be credited within the limit window.
 		$this->assertSame( 1, $this->count_credits( $referrer ) );
-		// Attribution is still recorded for the over-limit signup.
-		$this->assertEquals( $referrer, (int) get_user_meta( $customer2, '_referral_user_id', true ) );
+		// The over-limit signup is still recorded — as a rejected row.
+		$rows = get_wallet_referrals(
+			array(
+				'referred_user_id' => $customer2,
+				'type'             => 'signup',
+			)
+		);
+		$this->assertCount( 1, $rows );
+		$this->assertEquals( $referrer, (int) $rows[0]->referrer_id );
+		$this->assertSame( 'rejected', $rows[0]->status );
+		$this->assertSame( 'limit_reached', $rows[0]->reject_reason );
 	}
 
 	/**
@@ -259,7 +278,18 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 		$action->credit_referring_signup( $customer );
 
 		$this->assertNull( $this->latest_transaction( 0 ), 'A deleted referrer must never credit user ID 0.' );
-		$this->assertEmpty( get_user_meta( $customer, '_woo_wallet_referral_signup_credited', true ) );
+
+		// The back-compat shim synthesised a row from the legacy _referral_user_id
+		// meta and rejected it once the referrer was found missing.
+		$rows = get_wallet_referrals(
+			array(
+				'referred_user_id' => $customer,
+				'type'             => 'signup',
+			)
+		);
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'rejected', $rows[0]->status );
+		$this->assertSame( 'referrer_deleted', $rows[0]->reject_reason );
 	}
 
 	/**

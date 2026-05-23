@@ -270,3 +270,23 @@ function woo_wallet_update_161_merge_action_settings() {
 		update_option( '_wallet_settings_actions', $merged );
 	}
 }
+
+/**
+ * DB update 1.6.2: create the dedicated referral tracking table.
+ *
+ * `Woo_Wallet_Install::update()` only runs the registered `$db_updates`
+ * callbacks on upgrade — it never re-runs `create_tables()` — so a new table
+ * shipped in a release must be created here for existing installs. Fresh
+ * installs get the table from the full schema in `create_tables()`.
+ *
+ * `dbDelta()` is idempotent: it creates `woo_wallet_referrals` when absent and
+ * is a no-op once the table exists. No data backfill — the referral history
+ * starts fresh from 1.6.2 (legacy `_woo_wallet_referring_earning` user meta is
+ * left untouched and surfaced read-only as "legacy earnings").
+ *
+ * @since 1.6.2
+ */
+function woo_wallet_update_162_db_schema() {
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( Woo_Wallet_Install::get_referrals_schema() );
+}

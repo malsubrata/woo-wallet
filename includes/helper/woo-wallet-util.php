@@ -572,34 +572,583 @@ if ( ! function_exists( 'get_wallet_transactions_count' ) ) {
 	/**
 	 * Get wallet transactions count.
 	 *
+	 * Accepts either a scalar user id (legacy callers) or the same `$args`
+	 * array shape as `get_wallet_transactions()` so a paginated list endpoint
+	 * can report a filter-aware `X-WP-Total`. Keys ignored: `limit`, `order_by`,
+	 * `order`, `fields`, `nocache` — they don't affect COUNT(*).
+	 *
 	 * @global object $wpdb
-	 * @param int|null $user_id user_id.
-	 * @param bool     $include_deleted include_deleted.
+	 * @param int|array|null $user_id_or_args User id (legacy) or args array.
+	 * @param bool           $include_deleted include_deleted (legacy, ignored when array supplied).
 	 * @return int total count of transactions.
 	 */
-	function get_wallet_transactions_count( $user_id = null, $include_deleted = false ) {
+	function get_wallet_transactions_count( $user_id_or_args = null, $include_deleted = false ) {
 		global $wpdb;
-		$where  = array();
+
+		// Back-compat scalar path. Same SQL as the original implementation.
+		if ( ! is_array( $user_id_or_args ) ) {
+			$where  = array();
+			$params = array();
+			if ( $user_id_or_args ) {
+				$where[]  = 'user_id = %d';
+				$params[] = absint( $user_id_or_args );
+			}
+			if ( ! $include_deleted ) {
+				$where[] = 'deleted = 0';
+			}
+			$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions";
+			if ( ! empty( $where ) ) {
+				$sql .= ' WHERE ' . implode( ' AND ', $where );
+			}
+			if ( ! empty( $params ) ) {
+				$sql = $wpdb->prepare( $sql, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			}
+			return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		}
+
+		$args     = _woo_wallet_normalize_transaction_query_args( $user_id_or_args );
+		$compiled = _woo_wallet_build_transaction_where( $args );
+
+		$select = 'SELECT COUNT(DISTINCT transactions.transaction_id)';
+		$from   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
+		$joins  = $compiled['joins'];
+		$where  = 'WHERE ' . implode( ' AND ', $compiled['where_clauses'] );
+		$params = $compiled['params'];
+
+		$sql = trim( $select . ' ' . $from . ' ' . implode( ' ', $joins ) . ' ' . $where );
+		if ( ! empty( $params ) ) {
+			$sql = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $sql ), $params ) );
+		}
+		return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+	}
+}
+
+if ( ! function_exists( '_woo_wallet_normalize_transaction_query_args' ) ) {
+	/**
+	 * Normalize the args array consumed by `get_wallet_transactions()` and the
+	 * filter-aware path of `get_wallet_transactions_count()`. Pure function — no
+	 * SQL side effects. Lives next to the query builders so both stay in sync.
+	 *
+	 * @param array $args Raw args from caller.
+	 * @return array Normalized args.
+	 */
+	function _woo_wallet_normalize_transaction_query_args( array $args ) {
+		$defaults = array(
+			'user_id'         => 0,
+			'user_ids'        => array(),
+			'where'           => array(),
+			'where_meta'      => array(),
+			'category'        => '',
+			'after'           => '',
+			'before'          => '',
+			'include'         => array(),
+			'exclude'         => array(),
+			'search'          => '',
+			'include_deleted' => false,
+		);
+		$args     = wp_parse_args( $args, $defaults );
+
+		// Translate `category` arg → `where_meta` `_type` clause. Mirrors the same logic
+		// in get_wallet_transactions() so the count query joins on the same constraint.
+		$allowed_categories = array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' );
+		if ( ! empty( $args['category'] ) ) {
+			$raw_cats = is_array( $args['category'] ) ? $args['category'] : explode( ',', $args['category'] );
+			$cats     = array();
+			foreach ( $raw_cats as $c ) {
+				$c = trim( sanitize_key( $c ) );
+				if ( in_array( $c, $allowed_categories, true ) && 'other' !== $c ) {
+					$cats[] = $c;
+				}
+			}
+			if ( ! empty( $cats ) ) {
+				$args['where_meta'][] = array(
+					'key'      => '_type',
+					'value'    => 1 === count( $cats ) ? $cats[0] : $cats,
+					'operator' => 1 === count( $cats ) ? '=' : 'IN',
+				);
+			}
+		}
+		unset( $args['category'] );
+
+		return $args;
+	}
+}
+
+if ( ! function_exists( '_woo_wallet_build_transaction_where' ) ) {
+	/**
+	 * Build the WHERE/JOIN fragments + bound params for a transaction query.
+	 * Used by both `get_wallet_transactions_count()` (when given an args array)
+	 * and the upcoming admin REST list endpoint. Validates every identifier
+	 * against a whitelist and binds every value through %s/%d placeholders.
+	 *
+	 * @param array $args Normalized args.
+	 * @return array { joins: string[], where_clauses: string[], params: array }
+	 */
+	function _woo_wallet_build_transaction_where( array $args ) {
+		global $wpdb;
+
+		$allowed_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'original_currency', 'date', 'type', 'deleted' );
+		$allowed_ops  = array( '=', '!=', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN' );
+
+		$joins         = array();
+		$where_clauses = array( '1=1' );
+		$params        = array();
+
+		if ( ! empty( $args['where_meta'] ) ) {
+			$joins[] = "INNER JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta AS transaction_meta ON transactions.transaction_id = transaction_meta.transaction_id";
+		}
+
+		// user_id (single) or user_ids (multi). Mutually composable but user_id wins if both set.
+		if ( ! empty( $args['user_id'] ) ) {
+			$where_clauses[] = 'transactions.user_id = %d';
+			$params[]        = absint( $args['user_id'] );
+		} elseif ( ! empty( $args['user_ids'] ) && is_array( $args['user_ids'] ) ) {
+			$ids = array_map( 'absint', $args['user_ids'] );
+			$ids = array_filter( $ids );
+			if ( ! empty( $ids ) ) {
+				$ph              = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+				$where_clauses[] = "transactions.user_id IN ({$ph})";
+				foreach ( $ids as $id ) {
+					$params[] = $id;
+				}
+			}
+		}
+
+		if ( empty( $args['include_deleted'] ) ) {
+			$where_clauses[] = 'transactions.deleted = 0';
+		}
+
+		// `where` (transactions table). Whitelisted identifiers, prepared values.
+		if ( ! empty( $args['where'] ) && is_array( $args['where'] ) ) {
+			foreach ( $args['where'] as $value ) {
+				$op  = isset( $value['operator'] ) ? strtoupper( $value['operator'] ) : '=';
+				$op  = in_array( $op, $allowed_ops, true ) ? $op : '=';
+				$col = isset( $value['key'] ) ? $value['key'] : '';
+				if ( ! in_array( $col, $allowed_cols, true ) ) {
+					continue;
+				}
+				if ( 'IN' === $op || 'NOT IN' === $op ) {
+					if ( is_array( $value['value'] ) && count( $value['value'] ) ) {
+						$ph              = implode( ',', array_fill( 0, count( $value['value'] ), '%s' ) );
+						$where_clauses[] = "transactions.{$col} {$op} ({$ph})";
+						foreach ( $value['value'] as $v ) {
+							$params[] = $v;
+						}
+					}
+				} elseif ( 'LIKE' === $op || 'NOT LIKE' === $op ) {
+					$where_clauses[] = "transactions.{$col} {$op} %s";
+					$params[]        = '%' . $wpdb->esc_like( $value['value'] ) . '%';
+				} else {
+					$where_clauses[] = "transactions.{$col} {$op} %s";
+					$params[]        = $value['value'];
+				}
+			}
+		}
+
+		// where_meta. Joined above; meta_key + meta_value bound as placeholders.
+		if ( ! empty( $args['where_meta'] ) && is_array( $args['where_meta'] ) ) {
+			foreach ( $args['where_meta'] as $value ) {
+				$op       = isset( $value['operator'] ) ? strtoupper( $value['operator'] ) : '=';
+				$op       = in_array( $op, $allowed_ops, true ) ? $op : '=';
+				$meta_key = isset( $value['key'] ) ? $value['key'] : '';
+				if ( 'IN' === $op || 'NOT IN' === $op ) {
+					if ( is_array( $value['value'] ) && count( $value['value'] ) ) {
+						$ph              = implode( ',', array_fill( 0, count( $value['value'] ), '%s' ) );
+						$where_clauses[] = "(transaction_meta.meta_key = %s AND transaction_meta.meta_value {$op} ({$ph}))";
+						$params[]        = $meta_key;
+						foreach ( $value['value'] as $v ) {
+							$params[] = $v;
+						}
+					}
+				} elseif ( 'LIKE' === $op || 'NOT LIKE' === $op ) {
+					$where_clauses[] = '(transaction_meta.meta_key = %s AND transaction_meta.meta_value ' . $op . ' %s)';
+					$params[]        = $meta_key;
+					$params[]        = '%' . $wpdb->esc_like( $value['value'] ) . '%';
+				} else {
+					$where_clauses[] = "(transaction_meta.meta_key = %s AND transaction_meta.meta_value {$op} %s)";
+					$params[]        = $meta_key;
+					$params[]        = $value['value'];
+				}
+			}
+		}
+
+		if ( ! empty( $args['after'] ) || ! empty( $args['before'] ) ) {
+			$after           = empty( $args['after'] ) ? '0000-00-00' : $args['after'];
+			$before          = empty( $args['before'] ) ? current_time( 'mysql', 1 ) : $args['before'];
+			$where_clauses[] = 'transactions.date BETWEEN %s AND %s';
+			$params[]        = $after;
+			$params[]        = $before;
+		}
+
+		if ( ! empty( $args['include'] ) && is_array( $args['include'] ) ) {
+			$ids = array_filter( array_map( 'absint', $args['include'] ) );
+			if ( ! empty( $ids ) ) {
+				$ph              = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+				$where_clauses[] = "transactions.transaction_id IN ({$ph})";
+				foreach ( $ids as $id ) {
+					$params[] = $id;
+				}
+			}
+		}
+		if ( ! empty( $args['exclude'] ) && is_array( $args['exclude'] ) ) {
+			$ids = array_filter( array_map( 'absint', $args['exclude'] ) );
+			if ( ! empty( $ids ) ) {
+				$ph              = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+				$where_clauses[] = "transactions.transaction_id NOT IN ({$ph})";
+				foreach ( $ids as $id ) {
+					$params[] = $id;
+				}
+			}
+		}
+
+		// Free-text search: LIKE on `details`. User-side search (login/email/display_name)
+		// is composed by the controller via `user_ids` after a separate WP_User_Query —
+		// we don't join wp_users here to keep this builder DB-agnostic to multisite prefix.
+		if ( ! empty( $args['search'] ) && is_string( $args['search'] ) ) {
+			$where_clauses[] = 'transactions.details LIKE %s';
+			$params[]        = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+		}
+
+		return array(
+			'joins'         => $joins,
+			'where_clauses' => $where_clauses,
+			'params'        => $params,
+		);
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_get_balance_by_currency' ) ) {
+	/**
+	 * Per-currency wallet balance breakdown for a user.
+	 *
+	 * Returns one row per currency present in the user's non-deleted ledger,
+	 * plus the base-currency reduction via `Woo_Wallet_Currency_Manager`. Used
+	 * by the admin REST `users/{id}/balance` endpoint to render multicurrency
+	 * balance tables. The cached `_current_woo_wallet_balance` user meta stays
+	 * the single-currency display cache — this is the authoritative breakdown.
+	 *
+	 * @param int $user_id User id.
+	 * @return array {
+	 *   user_id: int,
+	 *   base_currency: string,
+	 *   balance_base: float,
+	 *   balance_base_formatted: string,
+	 *   by_currency: array<int, array{currency:string,balance:float,formatted:string}>,
+	 *   is_locked: bool,
+	 * }
+	 */
+	function woo_wallet_get_balance_by_currency( $user_id ) {
+		global $wpdb;
+		$user_id = absint( $user_id );
+
+		$rows = array();
+		if ( $user_id ) {
+			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->prepare(
+					"SELECT currency, COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) AS balance
+					FROM {$wpdb->base_prefix}woo_wallet_transactions
+					WHERE user_id = %d AND deleted = 0
+					GROUP BY currency",
+					$user_id
+				)
+			);
+		}
+
+		$base = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD';
+		if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+			$base = Woo_Wallet_Currency_Manager::instance()->get_base_currency();
+		}
+		$manager = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance() : null;
+
+		$by_currency  = array();
+		$balance_base = 0.0;
+		foreach ( (array) $rows as $row ) {
+			$cur     = isset( $row->currency ) && '' !== $row->currency ? strtoupper( $row->currency ) : $base;
+			$balance = (float) $row->balance;
+			$price_args = function_exists( 'woo_wallet_wc_price_args' )
+				? woo_wallet_wc_price_args( $user_id, array( 'currency' => $cur ) )
+				: array( 'currency' => $cur );
+			$by_currency[] = array(
+				'currency'  => $cur,
+				'balance'   => $balance,
+				'formatted' => function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $balance, $price_args ) ) : (string) $balance,
+			);
+			$balance_base += $manager ? (float) $manager->convert( $balance, $cur, $base ) : $balance;
+		}
+
+		$base_price_args         = function_exists( 'woo_wallet_wc_price_args' )
+			? woo_wallet_wc_price_args( $user_id, array( 'currency' => $base ) )
+			: array( 'currency' => $base );
+		$balance_base_formatted  = function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $balance_base, $base_price_args ) ) : (string) $balance_base;
+
+		return array(
+			'user_id'                => $user_id,
+			'base_currency'          => $base,
+			'balance_base'           => $balance_base,
+			'balance_base_formatted' => $balance_base_formatted,
+			'by_currency'            => $by_currency,
+			'is_locked'              => function_exists( 'is_wallet_account_locked' ) ? (bool) is_wallet_account_locked( $user_id ) : false,
+		);
+	}
+}
+
+if ( ! function_exists( 'get_wallet_referrals' ) ) {
+
+	/**
+	 * Query the referral tracking table.
+	 *
+	 * Mirrors get_wallet_transactions(): the ORDER BY column is whitelisted and
+	 * every value is bound through $wpdb->prepare(). This is the single read
+	 * path for all referral reporting — the customer referral page, the admin
+	 * Referral Report screen and the me/referrals REST summary.
+	 *
+	 * Not cached: referral volume is low and reports must always be fresh.
+	 *
+	 * @global object $wpdb
+	 * @param array $args   Query args. See $default_args below.
+	 * @param mixed $output Output type passed to $wpdb->get_results().
+	 * @return array|int Rows, or an integer count when 'count' is true.
+	 */
+	function get_wallet_referrals( $args = array(), $output = OBJECT ) {
+		global $wpdb;
+		$default_args = array(
+			'referrer_id'      => 0,
+			'referred_user_id' => null, // null = unfiltered; 0 is a valid filter (anonymous visits).
+			'type'             => '',
+			'status'           => '',
+			'transaction_id'   => 0,
+			'order_id'         => 0,
+			'after'            => '',
+			'before'           => '',
+			'order_by'         => 'referral_id',
+			'order'            => 'DESC',
+			'limit'            => '',
+			'count'            => false,
+		);
+		$args = apply_filters( 'woo_wallet_referrals_query_args', $args );
+		$args = wp_parse_args( $args, $default_args );
+
+		$table = $wpdb->base_prefix . 'woo_wallet_referrals';
+
+		// Whitelist the ORDER BY column — it cannot be parameterised.
+		$allowed_order_cols = array( 'referral_id', 'referrer_id', 'referred_user_id', 'type', 'status', 'amount', 'transaction_id', 'order_id', 'date_created', 'date_credited' );
+		$order_by           = in_array( $args['order_by'], $allowed_order_cols, true ) ? $args['order_by'] : 'referral_id';
+		$order              = 'ASC' === strtoupper( $args['order'] ) ? 'ASC' : 'DESC';
+
+		// Sanitize limit: allow either an integer or an "offset,limit" numeric pattern.
+		$limit_sql = '';
+		if ( $args['limit'] ) {
+			if ( is_numeric( $args['limit'] ) ) {
+				$limit_sql = 'LIMIT ' . absint( $args['limit'] );
+			} elseif ( is_string( $args['limit'] ) && preg_match( '/^\d+,\d+$/', $args['limit'] ) ) {
+				$limit_sql = 'LIMIT ' . $args['limit'];
+			}
+		}
+
+		$where  = array( '1=1' );
 		$params = array();
 
-		if ( $user_id ) {
-			$where[]  = 'user_id = %d';
-			$params[] = absint( $user_id );
+		if ( $args['referrer_id'] ) {
+			$where[]  = 'referrer_id = %d';
+			$params[] = absint( $args['referrer_id'] );
 		}
-		if ( ! $include_deleted ) {
-			$where[] = 'deleted = 0';
+		if ( null !== $args['referred_user_id'] && '' !== $args['referred_user_id'] ) {
+			$where[]  = 'referred_user_id = %d';
+			$params[] = absint( $args['referred_user_id'] );
+		}
+		if ( $args['type'] && in_array( $args['type'], array( 'visit', 'signup' ), true ) ) {
+			$where[]  = 'type = %s';
+			$params[] = $args['type'];
+		}
+		if ( $args['status'] && in_array( $args['status'], array( 'pending', 'completed', 'rejected' ), true ) ) {
+			$where[]  = 'status = %s';
+			$params[] = $args['status'];
+		}
+		if ( $args['transaction_id'] ) {
+			$where[]  = 'transaction_id = %d';
+			$params[] = absint( $args['transaction_id'] );
+		}
+		if ( $args['order_id'] ) {
+			$where[]  = 'order_id = %d';
+			$params[] = absint( $args['order_id'] );
+		}
+		if ( ! empty( $args['after'] ) || ! empty( $args['before'] ) ) {
+			$where[]  = 'date_created BETWEEN %s AND %s';
+			$params[] = empty( $args['after'] ) ? '0000-00-00 00:00:00' : $args['after'];
+			$params[] = empty( $args['before'] ) ? current_time( 'mysql', 1 ) : $args['before'];
 		}
 
-		$sql = "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions";
-		if ( ! empty( $where ) ) {
-			$sql .= ' WHERE ' . implode( ' AND ', $where );
+		$where_sql = 'WHERE ' . implode( ' AND ', $where );
+		$wpdb->hide_errors();
+
+		if ( $args['count'] ) {
+			$query = "SELECT COUNT(*) FROM {$table} {$where_sql}";
+			if ( ! empty( $params ) ) {
+				$query = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $query ), $params ) );
+			}
+			return (int) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 
+		$query = "SELECT * FROM {$table} {$where_sql} ORDER BY {$order_by} {$order} {$limit_sql}";
 		if ( ! empty( $params ) ) {
-			$sql = $wpdb->prepare( $sql, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$query = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $query ), $params ) );
 		}
 
-		return $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		return $wpdb->get_results( $query, $output ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	}
+}
+
+if ( ! function_exists( 'get_wallet_referrals_count' ) ) {
+	/**
+	 * Count referral rows matching the given filter args.
+	 *
+	 * Thin wrapper over get_wallet_referrals() with 'count' forced on — used by
+	 * report pagination and the summary headers.
+	 *
+	 * @param array $args Same filter args as get_wallet_referrals().
+	 * @return int
+	 */
+	function get_wallet_referrals_count( $args = array() ) {
+		$args['count'] = true;
+		return (int) get_wallet_referrals( $args );
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_referral_display_currency' ) ) {
+	/**
+	 * Currency that referral amounts should be displayed in.
+	 *
+	 * Referral rewards are stored in the store base currency; every customer and
+	 * admin display path reconverts them to the currency the storefront is
+	 * currently showing, so the figures track a currency switch.
+	 *
+	 * @return string ISO 4217 code.
+	 */
+	function woo_wallet_referral_display_currency() {
+		if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+			return Woo_Wallet_Currency_Manager::instance()->get_active_currency();
+		}
+		$currency = get_option( 'woocommerce_currency' );
+		return is_string( $currency ) && '' !== $currency ? strtoupper( $currency ) : 'USD';
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_referral_convert_amount' ) ) {
+	/**
+	 * Convert a stored referral amount into the active display currency.
+	 *
+	 * Fail-open: with no multi-currency provider the amount is returned
+	 * unchanged (the conversion manager logs the gap).
+	 *
+	 * @param float  $amount        Amount in $from_currency.
+	 * @param string $from_currency Currency the amount is stored in.
+	 * @return float
+	 */
+	function woo_wallet_referral_convert_amount( $amount, $from_currency ) {
+		$from = strtoupper( (string) $from_currency );
+		$to   = woo_wallet_referral_display_currency();
+		if ( '' === $from || $from === $to ) {
+			return (float) $amount;
+		}
+		if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+			return (float) Woo_Wallet_Currency_Manager::instance()->convert( $amount, $from, $to );
+		}
+		return (float) $amount;
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_referral_format_amount' ) ) {
+	/**
+	 * Convert and format a stored referral amount for display.
+	 *
+	 * @param float  $amount        Amount in $from_currency.
+	 * @param string $from_currency Currency the amount is stored in.
+	 * @param int    $user_id       Optional user the figure belongs to.
+	 * @return string HTML price string in the active display currency.
+	 */
+	function woo_wallet_referral_format_amount( $amount, $from_currency, $user_id = 0 ) {
+		$converted = woo_wallet_referral_convert_amount( $amount, $from_currency );
+		return wc_price(
+			$converted,
+			woo_wallet_wc_price_args( $user_id ? $user_id : '', array( 'currency' => woo_wallet_referral_display_currency() ) )
+		);
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_referral_user_label' ) ) {
+	/**
+	 * Human label for a referred user id.
+	 *
+	 * @param int $user_id Referred user id (0 for an anonymous visitor).
+	 * @return string
+	 */
+	function woo_wallet_referral_user_label( $user_id ) {
+		$user_id = absint( $user_id );
+		if ( ! $user_id ) {
+			return __( 'Guest visitor', 'woo-wallet' );
+		}
+		$user = get_userdata( $user_id );
+		return $user ? $user->display_name : __( 'Deleted user', 'woo-wallet' );
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_get_referral_summary' ) ) {
+	/**
+	 * Aggregate referral figures for one referrer.
+	 *
+	 * Shared by the customer referral page and the me/referrals REST endpoint
+	 * so both surface identical numbers. All money is reconverted to the active
+	 * display currency.
+	 *
+	 * @param int $user_id Referrer.
+	 * @return array visitors, signups, pending, earned, legacy_earned, currency.
+	 */
+	function woo_wallet_get_referral_summary( $user_id ) {
+		$user_id = absint( $user_id );
+
+		$earned    = 0.0;
+		$completed = get_wallet_referrals(
+			array(
+				'referrer_id' => $user_id,
+				'status'      => 'completed',
+			)
+		);
+		foreach ( (array) $completed as $row ) {
+			$earned += woo_wallet_referral_convert_amount( $row->amount, $row->currency );
+		}
+
+		// Legacy pre-1.6.2 earnings — stored untagged, treated as base currency.
+		$base_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
+			? Woo_Wallet_Currency_Manager::instance()->get_base_currency()
+			: woo_wallet_referral_display_currency();
+		$legacy_raw    = (float) get_user_meta( $user_id, '_woo_wallet_referring_earning', true );
+
+		return array(
+			'visitors'      => get_wallet_referrals_count(
+				array(
+					'referrer_id' => $user_id,
+					'type'        => 'visit',
+					'status'      => 'completed',
+				)
+			),
+			'signups'       => get_wallet_referrals_count(
+				array(
+					'referrer_id' => $user_id,
+					'type'        => 'signup',
+					'status'      => 'completed',
+				)
+			),
+			'pending'       => get_wallet_referrals_count(
+				array(
+					'referrer_id' => $user_id,
+					'type'        => 'signup',
+					'status'      => 'pending',
+				)
+			),
+			'earned'        => $earned,
+			'legacy_earned' => woo_wallet_referral_convert_amount( $legacy_raw, $base_currency ),
+			'currency'      => woo_wallet_referral_display_currency(),
+		);
 	}
 }
 

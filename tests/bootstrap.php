@@ -89,10 +89,13 @@ require $_tests_dir . '/includes/bootstrap.php';
  * ledger: Woo_Wallet_Wallet::transfer() runs its own START TRANSACTION/
  * COMMIT, which defeats WP_UnitTestCase's per-test rollback isolation —
  * without this drop, committed transfer rows would accumulate across runs.
+ * The referral table is dropped for the same reason: recording a referral
+ * credits the wallet, and that credit's COMMIT also commits the referral row.
  */
 global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transaction_meta" ); // phpcs:ignore WordPress.DB
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transactions" ); // phpcs:ignore WordPress.DB
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_referrals" ); // phpcs:ignore WordPress.DB
 
 if ( class_exists( 'WC_Install' ) ) {
 	WC_Install::install();

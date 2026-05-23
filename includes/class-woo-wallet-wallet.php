@@ -160,6 +160,85 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Update the `details` note on an existing transaction row. Balance is
+		 * untouched — this is admin-side metadata editing only. Emits the
+		 * `woo_wallet_transaction_details_updated` hook so caches/integrations
+		 * can react.
+		 *
+		 * @param int    $transaction_id Transaction id.
+		 * @param string $details        New details text.
+		 * @return bool|WP_Error
+		 */
+		public function update_transaction_details( $transaction_id, $details ) {
+			global $wpdb;
+			$transaction_id = absint( $transaction_id );
+			if ( ! $transaction_id ) {
+				return new WP_Error( 'woo_wallet_invalid_transaction', __( 'Invalid transaction id.', 'woo-wallet' ) );
+			}
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id, user_id FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d", $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( ! $row ) {
+				return new WP_Error( 'woo_wallet_transaction_not_found', __( 'Transaction not found.', 'woo-wallet' ) );
+			}
+			$ok = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				"{$wpdb->base_prefix}woo_wallet_transactions",
+				array( 'details' => (string) $details ),
+				array( 'transaction_id' => $transaction_id ),
+				array( '%s' ),
+				array( '%d' )
+			);
+			if ( false === $ok ) {
+				return new WP_Error( 'woo_wallet_update_failed', __( 'Could not update transaction details.', 'woo-wallet' ) );
+			}
+			do_action( 'woo_wallet_transaction_details_updated', $transaction_id, (int) $row->user_id, (string) $details );
+			return true;
+		}
+
+		/**
+		 * Soft-delete (sets `deleted=1`) or hard-delete a single transaction
+		 * row. Atomic under the per-user GET_LOCK. Does NOT mutate balance —
+		 * callers wanting balance preservation should use
+		 * `woo_wallet_purge_user_transactions()` or follow up with their own
+		 * credit/debit.
+		 *
+		 * @param int  $transaction_id Transaction id.
+		 * @param bool $hard           True for permanent DELETE, false for soft.
+		 * @return bool|WP_Error
+		 */
+		public function delete_transaction( $transaction_id, $hard = false ) {
+			global $wpdb;
+			$transaction_id = absint( $transaction_id );
+			if ( ! $transaction_id ) {
+				return new WP_Error( 'woo_wallet_invalid_transaction', __( 'Invalid transaction id.', 'woo-wallet' ) );
+			}
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id, user_id FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d", $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( ! $row ) {
+				return new WP_Error( 'woo_wallet_transaction_not_found', __( 'Transaction not found.', 'woo-wallet' ) );
+			}
+			$user_id      = (int) $row->user_id;
+			$lock_name    = 'woo_wallet_lock_user_' . $user_id;
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $user_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return new WP_Error( 'woo_wallet_lock_timeout', __( 'Could not acquire wallet lock.', 'woo-wallet' ) );
+			}
+			try {
+				if ( $hard ) {
+					$wpdb->delete( "{$wpdb->base_prefix}woo_wallet_transactions", array( 'transaction_id' => $transaction_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+					$wpdb->delete( "{$wpdb->base_prefix}woo_wallet_transaction_meta", array( 'transaction_id' => $transaction_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				} else {
+					$wpdb->update( "{$wpdb->base_prefix}woo_wallet_transactions", array( 'deleted' => 1 ), array( 'transaction_id' => $transaction_id ), array( '%d' ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				}
+				if ( function_exists( 'clear_woo_wallet_cache' ) ) {
+					clear_woo_wallet_cache( $user_id );
+				}
+				do_action( 'woo_wallet_transaction_deleted', $transaction_id, $user_id, (bool) $hard );
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			}
+			return true;
+		}
+
+		/**
 		 * Credit wallet balance through order payment
 		 *
 		 * @param int $order_id order_id.

@@ -43,6 +43,22 @@ class Action_Referrals extends WooWalletAction {
 					'default' => 'no',
 				),
 				array(
+					'title' => __( 'Referral link format', 'woo-wallet' ),
+					'type'  => 'title',
+					'desc'  => __( "Choose what a customer's referral link contains.", 'woo-wallet' ),
+					'id'    => 'referring_links',
+				),
+				'referal_link'                      => array(
+					'title'       => __( 'Link identifier', 'woo-wallet' ),
+					'type'        => 'select',
+					'description' => __( 'Numeric ID is safest. Usernames are friendlier but expose the username publicly.', 'woo-wallet' ),
+					'desc_tip'    => true,
+					'options'     => array(
+						'id'       => __( 'Numeric referral ID', 'woo-wallet' ),
+						'username' => __( 'Usernames as referral ID', 'woo-wallet' ),
+					),
+				),
+				array(
 					'title' => __( 'How referral rewards work', 'woo-wallet' ),
 					'type'  => 'title',
 					'desc'  => __( 'Reward existing customers when people they refer visit your store or sign up. Customers share a personal link from their Wallet → Referrals page. Only the referrer is rewarded.', 'woo-wallet' ),
@@ -146,22 +162,6 @@ class Action_Referrals extends WooWalletAction {
 					'default'     => __( 'Balance credited for referring a new member', 'woo-wallet' ),
 					'desc_tip'    => true,
 				),
-				array(
-					'title' => __( 'Referral link format', 'woo-wallet' ),
-					'type'  => 'title',
-					'desc'  => __( "Choose what a customer's referral link contains.", 'woo-wallet' ),
-					'id'    => 'referring_links',
-				),
-				'referal_link'                      => array(
-					'title'       => __( 'Link identifier', 'woo-wallet' ),
-					'type'        => 'select',
-					'description' => __( 'Numeric ID is safest. Usernames are friendlier but expose the username publicly.', 'woo-wallet' ),
-					'desc_tip'    => true,
-					'options'     => array(
-						'id'       => __( 'Numeric referral ID', 'woo-wallet' ),
-						'username' => __( 'Usernames as referral ID', 'woo-wallet' ),
-					),
-				),
 			)
 		);
 	}
@@ -223,13 +223,49 @@ class Action_Referrals extends WooWalletAction {
 		}
 	}
 	/**
+	 * Lazy-load the referral service.
+	 *
+	 * Loaded on demand (not in the boot sequence) — only the few requests that
+	 * actually record a referral need it. Mirrors how the transfer/top-up
+	 * services are pulled in at their call sites.
+	 *
+	 * @return void
+	 */
+	private function load_referral_service() {
+		if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
+			include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-referral-service.php';
+		}
+	}
+	/**
+	 * Resolve the referral code in play for the current request.
+	 *
+	 * Primary source is the live `woo_wallet_referral` cookie. When a signup
+	 * user ID is supplied (deferred / cross-request signup processing, where the
+	 * cookie may already be gone) the code captured at registration time —
+	 * `_woo_wallet_referral_at_signup` user meta — is used as a fallback.
+	 *
+	 * @param int $signup_user_id Optional newly-registered user for the fallback.
+	 * @return string The sanitized referral code, or '' when none.
+	 */
+	public function resolve_referral_code( $signup_user_id = 0 ) {
+		$signup_user_id = absint( $signup_user_id );
+
+		if ( isset( $_COOKIE['woo_wallet_referral'] ) && '' !== $_COOKIE['woo_wallet_referral'] ) {
+			return sanitize_text_field( wp_unslash( $_COOKIE['woo_wallet_referral'] ) );
+		}
+		if ( $signup_user_id ) {
+			$stored = get_user_meta( $signup_user_id, '_woo_wallet_referral_at_signup', true );
+			if ( $stored ) {
+				return sanitize_text_field( $stored );
+			}
+		}
+		return '';
+	}
+	/**
 	 * Get referral user.
 	 *
-	 * Resolves the referrer from the live `woo_wallet_referral` cookie. When a
-	 * signup user ID is supplied (deferred / cross-request signup processing,
-	 * where the cookie may already be gone) the referral code captured at
-	 * registration time — `_woo_wallet_referral_at_signup` user meta — is used
-	 * as a fallback.
+	 * Resolves the referrer from the referral code (see resolve_referral_code())
+	 * and rejects a missing referrer or a self-referral.
 	 *
 	 * @param int $signup_user_id Optional. The newly-registered user being
 	 *                            processed, used for self-referral checks and
@@ -238,16 +274,7 @@ class Action_Referrals extends WooWalletAction {
 	 */
 	public function get_referral_user( $signup_user_id = 0 ) {
 		$signup_user_id = absint( $signup_user_id );
-		$referral_code  = '';
-
-		if ( isset( $_COOKIE['woo_wallet_referral'] ) && '' !== $_COOKIE['woo_wallet_referral'] ) {
-			$referral_code = sanitize_text_field( wp_unslash( $_COOKIE['woo_wallet_referral'] ) );
-		} elseif ( $signup_user_id ) {
-			$stored = get_user_meta( $signup_user_id, '_woo_wallet_referral_at_signup', true );
-			if ( $stored ) {
-				$referral_code = sanitize_text_field( $stored );
-			}
-		}
+		$referral_code  = $this->resolve_referral_code( $signup_user_id );
 
 		if ( '' === $referral_code ) {
 			return false;
@@ -270,6 +297,10 @@ class Action_Referrals extends WooWalletAction {
 	/**
 	 * Init referral visitor.
 	 *
+	 * Resolves the referrer and enforces the 24h per-referrer dedup cookie, then
+	 * hands the period-limit check, ledger credit and row recording to
+	 * WooWallet_Referral_Service.
+	 *
 	 * @return void
 	 */
 	public function init_referral_visit() {
@@ -277,48 +308,23 @@ class Action_Referrals extends WooWalletAction {
 		if ( ! $referral_user ) {
 			return;
 		}
-		$referral_visit_amount = apply_filters( 'woo_wallet_referring_visitor_amount', $this->settings['referring_visitors_amount'], $referral_user->ID );
-		if ( $referral_visit_amount && $this->get_referral_user() ) {
-			if ( apply_filters( 'woo_wallet_restrict_referral_visit_by_cookie', isset( $_COOKIE[ 'woo_wallet_referral_visit_credited_' . $referral_user->ID ] ), $this ) ) {
-				return;
-			}
-			$limit                        = $this->settings['referring_visitors_limit_duration'];
-			$referral_visitor_count       = get_user_meta( $referral_user->ID, '_woo_wallet_referring_visitor', true ) ? get_user_meta( $referral_user->ID, '_woo_wallet_referring_visitor', true ) : 0;
-			$woo_wallet_referring_earning = get_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', true ) ? get_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', true ) : 0;
-			if ( $limit ) {
-				$woo_wallet_referral_visit_count = get_transient( 'woo_wallet_referral_visit_' . $referral_user->ID ) ? get_transient( 'woo_wallet_referral_visit_' . $referral_user->ID ) : 0;
-				if ( $woo_wallet_referral_visit_count < $this->settings['referring_visitors_limit'] ) {
-					if ( ! headers_sent() && did_action( 'wp_loaded' ) ) {
-						$transiant_duration = DAY_IN_SECONDS;
-						if ( 'week' === $limit ) {
-							$transiant_duration = WEEK_IN_SECONDS;
-						} elseif ( 'month' === $limit ) {
-							$transiant_duration = MONTH_IN_SECONDS;
-						}
-						set_transient( 'woo_wallet_referral_visit_' . $referral_user->ID, $woo_wallet_referral_visit_count + 1, $transiant_duration );
-						// The configured amount is saved in the store base
-						// currency, so credit it against the base currency to
-						// skip active-currency conversion in the ledger.
-						$transaction_id = woo_wallet()->wallet->credit( $referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description'], array( 'currency' => $this->get_base_currency() ) );
-						update_user_meta( $referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1 );
-						update_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount );
-						do_action( 'woo_wallet_after_referral_visit', $transaction_id, $this );
-					}
-				}
-			} else {
-				// Configured amount is in base currency — credit in base.
-				$transaction_id = woo_wallet()->wallet->credit( $referral_user->ID, $referral_visit_amount, $this->settings['referring_visitors_description'], array( 'currency' => $this->get_base_currency() ) );
-				update_user_meta( $referral_user->ID, '_woo_wallet_referring_visitor', $referral_visitor_count + 1 );
-				update_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_visit_amount );
-				do_action( 'woo_wallet_after_referral_visit', $transaction_id, $this );
-			}
-			wc_setcookie( 'woo_wallet_referral_visit_credited_' . $referral_user->ID, true, time() + DAY_IN_SECONDS );
+		// 24h per-referrer dedup — kept here because it owns $_COOKIE / headers.
+		if ( apply_filters( 'woo_wallet_restrict_referral_visit_by_cookie', isset( $_COOKIE[ 'woo_wallet_referral_visit_credited_' . $referral_user->ID ] ), $this ) ) {
+			return;
 		}
+		$this->load_referral_service();
+		WooWallet_Referral_Service::record_visit( $this, $referral_user, $this->resolve_referral_code() );
+		// Set the dedup cookie regardless of the service result — a visit blocked
+		// by the period limit should not be retried again until the next day.
+		wc_setcookie( 'woo_wallet_referral_visit_credited_' . $referral_user->ID, true, time() + DAY_IN_SECONDS );
 	}
 	/**
 	 * Process wallet referral signup.
 	 *
-	 * @param int $user_id user_id.
+	 * Records the permanent referrer↔referred attribution row, then credits it
+	 * immediately when no minimum-spend gate is configured.
+	 *
+	 * @param int $user_id The newly-registered user.
 	 * @return void
 	 */
 	public function woo_wallet_referring_signup( $user_id ) {
@@ -329,10 +335,10 @@ class Action_Referrals extends WooWalletAction {
 		if ( ! $referral_user ) {
 			return;
 		}
-		// Always record attribution so the signup-limit and minimum-spend
-		// gating never loses the referrer link.
-		if ( ! get_user_meta( $user_id, '_referral_user_id', true ) ) {
-			update_user_meta( $user_id, '_referral_user_id', $referral_user->ID );
+		$this->load_referral_service();
+		$result = WooWallet_Referral_Service::record_signup( $this, $referral_user, $user_id, $this->resolve_referral_code( $user_id ) );
+		if ( empty( $result['is_valid'] ) ) {
+			return;
 		}
 		$minimum_spent = isset( $this->settings['referral_order_amount'] ) ? $this->settings['referral_order_amount'] : 0;
 		if ( ! $minimum_spent ) {
@@ -340,68 +346,55 @@ class Action_Referrals extends WooWalletAction {
 		}
 	}
 	/**
-	 * Credit referral signup.
+	 * Credit a deferred referral signup once its minimum-spend gate is met.
+	 *
+	 * Fires on every order status change; acts only when the customer has a
+	 * pending sign-up referral and their lifetime spend clears the configured
+	 * minimum.
 	 *
 	 * @param int $order_id Order ID.
 	 * @return void
 	 */
 	public function woo_wallet_credit_referring_signup( $order_id ) {
-		$order            = wc_get_order( $order_id );
-		$customer_id      = $order->get_customer_id();
-		$referral_user_id = get_user_meta( $customer_id, '_referral_user_id', true );
-		if ( ! $referral_user_id || get_user_meta( $customer_id, '_woo_wallet_referral_signup_credited', true ) ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
 			return;
 		}
-		$customer_total_spent = wc_get_customer_total_spent( $customer_id );
-		$minimum_spent        = isset( $this->settings['referral_order_amount'] ) ? $this->settings['referral_order_amount'] : 0;
-		if ( $order->is_paid() && $customer_total_spent >= $minimum_spent ) {
+		$customer_id = $order->get_customer_id();
+		if ( ! $customer_id ) {
+			return;
+		}
+		// Act only when a pending sign-up referral exists for this customer —
+		// either a 1.6.2+ table row, or a pre-1.6.2 attribution still in meta.
+		$has_pending_row = (bool) get_wallet_referrals(
+			array(
+				'referred_user_id' => $customer_id,
+				'type'             => 'signup',
+				'status'           => 'pending',
+				'limit'            => 1,
+			)
+		);
+		$has_legacy_meta = get_user_meta( $customer_id, '_referral_user_id', true ) && ! get_user_meta( $customer_id, '_woo_wallet_referral_signup_credited', true );
+		if ( ! $has_pending_row && ! $has_legacy_meta ) {
+			return;
+		}
+		$minimum_spent = isset( $this->settings['referral_order_amount'] ) ? $this->settings['referral_order_amount'] : 0;
+		if ( $order->is_paid() && wc_get_customer_total_spent( $customer_id ) >= $minimum_spent ) {
 			$this->credit_referring_signup( $customer_id, $order_id );
 		}
 	}
 	/**
-	 * Credit referrals.
+	 * Credit a pending referral signup.
 	 *
-	 * @param integer $customer_id customer_id.
-	 * @param integer $order_id order_id.
-	 * @return void
+	 * Thin public wrapper over WooWallet_Referral_Service::credit_signup() —
+	 * kept public because the integration test suite calls it directly.
+	 *
+	 * @param int $customer_id The referred customer.
+	 * @param int $order_id    Optional qualifying order id.
+	 * @return array The service result envelope.
 	 */
 	public function credit_referring_signup( $customer_id, $order_id = 0 ) {
-		$referral_user_id = get_user_meta( $customer_id, '_referral_user_id', true );
-		if ( ! $referral_user_id || get_user_meta( $customer_id, '_woo_wallet_referral_signup_credited', true ) ) {
-			return;
-		}
-		// Guard against a deleted referrer — `new WP_User()` on a missing ID
-		// yields a user with ID 0, which would credit the wrong account.
-		$referral_user = get_user_by( 'id', $referral_user_id );
-		if ( ! $referral_user ) {
-			return;
-		}
-		// Signup limit — gate on actual credits, not registrations.
-		$limit         = $this->settings['referring_signups_limit_duration'];
-		$transient_key = 'woo_wallet_referral_signup_' . $referral_user->ID;
-		if ( $limit && (int) get_transient( $transient_key ) >= (int) $this->settings['referring_signups_limit'] ) {
-			return;
-		}
-		$referral_signup_count        = get_user_meta( $referral_user->ID, '_woo_wallet_referring_signup', true ) ? get_user_meta( $referral_user->ID, '_woo_wallet_referring_signup', true ) : 0;
-		$woo_wallet_referring_earning = get_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', true ) ? get_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', true ) : 0;
-		$referral_signup_amount       = apply_filters( 'woo_wallet_referring_signup_amount', $this->settings['referring_signups_amount'], $referral_user->ID, $customer_id, $order_id );
-		if ( $referral_signup_amount ) {
-			// Configured amount is in base currency — credit in base.
-			$transaction_id = woo_wallet()->wallet->credit( $referral_user->ID, $referral_signup_amount, $this->settings['referring_signups_description'], array( 'currency' => $this->get_base_currency() ) );
-			update_user_meta( $referral_user->ID, '_woo_wallet_referring_signup', $referral_signup_count + 1 );
-			update_user_meta( $referral_user->ID, '_woo_wallet_referring_earning', $woo_wallet_referring_earning + $referral_signup_amount );
-			update_user_meta( $customer_id, '_woo_wallet_referral_signup_credited', true );
-			// Count this credited signup against the configured limit.
-			if ( $limit ) {
-				$transiant_duration = DAY_IN_SECONDS;
-				if ( 'week' === $limit ) {
-					$transiant_duration = WEEK_IN_SECONDS;
-				} elseif ( 'month' === $limit ) {
-					$transiant_duration = MONTH_IN_SECONDS;
-				}
-				set_transient( $transient_key, (int) get_transient( $transient_key ) + 1, $transiant_duration );
-			}
-			do_action( 'woo_wallet_after_referral_signup', $transaction_id, $customer_id, $this, $order_id );
-		}
+		$this->load_referral_service();
+		return WooWallet_Referral_Service::credit_signup( $this, $customer_id, $order_id );
 	}
 }

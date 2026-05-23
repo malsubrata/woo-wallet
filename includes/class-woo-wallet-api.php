@@ -68,6 +68,10 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 				'class-terawallet-rest-me-referrals-controller.php',
 				'class-terawallet-rest-me-cashback-rules-controller.php',
 				'class-terawallet-rest-public-settings-controller.php',
+				// admin DataView surface.
+				'class-terawallet-rest-admin-transactions-controller.php',
+				'class-terawallet-rest-admin-users-controller.php',
+				'class-terawallet-rest-admin-transfer-controller.php',
 			) as $file ) {
 				if ( file_exists( $me_dir . $file ) ) {
 					include_once $me_dir . $file;
@@ -97,6 +101,10 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 				'TeraWallet_REST_Me_Referrals_Controller',
 				'TeraWallet_REST_Me_Cashback_Rules_Controller',
 				'TeraWallet_REST_Public_Settings_Controller',
+				// Admin DataView surface.
+				'TeraWallet_REST_Admin_Transactions_Controller',
+				'TeraWallet_REST_Admin_Users_Controller',
+				'TeraWallet_REST_Admin_Transfer_Controller',
 			);
 			foreach ( $controllers as $controller ) {
 				if ( ! class_exists( $controller ) ) {
