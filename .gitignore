@@ -21,3 +21,9 @@ docs
 composer.lock
 wp-tests-config.php
 .phpunit.result.cache
+
+# Playwright / MCP scratch
+.playwright-mcp/
+
+# Local screenshots / scratch images
+*.png
