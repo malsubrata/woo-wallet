@@ -51,6 +51,30 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 		}
 
 		/**
+		 * Require an `Idempotency-Key` header on a money-moving request.
+		 *
+		 * Returns the trimmed key, or a `WP_Error` (HTTP 400) when the header
+		 * is missing/blank. Money-moving admin endpoints must call this before
+		 * delegating to `WooWallet_Idempotency::run()` — without it, a blank
+		 * key falls through to direct execution (no replay protection), which
+		 * means an accidental client double-submit can double-credit.
+		 *
+		 * @param WP_REST_Request $request The request.
+		 * @return string|WP_Error The header value, or a 400 error.
+		 */
+		protected function require_idempotency_key( $request ) {
+			$key = sanitize_text_field( (string) $request->get_header( 'Idempotency-Key' ) );
+			if ( '' === $key ) {
+				return $this->error(
+					'terawallet_rest_idempotency_key_required',
+					__( 'The Idempotency-Key request header is required for this operation.', 'woo-wallet' ),
+					400
+				);
+			}
+			return $key;
+		}
+
+		/**
 		 * Build a WP_Error with a status header.
 		 *
 		 * @param string $code    Error code.

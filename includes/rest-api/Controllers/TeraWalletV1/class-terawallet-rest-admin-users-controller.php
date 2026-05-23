@@ -234,7 +234,10 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Controller_
 		if ( ! $user ) {
 			return $this->error( 'terawallet_rest_invalid_user', __( 'Invalid user id.', 'woo-wallet' ), 404 );
 		}
-		$idem_key = (string) $request->get_header( 'Idempotency-Key' );
+		$idem_key = $this->require_idempotency_key( $request );
+		if ( is_wp_error( $idem_key ) ) {
+			return $idem_key;
+		}
 		return WooWallet_Idempotency::run(
 			get_current_user_id(),
 			'admin_user_purge:' . $id . ':' . $idem_key,

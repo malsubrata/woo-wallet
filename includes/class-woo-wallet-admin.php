@@ -474,20 +474,30 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			$output = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 			fputcsv( $output, array( 'ID', 'Referrer', 'Referred', 'Type', 'Status', 'Reward', 'Currency', 'Order', 'Date created', 'Date credited' ) );
+			// Strip leading formula-trigger characters from user-controllable
+			// fields so display_name / email containing `=HYPERLINK(...)` etc.
+			// cannot execute when the CSV is opened in Excel / LibreOffice.
+			$csv_escape = static function ( $value ) {
+				if ( null === $value ) {
+					return '';
+				}
+				$value = (string) $value;
+				return ltrim( $value, "=+-@\t\r" );
+			};
 			foreach ( $rows as $row ) {
 				fputcsv(
 					$output,
 					array(
-						$row->referral_id,
-						woo_wallet_referral_user_label( $row->referrer_id ),
-						woo_wallet_referral_user_label( $row->referred_user_id ),
-						$row->type,
-						$row->status,
+						(int) $row->referral_id,
+						$csv_escape( woo_wallet_referral_user_label( $row->referrer_id ) ),
+						$csv_escape( woo_wallet_referral_user_label( $row->referred_user_id ) ),
+						$csv_escape( $row->type ),
+						$csv_escape( $row->status ),
 						$row->amount,
-						$row->currency,
-						$row->order_id ? $row->order_id : '',
-						$row->date_created,
-						$row->date_credited ? $row->date_credited : '',
+						$csv_escape( $row->currency ),
+						$row->order_id ? (int) $row->order_id : '',
+						$csv_escape( $row->date_created ),
+						$row->date_credited ? $csv_escape( $row->date_credited ) : '',
 					)
 				);
 			}

@@ -287,8 +287,11 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Cont
 			return $this->error( 'terawallet_rest_invalid_user', __( 'Invalid user id.', 'woo-wallet' ), 404 );
 		}
 
-		$idem_key = (string) $request->get_header( 'Idempotency-Key' );
-		$result   = WooWallet_Idempotency::run(
+		$idem_key = $this->require_idempotency_key( $request );
+		if ( is_wp_error( $idem_key ) ) {
+			return $idem_key;
+		}
+		$result = WooWallet_Idempotency::run(
 			get_current_user_id(),
 			'admin_txn_create:' . $idem_key,
 			function () use ( $params, $request ) {
@@ -335,7 +338,10 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Cont
 		$params = $request->get_params();
 		$action = $params['action'];
 
-		$idem_key = (string) $request->get_header( 'Idempotency-Key' );
+		$idem_key = $this->require_idempotency_key( $request );
+		if ( is_wp_error( $idem_key ) ) {
+			return $idem_key;
+		}
 		return WooWallet_Idempotency::run(
 			get_current_user_id(),
 			'admin_txn_bulk:' . $action . ':' . $idem_key,

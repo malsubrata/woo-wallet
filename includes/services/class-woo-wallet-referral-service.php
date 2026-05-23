@@ -50,59 +50,79 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 		public static function record_visit( $action, $referrer, $code = '' ) {
 			$referrer_id = (int) $referrer->ID;
 
-			if ( ! self::within_period_limit( $referrer_id, 'visit', $action->settings['referring_visitors_limit_duration'], $action->settings['referring_visitors_limit'] ) ) {
-				return self::fail( 'limit_reached', __( 'Visitor referral reward limit reached for this period.', 'woo-wallet' ) );
-			}
-
 			$amount = (float) apply_filters( 'woo_wallet_referring_visitor_amount', $action->settings['referring_visitors_amount'], $referrer_id );
 			if ( $amount <= 0 ) {
 				return self::fail( 'zero_amount', __( 'Visitor referral reward amount is zero.', 'woo-wallet' ) );
 			}
 
-			$currency = self::base_currency();
+			$currency        = self::base_currency();
+			$referred_user_id = get_current_user_id();
 
-			// Write the referral row BEFORE crediting: a referral credit must
-			// never exist without its audit row. If the row cannot be written
-			// (e.g. the table is missing) the visit is not credited at all.
-			$referral_id = self::insert_row(
-				array(
-					'referrer_id'      => $referrer_id,
-					'referred_user_id' => get_current_user_id(),
-					'type'             => 'visit',
-					'referral_code'    => (string) $code,
-					'status'           => 'pending',
-					'amount'           => $amount,
-					'currency'         => $currency,
-				)
-			);
-			if ( ! $referral_id ) {
-				return self::fail( 'record_failed', __( 'Could not record the referral.', 'woo-wallet' ) );
+			// Serialise concurrent visits per referrer so the period-limit
+			// COUNT + insert + credit cannot race. The cookie dedup in the
+			// action layer is best-effort; this lock is the authoritative gate.
+			$lock = self::acquire_referrer_lock( $referrer_id );
+			if ( ! $lock ) {
+				return self::fail( 'lock_busy', __( 'Could not acquire referral lock.', 'woo-wallet' ) );
 			}
 
-			// The configured amount is stored in the base currency, so credit it
-			// against the base currency to skip active-currency conversion.
-			$transaction_id = woo_wallet()->wallet->credit( $referrer_id, $amount, $action->settings['referring_visitors_description'], array( 'currency' => $currency ) );
-			if ( ! $transaction_id ) {
-				self::update_row( $referral_id, array( 'status' => 'rejected', 'reject_reason' => 'credit_failed' ) );
-				return self::fail( 'credit_failed', __( 'Could not credit the referral reward.', 'woo-wallet' ) );
-			}
+			try {
+				if ( ! self::within_period_limit( $referrer_id, 'visit', $action->settings['referring_visitors_limit_duration'], $action->settings['referring_visitors_limit'] ) ) {
+					return self::fail( 'limit_reached', __( 'Visitor referral reward limit reached for this period.', 'woo-wallet' ) );
+				}
 
-			self::update_row(
-				$referral_id,
-				array(
-					'status'         => 'completed',
+				// DB-level dedup: at most one completed visit credit per
+				// (referrer, referred user) inside the period window. Survives
+				// cookie clearing / private browsing.
+				if ( $referred_user_id && self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ) ) ) {
+					return self::fail( 'already_credited', __( 'A visit referral for this user was already credited in this period.', 'woo-wallet' ) );
+				}
+
+				// Write the referral row BEFORE crediting: a referral credit must
+				// never exist without its audit row. If the row cannot be written
+				// (e.g. the table is missing) the visit is not credited at all.
+				$referral_id = self::insert_row(
+					array(
+						'referrer_id'      => $referrer_id,
+						'referred_user_id' => $referred_user_id,
+						'type'             => 'visit',
+						'referral_code'    => (string) $code,
+						'status'           => 'pending',
+						'amount'           => $amount,
+						'currency'         => $currency,
+					)
+				);
+				if ( ! $referral_id ) {
+					return self::fail( 'record_failed', __( 'Could not record the referral.', 'woo-wallet' ) );
+				}
+
+				// The configured amount is stored in the base currency, so credit it
+				// against the base currency to skip active-currency conversion.
+				$transaction_id = woo_wallet()->wallet->credit( $referrer_id, $amount, $action->settings['referring_visitors_description'], array( 'currency' => $currency ) );
+				if ( ! $transaction_id ) {
+					self::update_row( $referral_id, array( 'status' => 'rejected', 'reject_reason' => 'credit_failed' ) );
+					return self::fail( 'credit_failed', __( 'Could not credit the referral reward.', 'woo-wallet' ) );
+				}
+
+				self::update_row(
+					$referral_id,
+					array(
+						'status'         => 'completed',
+						'transaction_id' => (int) $transaction_id,
+						'date_credited'  => current_time( 'mysql' ),
+					)
+				);
+
+				do_action( 'woo_wallet_after_referral_visit', $transaction_id, $action );
+
+				return array(
+					'is_valid'       => true,
+					'referral_id'    => $referral_id,
 					'transaction_id' => (int) $transaction_id,
-					'date_credited'  => current_time( 'mysql' ),
-				)
-			);
-
-			do_action( 'woo_wallet_after_referral_visit', $transaction_id, $action );
-
-			return array(
-				'is_valid'       => true,
-				'referral_id'    => $referral_id,
-				'transaction_id' => (int) $transaction_id,
-			);
+				);
+			} finally {
+				self::release_referrer_lock( $referrer_id );
+			}
 		}
 
 		/**
@@ -190,42 +210,60 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				return self::fail( 'referrer_deleted', __( 'The referrer account no longer exists.', 'woo-wallet' ) );
 			}
 
-			if ( ! self::within_period_limit( (int) $referrer->ID, 'signup', $action->settings['referring_signups_limit_duration'], $action->settings['referring_signups_limit'] ) ) {
-				self::update_row( $pending->referral_id, array( 'status' => 'rejected', 'reject_reason' => 'limit_reached' ) );
-				return self::fail( 'limit_reached', __( 'Sign-up referral reward limit reached for this period.', 'woo-wallet' ) );
+			// Serialise concurrent credits per referrer so the period-limit
+			// check + credit + completion update cannot race.
+			$lock = self::acquire_referrer_lock( (int) $referrer->ID );
+			if ( ! $lock ) {
+				return self::fail( 'lock_busy', __( 'Could not acquire referral lock.', 'woo-wallet' ) );
 			}
 
-			$amount = (float) apply_filters( 'woo_wallet_referring_signup_amount', $action->settings['referring_signups_amount'], $referrer->ID, $referred_user_id, $order_id );
-			if ( $amount <= 0 ) {
-				self::update_row( $pending->referral_id, array( 'status' => 'rejected', 'reject_reason' => 'zero_amount' ) );
-				return self::fail( 'zero_amount', __( 'Sign-up referral reward amount is zero.', 'woo-wallet' ) );
-			}
+			try {
+				// Re-fetch under the lock: another concurrent caller may have
+				// already moved this row to completed/rejected.
+				$fresh = self::find_pending_signup( $action, $referred_user_id );
+				if ( ! $fresh || (int) $fresh->referral_id !== (int) $pending->referral_id ) {
+					return self::fail( 'no_pending_referral', __( 'No pending sign-up referral to credit.', 'woo-wallet' ) );
+				}
 
-			$currency       = self::base_currency();
-			$transaction_id = woo_wallet()->wallet->credit( $referrer->ID, $amount, $action->settings['referring_signups_description'], array( 'currency' => $currency ) );
-			if ( ! $transaction_id ) {
-				return self::fail( 'credit_failed', __( 'Could not credit the referral reward.', 'woo-wallet' ) );
-			}
+				if ( ! self::within_period_limit( (int) $referrer->ID, 'signup', $action->settings['referring_signups_limit_duration'], $action->settings['referring_signups_limit'] ) ) {
+					self::update_row( $pending->referral_id, array( 'status' => 'rejected', 'reject_reason' => 'limit_reached' ) );
+					return self::fail( 'limit_reached', __( 'Sign-up referral reward limit reached for this period.', 'woo-wallet' ) );
+				}
 
-			self::update_row(
-				$pending->referral_id,
-				array(
-					'status'         => 'completed',
-					'amount'         => $amount,
-					'currency'       => $currency,
+				$amount = (float) apply_filters( 'woo_wallet_referring_signup_amount', $action->settings['referring_signups_amount'], $referrer->ID, $referred_user_id, $order_id );
+				if ( $amount <= 0 ) {
+					self::update_row( $pending->referral_id, array( 'status' => 'rejected', 'reject_reason' => 'zero_amount' ) );
+					return self::fail( 'zero_amount', __( 'Sign-up referral reward amount is zero.', 'woo-wallet' ) );
+				}
+
+				$currency       = self::base_currency();
+				$transaction_id = woo_wallet()->wallet->credit( $referrer->ID, $amount, $action->settings['referring_signups_description'], array( 'currency' => $currency ) );
+				if ( ! $transaction_id ) {
+					return self::fail( 'credit_failed', __( 'Could not credit the referral reward.', 'woo-wallet' ) );
+				}
+
+				self::update_row(
+					$pending->referral_id,
+					array(
+						'status'         => 'completed',
+						'amount'         => $amount,
+						'currency'       => $currency,
+						'transaction_id' => (int) $transaction_id,
+						'order_id'       => $order_id,
+						'date_credited'  => current_time( 'mysql' ),
+					)
+				);
+
+				do_action( 'woo_wallet_after_referral_signup', $transaction_id, $referred_user_id, $action, $order_id );
+
+				return array(
+					'is_valid'       => true,
+					'referral_id'    => (int) $pending->referral_id,
 					'transaction_id' => (int) $transaction_id,
-					'order_id'       => $order_id,
-					'date_credited'  => current_time( 'mysql' ),
-				)
-			);
-
-			do_action( 'woo_wallet_after_referral_signup', $transaction_id, $referred_user_id, $action, $order_id );
-
-			return array(
-				'is_valid'       => true,
-				'referral_id'    => (int) $pending->referral_id,
-				'transaction_id' => (int) $transaction_id,
-			);
+				);
+			} finally {
+				self::release_referrer_lock( (int) $referrer->ID );
+			}
 		}
 
 		/**
@@ -467,6 +505,66 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				$formats[] = isset( $map[ $column ] ) ? $map[ $column ] : '%s';
 			}
 			return $formats;
+		}
+
+		/**
+		 * Acquire a MySQL named lock for a referrer.
+		 *
+		 * Serialises concurrent referral processing for the same referrer so
+		 * the period-limit COUNT + insert + credit cannot race. The lock is
+		 * advisory and per-connection; pair every successful acquire with a
+		 * release_referrer_lock() call in a `finally`.
+		 *
+		 * @param int $referrer_id Referrer.
+		 * @return bool True on success, false on timeout or error.
+		 */
+		private static function acquire_referrer_lock( $referrer_id ) {
+			global $wpdb;
+			$got = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', 'woo_wallet_referral_lock_' . (int) $referrer_id, 5 )
+			);
+			return '1' === (string) $got;
+		}
+
+		/**
+		 * Release the referrer lock acquired by acquire_referrer_lock().
+		 *
+		 * @param int $referrer_id Referrer.
+		 * @return void
+		 */
+		private static function release_referrer_lock( $referrer_id ) {
+			global $wpdb;
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', 'woo_wallet_referral_lock_' . (int) $referrer_id )
+			);
+		}
+
+		/**
+		 * Whether a completed visit credit already exists for (referrer, referred)
+		 * within the current limit window.
+		 *
+		 * DB-level dedup that survives cookie clearing / private browsing.
+		 * A zero or missing window collapses to a per-day bucket so a tampered
+		 * client cannot bypass dedup by toggling the limit duration setting.
+		 *
+		 * @param int $referrer_id     Referrer.
+		 * @param int $referred_user_id Referred user (must be > 0).
+		 * @param int $period_seconds  Window length in seconds; 0 → fall back to DAY_IN_SECONDS.
+		 * @return bool
+		 */
+		private static function has_visit_in_period( $referrer_id, $referred_user_id, $period_seconds ) {
+			global $wpdb;
+			$table  = $wpdb->base_prefix . 'woo_wallet_referrals';
+			$window = $period_seconds > 0 ? (int) $period_seconds : DAY_IN_SECONDS;
+			$count  = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND referred_user_id = %d AND type = 'visit' AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )",
+					(int) $referrer_id,
+					(int) $referred_user_id,
+					$window
+				)
+			);
+			return $count > 0;
 		}
 
 		/**
