@@ -15,3 +15,15 @@ CLAUDE.md
 .agents
 
 docs
+
+# PHP / Composer / tests
+/vendor/
+composer.lock
+wp-tests-config.php
+.phpunit.result.cache
+
+# Playwright / MCP scratch
+.playwright-mcp/
+
+# Local screenshots / scratch images
+*.png

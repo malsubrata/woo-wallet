@@ -115,6 +115,11 @@ final class Woo_Wallet {
 
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-widgets.php';
 
+		// Loaded unconditionally and early: captures `user_register` before
+		// `woocommerce_init` so SSO / programmatic signups still get credited.
+		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-signup-handler.php';
+		new Woo_Wallet_Signup_Handler();
+
 		if ( $this->is_request( 'admin' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';
@@ -147,7 +152,7 @@ final class Woo_Wallet {
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'widgets_init', array( $this, 'woo_wallet_widget_init' ) );
-		add_action( 'init', array( $this, 'woocommerce_loaded_callback' ) );
+		add_action( 'woocommerce_init', array( $this, 'woocommerce_loaded_callback' ) );
 		// Registers WooCommerce Blocks integration.
 		add_action( 'woocommerce_blocks_loaded', array( __CLASS__, 'add_woocommerce_block_support' ) );
 		// Register Gutenberg blocks.
@@ -257,18 +262,18 @@ final class Woo_Wallet {
 	}
 
 	/**
-	 * Load WooCommerce dependent class file.
+	 * Load WooCommerce-dependent class files.
+	 *
+	 * Hooked on `woocommerce_init`, which fires inside the core `init` action
+	 * only after WooCommerce is fully loaded — so WC_Settings_API and
+	 * WC_REST_Controller are guaranteed defined, and text-domain just-in-time
+	 * loading works (no `_doing_it_wrong` notice). The hook never fires when
+	 * WooCommerce is inactive, so no class-existence guard is required.
 	 */
 	public function woocommerce_loaded_callback() {
-		// This runs on `init`, which fires even when WooCommerce is inactive.
-		// The files below extend WooCommerce classes (WooWalletAction extends
-		// WC_Settings_API) and would fatal if WooCommerce is not loaded.
-		if ( ! class_exists( 'WooCommerce' ) ) {
-			return;
-		}
 		include_once WOO_WALLET_ABSPATH . 'includes/abstracts/abstract-woo-wallet-actions.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-actions.php';
-		include_once WOO_WALLET_ABSPATH . '/includes/class-woo-wallet-api.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-api.php';
 		$this->rest_api = new WooWallet_API();
 	}
 

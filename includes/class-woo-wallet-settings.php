@@ -203,7 +203,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Minimum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no minimum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => get_woocommerce_currency_symbol(),
+						'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -214,7 +214,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Maximum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no maximum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => get_woocommerce_currency_symbol(),
+						'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -299,7 +299,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Minimum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer less than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => get_woocommerce_currency_symbol(),
+					'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -310,7 +310,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Maximum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer more than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => get_woocommerce_currency_symbol(),
+					'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -465,7 +465,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Minimum Cart Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter applicable minimum cart amount for cashback', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => get_woocommerce_currency_symbol(),
+							'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => array(
@@ -481,7 +481,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Maximum Cashback Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter maximum cashback amount', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => get_woocommerce_currency_symbol(),
+							'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => $cashbak_show_if,
@@ -560,7 +560,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				return $fields;
 			}
 
-			$currency_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			$currency_symbol = html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
 			foreach ( WOO_Wallet_Actions::instance()->actions as $action ) {
 				if ( empty( $action->form_fields ) ) {
@@ -575,9 +575,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				$enabled_key = $group_id . '__enabled';
 
 				foreach ( $action->form_fields as $key => $field ) {
-					$normalized = $this->normalize_action_form_field( $key, $field, $currency_symbol );
+					$normalized          = $this->normalize_action_form_field( $key, $field, $currency_symbol );
 					$normalized['name']  = $group_id . '__' . $normalized['name'];
 					$normalized['group'] = $group_id;
+					if ( isset( $normalized['show_if'] ) ) {
+						$normalized['show_if'] = $this->prefix_show_if( $normalized['show_if'], $group_id );
+					}
 
 					if ( $is_first ) {
 						$normalized['group_title']         = $action->get_action_title();
@@ -609,6 +612,16 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 		 */
 		private function normalize_action_form_field( $key, array $field, $currency_symbol ) {
 			$type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+			// Section-title entries become renderable headings in the React panel.
+			if ( 'title' === $type ) {
+				return array(
+					'name'  => isset( $field['id'] ) ? 'heading_' . $field['id'] : 'heading_' . $key,
+					'label' => isset( $field['title'] ) ? $field['title'] : '',
+					'desc'  => isset( $field['desc'] ) ? $field['desc'] : '',
+					'type'  => 'section_heading',
+				);
+			}
 
 			$result = array(
 				'name'    => $key,
@@ -648,8 +661,39 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			if ( isset( $field['size'] ) ) {
 				$result['size'] = $field['size'];
 			}
+			if ( isset( $field['half'] ) ) {
+				$result['half'] = (bool) $field['half'];
+			}
+			if ( isset( $field['show_if'] ) ) {
+				$result['show_if'] = $field['show_if'];
+			}
 
 			return $result;
+		}
+
+		/**
+		 * Re-prefix the `field` reference inside a `show_if` rule so it matches
+		 * the flattened `{action_id}__{key}` names the React panel keys on.
+		 * Accepts a single condition array or a list of condition arrays.
+		 *
+		 * @param array  $show_if  The raw show_if rule from the form field.
+		 * @param string $group_id The owning action id.
+		 * @return array
+		 */
+		private function prefix_show_if( $show_if, $group_id ) {
+			if ( ! is_array( $show_if ) ) {
+				return $show_if;
+			}
+			if ( isset( $show_if['field'] ) ) {
+				$show_if['field'] = $group_id . '__' . $show_if['field'];
+				return $show_if;
+			}
+			foreach ( $show_if as $index => $condition ) {
+				if ( is_array( $condition ) && isset( $condition['field'] ) ) {
+					$show_if[ $index ]['field'] = $group_id . '__' . $condition['field'];
+				}
+			}
+			return $show_if;
 		}
 
 		/**

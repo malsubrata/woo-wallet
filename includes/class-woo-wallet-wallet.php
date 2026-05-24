@@ -160,6 +160,85 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Update the `details` note on an existing transaction row. Balance is
+		 * untouched — this is admin-side metadata editing only. Emits the
+		 * `woo_wallet_transaction_details_updated` hook so caches/integrations
+		 * can react.
+		 *
+		 * @param int    $transaction_id Transaction id.
+		 * @param string $details        New details text.
+		 * @return bool|WP_Error
+		 */
+		public function update_transaction_details( $transaction_id, $details ) {
+			global $wpdb;
+			$transaction_id = absint( $transaction_id );
+			if ( ! $transaction_id ) {
+				return new WP_Error( 'woo_wallet_invalid_transaction', __( 'Invalid transaction id.', 'woo-wallet' ) );
+			}
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id, user_id FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d", $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( ! $row ) {
+				return new WP_Error( 'woo_wallet_transaction_not_found', __( 'Transaction not found.', 'woo-wallet' ) );
+			}
+			$ok = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				"{$wpdb->base_prefix}woo_wallet_transactions",
+				array( 'details' => (string) $details ),
+				array( 'transaction_id' => $transaction_id ),
+				array( '%s' ),
+				array( '%d' )
+			);
+			if ( false === $ok ) {
+				return new WP_Error( 'woo_wallet_update_failed', __( 'Could not update transaction details.', 'woo-wallet' ) );
+			}
+			do_action( 'woo_wallet_transaction_details_updated', $transaction_id, (int) $row->user_id, (string) $details );
+			return true;
+		}
+
+		/**
+		 * Soft-delete (sets `deleted=1`) or hard-delete a single transaction
+		 * row. Atomic under the per-user GET_LOCK. Does NOT mutate balance —
+		 * callers wanting balance preservation should use
+		 * `woo_wallet_purge_user_transactions()` or follow up with their own
+		 * credit/debit.
+		 *
+		 * @param int  $transaction_id Transaction id.
+		 * @param bool $hard           True for permanent DELETE, false for soft.
+		 * @return bool|WP_Error
+		 */
+		public function delete_transaction( $transaction_id, $hard = false ) {
+			global $wpdb;
+			$transaction_id = absint( $transaction_id );
+			if ( ! $transaction_id ) {
+				return new WP_Error( 'woo_wallet_invalid_transaction', __( 'Invalid transaction id.', 'woo-wallet' ) );
+			}
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id, user_id FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d", $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( ! $row ) {
+				return new WP_Error( 'woo_wallet_transaction_not_found', __( 'Transaction not found.', 'woo-wallet' ) );
+			}
+			$user_id      = (int) $row->user_id;
+			$lock_name    = 'woo_wallet_lock_user_' . $user_id;
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $user_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return new WP_Error( 'woo_wallet_lock_timeout', __( 'Could not acquire wallet lock.', 'woo-wallet' ) );
+			}
+			try {
+				if ( $hard ) {
+					$wpdb->delete( "{$wpdb->base_prefix}woo_wallet_transactions", array( 'transaction_id' => $transaction_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+					$wpdb->delete( "{$wpdb->base_prefix}woo_wallet_transaction_meta", array( 'transaction_id' => $transaction_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				} else {
+					$wpdb->update( "{$wpdb->base_prefix}woo_wallet_transactions", array( 'deleted' => 1 ), array( 'transaction_id' => $transaction_id ), array( '%d' ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				}
+				if ( function_exists( 'clear_woo_wallet_cache' ) ) {
+					clear_woo_wallet_cache( $user_id );
+				}
+				do_action( 'woo_wallet_transaction_deleted', $transaction_id, $user_id, (bool) $hard );
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			}
+			return true;
+		}
+
+		/**
 		 * Credit wallet balance through order payment
 		 *
 		 * @param int $order_id order_id.
@@ -471,15 +550,41 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return;
 			}
 
-			/** Credit partial payment amount * */
+			/**
+			 * Credit partial payment amount.
+			 *
+			 * Serialised via the same per-order GET_LOCK used by
+			 * `wallet_credit_purchase` so two concurrent cancel webhooks (or a
+			 * cancel racing with a status-change retry) cannot double-refund.
+			 * The marker meta (`_partial_pay_through_wallet_compleate`) is
+			 * re-read inside the lock so the first holder wins.
+			 */
 			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
-			if ( $partial_payment_amount && $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
-				/* translators: Order number */
-				$this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) );
-				/* translators: wallet amount */
-				$order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
-				$order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_partial_payment_refunded', true );
+			if ( $partial_payment_amount ) {
+				$lock_name    = 'woo_wallet_cancel_partial_' . absint( $order_id );
+				$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order_id );
+				$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+				if ( '1' === (string) $got_lock ) {
+					try {
+						// Re-fetch the order inside the lock so the marker
+						// read reflects any concurrent delete that landed
+						// while we were waiting on the lock.
+						$locked_order = wc_get_order( $order_id );
+						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
+							/* translators: Order number */
+							$this->credit( $locked_order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ), array( 'currency' => $locked_order->get_currency( 'edit' ) ) );
+							/* translators: wallet amount */
+							$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
+							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
+							$locked_order->save();
+							WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_payment_refunded', true );
+							$order = $locked_order;
+						}
+					} finally {
+						$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					}
+				}
 			}
 
 			/** Debit cashback amount * */
@@ -1173,11 +1278,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					update_user_meta( $this->user_id, $this->meta_key, $balance );
 					clear_woo_wallet_cache( $this->user_id );
 					do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $stored_amount, $type );
-					$email_admin = WC()->mailer()->emails['Woo_Wallet_Email_New_Transaction'];
+					$wallet_emails = WC()->mailer()->emails;
+					$email_admin   = isset( $wallet_emails['Woo_Wallet_Email_New_Transaction'] ) ? $wallet_emails['Woo_Wallet_Email_New_Transaction'] : null;
 					if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
 						$email_admin->trigger( $transaction_id );
 					}
-					$low_balance_email = WC()->mailer()->emails['Woo_Wallet_Email_Low_Wallet_Balance'];
+					$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
 					if ( ! is_null( $low_balance_email ) ) {
 						$low_balance_email->trigger( $this->user_id, $type );
 					}

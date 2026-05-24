@@ -523,6 +523,171 @@ $wallet-border-color: #eee;
         }
     }
 
+    // Referral summary cards
+    .woo-wallet-referral-stats {
+        margin-bottom: 30px;
+
+        .woo-wallet-section-title {
+            margin: 0;
+            padding: 20px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+        }
+    }
+
+    .woo-wallet-referral-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1px;
+        background: #eee;
+    }
+
+    .woo-wallet-referral-summary-card {
+        background: #fff;
+        padding: 24px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .woo-wallet-referral-summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .woo-wallet-referral-summary-label {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .woo-wallet-referral-summary-earned .woo-wallet-referral-summary-value {
+        color: var(--wallet-primary-color);
+    }
+
+    .woo-wallet-referral-legacy {
+        margin: 0;
+        padding: 16px 30px;
+        background: #f9f9f9;
+        border-top: 1px solid #eee;
+        font-size: 0.9rem;
+        color: #7f8c8d;
+    }
+
+    // Referral history list
+    .woo-wallet-referral-list {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--wallet-border-color);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+
+        .woo-wallet-section-title {
+            margin: 0;
+            padding: 20px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 30px;
+            font-weight: 600;
+            color: #7f8c8d;
+            border-bottom: 1px solid #eee;
+            background: #f9f9f9;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 30px;
+            border-bottom: 1px solid #eee;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    }
+
+    .woo-wallet-referral-empty {
+        padding: 30px;
+        margin: 0;
+        text-align: center;
+        color: #7f8c8d;
+    }
+
+    .woo-wallet-referral-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+
+        &.woo-wallet-referral-badge-completed {
+            background: #e6f6ec;
+            color: #1a7f3c;
+        }
+
+        &.woo-wallet-referral-badge-pending {
+            background: #fff4e0;
+            color: #b9770e;
+        }
+
+        &.woo-wallet-referral-badge-rejected {
+            background: #fdecec;
+            color: #c0392b;
+        }
+    }
+
+    .woo-wallet-referral-pagination {
+        padding: 20px 30px;
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            margin: 0;
+        }
+
+        .page-numbers {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--wallet-border-color);
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 0.9rem;
+
+            &.current {
+                background: var(--wallet-primary-color);
+                color: #fff;
+                border-color: var(--wallet-primary-color);
+            }
+        }
+    }
+
     // Responsive
     @media (max-width: 768px) {
         .woo-wallet-nav-tabs {

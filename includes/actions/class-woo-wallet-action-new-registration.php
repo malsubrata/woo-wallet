@@ -1,9 +1,19 @@
 <?php
+/**
+ * Action_New_Registration class file.
+ *
+ * @package WooWallet
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+/**
+ * Action_New_Registration class.
+ *
+ * Handles automatic wallet credit upon new user registration.
+ */
 class Action_New_Registration extends WooWalletAction {
 	/**
 	 * Class constructor.
@@ -14,8 +24,9 @@ class Action_New_Registration extends WooWalletAction {
 		$this->description  = __( 'Set credit upon new user registration', 'woo-wallet' );
 		$this->init_form_fields();
 		$this->init_settings();
-		// Actions.
-		add_action( 'user_register', array( $this, 'woo_wallet_new_user_registration_credit' ) );
+		// Note: the `user_register` credit is dispatched by
+		// Woo_Wallet_Signup_Handler so it also fires for SSO / programmatic
+		// signups created before this action class is instantiated.
 	}
 
 	/**
@@ -56,23 +67,31 @@ class Action_New_Registration extends WooWalletAction {
 	 */
 	public function woo_wallet_new_user_registration_credit( $user_id ) {
 		if ( $this->is_enabled() && $this->settings['amount'] && apply_filters( 'woo_wallet_new_user_registration_credit', true, $user_id ) ) {
-			// Security Improvement: Prevent duplicate credits (Idempotency)
+			// Security Improvement: Prevent duplicate credits (Idempotency).
 			$already_credited = get_user_meta( $user_id, '_woo_wallet_new_registration_credited', true );
 			if ( $already_credited ) {
 				return;
 			}
 
 			$amount = apply_filters( 'woo_wallet_new_user_registration_credit_amount', $this->settings['amount'], $user_id );
-			
-			// Security Improvement: Validate amount
+
+			// Security Improvement: Validate amount.
 			$amount = floatval( $amount );
 			if ( $amount <= 0 ) {
 				return;
 			}
 
-			$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, sanitize_textarea_field( $this->settings['description'] ) );
+			// The configured amount is saved in the store base currency, so
+			// credit it against the base currency to skip active-currency
+			// conversion in the ledger.
+			$transaction_id = woo_wallet()->wallet->credit(
+				$user_id,
+				$amount,
+				sanitize_textarea_field( $this->settings['description'] ),
+				array( 'currency' => $this->get_base_currency() )
+			);
 			if ( $transaction_id ) {
-				// Record that the credit has been applied
+				// Record that the credit has been applied.
 				update_user_meta( $user_id, '_woo_wallet_new_registration_credited', 'yes' );
 				do_action( 'woo_wallet_action_new_registration_credited', $transaction_id, $user_id, $this );
 			}
