@@ -4,10 +4,10 @@
  * fields emitted by the PHP action-settings transform.
  *
  * `label` and `hint` flow through third-party PHP filters
- * (`woo_wallet_action_*_form_fields`), so they are treated as untrusted:
- * `label` is rendered as a plain text node, and `hint` is sent through the
- * PHP REST layer (`wp_kses_post()` in TeraWallet_REST_Settings_Controller) so
- * the HTML that reaches this component has already been sanitized.
+ * (`woo_wallet_action_*_form_fields`) and can also be supplied by JS-registered
+ * tabs (`window.wooWallet.settings.registerField`) which bypass the PHP REST
+ * sanitisation layer entirely. Both are therefore rendered as plain text nodes
+ * so no caller — trusted or otherwise — can inject markup or scripts.
  */
 export default function SectionHeading( { field } ) {
 	return (
@@ -37,8 +37,9 @@ export default function SectionHeading( { field } ) {
 						color: 'var(--ww-text-muted)',
 						lineHeight: 1.5,
 					} }
-					dangerouslySetInnerHTML={ { __html: field.hint } }
-				/>
+				>
+					{ field.hint }
+				</p>
 			) }
 		</div>
 	);
