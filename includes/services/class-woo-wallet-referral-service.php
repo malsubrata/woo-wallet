@@ -144,40 +144,55 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 		public static function record_signup( $action, $referrer, $referred_user_id, $code = '' ) {
 			$referred_user_id = (int) $referred_user_id;
 
-			$existing = get_wallet_referrals(
-				array(
-					'referred_user_id' => $referred_user_id,
-					'type'             => 'signup',
-					'limit'            => 1,
-				)
-			);
-			if ( ! empty( $existing ) ) {
-				return self::fail( 'already_recorded', __( 'A sign-up referral is already recorded for this user.', 'woo-wallet' ) );
+			// Per-referred-user lock so the dedup SELECT and the INSERT cannot
+			// race. The multi-hook signup-drain (`drain_request_pending` +
+			// `drain_current_user` + `drain_user_on_login`) can fire two
+			// concurrent process() calls for the same user; without this lock
+			// both would pass the existence check and write duplicate pending
+			// rows, which `credit_signup()` could later credit twice.
+			$lock = self::acquire_referred_user_lock( $referred_user_id );
+			if ( ! $lock ) {
+				return self::fail( 'lock_busy', __( 'Could not acquire signup referral lock.', 'woo-wallet' ) );
 			}
 
-			$referral_id = self::insert_row(
-				array(
-					'referrer_id'      => (int) $referrer->ID,
-					'referred_user_id' => $referred_user_id,
-					'type'             => 'signup',
-					'referral_code'    => (string) $code,
-					'status'           => 'pending',
-					// Store the configured amount so a pending row shows a
-					// meaningful preview; the final value is re-resolved (and
-					// filtered) when the row is credited.
-					'amount'           => (float) $action->settings['referring_signups_amount'],
-					'currency'         => self::base_currency(),
-				)
-			);
-			if ( ! $referral_id ) {
-				return self::fail( 'record_failed', __( 'Could not record the referral.', 'woo-wallet' ) );
-			}
+			try {
+				$existing = get_wallet_referrals(
+					array(
+						'referred_user_id' => $referred_user_id,
+						'type'             => 'signup',
+						'limit'            => 1,
+					)
+				);
+				if ( ! empty( $existing ) ) {
+					return self::fail( 'already_recorded', __( 'A sign-up referral is already recorded for this user.', 'woo-wallet' ) );
+				}
 
-			return array(
-				'is_valid'    => true,
-				'referral_id' => $referral_id,
-				'status'      => 'pending',
-			);
+				$referral_id = self::insert_row(
+					array(
+						'referrer_id'      => (int) $referrer->ID,
+						'referred_user_id' => $referred_user_id,
+						'type'             => 'signup',
+						'referral_code'    => (string) $code,
+						'status'           => 'pending',
+						// Store the configured amount so a pending row shows a
+						// meaningful preview; the final value is re-resolved (and
+						// filtered) when the row is credited.
+						'amount'           => (float) $action->settings['referring_signups_amount'],
+						'currency'         => self::base_currency(),
+					)
+				);
+				if ( ! $referral_id ) {
+					return self::fail( 'record_failed', __( 'Could not record the referral.', 'woo-wallet' ) );
+				}
+
+				return array(
+					'is_valid'    => true,
+					'referral_id' => $referral_id,
+					'status'      => 'pending',
+				);
+			} finally {
+				self::release_referred_user_lock( $referred_user_id );
+			}
 		}
 
 		/**
@@ -536,6 +551,40 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 			global $wpdb;
 			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', 'woo_wallet_referral_lock_' . (int) $referrer_id )
+			);
+		}
+
+		/**
+		 * Acquire a MySQL named lock for a referred user.
+		 *
+		 * Used by record_signup() to serialise the dedup SELECT + INSERT pair so
+		 * concurrent signup-drain hooks for the same user cannot both pass the
+		 * existence check and insert duplicate pending rows. The lock namespace
+		 * is intentionally distinct from `woo_wallet_referral_lock_<id>` (per
+		 * referrer) so no caller holds both at once.
+		 *
+		 * @param int $referred_user_id Referred user.
+		 * @return bool
+		 */
+		private static function acquire_referred_user_lock( $referred_user_id ) {
+			global $wpdb;
+			$timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $referred_user_id );
+			$got     = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', 'woo_wallet_referral_signup_lock_' . (int) $referred_user_id, $timeout )
+			);
+			return '1' === (string) $got;
+		}
+
+		/**
+		 * Release the referred-user lock acquired by acquire_referred_user_lock().
+		 *
+		 * @param int $referred_user_id Referred user.
+		 * @return void
+		 */
+		private static function release_referred_user_lock( $referred_user_id ) {
+			global $wpdb;
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', 'woo_wallet_referral_signup_lock_' . (int) $referred_user_id )
 			);
 		}
 

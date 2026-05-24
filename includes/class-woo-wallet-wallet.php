@@ -550,15 +550,41 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return;
 			}
 
-			/** Credit partial payment amount * */
+			/**
+			 * Credit partial payment amount.
+			 *
+			 * Serialised via the same per-order GET_LOCK used by
+			 * `wallet_credit_purchase` so two concurrent cancel webhooks (or a
+			 * cancel racing with a status-change retry) cannot double-refund.
+			 * The marker meta (`_partial_pay_through_wallet_compleate`) is
+			 * re-read inside the lock so the first holder wins.
+			 */
 			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
-			if ( $partial_payment_amount && $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
-				/* translators: Order number */
-				$this->credit( $order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $order->get_order_number() ), array( 'currency' => $order->get_currency( 'edit' ) ) );
-				/* translators: wallet amount */
-				$order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
-				$order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_partial_payment_refunded', true );
+			if ( $partial_payment_amount ) {
+				$lock_name    = 'woo_wallet_cancel_partial_' . absint( $order_id );
+				$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order_id );
+				$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+				if ( '1' === (string) $got_lock ) {
+					try {
+						// Re-fetch the order inside the lock so the marker
+						// read reflects any concurrent delete that landed
+						// while we were waiting on the lock.
+						$locked_order = wc_get_order( $order_id );
+						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
+							/* translators: Order number */
+							$this->credit( $locked_order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ), array( 'currency' => $locked_order->get_currency( 'edit' ) ) );
+							/* translators: wallet amount */
+							$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
+							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
+							$locked_order->save();
+							WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_payment_refunded', true );
+							$order = $locked_order;
+						}
+					} finally {
+						$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					}
+				}
 			}
 
 			/** Debit cashback amount * */

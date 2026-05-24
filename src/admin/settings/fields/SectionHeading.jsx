@@ -2,6 +2,12 @@
  * Renders a section heading row inside a settings panel — an uppercase title
  * with an optional descriptive paragraph. Used for `type: section_heading`
  * fields emitted by the PHP action-settings transform.
+ *
+ * `label` and `hint` flow through third-party PHP filters
+ * (`woo_wallet_action_*_form_fields`), so they are treated as untrusted:
+ * `label` is rendered as a plain text node, and `hint` is sent through the
+ * PHP REST layer (`wp_kses_post()` in TeraWallet_REST_Settings_Controller) so
+ * the HTML that reaches this component has already been sanitized.
  */
 export default function SectionHeading( { field } ) {
 	return (
@@ -20,8 +26,9 @@ export default function SectionHeading( { field } ) {
 					letterSpacing: '0.04em',
 					color: 'var(--ww-text-heading)',
 				} }
-				dangerouslySetInnerHTML={ { __html: field.label || '' } }
-			/>
+			>
+				{ field.label || '' }
+			</h4>
 			{ field.hint && (
 				<p
 					style={ {

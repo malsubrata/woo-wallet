@@ -175,6 +175,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Cont
 			'user_ids' => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'ids'      => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'amount'   => array( 'type' => 'number', 'minimum' => 0.01 ),
+			'currency' => array( 'type' => 'string' ),
 			'note'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field' ),
 			'force'    => array( 'type' => 'boolean', 'default' => false ),
 		);
@@ -342,36 +343,62 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Cont
 		if ( is_wp_error( $idem_key ) ) {
 			return $idem_key;
 		}
+
+		$results = array();
+		if ( 'credit' === $action || 'debit' === $action ) {
+			$user_ids = array_filter( array_map( 'absint', (array) ( $params['user_ids'] ?? array() ) ) );
+			$amount   = (float) ( $params['amount'] ?? 0 );
+			$note     = isset( $params['note'] ) ? $params['note'] : '';
+			$call_args = array();
+			if ( ! empty( $params['currency'] ) ) {
+				$call_args['currency'] = strtoupper( $params['currency'] );
+			}
+			if ( ! $user_ids || $amount <= 0 ) {
+				return $this->error( 'terawallet_rest_bulk_invalid', __( 'user_ids and amount are required.', 'woo-wallet' ), 400 );
+			}
+			$current_user = get_current_user_id();
+			// Per-row idempotency: a retry after a mid-loop process death
+			// must not re-credit users who already received the credit on
+			// the first attempt. The wrapping `admin_txn_bulk` key still
+			// caches the envelope so an identical-shape replay returns the
+			// original response verbatim.
+			foreach ( $user_ids as $uid ) {
+				$row = WooWallet_Idempotency::run(
+					$current_user,
+					'admin_txn_bulk_row:' . $action . ':' . $idem_key . ':' . $uid,
+					function () use ( $action, $uid, $amount, $note, $call_args ) {
+						$args   = $call_args ?: null;
+						$txn_id = 'credit' === $action
+							? woo_wallet()->wallet->credit( $uid, $amount, $note, $args )
+							: woo_wallet()->wallet->debit( $uid, $amount, $note, $args );
+						return new WP_REST_Response(
+							array( 'user_id' => $uid, 'transaction_id' => (int) $txn_id, 'ok' => (bool) $txn_id ),
+							200
+						);
+					}
+				);
+				$results[] = $row instanceof WP_REST_Response ? $row->get_data() : array( 'user_id' => $uid, 'transaction_id' => 0, 'ok' => false );
+			}
+		} else {
+			$ids   = array_filter( array_map( 'absint', (array) ( $params['ids'] ?? array() ) ) );
+			$force = ! empty( $params['force'] );
+			if ( ! $ids ) {
+				return $this->error( 'terawallet_rest_bulk_invalid', __( 'ids are required.', 'woo-wallet' ), 400 );
+			}
+			foreach ( $ids as $id ) {
+				$ok        = woo_wallet()->wallet->delete_transaction( $id, $force );
+				$results[] = array( 'id' => $id, 'ok' => ! is_wp_error( $ok ), 'error' => is_wp_error( $ok ) ? $ok->get_error_message() : null );
+			}
+		}
+
+		$response = new WP_REST_Response( array( 'action' => $action, 'results' => $results ), 200 );
+		// Cache the aggregate envelope under the top-level key so a verbatim
+		// replay of the whole request returns the same response.
 		return WooWallet_Idempotency::run(
 			get_current_user_id(),
 			'admin_txn_bulk:' . $action . ':' . $idem_key,
-			function () use ( $params, $action ) {
-				$results = array();
-				if ( 'credit' === $action || 'debit' === $action ) {
-					$user_ids = array_filter( array_map( 'absint', (array) ( $params['user_ids'] ?? array() ) ) );
-					$amount   = (float) ( $params['amount'] ?? 0 );
-					$note     = isset( $params['note'] ) ? $params['note'] : '';
-					if ( ! $user_ids || $amount <= 0 ) {
-						return $this->error( 'terawallet_rest_bulk_invalid', __( 'user_ids and amount are required.', 'woo-wallet' ), 400 );
-					}
-					foreach ( $user_ids as $uid ) {
-						$txn_id = 'credit' === $action
-							? woo_wallet()->wallet->credit( $uid, $amount, $note )
-							: woo_wallet()->wallet->debit( $uid, $amount, $note );
-						$results[] = array( 'user_id' => $uid, 'transaction_id' => (int) $txn_id, 'ok' => (bool) $txn_id );
-					}
-				} else {
-					$ids   = array_filter( array_map( 'absint', (array) ( $params['ids'] ?? array() ) ) );
-					$force = ! empty( $params['force'] );
-					if ( ! $ids ) {
-						return $this->error( 'terawallet_rest_bulk_invalid', __( 'ids are required.', 'woo-wallet' ), 400 );
-					}
-					foreach ( $ids as $id ) {
-						$ok        = woo_wallet()->wallet->delete_transaction( $id, $force );
-						$results[] = array( 'id' => $id, 'ok' => ! is_wp_error( $ok ), 'error' => is_wp_error( $ok ) ? $ok->get_error_message() : null );
-					}
-				}
-				return new WP_REST_Response( array( 'action' => $action, 'results' => $results ), 200 );
+			function () use ( $response ) {
+				return $response;
 			}
 		);
 	}

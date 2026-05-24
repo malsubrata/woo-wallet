@@ -230,6 +230,19 @@ class TeraWallet_REST_Settings_Controller extends TeraWallet_REST_Controller_Bas
 			$field['prefix'] = html_entity_decode( $field['prefix'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 		}
 
+		// Defence-in-depth: `label` and `hint` flow through third-party
+		// `woo_wallet_*_form_fields` filters before reaching React. The
+		// React SectionHeading component renders `hint` via
+		// `dangerouslySetInnerHTML`, so strip executable HTML here. `label`
+		// is rendered as a text node, but sanitising it costs nothing and
+		// guards any other consumer that may render it as HTML.
+		if ( isset( $field['label'] ) && is_string( $field['label'] ) ) {
+			$field['label'] = wp_kses_post( $field['label'] );
+		}
+		if ( isset( $field['hint'] ) && is_string( $field['hint'] ) ) {
+			$field['hint'] = wp_kses_post( $field['hint'] );
+		}
+
 		return $field;
 	}
 

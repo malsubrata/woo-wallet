@@ -139,7 +139,12 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.2 (Unreleased) =
+= v1.6.2 (May 24, 2026) =
+– **Security:-** Admin bulk credit/debit (`POST /terawallet/v1/admin/transactions/bulk`) now records a per-user idempotency sub-key. A retry after a mid-loop process death no longer re-credits users who already received the credit on the first attempt.
+– **Security:-** Admin bulk credit/debit now forwards the request `currency` argument, fixing a multi-currency bug where the stored amount depended on the admin's active currency switcher state.
+– **Security:-** Cancelled-order partial-payment refund is now wrapped in a per-order `GET_LOCK`, so two concurrent cancel webhooks for the same order can no longer double-refund the wallet.
+– **Security:-** Section-heading admin settings rows are now rendered with the label as a plain text node, and both label and hint are sanitised with `wp_kses_post()` on the REST response — closing a stored-XSS vector exploitable by a third-party plugin hooking the `woo_wallet_action_*_form_fields` filter chain.
+– **Security:-** `WooWallet_Referral_Service::record_signup()` now serialises its existence check and INSERT under a per-referred-user `GET_LOCK`, preventing two concurrent signup-drain hooks from writing duplicate pending sign-up rows that could later be credited twice.
 – **Fix:-** New-user-registration and referral signup bonuses are now credited for users created via SSO / SAML, social login, the REST API, WP-CLI or any programmatic `wp_insert_user()`. A new early `user_register` capture (`Woo_Wallet_Signup_Handler`) defers crediting until the earning-action registry is loaded, so signups created before `woocommerce_init` are no longer missed.
 – **Fix:-** Referral visit and signup bonuses are now credited in the store base currency, matching the amount entered in settings — no more unwanted active-currency conversion in multi-currency stores.
 – **Fix:-** The referral "Signups" limit now counts credited signups instead of registrations, so a referred customer who never completes the minimum spend no longer consumes a limit slot.
