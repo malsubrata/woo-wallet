@@ -49,6 +49,9 @@ class Woo_Wallet_Install {
 		'1.6.2'  => array(
 			'woo_wallet_update_162_db_schema',
 		),
+		'1.6.3'  => array(
+			'woo_wallet_update_163_db_schema',
+		),
 	);
 	/**
 	 * Class constructor.
@@ -101,6 +104,7 @@ class Woo_Wallet_Install {
             blog_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
             user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             type ENUM('credit', 'debit') NOT NULL,
+            category VARCHAR(32) NOT NULL DEFAULT 'other',
             amount DECIMAL( 16,8 ) NOT NULL,
             original_amount DECIMAL( 16,8 ) NULL,
             original_currency varchar(20 ) NULL,
@@ -115,7 +119,8 @@ class Woo_Wallet_Install {
             KEY user_id (user_id ),
             KEY idx_user_deleted (user_id, deleted ),
             KEY idx_user_date (user_id, date ),
-            KEY idx_user_currency (user_id, currency, deleted )
+            KEY idx_user_currency (user_id, currency, deleted ),
+            KEY idx_user_category (user_id, category, deleted )
         ) ENGINE=InnoDB $collate;
         CREATE TABLE {$wpdb->base_prefix}woo_wallet_transaction_meta (
             meta_id BIGINT UNSIGNED NOT NULL auto_increment,

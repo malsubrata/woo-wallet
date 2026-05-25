@@ -249,9 +249,13 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 				? wp_strip_all_tags( wc_price( $original_amount, woo_wallet_wc_price_args( $this->current_user_id(), array( 'currency' => $original_currency ) ) ) )
 				: null;
 
-			// R8: project _type meta into a typed category field.
+			// Since 1.6.3 the category is a first-class column. Fall back to
+			// `_type` meta for rows written before the backfill ran or by
+			// third-party code that bypasses the wallet API.
 			$category = 'other';
-			if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
+			if ( isset( $transaction->category ) && '' !== $transaction->category ) {
+				$category = (string) $transaction->category;
+			} elseif ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
 				foreach ( $transaction->meta as $meta_row ) {
 					if ( '_type' === $meta_row->meta_key ) {
 						$category = $this->normalize_category( $meta_row->meta_value );

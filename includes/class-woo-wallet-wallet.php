@@ -289,6 +289,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					__( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(),
 					array(
 						'for'      => 'credit_purchase',
+						'category' => 'topup',
 						'currency' => $order->get_currency( 'edit' ),
 					)
 				);
@@ -998,8 +999,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					}
 
-					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $args );
-					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $args ) : 0;
+					$transfer_args             = $args;
+					$transfer_args['category'] = isset( $transfer_args['category'] ) && '' !== $transfer_args['category'] ? $transfer_args['category'] : 'transfer';
+					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $transfer_args );
+					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $transfer_args ) : 0;
 
 					if ( $debit_id && ( $credit_id || 0 === $credit_amount ) ) {
 						$new_from_balance = $from_balance - $amount;
@@ -1043,6 +1046,72 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Resolve the canonical category slug for a parsed-args array and, if
+		 * the admin has configured a description template for that category,
+		 * substitute its tokens and return the rendered string in place of the
+		 * caller-supplied `details`.
+		 *
+		 * Resolution order:
+		 *  1. `$parsed_args['category']` if non-empty.
+		 *  2. `$parsed_args['for']` if non-empty (legacy).
+		 *  3. `'other'`.
+		 *
+		 * @since 1.6.3
+		 * @param array  $parsed_args Already-parsed args (must include `for`).
+		 * @param int    $user_id     User the transaction belongs to.
+		 * @param float  $amount      Stored amount.
+		 * @param string $currency    Stored currency.
+		 * @param string $details     Caller-supplied details.
+		 * @return array { category: string, details: string } The resolved category
+		 *               and the final details string to persist.
+		 */
+		private function resolve_category_and_details( array $parsed_args, $user_id, $amount, $currency, $details ) {
+			$category = '';
+			if ( ! empty( $parsed_args['category'] ) && is_string( $parsed_args['category'] ) ) {
+				$category = sanitize_key( $parsed_args['category'] );
+			} elseif ( ! empty( $parsed_args['for'] ) && is_string( $parsed_args['for'] ) ) {
+				$category = sanitize_key( $parsed_args['for'] );
+			}
+
+			$alias = array(
+				'credit_purchase' => 'topup',
+				'purchase'        => 'partial_payment',
+			);
+			if ( isset( $alias[ $category ] ) ) {
+				$category = $alias[ $category ];
+			}
+			if ( '' === $category ) {
+				$category = 'other';
+			}
+			$category = substr( $category, 0, 32 );
+
+			$rendered = $details;
+			if ( function_exists( 'woo_wallet_get_transaction_type_template' ) ) {
+				$template = woo_wallet_get_transaction_type_template( $category );
+				if ( '' !== $template ) {
+					$user_name = '';
+					$user      = $user_id ? get_user_by( 'id', (int) $user_id ) : false;
+					if ( $user ) {
+						$user_name = $user->display_name;
+					}
+					$tokens = array(
+						'order_id'         => isset( $parsed_args['order_id'] ) ? (string) $parsed_args['order_id'] : '',
+						'amount'           => (string) $amount,
+						'currency'         => (string) $currency,
+						'user_name'        => $user_name,
+						'original_details' => (string) $details,
+					);
+					$rendered = woo_wallet_render_transaction_template( $template, $tokens );
+				}
+			}
+
+			return array(
+				'category' => $category,
+				'details'  => $rendered,
+			);
+		}
+
+		/**
 		 * Insert a single ledger row. Used by transfer() inside an active DB transaction.
 		 * Does not acquire locks, fire emails, or update the user_meta cache — those are
 		 * handled by the caller after COMMIT so a ROLLBACK leaves no side-effects behind.
@@ -1078,6 +1147,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				'blog_id'           => get_current_blog_id(),
 				'user_id'           => $user_id,
 				'type'              => $type,
+				'category'          => '',
 				'amount'            => $stored_amount,
 				'original_amount'   => $incoming_amount,
 				'original_currency' => $incoming_currency,
@@ -1095,12 +1165,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$parsed_args['currency'] = $stored_currency;
 			$parsed_args['amount']   = $stored_amount;
 
+			$resolved              = $this->resolve_category_and_details( $parsed_args, $user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
+			$parsed_args['category'] = $resolved['category'];
+			$parsed_args['details']   = $resolved['details'];
+
 			$row_data = apply_filters(
 				'woo_wallet_transactions_args',
 				array(
 					'blog_id'           => $parsed_args['blog_id'],
 					'user_id'           => $parsed_args['user_id'],
 					'type'              => $parsed_args['type'],
+					'category'          => $parsed_args['category'],
 					'amount'            => $parsed_args['amount'],
 					'original_amount'   => $parsed_args['original_amount'],
 					'original_currency' => $parsed_args['original_currency'],
@@ -1114,6 +1189,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				array(
 					'%d',
 					'%d',
+					'%s',
 					'%s',
 					'%f',
 					'%f',
@@ -1232,6 +1308,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					'blog_id'           => get_current_blog_id(),
 					'user_id'           => $this->user_id,
 					'type'              => $type,
+					'category'          => '',
 					'amount'            => $stored_amount,
 					'original_amount'   => $incoming_amount,
 					'original_currency' => $incoming_currency,
@@ -1250,6 +1327,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$parsed_args['currency'] = $stored_currency;
 				$parsed_args['amount']   = $stored_amount;
 
+				$resolved                = $this->resolve_category_and_details( $parsed_args, $this->user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
+				$parsed_args['category'] = $resolved['category'];
+				$parsed_args['details']  = $resolved['details'];
+
 				if ( $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 					"{$wpdb->base_prefix}woo_wallet_transactions",
 					apply_filters(
@@ -1258,6 +1339,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							'blog_id'           => $parsed_args['blog_id'],
 							'user_id'           => $parsed_args['user_id'],
 							'type'              => $parsed_args['type'],
+							'category'          => $parsed_args['category'],
 							'amount'            => $parsed_args['amount'],
 							'original_amount'   => $parsed_args['original_amount'],
 							'original_currency' => $parsed_args['original_currency'],
@@ -1268,7 +1350,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							'date'              => $parsed_args['date'],
 							'created_by'        => $parsed_args['created_by'],
 						),
-						array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' )
+						array( '%d', '%d', '%s', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' )
 					)
 				) ) {
 					$transaction_id = $wpdb->insert_id;

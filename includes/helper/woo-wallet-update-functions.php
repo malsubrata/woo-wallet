@@ -290,3 +290,114 @@ function woo_wallet_update_162_db_schema() {
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	dbDelta( Woo_Wallet_Install::get_referrals_schema() );
 }
+
+/**
+ * DB update 1.6.3: promote transaction "category" to a first-class column.
+ *
+ * Adds a `category VARCHAR(32) NOT NULL DEFAULT 'other'` column and an
+ * `(user_id, category, deleted)` index on `woo_wallet_transactions`, then
+ * backfills the column from the legacy `_type` transaction meta values:
+ *
+ *   credit_purchase     -> topup
+ *   purchase            -> partial_payment
+ *   partial_payment     -> partial_payment
+ *   cashback            -> cashback
+ *   cashback_adjustment -> cashback_adjustment
+ *   refund              -> refund   (kept as `refund`; the cashback unwind
+ *                                    distinction is applied going forward by
+ *                                    the write path, not retroactively)
+ *   vendor_commission   -> vendor_commission
+ *
+ * Transfer rows have no `_type` meta historically. They are detected by the
+ * presence of `_wallet_transfer_charge` meta on either leg (the originating
+ * transfer service writes this meta on the debit leg; the credit leg shares
+ * the same source/destination user pair and timestamp). Rows with no
+ * detectable type stay at the schema default `'other'`.
+ *
+ * The `_type` meta is NOT deleted — third-party code may still read it.
+ * From this point on `category` is the source of truth for the plugin's
+ * own read paths.
+ *
+ * Idempotent: each ALTER is gated by SHOW guards; the backfill UPDATEs only
+ * touch rows whose `category` is still the default `'other'`.
+ *
+ * @since 1.6.3
+ */
+function woo_wallet_update_163_db_schema() {
+	global $wpdb;
+	$table      = $wpdb->base_prefix . 'woo_wallet_transactions';
+	$meta_table = $wpdb->base_prefix . 'woo_wallet_transaction_meta';
+
+	if ( $table !== $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return;
+	}
+
+	// 1) Add the column if missing.
+	$has_category = $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table, 'category' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_category ) {
+		$wpdb->query( $wpdb->prepare( "ALTER TABLE %i ADD COLUMN `category` VARCHAR(32) NOT NULL DEFAULT 'other' AFTER `type`", $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	// 2) Add the supporting index if missing.
+	$has_category_idx = $wpdb->get_var( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'idx_user_category' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	if ( ! $has_category_idx ) {
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i ADD INDEX idx_user_category (user_id, category, deleted)', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	}
+
+	// 3) Backfill from legacy `_type` meta. Each entry maps the raw meta_value
+	// to the canonical category slug. Only rows still on the default 'other'
+	// are touched, so this is safe to re-run.
+	$mapping = array(
+		'credit_purchase'     => 'topup',
+		'purchase'            => 'partial_payment',
+		'partial_payment'     => 'partial_payment',
+		'cashback'            => 'cashback',
+		'cashback_adjustment' => 'cashback_adjustment',
+		'cashback_refund'     => 'cashback_refund',
+		'refund'              => 'refund',
+		'vendor_commission'   => 'vendor_commission',
+		'adjustment'          => 'adjustment',
+		'topup'               => 'topup',
+		'transfer'            => 'transfer',
+	);
+
+	foreach ( $mapping as $raw => $canonical ) {
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"UPDATE %i t
+				 JOIN %i m ON m.transaction_id = t.transaction_id AND m.meta_key = %s AND m.meta_value = %s
+				 SET t.category = %s
+				 WHERE t.category = %s",
+				$table,
+				$meta_table,
+				'_type',
+				$raw,
+				$canonical,
+				'other'
+			)
+		);
+	}
+
+	// 4) Detect transfer rows that pre-date 1.6.3 and were never tagged with
+	// `_type`. The transfer service has always written `_wallet_transfer_charge`
+	// on the debit leg. The matching credit leg can be reached by joining the
+	// `_to_wallet_user_id` meta back to the debit row's user_id, but a cheaper
+	// heuristic is: any row that has `_wallet_transfer_charge` OR
+	// `_to_wallet_user_id` OR `_from_wallet_user_id` meta is part of a transfer.
+	$transfer_metas = array( '_wallet_transfer_charge', '_to_wallet_user_id', '_from_wallet_user_id' );
+	foreach ( $transfer_metas as $mk ) {
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"UPDATE %i t
+				 JOIN %i m ON m.transaction_id = t.transaction_id AND m.meta_key = %s
+				 SET t.category = %s
+				 WHERE t.category = %s",
+				$table,
+				$meta_table,
+				$mk,
+				'transfer',
+				'other'
+			)
+		);
+	}
+}

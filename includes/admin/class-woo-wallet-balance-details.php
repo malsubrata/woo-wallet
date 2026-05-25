@@ -359,17 +359,15 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	protected function column_total_deposits( $item ) {
 		$args           = array(
-			'user_id'    => $item['id'],
-			'where'      => array(
+			'user_id' => $item['id'],
+			'where'   => array(
 				array(
 					'key'   => 'type',
 					'value' => 'credit',
 				),
-			),
-			'where_meta' => array(
 				array(
-					'key'   => '_type',
-					'value' => 'credit_purchase',
+					'key'   => 'category',
+					'value' => 'topup',
 				),
 			),
 		);
@@ -385,42 +383,26 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * @return string
 	 */
 	protected function column_total_spent( $item ) {
-		$base                  = $this->resolve_base_currency();
-		$args                  = array(
-			'user_id'    => $item['id'],
-			'where'      => array(
+		$base         = $this->resolve_base_currency();
+		// Since 1.6.3 both legacy `_type='purchase'` and `_type='partial_payment'`
+		// rows are canonicalised to `category='partial_payment'` (see the
+		// 1.6.3 backfill + the write-path alias map). A single query suffices.
+		$args         = array(
+			'user_id' => $item['id'],
+			'where'   => array(
 				array(
 					'key'   => 'type',
 					'value' => 'debit',
 				),
-			),
-			'where_meta' => array(
 				array(
-					'key'   => '_type',
-					'value' => 'purchase',
-				),
-			),
-		);
-		$transactions          = get_wallet_transactions( $args );
-		$total_spent_by_wallet = $this->sum_transactions_in_base( $transactions, $base );
-		$args                  = array(
-			'user_id'    => $item['id'],
-			'where'      => array(
-				array(
-					'key'   => 'type',
-					'value' => 'debit',
-				),
-			),
-			'where_meta' => array(
-				array(
-					'key'   => '_type',
+					'key'   => 'category',
 					'value' => 'partial_payment',
 				),
 			),
 		);
-		$transactions          = get_wallet_transactions( $args );
-		$total_partial_payment = $this->sum_transactions_in_base( $transactions, $base );
-		return wc_price( $total_spent_by_wallet + $total_partial_payment, woo_wallet_wc_price_args( $item['id'], array( 'currency' => $base ) ) );
+		$transactions = get_wallet_transactions( $args );
+		$total_spent  = $this->sum_transactions_in_base( $transactions, $base );
+		return wc_price( $total_spent, woo_wallet_wc_price_args( $item['id'], array( 'currency' => $base ) ) );
 	}
 	/**
 	 * Render cashback earned column
@@ -430,16 +412,14 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	protected function column_cashbak_earned( $item ) {
 		$args           = array(
-			'user_id'    => $item['id'],
-			'where'      => array(
+			'user_id' => $item['id'],
+			'where'   => array(
 				array(
 					'key'   => 'type',
 					'value' => 'credit',
 				),
-			),
-			'where_meta' => array(
 				array(
-					'key'   => '_type',
+					'key'   => 'category',
 					'value' => 'cashback',
 				),
 			),

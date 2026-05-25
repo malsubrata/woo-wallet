@@ -139,7 +139,12 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.3 (Unreleased) =
-– **Tweak:-** Development in progress.
+– **New:-** Transaction category is now a first-class indexed column on `woo_wallet_transactions` (was previously only on transaction meta). Adds `(user_id, category, deleted)` index for cheap admin filters/aggregations.
+– **New:-** Filterable PHP registry of canonical categories (`woo_wallet_get_transaction_types`, filter `woo_wallet_transaction_types`) so marketplace and addon plugins can register their own kinds.
+– **New:-** Admin "Transaction descriptions" settings tab with per-category description templates (tokens: `{order_id}`, `{amount}`, `{user_name}`, `{currency}`, `{original_details}`). When a template is set, it replaces the system-generated description on new transactions.
+– **New:-** Transaction CSV export now includes the `category` column.
+– **Tweak:-** Ledger writers (`credit`, `debit`, `transfer`) accept `$args['category']`; legacy `$args['for']` continues to work and is normalised (`credit_purchase` → `topup`, `purchase` → `partial_payment`). Transfer legs are now correctly tagged `transfer`.
+– **Tweak:-** Admin balance-details columns and the customer/admin REST `category` filter now read the column directly instead of joining the meta table.
 
 = v1.6.2 (May 25, 2026) =
 – **Security:-** Admin bulk credit/debit (`POST /terawallet/v1/admin/transactions/bulk`) now records a per-user idempotency sub-key. A retry after a mid-loop process death no longer re-credits users who already received the credit on the first attempt.
