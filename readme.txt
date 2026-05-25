@@ -3,9 +3,8 @@ Contributors: standalonetech, subratamal, moumitaadak
 Tags: woocommerce wallet, cashback, store credit, partial payment, digital wallet
 Requires PHP: 7.4
 Requires at least: 6.4
-Tested up to: 6.9
+Tested up to: 7.0
 Stable tag: 1.6.2
-Donate link: https://donate.stripe.com/fZeaFydax6NNfjWeVc
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -58,11 +57,11 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
     *   Built-in support for Dokan, WCFM, and WCMarketplace.
 
 *   🌍 **Multi-Currency Support:** First-class integrations with the most-used WooCommerce currency switchers. Wallet balances, top-ups, transfers, and cashback are all converted through the active provider's live rates.
+    *   [YayCurrency – Multi-Currency Switcher](https://wordpress.org/plugins/yaycurrency/)
     *   [WOOCS – WooCommerce Currency Switcher (FOX)](https://wordpress.org/plugins/woocommerce-currency-switcher/)
     *   [WPML Multilingual & Multi-Currency](https://wpml.org/) (WCML)
     *   [CURCY – Multi Currency for WooCommerce](https://wordpress.org/plugins/woo-multi-currency/) (VillaTheme)
     *   [Aelia Currency Switcher](https://aelia.co/shop/currency-switcher-woocommerce/)
-    *   [YayCurrency – Multi-Currency Switcher](https://wordpress.org/plugins/yaycurrency/)
     *   **Generic fallback** for any other plugin that filters `woocommerce_currency` — active-currency detection still works, conversion falls open to the stored amount with an audit-log warning.
 
 == 🚀 Pro Features ==
@@ -139,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.2 (May 24, 2026) =
+= v1.6.2 (May 25, 2026) =
 – **Security:-** Admin bulk credit/debit (`POST /terawallet/v1/admin/transactions/bulk`) now records a per-user idempotency sub-key. A retry after a mid-loop process death no longer re-credits users who already received the credit on the first attempt.
 – **Security:-** Admin bulk credit/debit now forwards the request `currency` argument, fixing a multi-currency bug where the stored amount depended on the admin's active currency switcher state.
 – **Security:-** Cancelled-order partial-payment refund is now wrapped in a per-order `GET_LOCK`, so two concurrent cancel webhooks for the same order can no longer double-refund the wallet.

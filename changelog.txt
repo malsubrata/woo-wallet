@@ -1,4 +1,22 @@
 *** Changelog ***
+= v1.6.2 (May 25, 2026) =
+– **Security:-** Admin bulk credit/debit (`POST /terawallet/v1/admin/transactions/bulk`) now records a per-user idempotency sub-key. A retry after a mid-loop process death no longer re-credits users who already received the credit on the first attempt.
+– **Security:-** Admin bulk credit/debit now forwards the request `currency` argument, fixing a multi-currency bug where the stored amount depended on the admin's active currency switcher state.
+– **Security:-** Cancelled-order partial-payment refund is now wrapped in a per-order `GET_LOCK`, so two concurrent cancel webhooks for the same order can no longer double-refund the wallet.
+– **Security:-** Section-heading admin settings rows are now rendered with the label as a plain text node, and both label and hint are sanitised with `wp_kses_post()` on the REST response — closing a stored-XSS vector exploitable by a third-party plugin hooking the `woo_wallet_action_*_form_fields` filter chain.
+– **Security:-** `WooWallet_Referral_Service::record_signup()` now serialises its existence check and INSERT under a per-referred-user `GET_LOCK`, preventing two concurrent signup-drain hooks from writing duplicate pending sign-up rows that could later be credited twice.
+– **Fix:-** New-user-registration and referral signup bonuses are now credited for users created via SSO / SAML, social login, the REST API, WP-CLI or any programmatic `wp_insert_user()`. A new early `user_register` capture (`Woo_Wallet_Signup_Handler`) defers crediting until the earning-action registry is loaded, so signups created before `woocommerce_init` are no longer missed.
+– **Fix:-** Referral visit and signup bonuses are now credited in the store base currency, matching the amount entered in settings — no more unwanted active-currency conversion in multi-currency stores.
+– **Fix:-** The referral "Signups" limit now counts credited signups instead of registrations, so a referred customer who never completes the minimum spend no longer consumes a limit slot.
+– **Fix:-** Crediting a referral signup whose referrer account was deleted no longer credits user ID 0.
+– **Tweak:-** Referral "Minimum Order Amount" setting renamed to "Minimum Spend" with a clearer description — it gates on the referred customer's total lifetime spend.
+– **Tweak:-** Loader for action/REST classes now hooks `woocommerce_init` instead of `init`, removing the WooCommerce-existence guard while keeping both the WC-inactive fatal and the WP 6.7 translation notice fixed.
+– **Tweak:-** Redesigned the Referrals action settings for clarity — labelled fields, section headings, inline help text, and side-by-side limit controls with the cap hidden until a limit period is chosen.
+– **New:-** Referral activity is now recorded in a dedicated `woo_wallet_referrals` database table — one row per visitor or sign-up referral, with status, reward amount and the currency it was credited in. Replaces the scattered `_woo_wallet_referring_*` user meta and gives referrals a full audit trail.
+– **New:-** The customer Referrals page now shows a referral history — who was referred, the reward type, amount, status (pending / credited / rejected) and date — alongside a converted earnings summary.
+– **New:-** New admin Referral Report screen (TeraWallet → Referral Report) listing every referral with referrer / type / status / date-range filters, a store-wide summary header and a filtered CSV export.
+– **Fix:-** Referral earnings shown to customers now carry their currency and reconvert to the active storefront currency on a currency switch — previously the total was a raw untagged number that could display incorrectly and never reconverted.
+
 = v1.6.1 (May 20, 2026) =
 – **Security:-** Wrapped `wallet_cashback()` in a per-order `GET_LOCK` mirroring the 1.6.0 `wallet_credit_purchase` fix, so duplicate `processing`/`completed` status transitions or replayed gateway webhooks can no longer double-credit cashback. Order meta now stores an array of credited transaction ids so historical doubles are recoverable.
 – **Security:-** Cashback clawback on cancellation no longer fails silently when the customer has spent the credit. Default policy: debit whatever balance remains and log the gap to a new `_cashback_unreversed_amount` order meta + order note. Opt-in setting `cashback_clawback_allow_negative` allows sites to drive the wallet negative for exact reversal.
