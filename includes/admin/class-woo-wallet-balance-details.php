@@ -574,6 +574,40 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			woo_wallet()->get_template( 'admin/credit-debit-modal.php' );
 			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			wp_enqueue_script( 'wc-backbone-modal' );
+			?>
+			<style>
+				/*
+				 * WP core hides .bulkactions and .tablenav .actions below 783px
+				 * (common.css). The Wallet > Users screen has no per-row inline
+				 * actions, so without an override the bulk Credit / Debit /
+				 * Delete-log controls disappear entirely on mobile. Re-enable
+				 * them and let the action select wrap to the next line below
+				 * the Apply button when the viewport is too narrow.
+				 */
+				@media screen and (max-width: 782px) {
+					.toplevel_page_woo-wallet .tablenav.top .bulkactions,
+					.toplevel_page_woo-wallet .tablenav .actions.bulkactions {
+						display: block;
+						width: 100%;
+						margin-bottom: 8px;
+						padding: 0;
+					}
+					.toplevel_page_woo-wallet .tablenav.top .bulkactions select,
+					.toplevel_page_woo-wallet .tablenav .actions.bulkactions select {
+						display: inline-block;
+						width: calc(100% - 90px);
+						max-width: 320px;
+						margin-right: 6px;
+						vertical-align: middle;
+					}
+					.toplevel_page_woo-wallet .tablenav.top .bulkactions input[type="submit"],
+					.toplevel_page_woo-wallet .tablenav .actions.bulkactions input[type="submit"] {
+						display: inline-block;
+						vertical-align: middle;
+					}
+				}
+			</style>
+			<?php
 		}
 		?>
 		<script type="text/javascript">
