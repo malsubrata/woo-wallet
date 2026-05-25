@@ -291,6 +291,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						'for'      => 'credit_purchase',
 						'category' => 'topup',
 						'currency' => $order->get_currency( 'edit' ),
+						'order_id' => $order->get_order_number(),
 					)
 				);
 				if ( $transaction_id ) {
@@ -384,6 +385,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						array(
 							'for'      => 'cashback',
 							'currency' => $order->get_currency( 'edit' ),
+							'order_id' => $order->get_order_number(),
 						)
 					);
 					if ( $transaction_id ) {
@@ -438,6 +440,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'for'      => 'cashback',
 								'currency' => $order->get_currency( 'edit' ),
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $transaction_id ) {
@@ -502,6 +505,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					array(
 						'for'      => 'partial_payment',
 						'currency' => $order->get_currency( 'edit' ),
+						'order_id' => $order->get_order_number(),
 					)
 				);
 				if ( $transaction_id ) {
@@ -574,7 +578,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$locked_order = wc_get_order( $order_id );
 						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
 							/* translators: Order number */
-							$this->credit( $locked_order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ), array( 'currency' => $locked_order->get_currency( 'edit' ) ) );
+							$this->credit(
+								$locked_order->get_customer_id(),
+								$partial_payment_amount,
+								sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
+								array(
+									'currency' => $locked_order->get_currency( 'edit' ),
+									'order_id' => $order->get_order_number(),
+								)
+							);
 							/* translators: wallet amount */
 							$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
 							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
@@ -672,6 +684,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						array(
 							'currency' => $order->get_currency( 'edit' ),
 							'for'      => 'refund',
+							'order_id' => $order->get_order_number(),
 						)
 					);
 					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
@@ -691,6 +704,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'currency' => $order->get_currency( 'edit' ),
 								'for'      => 'refund',
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $debit_result ) {
@@ -716,6 +730,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'currency' => $order->get_currency( 'edit' ),
 								'for'      => 'refund',
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $debit_result ) {
@@ -1001,8 +1016,8 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 					$transfer_args             = $args;
 					$transfer_args['category'] = isset( $transfer_args['category'] ) && '' !== $transfer_args['category'] ? $transfer_args['category'] : 'transfer';
-					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $transfer_args );
-					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $transfer_args ) : 0;
+					$debit_id                  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $transfer_args );
+					$credit_id                 = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $transfer_args ) : 0;
 
 					if ( $debit_id && ( $credit_id || 0 === $credit_amount ) ) {
 						$new_from_balance = $from_balance - $amount;
@@ -1094,7 +1109,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					if ( $user ) {
 						$user_name = $user->display_name;
 					}
-					$tokens = array(
+					$tokens   = array(
 						'order_id'         => isset( $parsed_args['order_id'] ) ? (string) $parsed_args['order_id'] : '',
 						'amount'           => (string) $amount,
 						'currency'         => (string) $currency,
@@ -1165,9 +1180,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$parsed_args['currency'] = $stored_currency;
 			$parsed_args['amount']   = $stored_amount;
 
-			$resolved              = $this->resolve_category_and_details( $parsed_args, $user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
+			$resolved                = $this->resolve_category_and_details( $parsed_args, $user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
 			$parsed_args['category'] = $resolved['category'];
-			$parsed_args['details']   = $resolved['details'];
+			$parsed_args['details']  = $resolved['details'];
 
 			$row_data = apply_filters(
 				'woo_wallet_transactions_args',

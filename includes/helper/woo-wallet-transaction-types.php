@@ -237,7 +237,7 @@ add_filter(
 		$tokens_hint = sprintf(
 			/* translators: list of supported template tokens */
 			__( 'Available tokens: %s. Leave blank to keep the system-generated description.', 'woo-wallet' ),
-			'<code>{order_id}</code>, <code>{amount}</code>, <code>{currency}</code>, <code>{user_name}</code>, <code>{original_details}</code>'
+			'<code>{order_id}</code>, <code>{amount}</code>, <code>{currency}</code>, <code>{original_details}</code>'
 		);
 
 		$category_fields = array();
@@ -259,7 +259,7 @@ add_filter(
 			if ( $first ) {
 				$field['group_title']       = __( 'Transaction description templates', 'woo-wallet' );
 				$field['group_description'] = __( 'These templates replace the auto-generated description on each new transaction record.', 'woo-wallet' );
-				$first                       = false;
+				$first                      = false;
 			}
 			$category_fields[] = $field;
 		}
