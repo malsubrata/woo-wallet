@@ -231,11 +231,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 *                      or below the table ("bottom").
 	 */
 	protected function extra_tablenav( $which ) {
-		if ( 'top' === $which ) {
-			/* translators: WooCommerce currency */
-			echo( sprintf( "<label class='alignleft actions bulkactions'>%s(%s): <input name='amount' type='number' step='0.01' id='amount'></input></label>", esc_html__( 'Amount', 'woo-wallet' ), get_woocommerce_currency_symbol() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo( sprintf( "<label class='alignleft actions bulkactions'>%s: <input name='description' type='text' id='description'></input></label>", esc_html__( 'Description', 'woo-wallet' ) ) );
-		}
+		// Amount + description for the Credit / Debit bulk actions are now
+		// captured in the WCBackboneModal opened by add_js_scripts() — see
+		// templates/admin/credit-debit-modal.php. Kept this hook for the
+		// `woo_wallet_users_list_extra_tablenav` extension surface.
 		do_action( 'woo_wallet_users_list_extra_tablenav', $which );
 	}
 
@@ -495,10 +494,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			if ( 'credit' === $this->current_action() ) {
 				$credit_ids  = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
-				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $credit_ids ) {
 					foreach ( $credit_ids as $id ) {
-						woo_wallet()->wallet->credit( $id, $amount, $description );
+						woo_wallet()->wallet->credit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
 					}
 				}
 				header( 'Refresh: 0' );
@@ -507,10 +506,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			if ( 'debit' === $this->current_action() ) {
 				$debit_ids   = isset( $_REQUEST['users'] ) ? array_map( 'intval', (array) $_REQUEST['users'] ) : array();
 				$amount      = isset( $_POST['amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_POST['amount'] ) ) ) : 0;
-				$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $debit_ids ) {
 					foreach ( $debit_ids as $id ) {
-						woo_wallet()->wallet->debit( $id, $amount, $description );
+						woo_wallet()->wallet->debit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
 					}
 				}
 				header( 'Refresh: 0' );
@@ -572,37 +571,92 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			ob_start();
 			woo_wallet()->get_template( 'admin/edit-balance.php' );
 			woo_wallet()->get_template( 'admin/delete-log-modal.php' );
+			woo_wallet()->get_template( 'admin/credit-debit-modal.php' );
 			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			wp_enqueue_script( 'wc-backbone-modal' );
 		}
 		?>
 		<script type="text/javascript">
 			jQuery(function ($) {
-				var $deleteLogForm = $('.toplevel_page_woo-wallet #posts-filter');
-				$deleteLogForm.on('submit', function (e) {
-					var action  = $(this).find('[name="action"]').val();
-					var action2 = $(this).find('[name="action2"]').val();
-					if ('delete_log' !== action && 'delete_log' !== action2) {
-						return true;
+				var $listForm = $('.toplevel_page_woo-wallet #posts-filter');
+
+				// Pick the action that's actually selected — bulkactions dropdowns
+				// duplicate the control above + below the table, so either one may
+				// hold the user's choice.
+				function selectedBulkAction() {
+					var top    = $listForm.find('[name="action"]').val();
+					var bottom = $listForm.find('[name="action2"]').val();
+					if (top && '-1' !== top) {
+						return top;
 					}
-					if ($(this).data('wooWalletDeleteConfirmed')) {
-						return true;
+					if (bottom && '-1' !== bottom) {
+						return bottom;
 					}
-					e.preventDefault();
-					$(this).WCBackboneModal({ template: 'woo-wallet-modal-delete-log' });
-					return false;
+					return '';
+				}
+
+				$listForm.on('submit', function (e) {
+					var action = selectedBulkAction();
+					if ('delete_log' === action) {
+						if ($(this).data('wooWalletDeleteConfirmed')) {
+							return true;
+						}
+						e.preventDefault();
+						$(this).WCBackboneModal({ template: 'woo-wallet-modal-delete-log' });
+						return false;
+					}
+					if ('credit' === action || 'debit' === action) {
+						if ($(this).data('wooWalletCreditDebitConfirmed')) {
+							return true;
+						}
+						// Need at least one row selected.
+						var checked = $listForm.find('input[name="users[]"]:checked').length;
+						if (!checked) {
+							return true; // Let WP's native "no items selected" handling run.
+						}
+						e.preventDefault();
+						$(this).data('wooWalletPendingAction', action);
+						$(this).WCBackboneModal({ template: 'woo-wallet-modal-credit-debit' });
+						// Set the modal title + button label to match the chosen action.
+						var $modal = $('.woo-wallet-credit-debit');
+						if ('credit' === action) {
+							$modal.find('#woo-wallet-credit-debit-title').text('<?php echo esc_js( __( 'Credit wallet balance', 'woo-wallet' ) ); ?>');
+							$modal.find('#woo-wallet-confirm-credit-debit').text('<?php echo esc_js( __( 'Credit', 'woo-wallet' ) ); ?>');
+						} else {
+							$modal.find('#woo-wallet-credit-debit-title').text('<?php echo esc_js( __( 'Debit wallet balance', 'woo-wallet' ) ); ?>');
+							$modal.find('#woo-wallet-confirm-credit-debit').text('<?php echo esc_js( __( 'Debit', 'woo-wallet' ) ); ?>');
+						}
+						return false;
+					}
+					return true;
 				});
 				$(document).on('click', '#woo-wallet-confirm-delete-log', function (e) {
 					e.preventDefault();
 					var $modal    = $(this).closest('.wc-backbone-modal');
 					var mode      = $modal.find('input[name="woo_wallet_delete_mode"]:checked').val() || 'soft';
 					var handling  = $modal.find('input[name="woo_wallet_balance_handling"]:checked').val() || 'keep';
-					$deleteLogForm.find('input[name="delete_mode"], input[name="balance_handling"]').remove();
-					$deleteLogForm.append($('<input>').attr({ type: 'hidden', name: 'delete_mode', value: mode }));
-					$deleteLogForm.append($('<input>').attr({ type: 'hidden', name: 'balance_handling', value: handling }));
-					$deleteLogForm.data('wooWalletDeleteConfirmed', true);
+					$listForm.find('input[name="delete_mode"], input[name="balance_handling"]').remove();
+					$listForm.append($('<input>').attr({ type: 'hidden', name: 'delete_mode', value: mode }));
+					$listForm.append($('<input>').attr({ type: 'hidden', name: 'balance_handling', value: handling }));
+					$listForm.data('wooWalletDeleteConfirmed', true);
 					$('.wc-backbone-modal-backdrop.modal-close').trigger('click');
-					$deleteLogForm[0].submit();
+					$listForm[0].submit();
+				});
+				$(document).on('click', '#woo-wallet-confirm-credit-debit', function (e) {
+					e.preventDefault();
+					var $modal      = $(this).closest('.wc-backbone-modal');
+					var amount      = parseFloat($modal.find('#woo-wallet-bulk-amount').val());
+					var description = $modal.find('#woo-wallet-bulk-description').val() || '';
+					if (isNaN(amount) || amount <= 0) {
+						$modal.find('#woo-wallet-bulk-amount').focus();
+						return false;
+					}
+					$listForm.find('input[name="amount"], input[name="description"]').remove();
+					$listForm.append($('<input>').attr({ type: 'hidden', name: 'amount', value: amount }));
+					$listForm.append($('<input>').attr({ type: 'hidden', name: 'description', value: description }));
+					$listForm.data('wooWalletCreditDebitConfirmed', true);
+					$('.wc-backbone-modal-backdrop.modal-close').trigger('click');
+					$listForm[0].submit();
 				});
 				$(document).on('click', '.toplevel_page_woo-wallet .edit-wallet-balance', function (event) {
 					event.preventDefault();

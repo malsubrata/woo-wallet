@@ -145,6 +145,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **New:-** Transaction CSV export now includes the `category` column.
 – **Tweak:-** Ledger writers (`credit`, `debit`, `transfer`) accept `$args['category']`; legacy `$args['for']` continues to work and is normalised (`credit_purchase` → `topup`, `purchase` → `partial_payment`). Transfer legs are now correctly tagged `transfer`.
 – **Tweak:-** Admin balance-details columns and the customer/admin REST `category` filter now read the column directly instead of joining the meta table.
+– **Tweak:-** The Wallet > Users bulk Credit / Debit actions now collect amount and description in a WCBackboneModal popup (consistent with the existing Delete Log dialog) instead of inline form fields. Bulk admin adjustments are tagged `category='adjustment'`.
 
 = v1.6.2 (May 25, 2026) =
 – **Security:-** Admin bulk credit/debit (`POST /terawallet/v1/admin/transactions/bulk`) now records a per-user idempotency sub-key. A retry after a mid-loop process death no longer re-credits users who already received the credit on the first attempt.
