@@ -1,13 +1,20 @@
 <?php
 /**
- * REST API Wallet controller
+ * Legacy REST API: wc/v3/wallet/*  (transactions + balance)
  *
- * Handles requests to the /wallet endpoint.
+ * Retains the original wc/v3 business logic for back-compat with external
+ * integrators (server-to-server callers using WooCommerce consumer keys).
+ * Will be removed in plugin major version 2.0.
  *
- * @author   Subrata Mal
- * @category API
- * @since   1.3.23
+ * Canonical replacements:
+ *   GET  /wc/v3/wallet           → GET  /terawallet/v1/admin/transactions
+ *   POST /wc/v3/wallet           → POST /terawallet/v1/admin/transactions
+ *   GET  /wc/v3/wallet/{id}      → GET  /terawallet/v1/admin/transactions/{id}
+ *   GET  /wc/v3/wallet/balance   → GET  /terawallet/v1/admin/users/{id}/balance
+ *
+ * @deprecated 1.7.0 Use terawallet/v1/admin/transactions instead.
  * @package StandaleneTech
+ * @since   1.3.23
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -15,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * REST API TeraWallet transactions controller class.
  *
+ * @deprecated 1.7.0 Use TeraWallet_REST_Admin_Transactions_Controller.
  * @extends TeraWallet_REST_Controller_Base
  */
 class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller_Base {
@@ -34,7 +42,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	protected $rest_base = 'wallet';
 
 	/**
-	 * Register the routes for customers.
+	 * Register the routes and attach the deprecation-header filter.
 	 */
 	public function register_routes() {
 		register_rest_route(
@@ -141,9 +149,30 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 				'schema' => array( $this, 'get_public_batch_schema' ),
 			)
 		);
+
+		// Stamp all wc/v3/wallet/* responses with deprecation headers so
+		// integrators can discover the canonical terawallet/v1 replacements.
+		add_filter( 'rest_post_dispatch', array( $this, 'add_deprecation_headers' ), 10, 3 );
 	}
+
 	/**
-	 * Collection params for get request.
+	 * Add X-TeraWallet-Deprecated header to wc/v3/wallet/* responses.
+	 *
+	 * @param WP_REST_Response $response Dispatched response.
+	 * @param WP_REST_Server   $server   Server instance.
+	 * @param WP_REST_Request  $request  The incoming request.
+	 * @return WP_REST_Response
+	 */
+	public function add_deprecation_headers( $response, $server, $request ) {
+		if ( $response instanceof WP_REST_Response && 0 === strpos( $request->get_route(), '/wc/v3/wallet' ) ) {
+			$response->header( 'X-TeraWallet-Deprecated', '1' );
+			$response->header( 'X-TeraWallet-Successor', 'terawallet/v1/admin/transactions' );
+		}
+		return $response;
+	}
+
+	/**
+	 * Collection params.
 	 *
 	 * @return array
 	 */
@@ -205,7 +234,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		$params['currency'] = array(
 			'required'          => false,
 			'type'              => 'string',
-			'description'       => __( 'Filter rows by ISO 4217 currency code (post-1.6 ledger only).', 'woo-wallet' ),
+			'description'       => __( 'Filter rows by ISO 4217 currency code.', 'woo-wallet' ),
 			'pattern'           => '^[A-Z]{3}$',
 			'sanitize_callback' => function ( $v ) {
 				return is_string( $v ) ? strtoupper( trim( $v ) ) : '';
@@ -217,7 +246,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		$params['category'] = array(
 			'required'          => false,
 			'type'              => 'string',
-			'description'       => __( 'Filter by transaction category. Matches the _type transaction meta. Accepts a single value or a comma-separated list.', 'woo-wallet' ),
+			'description'       => __( 'Filter by transaction category.', 'woo-wallet' ),
 			'sanitize_callback' => 'sanitize_text_field',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
@@ -225,39 +254,40 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	}
 
 	/**
-	 * Check whether a given request has permission to read transactions.
+	 * Check permission for reading transactions.
 	 *
-	 * @param  WP_REST_Request $request Full details about the request.
-	 * @return WP_Error|boolean
+	 * @param WP_REST_Request $request Full request details.
+	 * @return true|WP_Error
 	 */
 	public function get_items_permissions_check( $request ) {
 		return $this->check_capability( 'read', $request );
 	}
 
 	/**
-	 * Check whether a given request has permission to read a single transaction.
+	 * Check permission for reading a single transaction.
 	 *
-	 * @param  WP_REST_Request $request Full details about the request.
-	 * @return WP_Error|boolean
+	 * @param WP_REST_Request $request Full request details.
+	 * @return true|WP_Error
 	 */
 	public function get_item_permissions_check( $request ) {
 		return $this->check_capability( 'read', $request );
 	}
 
 	/**
-	 * Check whether a given request has permission to create new transactions.
+	 * Check permission for creating transactions.
 	 *
-	 * @param  WP_REST_Request $request Full details about the request.
-	 * @return WP_Error|boolean
+	 * @param WP_REST_Request $request Full request details.
+	 * @return true|WP_Error
 	 */
 	public function create_item_permissions_check( $request ) {
 		return $this->check_capability( 'create', $request );
 	}
+
 	/**
-	 * Get all wallet transactions
+	 * GET /wc/v3/wallet — transactions list for a user identified by email.
 	 *
-	 * @param WP_REST_Request $request request.
-	 * @return WP_REST_Response | WP_Error
+	 * @param WP_REST_Request $request Full request details.
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_items( $request ) {
 		$params = $request->get_params();
@@ -296,8 +326,6 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		}
 		$args = apply_filters( 'woo_wallet_rest_api_get_items_args', $args, $request );
 
-		// get_wallet_transactions() accepts limit as either an integer or a
-		// strict "offset,limit" string (regex ^\d+,\d+$ — no whitespace).
 		$args['limit'] = $offset > 0 ? "{$offset},{$per_page}" : $per_page;
 		$transactions  = get_wallet_transactions( $args );
 
@@ -307,7 +335,6 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			$items[]  = $this->prepare_response_for_collection( $prepared );
 		}
 
-		// Filter-aware total: pass the same args so X-WP-Total reflects type/currency/category/date filters.
 		$count_args = $args;
 		unset( $count_args['limit'], $count_args['order_by'], $count_args['order'], $count_args['fields'], $count_args['nocache'] );
 		$total    = function_exists( 'get_wallet_transactions_count' ) ? (int) get_wallet_transactions_count( $count_args ) : count( $items );
@@ -316,10 +343,10 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	}
 
 	/**
-	 * Get a single wallet transaction by id.
+	 * GET /wc/v3/wallet/{id} — single transaction.
 	 *
-	 * @param WP_REST_Request $request Request.
-	 * @return WP_REST_Response | WP_Error
+	 * @param WP_REST_Request $request Full request details.
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_item( $request ) {
 		$id          = (int) $request['id'];
@@ -331,7 +358,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	}
 
 	/**
-	 * Fetch a single transaction row by id, or null if missing/deleted.
+	 * Fetch a single non-deleted transaction row by id.
 	 *
 	 * @param int $id Transaction id.
 	 * @return object|null
@@ -346,14 +373,14 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $row ? $row : null;
 	}
+
 	/**
-	 * Get user wallet balance.
+	 * GET /wc/v3/wallet/balance — balance for a user identified by email.
 	 *
-	 * @param WP_REST_Request $request request.
-	 * @return WP_REST_Request | WP_Error
+	 * @param WP_REST_Request $request Full request details.
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_balance( $request ) {
-		// get parameters from request.
 		$params = $request->get_params();
 		$user   = get_user_by( 'email', $params['email'] );
 		if ( ! $user ) {
@@ -368,11 +395,12 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			200
 		);
 	}
+
 	/**
-	 * Create new wallet transaction.
+	 * POST /wc/v3/wallet — create a credit or debit transaction.
 	 *
-	 * @param WP_REST_Request $request request.
-	 * @return WP_REST_Response | WP_Error
+	 * @param WP_REST_Request $request Full request details.
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function create_item( $request ) {
 		$params = $request->get_params();
@@ -405,9 +433,9 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	}
 
 	/**
-	 * Prepare a wallet transaction row for the REST response.
+	 * Prepare a transaction row for the REST response.
 	 *
-	 * @param object          $transaction Raw transaction row from get_wallet_transactions().
+	 * @param object          $transaction Raw transaction row.
 	 * @param WP_REST_Request $request     The request.
 	 * @return WP_REST_Response
 	 */
@@ -424,7 +452,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 	}
 
 	/**
-	 * Build the standard `_links` envelope for a transaction.
+	 * Build HATEOAS _links for a transaction.
 	 *
 	 * @param object          $transaction Raw transaction row.
 	 * @param WP_REST_Request $request     The request.
@@ -460,13 +488,13 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 			'title'      => 'wallet_transaction',
 			'type'       => 'object',
 			'properties' => array(
-				'id'       => array(
+				'id'                  => array(
 					'description' => __( 'Unique identifier for the transaction.', 'woo-wallet' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' ),
 					'readonly'    => true,
 				),
-				'user_id'  => array(
+				'user_id'             => array(
 					'description' => __( 'User ID this transaction belongs to.', 'woo-wallet' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' ),
@@ -489,54 +517,54 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 					'context'     => array( 'view', 'edit' ),
 					'readonly'    => true,
 				),
-				'type'     => array(
+				'type'                => array(
 					'description' => __( 'Transaction type: credit or debit.', 'woo-wallet' ),
 					'type'        => 'string',
 					'enum'        => array( 'credit', 'debit' ),
 					'context'     => array( 'view', 'edit' ),
 				),
-				'amount'   => array(
+				'amount'              => array(
 					'description' => __( 'Transaction amount.', 'woo-wallet' ),
 					'type'        => 'number',
 					'context'     => array( 'view', 'edit' ),
 				),
-				'currency' => array(
+				'currency'            => array(
 					'description' => __( 'Currency code (canonical ledger currency for this row).', 'woo-wallet' ),
 					'type'        => 'string',
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'original_amount'   => array(
+				'original_amount'     => array(
 					'description' => __( 'Source amount as the customer saw it before any currency conversion. Null on pre-1.6 rows.', 'woo-wallet' ),
 					'type'        => array( 'number', 'null' ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'original_currency' => array(
+				'original_currency'   => array(
 					'description' => __( 'Source currency the customer transacted in. Null on pre-1.6 rows.', 'woo-wallet' ),
 					'type'        => array( 'string', 'null' ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'original_rate'     => array(
-					'description' => __( 'Conversion rate applied at write time (original_currency → currency). Null on pre-1.6 rows.', 'woo-wallet' ),
+				'original_rate'       => array(
+					'description' => __( 'Conversion rate applied at write time. Null on pre-1.6 rows.', 'woo-wallet' ),
 					'type'        => array( 'number', 'null' ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'mode'              => array(
-					'description' => __( 'Storage mode this row was written in: 0 = single_base, 1 = per_currency.', 'woo-wallet' ),
+				'mode'                => array(
+					'description' => __( 'Storage mode: 0 = single_base, 1 = per_currency.', 'woo-wallet' ),
 					'type'        => 'integer',
 					'enum'        => array( 0, 1 ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
-				'details'  => array(
+				'details'             => array(
 					'description' => __( 'Note attached to the transaction.', 'woo-wallet' ),
 					'type'        => 'string',
 					'context'     => array( 'view', 'edit' ),
 				),
-				'date'     => array(
+				'date'                => array(
 					'description' => __( 'Date the transaction was recorded, in RFC3339 format.', 'woo-wallet' ),
 					'type'        => 'string',
 					'format'      => 'date-time',
@@ -550,14 +578,14 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 					'readonly'    => true,
 				),
 				'category'            => array(
-					'description' => __( 'Typed category derived from the _type transaction meta. Both namespaces use the same enum values.', 'woo-wallet' ),
+					'description' => __( 'Transaction category.', 'woo-wallet' ),
 					'type'        => 'string',
 					'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),
 				'cashback_expires_at' => array(
-					'description' => __( 'ISO-8601 timestamp at which this cashback row expires. Null when no expiry is set. Core does not enforce expiry; intended for Pro/addon use.', 'woo-wallet' ),
+					'description' => __( 'ISO-8601 timestamp at which this cashback row expires. Null when no expiry is set.', 'woo-wallet' ),
 					'type'        => array( 'string', 'null' ),
 					'format'      => 'date-time',
 					'context'     => array( 'view' ),
@@ -567,7 +595,6 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		);
 		return $this->add_additional_fields_schema( $schema );
 	}
-
 }
 
 // Back-compat alias for the pre-rename class name. Remove in 2.1.

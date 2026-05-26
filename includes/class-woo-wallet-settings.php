@@ -95,7 +95,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				'woo-wallet-admin-settings',
 				'wooWalletSettingsData',
 				array(
-					'restUrl'   => esc_url_raw( rest_url( 'wc/v3/wallet/settings' ) ),
+					'restUrl'   => esc_url_raw( rest_url( 'terawallet/v1/settings' ) ),
 					'restNonce' => wp_create_nonce( 'wp_rest' ),
 					'pluginUrl' => woo_wallet()->plugin_url(),
 					'version'   => WOO_WALLET_PLUGIN_VERSION,

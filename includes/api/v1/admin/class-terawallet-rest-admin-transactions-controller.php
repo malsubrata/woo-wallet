@@ -25,14 +25,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Admin transactions controller.
  */
-class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Controller_Base {
-
-	/**
-	 * Namespace.
-	 *
-	 * @var string
-	 */
-	protected $namespace = 'terawallet/v1';
+class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admin_Controller_Base {
 
 	/**
 	 * Route base.
@@ -123,10 +116,12 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Cont
 
 	/* ---------------- permissions ---------------- */
 
-	public function permissions_read( $request ) {
-		return $this->check_capability( 'read', $request );
-	}
-
+	/**
+	 * Override: transaction mutations are edit-context (harder than create).
+	 *
+	 * @param WP_REST_Request $request The request.
+	 * @return true|WP_Error
+	 */
 	public function permissions_write( $request ) {
 		return $this->check_capability( 'edit', $request );
 	}

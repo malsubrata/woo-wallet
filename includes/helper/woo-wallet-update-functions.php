@@ -218,7 +218,7 @@ function woo_wallet_update_161_db_schema() {
  * (`woo_wallet_daily_visits_settings`, `woo_wallet_new_registration_settings`,
  * …). The React Actions tab now reads/writes a single `_wallet_settings_actions`
  * row with namespaced keys (`daily_visits__amount`, etc.) so it can flow through
- * the standard `/wc/v3/wallet/settings/section` endpoint exactly like the
+ * the standard `/terawallet/v1/settings/section` endpoint exactly like the
  * General and Credit tabs.
  *
  * This callback copies any pre-existing per-action values into the merged
