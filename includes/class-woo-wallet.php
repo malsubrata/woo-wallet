@@ -273,7 +273,7 @@ final class Woo_Wallet {
 	public function woocommerce_loaded_callback() {
 		include_once WOO_WALLET_ABSPATH . 'includes/abstracts/abstract-woo-wallet-actions.php';
 		require_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-actions.php';
-		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-api.php';
+		include_once WOO_WALLET_ABSPATH . 'includes/api/class-woo-wallet-api.php';
 		$this->rest_api = new WooWallet_API();
 	}
 

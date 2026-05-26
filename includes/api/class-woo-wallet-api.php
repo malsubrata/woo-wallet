@@ -45,20 +45,20 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 		 */
 		private function rest_api_includes() {
 			// Shared bases.
-			include_once __DIR__ . '/rest-api/class-terawallet-rest-controller-base.php';
-			include_once __DIR__ . '/rest-api/class-terawallet-rest-me-controller-base.php';
+			include_once __DIR__ . '/class-terawallet-rest-controller-base.php';
+			include_once __DIR__ . '/class-terawallet-rest-me-controller-base.php';
 
 			// wc/v3/* — admin/server-to-server.
-			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-transactions-controller.php';
-			include_once __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-settings-controller.php';
-			$multicurrency_controller = __DIR__ . '/rest-api/Controllers/Version3/class-terawallet-rest-multicurrency-controller.php';
+			include_once __DIR__ . '/Controllers/Version3/class-terawallet-rest-transactions-controller.php';
+			include_once __DIR__ . '/Controllers/Version3/class-terawallet-rest-settings-controller.php';
+			$multicurrency_controller = __DIR__ . '/Controllers/Version3/class-terawallet-rest-multicurrency-controller.php';
 			if ( file_exists( $multicurrency_controller ) ) {
 				include_once $multicurrency_controller;
 			}
 
 			// terawallet/v1/* — customer (React dashboard). Files are conditionally
 			// included; missing files are skipped so partial PRs don't fatal.
-			$me_dir = __DIR__ . '/rest-api/Controllers/TeraWalletV1/';
+			$me_dir = __DIR__ . '/Controllers/TeraWalletV1/';
 			foreach ( array(
 				'class-terawallet-rest-me-controller.php',
 				'class-terawallet-rest-me-balance-controller.php',
