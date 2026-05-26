@@ -16,14 +16,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Admin transfer controller.
  */
-class TeraWallet_REST_Admin_Transfer_Controller extends TeraWallet_REST_Controller_Base {
-
-	/**
-	 * Namespace.
-	 *
-	 * @var string
-	 */
-	protected $namespace = 'terawallet/v1';
+class TeraWallet_REST_Admin_Transfer_Controller extends TeraWallet_REST_Admin_Controller_Base {
 
 	/**
 	 * Route base.
