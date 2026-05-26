@@ -53,12 +53,16 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 			// Central route registry.
 			include_once __DIR__ . '/class-terawallet-rest-route-registry.php';
 
-			// wc/v3/* — admin/server-to-server.
-			include_once __DIR__ . '/Controllers/Version3/class-terawallet-rest-transactions-controller.php';
-			include_once __DIR__ . '/Controllers/Version3/class-terawallet-rest-settings-controller.php';
-			$multicurrency_controller = __DIR__ . '/Controllers/Version3/class-terawallet-rest-multicurrency-controller.php';
-			if ( file_exists( $multicurrency_controller ) ) {
-				include_once $multicurrency_controller;
+			// wc/v3/* — legacy shims (deprecated since 1.7.0, removed in 2.0).
+			$legacy_dir = __DIR__ . '/legacy/wc-v3/';
+			foreach ( array(
+				'class-terawallet-rest-legacy-wallet-controller.php',
+				'class-terawallet-rest-legacy-settings-controller.php',
+				'class-terawallet-rest-legacy-multicurrency-controller.php',
+			) as $file ) {
+				if ( file_exists( $legacy_dir . $file ) ) {
+					include_once $legacy_dir . $file;
+				}
 			}
 
 			// terawallet/v1/* — customer (React dashboard). Files are conditionally
