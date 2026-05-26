@@ -62,7 +62,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 
 			// terawallet/v1/* — customer (React dashboard). Files are conditionally
 			// included; missing files are skipped so partial PRs don't fatal.
-			$me_dir = __DIR__ . '/Controllers/TeraWalletV1/';
+			$me_dir = __DIR__ . '/v1/me/';
 			foreach ( array(
 				'class-terawallet-rest-me-controller.php',
 				'class-terawallet-rest-me-balance-controller.php',
@@ -71,14 +71,31 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 				'class-terawallet-rest-me-transfer-controller.php',
 				'class-terawallet-rest-me-referrals-controller.php',
 				'class-terawallet-rest-me-cashback-rules-controller.php',
-				'class-terawallet-rest-public-settings-controller.php',
-				// admin DataView surface.
+			) as $file ) {
+				if ( file_exists( $me_dir . $file ) ) {
+					include_once $me_dir . $file;
+				}
+			}
+
+			// terawallet/v1/admin/* — admin DataView surface.
+			$admin_dir = __DIR__ . '/v1/admin/';
+			foreach ( array(
 				'class-terawallet-rest-admin-transactions-controller.php',
 				'class-terawallet-rest-admin-users-controller.php',
 				'class-terawallet-rest-admin-transfer-controller.php',
 			) as $file ) {
-				if ( file_exists( $me_dir . $file ) ) {
-					include_once $me_dir . $file;
+				if ( file_exists( $admin_dir . $file ) ) {
+					include_once $admin_dir . $file;
+				}
+			}
+
+			// terawallet/v1/public/* — unauthenticated/public endpoints.
+			$public_dir = __DIR__ . '/v1/public/';
+			foreach ( array(
+				'class-terawallet-rest-public-settings-controller.php',
+			) as $file ) {
+				if ( file_exists( $public_dir . $file ) ) {
+					include_once $public_dir . $file;
 				}
 			}
 		}
