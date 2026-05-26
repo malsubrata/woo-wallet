@@ -48,6 +48,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 			include_once __DIR__ . '/abstracts/class-terawallet-rest-controller-base.php';
 			include_once __DIR__ . '/abstracts/class-terawallet-rest-me-controller-base.php';
 			include_once __DIR__ . '/abstracts/class-terawallet-rest-admin-controller-base.php';
+			include_once __DIR__ . '/abstracts/class-terawallet-rest-settings-controller-base.php';
 
 			// Central route registry.
 			include_once __DIR__ . '/class-terawallet-rest-route-registry.php';
@@ -96,6 +97,29 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 			) as $file ) {
 				if ( file_exists( $public_dir . $file ) ) {
 					include_once $public_dir . $file;
+				}
+			}
+
+			// terawallet/v1/settings/* — canonical settings surface (split from wc/v3 mega-controller).
+			$settings_dir = __DIR__ . '/v1/settings/';
+			foreach ( array(
+				'class-terawallet-rest-settings-controller.php',
+				'class-terawallet-rest-settings-section-controller.php',
+				'class-terawallet-rest-settings-action-controller.php',
+				'class-terawallet-rest-settings-js-section-controller.php',
+			) as $file ) {
+				if ( file_exists( $settings_dir . $file ) ) {
+					include_once $settings_dir . $file;
+				}
+			}
+
+			// terawallet/v1/system/* — infrastructure endpoints.
+			$system_dir = __DIR__ . '/v1/system/';
+			foreach ( array(
+				'class-terawallet-rest-multicurrency-controller.php',
+			) as $file ) {
+				if ( file_exists( $system_dir . $file ) ) {
+					include_once $system_dir . $file;
 				}
 			}
 		}

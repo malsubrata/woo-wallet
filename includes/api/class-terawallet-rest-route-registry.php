@@ -32,6 +32,7 @@ if ( ! class_exists( 'TeraWallet_REST_Route_Registry' ) ) {
 		public static function register_all() {
 			// Canonical controllers (terawallet/v1).
 			$canonical = array(
+				// me/*
 				'TeraWallet_REST_Me_Controller',
 				'TeraWallet_REST_Me_Balance_Controller',
 				'TeraWallet_REST_Me_Transactions_Controller',
@@ -39,10 +40,19 @@ if ( ! class_exists( 'TeraWallet_REST_Route_Registry' ) ) {
 				'TeraWallet_REST_Me_Transfer_Controller',
 				'TeraWallet_REST_Me_Referrals_Controller',
 				'TeraWallet_REST_Me_Cashback_Rules_Controller',
+				// public/*
 				'TeraWallet_REST_Public_Settings_Controller',
+				// admin/*
 				'TeraWallet_REST_Admin_Transactions_Controller',
 				'TeraWallet_REST_Admin_Users_Controller',
 				'TeraWallet_REST_Admin_Transfer_Controller',
+				// settings/*
+				'TeraWallet_REST_Settings_V1_Controller',
+				'TeraWallet_REST_Settings_Section_Controller',
+				'TeraWallet_REST_Settings_Action_Controller',
+				'TeraWallet_REST_Settings_Js_Section_Controller',
+				// system/*
+				'TeraWallet_REST_V1_Multicurrency_Controller',
 			);
 
 			// Legacy controllers (wc/v3) — retained for back-compat.
