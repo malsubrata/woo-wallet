@@ -19,7 +19,7 @@ export default function useSettings() {
 	const timers = useRef( {} );
 
 	useEffect( () => {
-		apiFetch( { path: '/wc/v3/wallet/settings' } )
+		apiFetch( { path: '/terawallet/v1/settings' } )
 			.then( ( data ) => {
 				setSchema( data );
 				setValues( data.values || {} );
@@ -98,7 +98,7 @@ export default function useSettings() {
 					// JS-registered tab — send the fields_schema alongside so
 					// the server can pick the right sanitizer per field.
 					result = await apiFetch( {
-						path: '/wc/v3/wallet/settings/js-section',
+						path: '/terawallet/v1/settings/js-section',
 						method: 'POST',
 						data: {
 							section_id: sectionId,
@@ -114,7 +114,7 @@ export default function useSettings() {
 					);
 				} else {
 					result = await apiFetch( {
-						path: '/wc/v3/wallet/settings/section',
+						path: '/terawallet/v1/settings/section',
 						method: 'POST',
 						data: { section_id: sectionId, values: payload },
 					} );
