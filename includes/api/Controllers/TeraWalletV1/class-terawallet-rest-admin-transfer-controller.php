@@ -36,7 +36,7 @@ class TeraWallet_REST_Admin_Transfer_Controller extends TeraWallet_REST_Admin_Co
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_item' ),
-					'permission_callback' => array( $this, 'permissions' ),
+					'permission_callback' => array( $this, 'permissions_write' ),
 					'args'                => array(
 						'from_user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 						'to_user_id'   => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
@@ -49,7 +49,13 @@ class TeraWallet_REST_Admin_Transfer_Controller extends TeraWallet_REST_Admin_Co
 		);
 	}
 
-	public function permissions( $request ) {
+	/**
+	 * Check whether the current user may perform write operations.
+	 *
+	 * @param WP_REST_Request $request Full request object.
+	 * @return true|WP_Error True when authorized, WP_Error otherwise.
+	 */
+	public function permissions_write( $request ) {
 		return $this->check_capability( 'edit', $request );
 	}
 

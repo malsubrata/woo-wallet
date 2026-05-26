@@ -24,20 +24,6 @@ if ( ! class_exists( 'TeraWallet_REST_Route_Registry' ) ) {
 	class TeraWallet_REST_Route_Registry {
 
 		/**
-		 * Canonical terawallet/v1 controller class names.
-		 *
-		 * @var string[]
-		 */
-		private static $canonical_controllers = array();
-
-		/**
-		 * Legacy wc/v3 controller class names.
-		 *
-		 * @var string[]
-		 */
-		private static $legacy_controllers = array();
-
-		/**
 		 * Instantiate and register routes for every known controller.
 		 *
 		 * Controllers are skipped (not fataled) when their class does not
@@ -65,9 +51,6 @@ if ( ! class_exists( 'TeraWallet_REST_Route_Registry' ) ) {
 				'TeraWallet_REST_Settings_Controller',
 				'TeraWallet_REST_Multicurrency_Controller',
 			);
-
-			self::$canonical_controllers = $canonical;
-			self::$legacy_controllers    = $legacy;
 
 			foreach ( array_merge( $canonical, $legacy ) as $class ) {
 				if ( class_exists( $class ) ) {
