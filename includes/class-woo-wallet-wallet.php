@@ -80,7 +80,55 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 			}
-			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : $this->wallet_balance;
+			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : $this->floor_to_price_decimals( $this->wallet_balance );
+		}
+
+		/**
+		 * Floor a balance to the store's price decimals for the spendable
+		 * (numeric, non-`view`) context.
+		 *
+		 * The raw ledger SUM can carry sub-cent "dust" (e.g. a multicurrency
+		 * conversion of 1 EUR -> 111.111… INR). Reporting that raw value to a
+		 * checkout that only renders/accepts two decimals causes the classic
+		 * round-half-up loophole: a raw 124.12511111 displayed as 124.13 is not
+		 * debitable (124.13 > raw), which blocks wallet-gateway payments and
+		 * silently breaks partial payments. Flooring (never rounding up)
+		 * guarantees the spendable value is always <= the true raw balance.
+		 *
+		 * Floors on the scaled integer after rounding away IEEE754 noise at a
+		 * precision finer than a cent, so a clean value such as 124.13 — stored
+		 * as 124.12999999… in a double — is not eroded down to 124.12.
+		 *
+		 * @since 1.6.3
+		 * @param float $amount Raw ledger balance.
+		 * @return float Balance floored to wc_get_price_decimals().
+		 */
+		private function floor_to_price_decimals( $amount ) {
+			$decimals = (int) wc_get_price_decimals();
+			if ( $decimals < 0 ) {
+				$decimals = 0;
+			}
+			$factor = pow( 10, $decimals );
+			$scaled = round( (float) $amount * $factor, 4 );
+			return floor( $scaled ) / $factor;
+		}
+
+		/**
+		 * Quantize an amount to the store's price decimals before it is written
+		 * to the ledger, so no new sub-cent dust can enter the `amount` column.
+		 *
+		 * Uses WooCommerce's own rounding (`wc_format_decimal`) so stored amounts
+		 * match the precision the rest of WooCommerce renders and validates
+		 * against. The pre-conversion `original_amount` is intentionally left
+		 * un-quantized — it is the audit record of what the customer actually
+		 * transacted in the source currency.
+		 *
+		 * @since 1.6.3
+		 * @param float $amount Canonical (already currency-converted) amount.
+		 * @return float Amount rounded to wc_get_price_decimals().
+		 */
+		private function quantize_amount( $amount ) {
+			return (float) wc_format_decimal( (float) $amount, (int) wc_get_price_decimals() );
 		}
 
 		/**
@@ -1100,6 +1148,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 			$category = substr( $category, 0, 32 );
 
+			// Validate against the registered category set. Unknown slugs (e.g. a
+			// typo or a third-party kind that was never registered via the
+			// `woo_wallet_transaction_types` filter) collapse to 'other' so they
+			// can't pollute the first-class `category` column with values the
+			// admin filters and label lookups don't recognise.
+			if ( 'other' !== $category && function_exists( 'woo_wallet_is_known_transaction_type' ) && ! woo_wallet_is_known_transaction_type( $category ) ) {
+				$category = 'other';
+			}
+
 			$rendered = $details;
 			if ( function_exists( 'woo_wallet_get_transaction_type_template' ) ) {
 				$template = woo_wallet_get_transaction_type_template( $category );
@@ -1116,7 +1173,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						'user_name'        => $user_name,
 						'original_details' => (string) $details,
 					);
-					$rendered = woo_wallet_render_transaction_template( $template, $tokens );
+					// The `details` column is plain text and is echoed by theme-
+					// overridable email/list-table templates. Strip any markup the
+					// tokens carry in (a `{user_name}` of `<script>…` or attacker-
+					// controlled `{original_details}`) so a configured template can
+					// never become a stored-XSS vector.
+					$rendered = wp_strip_all_tags( woo_wallet_render_transaction_template( $template, $tokens ) );
 				}
 			}
 
@@ -1287,6 +1349,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					$original_rate = $stored_amount / $incoming_amount;
 				}
 			}
+
+			// Quantize the canonical amount to the store's price decimals before the
+			// balance gate and insert, so currency conversion (or a sub-cent caller
+			// amount) can never seed the ledger with dust. `original_amount` keeps the
+			// un-quantized source value as the audit record; `original_rate` above is
+			// computed from the pre-quantize conversion result.
+			$stored_amount = $this->quantize_amount( $stored_amount );
 
 			// Acquire a per-user (per-currency in mode B) DB lock to serialize concurrent requests.
 			$lock_acquired = false;

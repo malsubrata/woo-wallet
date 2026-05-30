@@ -80,7 +80,11 @@ class Test_Ledger_Precision extends WP_UnitTestCase {
 				'currency' => get_woocommerce_currency(),
 				'date'     => current_time( 'mysql' ),
 			),
-			array( '%d', '%d', '%s', '%f', '%s', '%s' )
+			// Use %s (not %f) for the amount: the DECIMAL(16,8) column can hold the
+			// full 8-decimal dust value, but WordPress's %f placeholder formats via
+			// sprintf('%f', …) which truncates to 6 decimals, eroding the fixture
+			// before it reaches the column. %s passes the literal through intact.
+			array( '%d', '%d', '%s', '%s', '%s', '%s' )
 		);
 		clear_woo_wallet_cache( $this->user_id );
 	}
