@@ -236,8 +236,9 @@ add_filter(
 		}
 		$tokens_hint = sprintf(
 			/* translators: list of supported template tokens */
-			__( 'Available tokens: %s. Leave blank to keep the system-generated description.', 'woo-wallet' ),
-			'<code>{order_id}</code>, <code>{amount}</code>, <code>{currency}</code>, <code>{original_details}</code>'
+			__( 'Available tokens: %1$s. %2$sLeave blank to keep the system-generated description.', 'woo-wallet' ),
+			'<code>{order_id}</code>, <code>{amount}</code>, <code>{currency}</code>, <code>{original_details}</code>',
+			'<br/>'
 		);
 
 		$category_fields = array();
