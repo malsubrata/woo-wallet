@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.3 (Unreleased) =
+= v1.6.3 (May 30, 2026) =
 – **New:-** Transaction category is now a first-class indexed column on `woo_wallet_transactions` (was previously only on transaction meta). Adds `(user_id, category, deleted)` index for cheap admin filters/aggregations.
 – **New:-** Filterable PHP registry of canonical categories (`woo_wallet_get_transaction_types`, filter `woo_wallet_transaction_types`) so marketplace and addon plugins can register their own kinds.
 – **New:-** Admin "Transaction descriptions" settings tab with per-category description templates (tokens: `{order_id}`, `{amount}`, `{user_name}`, `{currency}`, `{original_details}`). When a template is set, it replaces the system-generated description on new transactions.
