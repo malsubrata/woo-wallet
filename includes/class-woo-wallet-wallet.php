@@ -80,7 +80,55 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 			}
-			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
+			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : $this->floor_to_price_decimals( $this->wallet_balance );
+		}
+
+		/**
+		 * Floor a balance to the store's price decimals for the spendable
+		 * (numeric, non-`view`) context.
+		 *
+		 * The raw ledger SUM can carry sub-cent "dust" (e.g. a multicurrency
+		 * conversion of 1 EUR -> 111.111… INR). Reporting that raw value to a
+		 * checkout that only renders/accepts two decimals causes the classic
+		 * round-half-up loophole: a raw 124.12511111 displayed as 124.13 is not
+		 * debitable (124.13 > raw), which blocks wallet-gateway payments and
+		 * silently breaks partial payments. Flooring (never rounding up)
+		 * guarantees the spendable value is always <= the true raw balance.
+		 *
+		 * Floors on the scaled integer after rounding away IEEE754 noise at a
+		 * precision finer than a cent, so a clean value such as 124.13 — stored
+		 * as 124.12999999… in a double — is not eroded down to 124.12.
+		 *
+		 * @since 1.6.3
+		 * @param float $amount Raw ledger balance.
+		 * @return float Balance floored to wc_get_price_decimals().
+		 */
+		private function floor_to_price_decimals( $amount ) {
+			$decimals = (int) wc_get_price_decimals();
+			if ( $decimals < 0 ) {
+				$decimals = 0;
+			}
+			$factor = pow( 10, $decimals );
+			$scaled = round( (float) $amount * $factor, 4 );
+			return floor( $scaled ) / $factor;
+		}
+
+		/**
+		 * Quantize an amount to the store's price decimals before it is written
+		 * to the ledger, so no new sub-cent dust can enter the `amount` column.
+		 *
+		 * Uses WooCommerce's own rounding (`wc_format_decimal`) so stored amounts
+		 * match the precision the rest of WooCommerce renders and validates
+		 * against. The pre-conversion `original_amount` is intentionally left
+		 * un-quantized — it is the audit record of what the customer actually
+		 * transacted in the source currency.
+		 *
+		 * @since 1.6.3
+		 * @param float $amount Canonical (already currency-converted) amount.
+		 * @return float Amount rounded to wc_get_price_decimals().
+		 */
+		private function quantize_amount( $amount ) {
+			return (float) wc_format_decimal( (float) $amount, (int) wc_get_price_decimals() );
 		}
 
 		/**
@@ -289,7 +337,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					__( 'Wallet credit through purchase #', 'woo-wallet' ) . $order->get_order_number(),
 					array(
 						'for'      => 'credit_purchase',
+						'category' => 'topup',
 						'currency' => $order->get_currency( 'edit' ),
+						'order_id' => $order->get_order_number(),
 					)
 				);
 				if ( $transaction_id ) {
@@ -383,6 +433,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						array(
 							'for'      => 'cashback',
 							'currency' => $order->get_currency( 'edit' ),
+							'order_id' => $order->get_order_number(),
 						)
 					);
 					if ( $transaction_id ) {
@@ -437,6 +488,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'for'      => 'cashback',
 								'currency' => $order->get_currency( 'edit' ),
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $transaction_id ) {
@@ -501,6 +553,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					array(
 						'for'      => 'partial_payment',
 						'currency' => $order->get_currency( 'edit' ),
+						'order_id' => $order->get_order_number(),
 					)
 				);
 				if ( $transaction_id ) {
@@ -573,7 +626,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$locked_order = wc_get_order( $order_id );
 						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
 							/* translators: Order number */
-							$this->credit( $locked_order->get_customer_id(), $partial_payment_amount, sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ), array( 'currency' => $locked_order->get_currency( 'edit' ) ) );
+							$this->credit(
+								$locked_order->get_customer_id(),
+								$partial_payment_amount,
+								sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
+								array(
+									'currency' => $locked_order->get_currency( 'edit' ),
+									'order_id' => $order->get_order_number(),
+								)
+							);
 							/* translators: wallet amount */
 							$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
 							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
@@ -671,6 +732,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						array(
 							'currency' => $order->get_currency( 'edit' ),
 							'for'      => 'refund',
+							'order_id' => $order->get_order_number(),
 						)
 					);
 					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
@@ -690,6 +752,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'currency' => $order->get_currency( 'edit' ),
 								'for'      => 'refund',
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $debit_result ) {
@@ -715,6 +778,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							array(
 								'currency' => $order->get_currency( 'edit' ),
 								'for'      => 'refund',
+								'order_id' => $order->get_order_number(),
 							)
 						);
 						if ( $debit_result ) {
@@ -998,8 +1062,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					}
 
-					$debit_id  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $args );
-					$credit_id = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $args ) : 0;
+					$transfer_args             = $args;
+					$transfer_args['category'] = isset( $transfer_args['category'] ) && '' !== $transfer_args['category'] ? $transfer_args['category'] : 'transfer';
+					$debit_id                  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $transfer_args );
+					$credit_id                 = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $transfer_args ) : 0;
 
 					if ( $debit_id && ( $credit_id || 0 === $credit_amount ) ) {
 						$new_from_balance = $from_balance - $amount;
@@ -1043,6 +1109,86 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Resolve the canonical category slug for a parsed-args array and, if
+		 * the admin has configured a description template for that category,
+		 * substitute its tokens and return the rendered string in place of the
+		 * caller-supplied `details`.
+		 *
+		 * Resolution order:
+		 *  1. `$parsed_args['category']` if non-empty.
+		 *  2. `$parsed_args['for']` if non-empty (legacy).
+		 *  3. `'other'`.
+		 *
+		 * @since 1.6.3
+		 * @param array  $parsed_args Already-parsed args (must include `for`).
+		 * @param int    $user_id     User the transaction belongs to.
+		 * @param float  $amount      Stored amount.
+		 * @param string $currency    Stored currency.
+		 * @param string $details     Caller-supplied details.
+		 * @return array { category: string, details: string } The resolved category
+		 *               and the final details string to persist.
+		 */
+		private function resolve_category_and_details( array $parsed_args, $user_id, $amount, $currency, $details ) {
+			$category = '';
+			if ( ! empty( $parsed_args['category'] ) && is_string( $parsed_args['category'] ) ) {
+				$category = sanitize_key( $parsed_args['category'] );
+			} elseif ( ! empty( $parsed_args['for'] ) && is_string( $parsed_args['for'] ) ) {
+				$category = sanitize_key( $parsed_args['for'] );
+			}
+
+			$alias = array(
+				'credit_purchase' => 'topup',
+				'purchase'        => 'partial_payment',
+			);
+			if ( isset( $alias[ $category ] ) ) {
+				$category = $alias[ $category ];
+			}
+			if ( '' === $category ) {
+				$category = 'other';
+			}
+			$category = substr( $category, 0, 32 );
+
+			// Validate against the registered category set. Unknown slugs (e.g. a
+			// typo or a third-party kind that was never registered via the
+			// `woo_wallet_transaction_types` filter) collapse to 'other' so they
+			// can't pollute the first-class `category` column with values the
+			// admin filters and label lookups don't recognise.
+			if ( 'other' !== $category && function_exists( 'woo_wallet_is_known_transaction_type' ) && ! woo_wallet_is_known_transaction_type( $category ) ) {
+				$category = 'other';
+			}
+
+			$rendered = $details;
+			if ( function_exists( 'woo_wallet_get_transaction_type_template' ) ) {
+				$template = woo_wallet_get_transaction_type_template( $category );
+				if ( '' !== $template ) {
+					$user_name = '';
+					$user      = $user_id ? get_user_by( 'id', (int) $user_id ) : false;
+					if ( $user ) {
+						$user_name = $user->display_name;
+					}
+					$tokens   = array(
+						'order_id'         => isset( $parsed_args['order_id'] ) ? (string) $parsed_args['order_id'] : '',
+						'amount'           => (string) $amount,
+						'currency'         => (string) $currency,
+						'user_name'        => $user_name,
+						'original_details' => (string) $details,
+					);
+					// The `details` column is plain text and is echoed by theme-
+					// overridable email/list-table templates. Strip any markup the
+					// tokens carry in (a `{user_name}` of `<script>…` or attacker-
+					// controlled `{original_details}`) so a configured template can
+					// never become a stored-XSS vector.
+					$rendered = wp_strip_all_tags( woo_wallet_render_transaction_template( $template, $tokens ) );
+				}
+			}
+
+			return array(
+				'category' => $category,
+				'details'  => $rendered,
+			);
+		}
+
+		/**
 		 * Insert a single ledger row. Used by transfer() inside an active DB transaction.
 		 * Does not acquire locks, fire emails, or update the user_meta cache — those are
 		 * handled by the caller after COMMIT so a ROLLBACK leaves no side-effects behind.
@@ -1078,6 +1224,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				'blog_id'           => get_current_blog_id(),
 				'user_id'           => $user_id,
 				'type'              => $type,
+				'category'          => '',
 				'amount'            => $stored_amount,
 				'original_amount'   => $incoming_amount,
 				'original_currency' => $incoming_currency,
@@ -1095,12 +1242,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$parsed_args['currency'] = $stored_currency;
 			$parsed_args['amount']   = $stored_amount;
 
+			$resolved                = $this->resolve_category_and_details( $parsed_args, $user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
+			$parsed_args['category'] = $resolved['category'];
+			$parsed_args['details']  = $resolved['details'];
+
 			$row_data = apply_filters(
 				'woo_wallet_transactions_args',
 				array(
 					'blog_id'           => $parsed_args['blog_id'],
 					'user_id'           => $parsed_args['user_id'],
 					'type'              => $parsed_args['type'],
+					'category'          => $parsed_args['category'],
 					'amount'            => $parsed_args['amount'],
 					'original_amount'   => $parsed_args['original_amount'],
 					'original_currency' => $parsed_args['original_currency'],
@@ -1114,6 +1266,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				array(
 					'%d',
 					'%d',
+					'%s',
 					'%s',
 					'%f',
 					'%f',
@@ -1197,6 +1350,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 			}
 
+			// Quantize the canonical amount to the store's price decimals before the
+			// balance gate and insert, so currency conversion (or a sub-cent caller
+			// amount) can never seed the ledger with dust. `original_amount` keeps the
+			// un-quantized source value as the audit record; `original_rate` above is
+			// computed from the pre-quantize conversion result.
+			$stored_amount = $this->quantize_amount( $stored_amount );
+
 			// Acquire a per-user (per-currency in mode B) DB lock to serialize concurrent requests.
 			$lock_acquired = false;
 			$lock_suffix   = 'per_currency' === $mode ? '_' . $stored_currency : '';
@@ -1232,6 +1392,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					'blog_id'           => get_current_blog_id(),
 					'user_id'           => $this->user_id,
 					'type'              => $type,
+					'category'          => '',
 					'amount'            => $stored_amount,
 					'original_amount'   => $incoming_amount,
 					'original_currency' => $incoming_currency,
@@ -1250,6 +1411,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$parsed_args['currency'] = $stored_currency;
 				$parsed_args['amount']   = $stored_amount;
 
+				$resolved                = $this->resolve_category_and_details( $parsed_args, $this->user_id, $stored_amount, $stored_currency, $parsed_args['details'] );
+				$parsed_args['category'] = $resolved['category'];
+				$parsed_args['details']  = $resolved['details'];
+
 				if ( $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 					"{$wpdb->base_prefix}woo_wallet_transactions",
 					apply_filters(
@@ -1258,6 +1423,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							'blog_id'           => $parsed_args['blog_id'],
 							'user_id'           => $parsed_args['user_id'],
 							'type'              => $parsed_args['type'],
+							'category'          => $parsed_args['category'],
 							'amount'            => $parsed_args['amount'],
 							'original_amount'   => $parsed_args['original_amount'],
 							'original_currency' => $parsed_args['original_currency'],
@@ -1268,7 +1434,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							'date'              => $parsed_args['date'],
 							'created_by'        => $parsed_args['created_by'],
 						),
-						array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' )
+						array( '%d', '%d', '%s', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' )
 					)
 				) ) {
 					$transaction_id = $wpdb->insert_id;

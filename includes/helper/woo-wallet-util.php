@@ -366,40 +366,29 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$args         = apply_filters( 'woo_wallet_transactions_query_args', $args );
 		$args         = wp_parse_args( $args, $default_args );
 
-		// R8: translate `category` arg into a where_meta clause on `_type`.
-		// The allowed values mirror the REST schema enum; unknown values are mapped to `other`
-		// which is a client-side projection default and is NOT stored in meta, so filtering by
-		// `other` intentionally returns rows with no `_type` meta — achieved via a different path
-		// if needed; for now we simply pass it through and the join will find no rows.
-		$allowed_categories = array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' );
+		// Since 1.6.3 the semantic kind lives on the `category` column of
+		// `woo_wallet_transactions`. Translate the `category` filter into a
+		// direct `where` clause on that column — no meta join required.
+		// Allowed values still gate the input to keep the surface small;
+		// third-party slugs are accepted as long as they pass sanitize_key().
 		if ( ! empty( $args['category'] ) ) {
 			$raw_cats = is_array( $args['category'] ) ? $args['category'] : explode( ',', $args['category'] );
 			$cats     = array();
 			foreach ( $raw_cats as $c ) {
 				$c = trim( sanitize_key( $c ) );
-				if ( in_array( $c, $allowed_categories, true ) && 'other' !== $c ) {
-					$cats[] = $c;
+				if ( '' !== $c ) {
+					$cats[] = substr( $c, 0, 32 );
 				}
 			}
 			if ( ! empty( $cats ) ) {
-				if ( ! isset( $args['where_meta'] ) ) {
-					$args['where_meta'] = array();
+				if ( ! isset( $args['where'] ) || ! is_array( $args['where'] ) ) {
+					$args['where'] = array();
 				}
-				if ( 1 === count( $cats ) ) {
-					$args['where_meta'][] = array(
-						'key'      => '_type',
-						'value'    => $cats[0],
-						'operator' => '=',
-					);
-				} else {
-					$args['where_meta'][] = array(
-						'key'      => '_type',
-						'value'    => $cats,
-						'operator' => 'IN',
-					);
-				}
-				// Ensure LEFT JOIN so transaction_meta is required (we're filtering on it).
-				$args['join_type'] = 'INNER';
+				$args['where'][] = array(
+					'key'      => 'category',
+					'value'    => 1 === count( $cats ) ? $cats[0] : $cats,
+					'operator' => 1 === count( $cats ) ? '=' : 'IN',
+				);
 			}
 			unset( $args['category'] );
 		}
@@ -410,7 +399,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$from   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
 
 		// Validate and whitelist inputs that become SQL identifiers.
-		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'date', 'type', 'deleted' );
+		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'date', 'type', 'category', 'deleted' );
 		if ( ! in_array( $order_by, $allowed_order_cols, true ) ) {
 			$order_by = 'transaction_id';
 		}
@@ -648,21 +637,23 @@ if ( ! function_exists( '_woo_wallet_normalize_transaction_query_args' ) ) {
 		);
 		$args     = wp_parse_args( $args, $defaults );
 
-		// Translate `category` arg → `where_meta` `_type` clause. Mirrors the same logic
-		// in get_wallet_transactions() so the count query joins on the same constraint.
-		$allowed_categories = array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' );
+		// Since 1.6.3: filter by the first-class `category` column instead of
+		// joining `transaction_meta` on `_type`. Mirrors get_wallet_transactions().
 		if ( ! empty( $args['category'] ) ) {
 			$raw_cats = is_array( $args['category'] ) ? $args['category'] : explode( ',', $args['category'] );
 			$cats     = array();
 			foreach ( $raw_cats as $c ) {
 				$c = trim( sanitize_key( $c ) );
-				if ( in_array( $c, $allowed_categories, true ) && 'other' !== $c ) {
-					$cats[] = $c;
+				if ( '' !== $c ) {
+					$cats[] = substr( $c, 0, 32 );
 				}
 			}
 			if ( ! empty( $cats ) ) {
-				$args['where_meta'][] = array(
-					'key'      => '_type',
+				if ( ! isset( $args['where'] ) || ! is_array( $args['where'] ) ) {
+					$args['where'] = array();
+				}
+				$args['where'][] = array(
+					'key'      => 'category',
 					'value'    => 1 === count( $cats ) ? $cats[0] : $cats,
 					'operator' => 1 === count( $cats ) ? '=' : 'IN',
 				);
@@ -687,7 +678,7 @@ if ( ! function_exists( '_woo_wallet_build_transaction_where' ) ) {
 	function _woo_wallet_build_transaction_where( array $args ) {
 		global $wpdb;
 
-		$allowed_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'original_currency', 'date', 'type', 'deleted' );
+		$allowed_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'original_currency', 'date', 'type', 'category', 'deleted' );
 		$allowed_ops  = array( '=', '!=', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN' );
 
 		$joins         = array();

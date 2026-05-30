@@ -93,6 +93,7 @@ class TeraWallet_CSV_Exporter {
 				'user_id'        => __( 'User ID', 'woo-wallet' ),
 				'email'          => __( 'Email', 'woo-wallet' ),
 				'type'           => __( 'Type', 'woo-wallet' ),
+				'category'       => __( 'Category', 'woo-wallet' ),
 				'currency'       => __( 'Currency', 'woo-wallet' ),
 				'amount'         => __( 'Amount', 'woo-wallet' ),
 				'details'        => __( 'Details', 'woo-wallet' ),

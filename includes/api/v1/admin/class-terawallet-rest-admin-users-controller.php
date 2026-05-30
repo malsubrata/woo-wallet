@@ -17,14 +17,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Admin users controller.
  */
-class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Controller_Base {
-
-	/**
-	 * Namespace.
-	 *
-	 * @var string
-	 */
-	protected $namespace = 'terawallet/v1';
+class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Controller_Base {
 
 	/**
 	 * Route base.
@@ -88,10 +81,12 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Controller_
 		);
 	}
 
-	public function permissions_read( $request ) {
-		return $this->check_capability( 'read', $request );
-	}
-
+	/**
+	 * Override: purge is an edit-context action (harder than create).
+	 *
+	 * @param WP_REST_Request $request The request.
+	 * @return true|WP_Error
+	 */
 	public function permissions_write( $request ) {
 		return $this->check_capability( 'edit', $request );
 	}
@@ -154,9 +149,11 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Controller_
 		$user_id  = (int) $user->ID;
 		$balance  = woo_wallet_get_balance_by_currency( $user_id );
 
-		$deposits = $this->sum_category( $user_id, 'credit', 'credit_purchase', $balance['base_currency'] );
-		$spent    = $this->sum_category( $user_id, 'debit', 'purchase', $balance['base_currency'] )
-				+ $this->sum_category( $user_id, 'debit', 'partial_payment', $balance['base_currency'] );
+		// Since 1.6.3: filter by canonical `category` column slugs.
+		// `topup` covers what was historically `credit_purchase` meta;
+		// `partial_payment` covers both `purchase` and `partial_payment` meta.
+		$deposits = $this->sum_category( $user_id, 'credit', 'topup', $balance['base_currency'] );
+		$spent    = $this->sum_category( $user_id, 'debit', 'partial_payment', $balance['base_currency'] );
 		$cashback = $this->sum_category( $user_id, 'credit', 'cashback', $balance['base_currency'] );
 
 		$price_args = function_exists( 'woo_wallet_wc_price_args' )
@@ -193,18 +190,20 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Controller_
 	 *
 	 * @param int    $user_id   User id.
 	 * @param string $type      'credit' or 'debit'.
-	 * @param string $sub_type  `_type` meta value (e.g. credit_purchase).
+	 * @param string $sub_type  Canonical category slug (e.g. `topup`, `cashback`).
 	 * @param string $base      Base currency code.
 	 * @return float
 	 */
 	protected function sum_category( $user_id, $type, $sub_type, $base ) {
 		$rows = get_wallet_transactions(
 			array(
-				'user_id'    => $user_id,
-				'fields'     => 'all',
-				'nocache'    => true,
-				'where'      => array( array( 'key' => 'type', 'value' => $type ) ),
-				'where_meta' => array( array( 'key' => '_type', 'value' => $sub_type ) ),
+				'user_id' => $user_id,
+				'fields'  => 'all',
+				'nocache' => true,
+				'where'   => array(
+					array( 'key' => 'type', 'value' => $type ),
+					array( 'key' => 'category', 'value' => $sub_type ),
+				),
 			)
 		);
 		if ( empty( $rows ) ) {

@@ -13,7 +13,7 @@ import apiFetch from '@wordpress/api-fetch';
 //     active provider is the generic fallback, since conversion is a noop in
 //     that combination and the admin needs to know.
 
-const ENDPOINT = '/wc/v3/wallet/multicurrency';
+const ENDPOINT = '/terawallet/v1/multicurrency';
 
 function StateRow( { label, value, mono } ) {
 	return (

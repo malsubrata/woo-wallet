@@ -157,9 +157,15 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 		protected function build_transaction_data( $transaction, $request ) {
 			$category            = 'other';
 			$cashback_expires_at = null;
+			// Since 1.6.3: prefer the first-class `category` column; the `_type`
+			// meta is still consulted as a fallback for rows written before the
+			// 1.6.3 backfill ran or by third-party code that bypasses the API.
+			if ( isset( $transaction->category ) && '' !== $transaction->category ) {
+				$category = (string) $transaction->category;
+			}
 			if ( isset( $transaction->meta ) && is_array( $transaction->meta ) ) {
 				foreach ( $transaction->meta as $meta_row ) {
-					if ( '_type' === $meta_row->meta_key ) {
+					if ( '_type' === $meta_row->meta_key && 'other' === $category ) {
 						$category = $this->normalize_category( $meta_row->meta_value );
 					} elseif ( 'cashback_expires_at' === $meta_row->meta_key ) {
 						$ts = (int) $meta_row->meta_value;
