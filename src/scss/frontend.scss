@@ -341,6 +341,28 @@ $wallet-border-color: #eee;
             }
         }
 
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            line-height: 1.5;
+            height: auto;
+            padding-right: 40px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px 16px;
+            background-color: #f9f9f9;
+
+            &:focus {
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 16px 16px;
+                background-color: #fff;
+            }
+        }
+
         input[type="submit"] {
             background: var(--wallet-primary-color);
             color: #fff;

@@ -80,7 +80,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 			}
-			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : number_format( $this->wallet_balance, wc_get_price_decimals(), '.', '' );
+			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : $this->wallet_balance;
 		}
 
 		/**
