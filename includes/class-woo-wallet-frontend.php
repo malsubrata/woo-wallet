@@ -78,8 +78,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_filter( 'woo_wallet_is_enable_transfer', array( $this, 'woo_wallet_is_enable_transfer' ) );
 			add_filter( 'woo_wallet_is_enable_add', array( $this, 'woo_wallet_is_enable_top_up' ) );
 
-			add_filter( 'wp_nav_menu_objects', array( $this, 'wp_nav_menu_objects' ), 10 );
-
 			add_action( 'woocommerce_order_details_after_order_table', array( $this, 'remove_woocommerce_order_again_button_for_wallet_rechargeable_order' ), 5 );
 
 			add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'woocommerce_cart_loaded_from_session' ) );
@@ -115,20 +113,6 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			if ( is_wallet_rechargeable_order( $order ) ) {
 				remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
 			}
-		}
-		/**
-		 * Show mini wallet on nav menu.
-		 *
-		 * @param object $items items.
-		 * @return object
-		 */
-		public function wp_nav_menu_objects( $items ) {
-			foreach ( $items as &$item ) {
-				if ( is_object( $item ) && 'my-wallet' === $item->post_name && get_post_meta( $item->ID, '_show_wallet_icon_amount', true ) ) {
-					$item->title = apply_filters( 'wp_wallet_nav_menu_title', '<span dir="rtl" class="woo-wallet-icon-wallet"></span>&nbsp;' . woo_wallet()->wallet->get_wallet_balance( get_current_user_id() ), $item );
-				}
-			}
-			return $items;
 		}
 
 		/**

@@ -98,8 +98,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
 			add_filter( 'woocommerce_settings_pages', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
 
-			add_action( 'wp_nav_menu_item_custom_fields', array( $this, 'wp_nav_menu_item_custom_fields' ) );
-			add_filter( 'wp_update_nav_menu_item', array( $this, 'wp_update_nav_menu_item' ), 10, 2 );
 			add_action( 'woocommerce_after_dashboard_status_widget', array( $this, 'add_wallet_topup_report' ) );
 
 			add_action( 'edit_user_profile', array( $this, 'add_wallet_management_fields' ) );
@@ -272,40 +270,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<?php
 			}
 		}
-		/**
-		 * Update WP nav menu items.
-		 *
-		 * @param integer $menu_id menu_id.
-		 * @param integer $menu_item_db_id menu_item_db_id.
-		 * @return void
-		 */
-		public function wp_update_nav_menu_item( $menu_id, $menu_item_db_id ) {
-			if ( isset( $_POST[ "show-wallet-icon-amount-$menu_item_db_id" ] ) && 'on' === $_POST[ "show-wallet-icon-amount-$menu_item_db_id" ] ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-				update_post_meta( $menu_item_db_id, '_show_wallet_icon_amount', true );
-			} else {
-				delete_post_meta( $menu_item_db_id, '_show_wallet_icon_amount' );
-			}
-		}
-		/**
-		 * Set custom fields to wallet menu item settings.
-		 *
-		 * @param integer $item_id item_id.
-		 * @return void
-		 */
-		public function wp_nav_menu_item_custom_fields( $item_id ) {
-			$menu_post = get_post( $item_id );
-			if ( 'my-wallet' !== $menu_post->post_name ) {
-				return;
-			}
-			?>
-			<p class="field-wallet-icon wallet-icon">
-				<label for="show-wallet-icon-amount-<?php echo esc_attr( $item_id ); ?>">
-					<input type="checkbox" <?php checked( get_post_meta( $item_id, '_show_wallet_icon_amount', true ) ); ?> id="edit-menu-item-wallet-icon-<?php echo esc_attr( $item_id ); ?>" name="show-wallet-icon-amount-<?php echo esc_attr( $item_id ); ?>"/>
-					<span class="description"><?php esc_html_e( 'Display wallet icon and amount instead of menu navigation label?', 'woo-wallet' ); ?></span>
-				</label>
-			</p>
-			<?php
-		}
 
 		/**
 		 * Admin init
@@ -398,8 +362,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					'status' => 'completed',
 				)
 			);
-			$base_currency = get_option( 'woocommerce_currency' );
-			$paid          = 0.0;
+			$base_currency   = get_option( 'woocommerce_currency' );
+			$paid            = 0.0;
 			foreach ( (array) get_wallet_referrals( array( 'status' => 'completed' ) ) as $row ) {
 				$paid += (float) $row->amount;
 			}
