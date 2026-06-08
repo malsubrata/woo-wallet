@@ -137,6 +137,7 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 				'cashback_adjustment' => 'cashback_adjustment',
 				'cashback_refund'     => 'cashback_refund',
 				'partial_payment'     => 'partial_payment',
+				'purchase'            => 'purchase',
 				'transfer'            => 'transfer',
 				'refund'              => 'refund',
 				'adjustment'          => 'adjustment',
@@ -176,17 +177,17 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 				}
 			}
 
-			$user_id  = isset( $transaction->user_id ) ? (int) $transaction->user_id : 0;
-			$currency = isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency();
-			$amount   = isset( $transaction->amount ) ? (float) $transaction->amount : 0.0;
+			$user_id           = isset( $transaction->user_id ) ? (int) $transaction->user_id : 0;
+			$currency          = isset( $transaction->currency ) ? $transaction->currency : get_woocommerce_currency();
+			$amount            = isset( $transaction->amount ) ? (float) $transaction->amount : 0.0;
 			$original_amount   = isset( $transaction->original_amount ) && null !== $transaction->original_amount ? (float) $transaction->original_amount : null;
 			$original_currency = isset( $transaction->original_currency ) && null !== $transaction->original_currency ? (string) $transaction->original_currency : null;
-			$type     = isset( $transaction->type ) ? $transaction->type : '';
+			$type              = isset( $transaction->type ) ? $transaction->type : '';
 
 			$price_args = function_exists( 'woo_wallet_wc_price_args' )
 				? woo_wallet_wc_price_args( $user_id, array( 'currency' => $currency ) )
 				: array( 'currency' => $currency );
-			$formatted = array(
+			$formatted  = array(
 				'amount'          => function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $amount, $price_args ) ) : (string) $amount,
 				'original_amount' => null,
 				'date'            => '',
@@ -272,6 +273,7 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 				'cashback_adjustment' => __( 'Cashback adjustment', 'woo-wallet' ),
 				'cashback_refund'     => __( 'Cashback refund', 'woo-wallet' ),
 				'partial_payment'     => __( 'Partial payment', 'woo-wallet' ),
+				'purchase'            => __( 'Purchase', 'woo-wallet' ),
 				'transfer'            => __( 'Transfer', 'woo-wallet' ),
 				'refund'              => __( 'Refund', 'woo-wallet' ),
 				'adjustment'          => __( 'Adjustment', 'woo-wallet' ),

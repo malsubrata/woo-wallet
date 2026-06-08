@@ -47,11 +47,15 @@ dispatch the **`wallet-ledger-auditor`** agent on the diff.
 
 Collect every finding from these agents.
 
-## 5. Build & lint
+## 5. Build, lint & translations
 
 - `npm run build` — this MUST complete with no errors.
 - `npm run lint:js` and `npm run lint:css` — report any warnings/errors (warnings are
   not blocking, errors are).
+- `npm run make-pot` — regenerate `languages/woo-wallet.pot` so the shipped translation
+  template matches the release strings. This requires WP-CLI; if it fails, STOP and
+  report (the release must ship an up-to-date `.pot`). The regenerated file is committed
+  in step 9.
 
 ## 6. Version consistency check
 
@@ -63,7 +67,7 @@ Confirm all of the following agree on `<version>`:
 
 If they disagree, STOP and report the mismatch.
 
-## 7. Changelog check
+## 7. Changelog check & sync to changelog.txt
 
 In `readme.txt`, find the `= v<version> ... =` changelog entry:
 - It must contain real entries — if it still only has the
@@ -71,6 +75,18 @@ In `readme.txt`, find the `= v<version> ... =` changelog entry:
   the changelog before finishing.
 - Replace `(Unreleased)` in the header with today's date in `Month D, YYYY` format
   (e.g. `(May 20, 2026)`).
+
+Then mirror that finalized entry into `changelog.txt` (the standalone changelog archive):
+- Read the full, now-dated `= v<version> (Month D, YYYY) =` block from `readme.txt`
+  (the header line plus every `– **...** ...` bullet, up to but not including the next
+  `= v... =` header).
+- If `changelog.txt` already contains a `= v<version> ` block, STOP and report — it has
+  already been synced; do not duplicate it.
+- Otherwise insert the copied block at the TOP of the changelog list in `changelog.txt`,
+  immediately after the `*** Changelog ***` header line and before the existing newest
+  entry, with one blank line separating it from the entry that follows. Do not touch any
+  older entries.
+- The wording must match `readme.txt` verbatim so the two changelogs never drift.
 
 ## 8. Decision gate
 
@@ -80,11 +96,17 @@ In `readme.txt`, find the `= v<version> ... =` changelog entry:
 - Otherwise, present a concise summary (what changed, agent results, build status) and
   continue.
 
-## 9. Commit the changelog finalization
+## 9. Commit the changelog finalization & regenerated translations
 
-If you changed the changelog date in step 7:
-- `git commit -am "chore(release): finalize v<version> changelog"`
+The changelog date change and `changelog.txt` sync (step 7) and the regenerated
+`languages/woo-wallet.pot` (step 5) must land on the release branch before the merge.
+Run `git status --porcelain`; if it is non-empty:
+- `git add readme.txt changelog.txt languages/woo-wallet.pot`
+- `git commit -m "chore(release): finalize v<version> changelog and regenerate translations"`
 - `git push`
+
+(If `make-pot` produced no diff and both changelogs were already finalized, there is
+nothing to commit — skip this step.)
 
 ## 10. Merge into master
 

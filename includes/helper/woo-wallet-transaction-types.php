@@ -57,6 +57,11 @@ function woo_wallet_get_transaction_types() {
 			'description'      => __( 'Cashback unwound when its originating order is refunded.', 'woo-wallet' ),
 			'default_template' => '',
 		),
+		'purchase'            => array(
+			'label'            => __( 'Purchase', 'woo-wallet' ),
+			'description'      => __( 'Wallet debit applied to an order at checkout.', 'woo-wallet' ),
+			'default_template' => '',
+		),
 		'partial_payment'     => array(
 			'label'            => __( 'Partial payment', 'woo-wallet' ),
 			'description'      => __( 'Wallet debit applied to an order at checkout.', 'woo-wallet' ),

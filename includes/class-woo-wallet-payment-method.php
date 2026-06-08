@@ -161,7 +161,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 					$order->get_total( 'edit' ),
 					apply_filters( 'woo_wallet_order_payment_description', __( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(), $order ),
 					array(
-						'for'      => 'purchase',
+						'category' => 'purchase',
 						'currency' => $order->get_currency(),
 					)
 				);

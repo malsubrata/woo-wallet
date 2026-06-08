@@ -543,25 +543,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( ! $order instanceof WC_Order ) {
 				$order = wc_get_order( $order );
 			}
-			// Deduct partial payment amount.
-			$partial_payment_amount = get_order_partial_payment_amount( $order->get_id() );
-			if ( $partial_payment_amount && ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
-				$transaction_id = $this->debit(
-					$order->get_customer_id(),
-					$partial_payment_amount,
-					__( 'For order payment #', 'woo-wallet' ) . $order->get_order_number(),
-					array(
-						'for'      => 'partial_payment',
-						'currency' => $order->get_currency( 'edit' ),
-						'order_id' => $order->get_order_number(),
-					)
-				);
-				if ( $transaction_id ) {
-					/* translators: wallet amount */
-					$order->add_order_note( sprintf( __( '%s paid through wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
-					WOO_Wallet_Helper::update_order_meta_data( $order, '_partial_pay_through_wallet_compleate', $transaction_id );
-					do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $order );
-				}
+			if ( ! $order ) {
+				return;
+			}
+			// Deduct partial payment amount at order placement, unless configured to
+			// wait until payment completes (handled by maybe_debit_partial_payment_on_status).
+			if ( 'payment_complete' !== woo_wallet()->settings_api->get_option( 'partial_payment_debit_on', '_wallet_settings_general', 'order_created' ) ) {
+				$this->debit_partial_payment_for_order( $order );
 			}
 			// Update order meta if wallet rechargable order.
 			if ( is_wallet_rechargeable_order( $order ) ) {
@@ -571,6 +559,233 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			}
 			// Update partial payment session.
 			update_wallet_partial_payment_session();
+		}
+
+		/**
+		 * Debit the wallet partial-payment amount when the order reaches a paid status.
+		 *
+		 * Only active when the `partial_payment_debit_on` setting is `payment_complete`.
+		 * Registered over the `wallet_debit_partial_payment_status` statuses.
+		 *
+		 * @param int $order_id order id.
+		 * @return void
+		 * @since 1.6.4
+		 */
+		public function maybe_debit_partial_payment_on_status( $order_id ) {
+			if ( 'payment_complete' !== woo_wallet()->settings_api->get_option( 'partial_payment_debit_on', '_wallet_settings_general', 'order_created' ) ) {
+				return;
+			}
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$this->debit_partial_payment_for_order( $order );
+			}
+		}
+
+		/**
+		 * Debit the wallet partial-payment amount for an order exactly once.
+		 *
+		 * Shared by the order-placement path (`woocommerce_order_processed`) and the
+		 * payment-complete path (`maybe_debit_partial_payment_on_status`). Serialised by
+		 * a per-order `GET_LOCK` and guarded by the `_partial_pay_through_wallet_compleate`
+		 * meta so duplicate checkout calls or racing status webhooks cannot double-debit.
+		 * When the balance was spent before the debit (payment_complete mode) the order is
+		 * put on-hold and `woo_wallet_partial_payment_debit_failed` fires instead of
+		 * overdrafting the wallet. On success the base-currency amount actually debited is
+		 * stored on the order so refunds can reverse it without FX drift.
+		 *
+		 * @param WC_Order $order order.
+		 * @return void
+		 * @since 1.6.4
+		 */
+		private function debit_partial_payment_for_order( $order ) {
+			global $wpdb;
+
+			$partial_payment_amount = get_order_partial_payment_amount( $order->get_id() );
+			if ( ! $partial_payment_amount || $order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
+				return;
+			}
+
+			$lock_name    = 'woo_wallet_debit_partial_' . absint( $order->get_id() );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== (string) $got_lock ) {
+				return;
+			}
+
+			try {
+				// Re-fetch inside the lock so the marker reflects a concurrent debit.
+				$locked_order = wc_get_order( $order->get_id() );
+				if ( ! $locked_order || $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
+					return;
+				}
+
+				$transaction_id = $this->debit(
+					$locked_order->get_customer_id(),
+					$partial_payment_amount,
+					__( 'For order payment #', 'woo-wallet' ) . $locked_order->get_order_number(),
+					array(
+						'for'      => 'partial_payment',
+						'currency' => $locked_order->get_currency( 'edit' ),
+						'order_id' => $locked_order->get_order_number(),
+					)
+				);
+
+				if ( $transaction_id ) {
+					/* translators: wallet amount */
+					$locked_order->add_order_note( sprintf( __( '%s paid through wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+					WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_partial_pay_through_wallet_compleate', $transaction_id );
+					// Capture the base-currency amount actually debited so refunds reverse
+					// the exact value without re-converting at a later (drifted) FX rate.
+					$base = $this->get_transaction_base_amount( $transaction_id );
+					if ( $base ) {
+						WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_partial_payment_base_amount', $base['amount'] );
+						WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_partial_payment_base_currency', $base['currency'] );
+					}
+					do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $locked_order );
+				} else {
+					// Insufficient balance (e.g. spent before payment cleared). Hold the
+					// order for review rather than overdrafting the wallet.
+					$locked_order->update_status( 'on-hold', __( 'Wallet partial payment could not be debited (insufficient balance). Held for review. ', 'woo-wallet' ) );
+					do_action( 'woo_wallet_partial_payment_debit_failed', $locked_order, $partial_payment_amount );
+				}
+			} finally {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+		}
+
+		/**
+		 * Read the stored (base-currency) amount and currency for a transaction row.
+		 *
+		 * @param int $transaction_id transaction id.
+		 * @return array|false { amount, currency } or false.
+		 * @since 1.6.4
+		 */
+		private function get_transaction_base_amount( $transaction_id ) {
+			global $wpdb;
+			if ( ! $transaction_id ) {
+				return false;
+			}
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT amount, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d", $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( $row ) {
+				return array(
+					'amount'   => (float) $row->amount,
+					'currency' => $row->currency,
+				);
+			}
+			return false;
+		}
+
+		/**
+		 * Refund the wallet-paid portion proportionally on a partial WooCommerce refund.
+		 *
+		 * Hooks `woocommerce_order_refunded`. Opt-out via the
+		 * `partial_payment_refund_on_partial_refund` setting (default on — symmetric with
+		 * the full-cancellation refund). Idempotent on the refund id and capped so the
+		 * cumulative wallet refund never exceeds the original wallet debit. Reverses the
+		 * stored base amount (FX-stable) when available, falling back to an order-currency
+		 * credit for orders created before this meta existed.
+		 *
+		 * @param int $order_id  order id.
+		 * @param int $refund_id refund id.
+		 * @return void
+		 * @since 1.6.4
+		 */
+		public function process_partial_payment_refund( $order_id, $refund_id ) {
+			global $wpdb;
+
+			if ( 'on' !== woo_wallet()->settings_api->get_option( 'partial_payment_refund_on_partial_refund', '_wallet_settings_general', 'on' ) ) {
+				return;
+			}
+
+			$order = wc_get_order( $order_id );
+			if ( ! $order || ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) || $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
+				return;
+			}
+
+			$via_wallet  = (float) get_order_partial_payment_amount( $order_id );
+			$order_total = (float) $order->get_total( 'edit' );
+			if ( $via_wallet <= 0 || $order_total <= 0 ) {
+				return;
+			}
+
+			$refund = wc_get_order( $refund_id );
+			if ( ! $refund ) {
+				return;
+			}
+			$refund_amount = abs( (float) $refund->get_amount() );
+			if ( $refund_amount <= 0 ) {
+				return;
+			}
+
+			$lock_name    = 'woo_wallet_refund_partial_' . absint( $order_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== (string) $got_lock ) {
+				return;
+			}
+
+			try {
+				$locked_order = wc_get_order( $order_id );
+				if ( ! $locked_order || $locked_order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
+					return;
+				}
+
+				// Idempotency: never process the same refund id twice.
+				$processed = array_map( 'strval', (array) $locked_order->get_meta( '_woo_wallet_partial_refund_ids' ) );
+				if ( in_array( (string) $refund_id, $processed, true ) ) {
+					return;
+				}
+
+				$already    = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
+				$proration  = min( 1.0, $refund_amount / $order_total );
+				$refund_now = round( $via_wallet * $proration, wc_get_price_decimals() );
+				// Cap so cumulative wallet refunds can never exceed the original debit.
+				$refund_now = min( $refund_now, max( 0.0, $via_wallet - $already ) );
+				$refund_now = (float) apply_filters( 'woo_wallet_partial_payment_refund_amount', $refund_now, $locked_order, $refund );
+				if ( $refund_now <= 0 ) {
+					return;
+				}
+
+				// FX-stable reversal: credit the stored base amount proportionally rather
+				// than re-converting today. Falls back to order currency for legacy orders.
+				$base_amount   = (float) $locked_order->get_meta( '_partial_payment_base_amount' );
+				$base_currency = $locked_order->get_meta( '_partial_payment_base_currency' );
+				if ( $base_amount > 0 && $base_currency ) {
+					$credit_amount   = round( $base_amount * ( $refund_now / $via_wallet ), wc_get_price_decimals() );
+					$credit_currency = $base_currency;
+				} else {
+					$credit_amount   = $refund_now;
+					$credit_currency = $locked_order->get_currency( 'edit' );
+				}
+
+				$transaction_id = $this->credit(
+					$locked_order->get_customer_id(),
+					$credit_amount,
+					/* translators: order number */
+					sprintf( __( 'Partial refund for order #%s credited to wallet', 'woo-wallet' ), $locked_order->get_order_number() ),
+					array(
+						'for'      => 'partial_payment_refund',
+						'currency' => $credit_currency,
+						'order_id' => $locked_order->get_order_number(),
+					)
+				);
+
+				if ( $transaction_id ) {
+					$processed[] = (string) $refund_id;
+					$new_total   = $already + $refund_now;
+					WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_refunded_total', $new_total );
+					WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_refund_ids', $processed );
+					/* translators: wallet amount */
+					$locked_order->add_order_note( sprintf( __( '%s of the wallet payment refunded to the customer wallet (partial refund).', 'woo-wallet' ), wc_price( $refund_now, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+					if ( $new_total + 0.001 >= $via_wallet ) {
+						WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_payment_refunded', true );
+					}
+					$locked_order->save();
+					do_action( 'woo_wallet_partial_payment_refunded', $order_id, $transaction_id, $refund_now );
+				}
+			} finally {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
 		}
 		/**
 		 * Process cancelled order.
@@ -624,19 +839,35 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						// read reflects any concurrent delete that landed
 						// while we were waiting on the lock.
 						$locked_order = wc_get_order( $order_id );
-						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) ) {
-							/* translators: Order number */
-							$this->credit(
-								$locked_order->get_customer_id(),
-								$partial_payment_amount,
-								sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
-								array(
-									'currency' => $locked_order->get_currency( 'edit' ),
-									'order_id' => $order->get_order_number(),
-								)
-							);
-							/* translators: wallet amount */
-							$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), $partial_payment_amount ) );
+						if ( $locked_order && $locked_order->get_meta( '_partial_pay_through_wallet_compleate' ) && ! $locked_order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
+							// Refund only the portion not already returned by earlier partial refunds.
+							$already_refunded = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
+							$refund_gross     = max( 0.0, $partial_payment_amount - $already_refunded );
+							if ( $refund_gross > 0 ) {
+								// FX-stable: reverse the stored base amount proportionally when present.
+								$base_amount   = (float) $locked_order->get_meta( '_partial_payment_base_amount' );
+								$base_currency = $locked_order->get_meta( '_partial_payment_base_currency' );
+								if ( $base_amount > 0 && $base_currency && $partial_payment_amount > 0 ) {
+									$credit_amount   = round( $base_amount * ( $refund_gross / $partial_payment_amount ), wc_get_price_decimals() );
+									$credit_currency = $base_currency;
+								} else {
+									$credit_amount   = $refund_gross;
+									$credit_currency = $locked_order->get_currency( 'edit' );
+								}
+								/* translators: Order number */
+								$this->credit(
+									$locked_order->get_customer_id(),
+									$credit_amount,
+									sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
+									array(
+										'for'      => 'partial_payment_refund',
+										'currency' => $credit_currency,
+										'order_id' => $order->get_order_number(),
+									)
+								);
+								/* translators: wallet amount */
+								$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), wc_price( $refund_gross, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+							}
 							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
 							$locked_order->save();
 							WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_woo_wallet_partial_payment_refunded', true );
@@ -1138,7 +1369,6 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			$alias = array(
 				'credit_purchase' => 'topup',
-				'purchase'        => 'partial_payment',
 			);
 			if ( isset( $alias[ $category ] ) ) {
 				$category = $alias[ $category ];
@@ -1166,7 +1396,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					if ( $user ) {
 						$user_name = $user->display_name;
 					}
-					$tokens   = array(
+					$tokens = array(
 						'order_id'         => isset( $parsed_args['order_id'] ) ? (string) $parsed_args['order_id'] : '',
 						'amount'           => (string) $amount,
 						'currency'         => (string) $currency,
@@ -1451,7 +1681,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					}
 					$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
 					if ( ! is_null( $low_balance_email ) ) {
-						$low_balance_email->trigger( $this->user_id, $type );
+						$low_balance_email->trigger( $this->user_id, $type, $stored_amount );
 					}
 					return $transaction_id;
 				}

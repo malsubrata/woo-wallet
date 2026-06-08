@@ -39,12 +39,35 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Contr
 					'callback'            => array( $this, 'get_items' ),
 					'permission_callback' => array( $this, 'permissions_read' ),
 					'args'                => array(
-						'page'     => array( 'type' => 'integer', 'default' => 1, 'minimum' => 1 ),
-						'per_page' => array( 'type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 100 ),
-						'orderby'  => array( 'type' => 'string', 'enum' => array( 'login', 'email', 'display_name', 'registered', 'balance' ), 'default' => 'login' ),
-						'order'    => array( 'type' => 'string', 'enum' => array( 'asc', 'desc' ), 'default' => 'asc' ),
-						'search'   => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
-						'role'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_key' ),
+						'page'     => array(
+							'type'    => 'integer',
+							'default' => 1,
+							'minimum' => 1,
+						),
+						'per_page' => array(
+							'type'    => 'integer',
+							'default' => 20,
+							'minimum' => 1,
+							'maximum' => 100,
+						),
+						'orderby'  => array(
+							'type'    => 'string',
+							'enum'    => array( 'login', 'email', 'display_name', 'registered', 'balance' ),
+							'default' => 'login',
+						),
+						'order'    => array(
+							'type'    => 'string',
+							'enum'    => array( 'asc', 'desc' ),
+							'default' => 'asc',
+						),
+						'search'   => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'role'     => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_key',
+						),
 					),
 				),
 			)
@@ -73,8 +96,16 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Contr
 					'callback'            => array( $this, 'purge_transactions' ),
 					'permission_callback' => array( $this, 'permissions_write' ),
 					'args'                => array(
-						'delete_mode'      => array( 'type' => 'string', 'enum' => array( 'soft', 'hard' ), 'default' => 'soft' ),
-						'balance_handling' => array( 'type' => 'string', 'enum' => array( 'keep', 'wipe' ), 'default' => 'keep' ),
+						'delete_mode'      => array(
+							'type'    => 'string',
+							'enum'    => array( 'soft', 'hard' ),
+							'default' => 'soft',
+						),
+						'balance_handling' => array(
+							'type'    => 'string',
+							'enum'    => array( 'keep', 'wipe' ),
+							'default' => 'keep',
+						),
 					),
 				),
 			)
@@ -146,47 +177,51 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Contr
 	 * @return array
 	 */
 	protected function prepare_user_row( $user ) {
-		$user_id  = (int) $user->ID;
-		$balance  = woo_wallet_get_balance_by_currency( $user_id );
+		$user_id = (int) $user->ID;
+		$balance = woo_wallet_get_balance_by_currency( $user_id );
 
 		// Since 1.6.3: filter by canonical `category` column slugs.
 		// `topup` covers what was historically `credit_purchase` meta;
 		// `partial_payment` covers both `purchase` and `partial_payment` meta.
-		$deposits = $this->sum_category( $user_id, 'credit', 'topup', $balance['base_currency'] );
-		$spent    = $this->sum_category( $user_id, 'debit', 'partial_payment', $balance['base_currency'] );
-		$cashback = $this->sum_category( $user_id, 'credit', 'cashback', $balance['base_currency'] );
+		$deposits = $this->sum_category( $user_id, 'credit', array( 'topup' ), $balance['base_currency'] );
+		$spent    = $this->sum_category( $user_id, 'debit', array( 'purchase', 'partial_payment' ), $balance['base_currency'] );
+		$cashback = $this->sum_category( $user_id, 'credit', array( 'cashback' ), $balance['base_currency'] );
 
 		$price_args = function_exists( 'woo_wallet_wc_price_args' )
 			? woo_wallet_wc_price_args( $user_id, array( 'currency' => $balance['base_currency'] ) )
 			: array( 'currency' => $balance['base_currency'] );
-		$fmt = function ( $v ) use ( $price_args ) {
+		$fmt        = function ( $v ) use ( $price_args ) {
 			return function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $v, $price_args ) ) : (string) $v;
 		};
 
 		return array(
-			'id'                     => $user_id,
-			'login'                  => $user->user_login,
-			'email'                  => $user->user_email,
-			'display_name'           => $user->display_name,
-			'registered'             => mysql_to_rfc3339( $user->user_registered ),
-			'avatar_url'             => get_avatar_url( $user_id ),
-			'roles'                  => $user->roles,
-			'base_currency'          => $balance['base_currency'],
-			'balance'                => $balance['balance_base'],
-			'balance_formatted'      => $balance['balance_base_formatted'],
-			'by_currency'            => $balance['by_currency'],
-			'total_deposits'         => $deposits,
-			'total_deposits_formatted' => $fmt( $deposits ),
-			'total_spent'            => $spent,
-			'total_spent_formatted'  => $fmt( $spent ),
-			'cashback_earned'        => $cashback,
+			'id'                        => $user_id,
+			'login'                     => $user->user_login,
+			'email'                     => $user->user_email,
+			'display_name'              => $user->display_name,
+			'registered'                => mysql_to_rfc3339( $user->user_registered ),
+			'avatar_url'                => get_avatar_url( $user_id ),
+			'roles'                     => $user->roles,
+			'base_currency'             => $balance['base_currency'],
+			'balance'                   => $balance['balance_base'],
+			'balance_formatted'         => $balance['balance_base_formatted'],
+			'by_currency'               => $balance['by_currency'],
+			'total_deposits'            => $deposits,
+			'total_deposits_formatted'  => $fmt( $deposits ),
+			'total_spent'               => $spent,
+			'total_spent_formatted'     => $fmt( $spent ),
+			'cashback_earned'           => $cashback,
 			'cashback_earned_formatted' => $fmt( $cashback ),
-			'is_locked'              => $balance['is_locked'],
+			'is_locked'                 => $balance['is_locked'],
 		);
 	}
 
 	/**
 	 * Sum a category total normalised to the base currency.
+	 *
+	 * Thin wrapper over the shared `woo_wallet_get_user_category_total()` helper
+	 * (in `includes/helper/woo-wallet-util.php`) so the admin user report and the
+	 * customer dashboard stat cards always compute these figures the same way.
 	 *
 	 * @param int    $user_id   User id.
 	 * @param string $type      'credit' or 'debit'.
@@ -195,27 +230,7 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Contr
 	 * @return float
 	 */
 	protected function sum_category( $user_id, $type, $sub_type, $base ) {
-		$rows = get_wallet_transactions(
-			array(
-				'user_id' => $user_id,
-				'fields'  => 'all',
-				'nocache' => true,
-				'where'   => array(
-					array( 'key' => 'type', 'value' => $type ),
-					array( 'key' => 'category', 'value' => $sub_type ),
-				),
-			)
-		);
-		if ( empty( $rows ) ) {
-			return 0.0;
-		}
-		$manager = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance() : null;
-		$total   = 0.0;
-		foreach ( $rows as $row ) {
-			$cur     = isset( $row->currency ) && '' !== $row->currency ? strtoupper( $row->currency ) : $base;
-			$total  += $manager ? (float) $manager->convert( $row->amount, $cur, $base ) : (float) $row->amount;
-		}
-		return $total;
+		return woo_wallet_get_user_category_total( $user_id, $type, $sub_type, $base );
 	}
 
 	public function get_balance( $request ) {
@@ -250,7 +265,13 @@ class TeraWallet_REST_Admin_Users_Controller extends TeraWallet_REST_Admin_Contr
 					return $this->error( $result->get_error_code(), $result->get_error_message(), 400 );
 				}
 				return new WP_REST_Response(
-					array_merge( array( 'purged' => true, 'user_id' => $id ), is_array( $result ) ? $result : array() ),
+					array_merge(
+						array(
+							'purged'  => true,
+							'user_id' => $id,
+						),
+						is_array( $result ) ? $result : array()
+					),
 					200
 				);
 			}

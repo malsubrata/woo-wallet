@@ -382,20 +382,17 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 * @return string
 	 */
 	protected function column_total_spent( $item ) {
-		$base         = $this->resolve_base_currency();
+		$base = $this->resolve_base_currency();
 		// Since 1.6.3 both legacy `_type='purchase'` and `_type='partial_payment'`
 		// rows are canonicalised to `category='partial_payment'` (see the
 		// 1.6.3 backfill + the write-path alias map). A single query suffices.
 		$args         = array(
-			'user_id' => $item['id'],
-			'where'   => array(
+			'user_id'  => $item['id'],
+			'category' => array( 'purchase', 'partial_payment' ),
+			'where'    => array(
 				array(
 					'key'   => 'type',
 					'value' => 'debit',
-				),
-				array(
-					'key'   => 'category',
-					'value' => 'partial_payment',
 				),
 			),
 		);

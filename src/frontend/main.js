@@ -8,12 +8,19 @@ jQuery(function ($) {
 
     if (tableEl) {
         const columns = (wallet_param.columns || []).map(function (col) {
+            const isDetails = col.data === 'details';
             return {
                 title: col.title,
                 field: col.data,
                 headerSort: false,
                 formatter: 'html',
-                responsive: col.data === 'details' ? 0 : 2,
+                responsive: isDetails ? 0 : 2,
+                // Let the details column show its full text by wrapping onto
+                // multiple lines and growing the row height to fit, instead of
+                // truncating with an ellipsis.
+                variableHeight: isDetails ? true : undefined,
+                cssClass: isDetails ? 'woo-wallet-details-cell' : undefined,
+                widthGrow: isDetails ? 3 : 1,
             };
         });
 

@@ -169,6 +169,10 @@ final class Woo_Wallet {
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-payment-method.php';
 		$this->add_marketplace_support();
 		$this->add_multicurrency_support();
+		// Currency providers are now registered (above), so a pending one-shot
+		// normalization of legacy non-base ledger rows can run. Cheap no-op when
+		// the marker is unset.
+		woo_wallet_maybe_normalize_legacy_currency_rows();
 		add_filter( 'woocommerce_email_classes', array( $this, 'woocommerce_email_classes' ), 999 );
 		add_filter( 'woocommerce_template_directory', array( $this, 'woocommerce_template_directory' ), 10, 2 );
 		add_filter( 'woocommerce_payment_gateways', array( $this, 'load_gateway' ) );
@@ -180,12 +184,19 @@ final class Woo_Wallet {
 		add_action( 'woocommerce_checkout_order_processed', array( $this->wallet, 'woocommerce_order_processed' ), 99 );
 		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this->wallet, 'woocommerce_order_processed' ), 99 );
 
+		// Optional: debit partial payment only once the order reaches a paid status
+		// (when the `partial_payment_debit_on` setting is `payment_complete`).
+		foreach ( apply_filters( 'wallet_debit_partial_payment_status', array( 'processing', 'completed' ) ) as $status ) {
+			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'maybe_debit_partial_payment_on_status' ) );
+		}
+
 		foreach ( apply_filters( 'wallet_cashback_order_status', $this->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ) as $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_cashback' ), 12 );
 		}
 
 		add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_refunded_order' ), 10, 2 );
+		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_partial_payment_refund' ), 10, 2 );
 
 		add_filter( 'woocommerce_reports_get_order_report_query', array( $this, 'woocommerce_reports_get_order_report_query' ) );
 		add_filter( 'woocommerce_analytics_revenue_query_args', array( $this, 'remove_wallet_rechargable_order_from_analytics' ) );
@@ -492,7 +503,12 @@ final class Woo_Wallet {
 				'namespace' => 'apply-partial-payment',
 				'callback'  => function ( $data ) {
 					if ( ! is_null( wc()->session ) ) {
-						wc()->session->set( 'partial_payment_amount', $data['amount'] );
+						$amount = isset( $data['amount'] ) ? (float) $data['amount'] : 0;
+						$max    = woo_wallet_get_partial_payment_max_amount();
+						if ( $max > 0 && $amount > $max ) {
+							$amount = $max;
+						}
+						wc()->session->set( 'partial_payment_amount', $amount );
 					}
 				},
 			)
@@ -506,7 +522,9 @@ final class Woo_Wallet {
 	 * @return void
 	 */
 	public function woocommerce_order_item_fee_after_calculate_taxes_callback( $item ) {
-		if ( is_a( $item, 'WC_Order_Item_Fee' ) && '_via_wallet_partial_payment' === $item->get_meta( '_legacy_fee_key' ) ) {
+		// Keep the fee tax in `tax_inclusive_wallet` mode (the wallet pays the tax);
+		// only zero it in `payment` mode.
+		if ( is_a( $item, 'WC_Order_Item_Fee' ) && '_via_wallet_partial_payment' === $item->get_meta( '_legacy_fee_key' ) && 'tax_inclusive_wallet' !== woo_wallet_get_partial_payment_tax_mode() ) {
 			$item->set_taxes( false );
 		}
 	}

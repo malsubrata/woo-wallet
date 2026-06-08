@@ -82,6 +82,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 
 			add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'woocommerce_cart_loaded_from_session' ) );
 
+			add_action( 'woo_wallet_dashboard_content', array( $this, 'woo_wallet_dashboard_content' ) );
 			add_action( 'woo_wallet_add_content', array( $this, 'woo_wallet_add_content' ) );
 			add_action( 'woo_wallet_transfer_content', array( $this, 'woo_wallet_transfer_content' ) );
 			add_action( 'woo_wallet_transactions_content', array( $this, 'woo_wallet_transactions_content' ) );
@@ -299,6 +300,12 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			} else {
 				woo_wallet()->get_template( 'wc-endpoint-wallet.php' );
 			}
+		}
+		/**
+		 * Wallet dashboard main content.
+		 */
+		public function woo_wallet_dashboard_content() {
+			woo_wallet()->get_template( 'dashboard.php' );
 		}
 
 		/**
@@ -644,24 +651,51 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @since 1.2.1
 		 */
 		public function woo_wallet_add_partial_payment_fee() {
-			$parial_payment_amount = apply_filters( 'woo_wallet_partial_payment_amount', wc()->session->get( 'partial_payment_amount', 0 ) && woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) >= wc()->session->get( 'partial_payment_amount', 0 ) ? wc()->session->get( 'partial_payment_amount', 0 ) : woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
+			$balance        = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
+			$session_amount = ( ! is_null( wc()->session ) ) ? (float) wc()->session->get( 'partial_payment_amount', 0 ) : 0;
+			$desired        = ( $session_amount && $balance >= $session_amount ) ? $session_amount : $balance;
+			$desired        = (float) apply_filters( 'woo_wallet_partial_payment_amount', $desired );
 
-			if ( $parial_payment_amount > 0 ) {
-				$fee = array(
-					'id'        => '_via_wallet_partial_payment',
-					'name'      => __( 'Via wallet', 'woo-wallet' ),
-					'amount'    => (float) -1 * $parial_payment_amount,
-					'taxable'   => false,
-					'tax_class' => 'non-taxable',
-				);
-				if ( is_enable_wallet_partial_payment() && $parial_payment_amount ) {
-					wc()->cart->fees_api()->add_fee( $fee );
+			// Cap to what the cart/mode actually allows so the applied "Via wallet" line
+			// and the wallet debit can never disagree (closes the silent over-cap).
+			$max_amount = woo_wallet_get_partial_payment_max_amount();
+			if ( $desired > $max_amount ) {
+				$desired = $max_amount;
+			}
+
+			if ( $desired > 0 && is_enable_wallet_partial_payment() ) {
+				$mode = woo_wallet_get_partial_payment_tax_mode();
+				if ( 'tax_inclusive_wallet' === $mode ) {
+					// Taxable negative fee: WooCommerce adds its own negative tax on top
+					// of the (clamped) base, so the wallet covers the full gross. The
+					// desired amount is the GROSS to deduct, so the fee base is grossed
+					// down by the effective rate; base + fee-tax reconstructs the gross.
+					$ex_tax   = woo_wallet_get_cart_ex_tax_clampable_total();
+					$rate     = woo_wallet_get_cart_effective_tax_rate();
+					$fee_base = $rate > 0 ? $desired / ( 1 + $rate ) : $desired;
+					$fee_base = min( $fee_base, $ex_tax );
+					$fee      = array(
+						'id'        => '_via_wallet_partial_payment',
+						'name'      => __( 'Via wallet', 'woo-wallet' ),
+						'amount'    => (float) -1 * $fee_base,
+						'taxable'   => true,
+						'tax_class' => apply_filters( 'woo_wallet_partial_payment_fee_tax_class', '' ),
+					);
 				} else {
-					$all_fees = wc()->cart->fees_api()->get_fees();
-					if ( isset( $all_fees['_via_wallet_partial_payment'] ) ) {
-						unset( $all_fees['_via_wallet_partial_payment'] );
-						wc()->cart->fees_api()->set_fees( $all_fees );
-					}
+					$fee = array(
+						'id'        => '_via_wallet_partial_payment',
+						'name'      => __( 'Via wallet', 'woo-wallet' ),
+						'amount'    => (float) -1 * $desired,
+						'taxable'   => false,
+						'tax_class' => 'non-taxable',
+					);
+				}
+				wc()->cart->fees_api()->add_fee( $fee );
+			} else {
+				$all_fees = wc()->cart->fees_api()->get_fees();
+				if ( isset( $all_fees['_via_wallet_partial_payment'] ) ) {
+					unset( $all_fees['_via_wallet_partial_payment'] );
+					wc()->cart->fees_api()->set_fees( $all_fees );
 				}
 			}
 		}
@@ -674,7 +708,9 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		 * @return array
 		 */
 		public function woocommerce_cart_totals_get_fees_from_cart_taxes( $fee_taxes, $fee ) {
-			if ( '_via_wallet_partial_payment' === $fee->object->id ) {
+			// In `tax_inclusive_wallet` mode the fee is intentionally taxable so the
+			// wallet covers the tax line — only strip the tax in `payment` mode.
+			if ( '_via_wallet_partial_payment' === $fee->object->id && 'tax_inclusive_wallet' !== woo_wallet_get_partial_payment_tax_mode() ) {
 				$fee_taxes = array();
 			}
 			return $fee_taxes;
