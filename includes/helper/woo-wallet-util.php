@@ -1826,11 +1826,20 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 	 * — identical to how the display already valued it — so the result never
 	 * diverges from the balance the customer saw. Idempotent / safe to re-run.
 	 *
+	 * The work is processed one bounded batch at a time (filter
+	 * `woo_wallet_legacy_currency_normalize_batch_size`, default 500) and each
+	 * user's row rewrites plus the balance-cache rebuild run inside that user's
+	 * `woo_wallet_lock_user_<id>` ledger lock — the same lock
+	 * `recode_transaction()` holds — so a concurrent debit can never interleave
+	 * between the row rewrite and the cache rebuild. A user whose lock is held
+	 * (e.g. mid-checkout) is skipped and retried on a later drain.
+	 *
 	 * @global object $wpdb wpdb.
-	 * @return int|false Number of rows converted (0 when already clean), or false
-	 *                   when the work cannot run safely (per_currency mode, or no
-	 *                   usable non-generic currency provider) and should be
-	 *                   retried on a later request.
+	 * @return int|false Number of rows converted in this batch (0 when no foreign
+	 *                   rows remain — i.e. the migration is complete), or false
+	 *                   when the work cannot run safely (per_currency mode, or
+	 *                   foreign rows exist but no usable non-generic currency
+	 *                   provider is available) and should be retried later.
 	 */
 	function woo_wallet_normalize_legacy_currency_rows() {
 		global $wpdb;
@@ -1847,15 +1856,10 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 			return false;
 		}
 
-		$manager  = Woo_Wallet_Currency_Manager::instance();
-		$provider = $manager->get_active_provider();
-
-		// Without a real provider the foreign->base rate is unknowable; bail so
-		// the caller can retry once one is available. Never guess a rate — that
-		// would corrupt the ledger with a face-value "conversion".
-		if ( ! $provider || 'generic' === $provider->get_id() ) {
+		if ( ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
 			return false;
 		}
+		$manager = Woo_Wallet_Currency_Manager::instance();
 
 		$base = strtoupper( (string) $manager->get_base_currency() );
 		if ( '' === $base ) {
@@ -1864,68 +1868,130 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 
 		$table = $wpdb->base_prefix . 'woo_wallet_transactions';
 
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_id, user_id, amount, currency, original_amount, original_currency FROM {$table} WHERE currency <> %s", $base ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// Batch the work so a store with a large legacy ledger never does an
+		// unbounded scan + rewrite in a single request. The drain
+		// (`woo_wallet_maybe_normalize_legacy_currency_rows()`) calls this
+		// repeatedly under a global job lock until no foreign rows remain.
+		$batch_size = (int) apply_filters( 'woo_wallet_legacy_currency_normalize_batch_size', 500 );
+		if ( $batch_size < 1 ) {
+			$batch_size = 500;
+		}
+
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_id, user_id, amount, currency, original_amount, original_currency FROM {$table} WHERE currency <> %s ORDER BY user_id LIMIT %d", $base, $batch_size ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		if ( empty( $rows ) ) {
+			// No foreign rows to normalize — provider availability is irrelevant
+			// (the common single_base store that never ran multicurrency lands
+			// here). Signal "done" so the drain clears the pending flag instead
+			// of retrying forever.
 			return 0;
+		}
+
+		// Foreign rows exist, so a real rate is required. Without a usable
+		// provider the foreign->base rate is unknowable; bail so the caller can
+		// retry once one is available. Never guess a rate — that would corrupt
+		// the ledger with a face-value "conversion".
+		$provider = $manager->get_active_provider();
+		if ( ! $provider || 'generic' === $provider->get_id() ) {
+			return false;
+		}
+
+		// Group the batch by user so each user's row rewrites AND cache rebuild
+		// happen together inside that user's ledger lock.
+		$rows_by_user = array();
+		foreach ( $rows as $row ) {
+			$rows_by_user[ (int) $row->user_id ][] = $row;
 		}
 
 		$decimals        = (int) wc_get_price_decimals();
 		$converted_count = 0;
-		$affected_users  = array();
 
-		foreach ( $rows as $row ) {
-			$from = strtoupper( (string) $row->currency );
-			if ( $from === $base ) {
+		foreach ( $rows_by_user as $uid => $user_rows ) {
+			$uid = (int) $uid;
+
+			// Pre-compute the conversions OUTSIDE the lock (pure rate math that
+			// may touch the provider) so the per-user lock is held only for the
+			// DB writes.
+			$updates = array();
+			foreach ( $user_rows as $row ) {
+				$from = strtoupper( (string) $row->currency );
+				if ( $from === $base ) {
+					continue;
+				}
+
+				// Convert through the manager — the exact same call the display
+				// filter (`filter_woo_wallet_current_balance`) uses — so the
+				// normalized base amount matches the figure the customer was
+				// already shown and could spend. A currency the provider has no
+				// rate for fails open to its face value (1:1); that is identical
+				// to how the display already valued it.
+				$converted_raw = $manager->convert( (float) $row->amount, $from, $base );
+				if ( ! is_numeric( $converted_raw ) ) {
+					$converted_raw = (float) $row->amount;
+				}
+				$converted = (float) wc_format_decimal( (float) $converted_raw, $decimals );
+
+				// Effective per-unit rate actually applied (1.0 on a fail-open).
+				$rate = ( (float) $row->amount !== 0.0 ) ? ( (float) $converted_raw / (float) $row->amount ) : 1.0;
+
+				// Preserve the pre-conversion value as the audit record. Legacy
+				// per_currency rows already carry the source amount/currency
+				// here, so this is idempotent; we additionally record the rate.
+				$original_amount   = ( null !== $row->original_amount && (float) $row->original_amount > 0 ) ? (float) $row->original_amount : (float) $row->amount;
+				$original_currency = ( ! empty( $row->original_currency ) ) ? strtoupper( (string) $row->original_currency ) : $from;
+
+				$updates[] = array(
+					'transaction_id'    => (int) $row->transaction_id,
+					'amount'            => $converted,
+					'original_amount'   => $original_amount,
+					'original_currency' => $original_currency,
+					'rate'              => $rate,
+				);
+			}
+
+			if ( empty( $updates ) ) {
 				continue;
 			}
 
-			// Convert through the manager — the exact same call the display
-			// filter (`filter_woo_wallet_current_balance`) uses — so the
-			// normalized base amount matches the figure the customer was already
-			// shown and could spend. A currency the provider has no rate for
-			// fails open to its face value (1:1); that is identical to how the
-			// display already valued it, and the manager logs that fallback.
-			$converted_raw = $manager->convert( (float) $row->amount, $from, $base );
-			if ( ! is_numeric( $converted_raw ) ) {
-				$converted_raw = (float) $row->amount;
+			// Serialise against this user's debits/credits with the SAME lock
+			// `recode_transaction()` uses, so a concurrent debit can never
+			// interleave between the row rewrite and the cache rebuild (which
+			// would leave `_current_woo_wallet_balance` out of sync with the raw
+			// ledger SUM). Non-blocking: a user mid-checkout is skipped and
+			// retried on the next drain rather than blocking this request.
+			$lock_name = 'woo_wallet_lock_user_' . $uid;
+			$got_lock  = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, 0 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== (string) $got_lock ) {
+				continue;
 			}
-			$converted = (float) wc_format_decimal( (float) $converted_raw, $decimals );
 
-			// Effective per-unit rate actually applied (1.0 on a fail-open), for
-			// the audit column.
-			$rate = ( (float) $row->amount !== 0.0 ) ? ( (float) $converted_raw / (float) $row->amount ) : 1.0;
+			try {
+				foreach ( $updates as $update ) {
+					$updated = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+						$wpdb->prepare(
+							"UPDATE {$table} SET amount = %s, currency = %s, mode = 0, original_amount = %s, original_currency = %s, original_rate = %s WHERE transaction_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+							$update['amount'],
+							$base,
+							$update['original_amount'],
+							$update['original_currency'],
+							$update['rate'],
+							$update['transaction_id']
+						)
+					);
+					if ( $updated ) {
+						++$converted_count;
+					}
+				}
 
-			// Preserve the pre-conversion value as the audit record. Legacy
-			// per_currency rows already carry the source amount/currency here, so
-			// this is idempotent; we additionally record the real conversion rate.
-			$original_amount   = ( null !== $row->original_amount && (float) $row->original_amount > 0 ) ? (float) $row->original_amount : (float) $row->amount;
-			$original_currency = ( ! empty( $row->original_currency ) ) ? strtoupper( (string) $row->original_currency ) : $from;
-
-			$updated = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->prepare(
-					"UPDATE {$table} SET amount = %s, currency = %s, mode = 0, original_amount = %s, original_currency = %s, original_rate = %s WHERE transaction_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-					$converted,
-					$base,
-					$original_amount,
-					$original_currency,
-					$rate,
-					$row->transaction_id
-				)
-			);
-
-			if ( $updated ) {
-				++$converted_count;
-				$affected_users[ (int) $row->user_id ] = true;
-			}
-		}
-
-		// Rebuild the cached balance for every affected user from the now
-		// base-denominated raw SUM (the same value recode_transaction caches).
-		foreach ( array_keys( $affected_users ) as $uid ) {
-			$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$table} WHERE user_id = %d AND deleted = 0", $uid ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			update_user_meta( $uid, '_current_woo_wallet_balance', $balance );
-			if ( function_exists( 'clear_woo_wallet_cache' ) ) {
-				clear_woo_wallet_cache( $uid );
+				// Rebuild the cached balance from the now base-denominated raw
+				// SUM (the same value recode_transaction caches) INSIDE the lock
+				// so no concurrent debit can interleave.
+				$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$table} WHERE user_id = %d AND deleted = 0", $uid ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				update_user_meta( $uid, '_current_woo_wallet_balance', $balance );
+				if ( function_exists( 'clear_woo_wallet_cache' ) ) {
+					clear_woo_wallet_cache( $uid );
+				}
+			} finally {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
 		}
 
@@ -1946,18 +2012,74 @@ if ( ! function_exists( 'woo_wallet_maybe_normalize_legacy_currency_rows' ) ) {
 	 * actually completed. Mirrors the deferred-drain pattern used by
 	 * `Woo_Wallet_Signup_Handler`.
 	 *
+	 * Concurrency- and load-safe: the whole drain is gated by a single global,
+	 * non-blocking `GET_LOCK` so only one worker migrates at a time (no
+	 * thundering herd of workers scanning the same rows). It drains a bounded
+	 * number of batches per request (filter
+	 * `woo_wallet_legacy_currency_normalize_max_batches`, default 20), leaving
+	 * the flag set for the next request when more remain. When the work cannot
+	 * run yet (no usable FX provider) it backs off behind a short transient so it
+	 * does not re-attempt on every single request.
+	 *
+	 * @global object $wpdb wpdb.
 	 * @return void
 	 */
 	function woo_wallet_maybe_normalize_legacy_currency_rows() {
 		if ( ! get_option( 'woo_wallet_pending_legacy_currency_normalize' ) ) {
 			return;
 		}
-		$result = woo_wallet_normalize_legacy_currency_rows();
-		// Clear the marker only on a definite outcome (an int row count, including
-		// 0). A false return means "could not run safely yet" — keep the flag so
-		// a later request (with a provider available) retries.
-		if ( false !== $result ) {
-			delete_option( 'woo_wallet_pending_legacy_currency_normalize' );
+		// Back off when a recent run determined it cannot proceed yet (no usable
+		// FX provider), so we don't re-attempt on every request meanwhile.
+		if ( get_transient( 'woo_wallet_legacy_currency_normalize_cooldown' ) ) {
+			return;
+		}
+
+		global $wpdb;
+
+		// Global job lock: only ONE worker runs the migration at a time, so a
+		// busy store does not get N concurrent workers scanning + rewriting the
+		// same rows. Non-blocking — other workers bail instantly and the next
+		// request picks up where this one left off.
+		$got_lock = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', 'woo_wallet_legacy_currency_normalize', 0 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( '1' !== (string) $got_lock ) {
+			return;
+		}
+
+		try {
+			// Re-check inside the lock — another worker may have just finished.
+			if ( ! get_option( 'woo_wallet_pending_legacy_currency_normalize' ) ) {
+				return;
+			}
+
+			// Drain a bounded number of batches per request so a large backlog is
+			// migrated over successive requests without blowing a single
+			// request's time budget.
+			$max_batches = (int) apply_filters( 'woo_wallet_legacy_currency_normalize_max_batches', 20 );
+			if ( $max_batches < 1 ) {
+				$max_batches = 1;
+			}
+
+			for ( $i = 0; $i < $max_batches; $i++ ) {
+				$result = woo_wallet_normalize_legacy_currency_rows();
+
+				if ( false === $result ) {
+					// Cannot run safely yet (no provider / per_currency). Cool
+					// down before retrying so we don't churn on every request.
+					set_transient( 'woo_wallet_legacy_currency_normalize_cooldown', 1, 5 * MINUTE_IN_SECONDS );
+					return;
+				}
+
+				if ( 0 === $result ) {
+					// No foreign rows remain — migration complete.
+					delete_option( 'woo_wallet_pending_legacy_currency_normalize' );
+					return;
+				}
+				// $result > 0: a batch was converted; loop to drain the next one.
+			}
+			// Hit the per-request batch cap with rows still remaining; keep the
+			// flag set so the next request continues the drain.
+		} finally {
+			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', 'woo_wallet_legacy_currency_normalize' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		}
 	}
 }
@@ -1977,15 +2099,19 @@ if ( ! function_exists( 'woo_wallet_get_user_category_total' ) ) {
 	 * `single_base` mode (all rows already base currency — the conversion is a
 	 * no-op) and on stores that still carry legacy multicurrency rows.
 	 *
-	 * payments and partial payments, because the full-payment debit records with
-	 * `'for' => 'purchase'`, which the ledger canonicalises to `partial_payment`
-	 * (see `Woo_Wallet_Wallet::resolve_category_and_details()`).
+	 * `$category` accepts a single slug or a list of slugs that are summed
+	 * together. "Total spent" therefore passes `array( 'purchase',
+	 * 'partial_payment' )`: since 1.6.4 a full wallet-gateway payment records as
+	 * its own `purchase` category while a partial payment records as
+	 * `partial_payment` (the `purchase => partial_payment` alias was removed —
+	 * see `Woo_Wallet_Wallet::resolve_category_and_details()`), so both must be
+	 * requested to count every wallet-funded order debit.
 	 *
 	 * @since 1.6.4
-	 * @param int    $user_id       User id.
-	 * @param string $type          'credit' or 'debit'.
-	 * @param array  $category      Canonical category slug (e.g. topup, partial_payment, cashback).
-	 * @param string $base_currency Optional base currency code; resolved from the user balance when empty.
+	 * @param int          $user_id       User id.
+	 * @param string       $type          'credit' or 'debit'.
+	 * @param string|array $category      Canonical category slug, or a list of slugs to sum (e.g. topup, partial_payment, purchase, cashback).
+	 * @param string       $base_currency Optional base currency code; resolved from the user balance when empty.
 	 * @return float Summed amount in base currency.
 	 */
 	function woo_wallet_get_user_category_total( $user_id, $type, $category, $base_currency = '' ) {

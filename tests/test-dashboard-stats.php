@@ -44,23 +44,25 @@ class Test_Dashboard_Stats extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Total spent counts a partial payment AND a full wallet payment, because
-	 * the full-payment `for => purchase` debit canonicalises to
-	 * `category = partial_payment`.
+	 * Total spent counts a partial payment AND a full wallet payment. Since 1.6.4
+	 * the full-payment `for => purchase` debit records as its own
+	 * `category = purchase` (no longer aliased to `partial_payment`), so the
+	 * "total spent" figure must sum BOTH `purchase` and `partial_payment` — which
+	 * is exactly what the dashboard/admin aggregations pass.
 	 */
 	public function test_total_spent_includes_full_and_partial_payments() {
 		woo_wallet()->wallet->credit( $this->user_id, 500.00, 'Fund', array( 'category' => 'topup' ) );
 
 		// Partial payment debit.
 		woo_wallet()->wallet->debit( $this->user_id, 40.00, 'Partial pay #1', array( 'category' => 'partial_payment' ) );
-		// Full wallet-gateway payment debit (legacy `for` arg → partial_payment).
+		// Full wallet-gateway payment debit (legacy `for` arg → `purchase`).
 		woo_wallet()->wallet->debit( $this->user_id, 60.00, 'Full pay #2', array( 'for' => 'purchase' ) );
 		// A non-purchase debit (e.g. transfer/withdrawal) must not count as spent.
 		woo_wallet()->wallet->debit( $this->user_id, 25.00, 'Adjustment', array( 'category' => 'adjustment' ) );
 
 		$this->assertEqualsWithDelta(
 			100.00,
-			woo_wallet_get_user_category_total( $this->user_id, 'debit', 'partial_payment' ),
+			woo_wallet_get_user_category_total( $this->user_id, 'debit', array( 'purchase', 'partial_payment' ) ),
 			0.001
 		);
 	}
