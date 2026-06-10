@@ -79,9 +79,12 @@ class Test_Transaction_Category extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Legacy `for` arg aliases `purchase` to canonical `partial_payment`.
+	 * Since 1.6.4 the legacy `for => purchase` arg maps to its own first-class
+	 * `purchase` category (it is no longer aliased to `partial_payment`). The
+	 * "total spent" aggregations count both categories, so the split is
+	 * transparent there.
 	 */
-	public function test_debit_legacy_for_purchase_aliases_to_partial_payment() {
+	public function test_debit_legacy_for_purchase_maps_to_purchase_category() {
 		woo_wallet()->wallet->credit( $this->user_id, 100.00, 'Seed' );
 		$transaction_id = woo_wallet()->wallet->debit(
 			$this->user_id,
@@ -90,7 +93,7 @@ class Test_Transaction_Category extends WP_UnitTestCase {
 			array( 'for' => 'purchase' )
 		);
 
-		$this->assertSame( 'partial_payment', $this->read_category( $transaction_id ) );
+		$this->assertSame( 'purchase', $this->read_category( $transaction_id ) );
 	}
 
 	/**

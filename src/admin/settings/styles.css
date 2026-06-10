@@ -64,14 +64,18 @@
 }
 
 /* ── WP parent chain — make every wrapper fill height ────────────── */
+/* WP core renders #wpfooter as `position:absolute; bottom:0` relative to
+   #wpwrap — it sits OUTSIDE this flex chain. The full-height app would
+   otherwise extend underneath it and the footer would overlap the app's
+   bottom edge (save button / content). Reserve a strip at the bottom of
+   #wpcontent so the app stops just above the footer instead of hiding it.
+   (Core hides #wpfooter itself on screens ≤782px, so the strip is desktop
+   only, where the footer is a single ~40px line.) */
 .terawallet_page_woo-wallet-settings #wpcontent {
-  padding: 0 !important;
+  box-sizing: border-box;
+  padding: 0 0 var(--ww-wpfooter-h, 46px) 0 !important;
   display: flex;
   flex-direction: column;
-}
-
-.terawallet_page_woo-wallet-settings #wpfooter {
-  display: none;
 }
 
 .terawallet_page_woo-wallet-settings #wpbody {

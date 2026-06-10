@@ -52,6 +52,9 @@ class Woo_Wallet_Install {
 		'1.6.3'  => array(
 			'woo_wallet_update_163_db_schema',
 		),
+		'1.6.4'  => array(
+			'woo_wallet_update_164_flag_legacy_currency_normalize',
+		),
 	);
 	/**
 	 * Class constructor.

@@ -281,6 +281,43 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'group'   => 'partial_payment',
 					'show_if' => $partial_show_if,
 				),
+				array(
+					'name'    => 'partial_payment_tax_treatment',
+					'label'   => __( 'Tax treatment', 'woo-wallet' ),
+					'desc'    => __( 'How the wallet interacts with order tax. "Wallet pays goods only" charges the tax on the order (correct when top-ups are not taxed). "Wallet pays the whole order including tax" lets the wallet cover the tax line — use this ONLY when top-ups are set Taxable, otherwise tax is under-collected. Confirm with your accountant.', 'woo-wallet' ),
+					'type'    => 'select',
+					'options' => array(
+						'payment'              => __( 'Wallet pays goods only; tax charged on order (recommended)', 'woo-wallet' ),
+						'tax_inclusive_wallet' => __( 'Wallet pays the whole order including tax (top-ups taxed at load)', 'woo-wallet' ),
+					),
+					'default' => 'payment',
+					'size'    => 'regular-text wc-enhanced-select',
+					'group'   => 'partial_payment',
+					'show_if' => $partial_show_if,
+				),
+				array(
+					'name'    => 'partial_payment_debit_on',
+					'label'   => __( 'Deduct wallet balance', 'woo-wallet' ),
+					'desc'    => __( 'When to deduct the wallet amount. "At order placement" reserves the balance immediately (default). "When payment completes" deducts only once the order reaches a paid status — if the balance was spent meanwhile the order is held for review.', 'woo-wallet' ),
+					'type'    => 'select',
+					'options' => array(
+						'order_created'    => __( 'At order placement', 'woo-wallet' ),
+						'payment_complete' => __( 'When payment completes', 'woo-wallet' ),
+					),
+					'default' => 'order_created',
+					'size'    => 'regular-text wc-enhanced-select',
+					'group'   => 'partial_payment',
+					'show_if' => $partial_show_if,
+				),
+				array(
+					'name'    => 'partial_payment_refund_on_partial_refund',
+					'label'   => __( 'Refund wallet on partial refunds', 'woo-wallet' ),
+					'desc'    => __( 'When you issue a partial refund on an order, return the wallet-paid portion proportionally to the customer wallet. Full cancellations always refund the wallet.', 'woo-wallet' ),
+					'type'    => 'checkbox',
+					'default' => 'on',
+					'group'   => 'partial_payment',
+					'show_if' => $partial_show_if,
+				),
 			);
 
 			$transfer_fields = array(

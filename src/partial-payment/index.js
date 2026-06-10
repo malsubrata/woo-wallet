@@ -100,6 +100,10 @@ const render = () => {
 									if (num > settings.balance) {
 										return __('Amount cannot exceed your wallet balance', 'woo-wallet');
 									}
+									const maxAmount = parseFloat(settings.max_amount);
+									if (!isNaN(maxAmount) && maxAmount > 0 && num > maxAmount) {
+										return __('Amount cannot exceed the order total payable from your wallet', 'woo-wallet');
+									}
 								}}
 							/>
 							<Button

@@ -193,7 +193,7 @@ function woo_wallet_update_161_db_schema() {
 		}
 
 		// (b) Gate coupon-cashback total mutation behind a legacy flag so upgrading
-		//     merchants' revenue reports are not surprised.
+		// merchants' revenue reports are not surprised.
 		if ( ! isset( $settings['woo_wallet_legacy_coupon_cashback_total_mutation'] ) ) {
 			$settings['woo_wallet_legacy_coupon_cashback_total_mutation'] = 'yes';
 		}
@@ -349,7 +349,7 @@ function woo_wallet_update_163_db_schema() {
 	// are touched, so this is safe to re-run.
 	$mapping = array(
 		'credit_purchase'     => 'topup',
-		'purchase'            => 'partial_payment',
+		'purchase'            => 'purchase',
 		'partial_payment'     => 'partial_payment',
 		'cashback'            => 'cashback',
 		'cashback_adjustment' => 'cashback_adjustment',
@@ -364,10 +364,10 @@ function woo_wallet_update_163_db_schema() {
 	foreach ( $mapping as $raw => $canonical ) {
 		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
-				"UPDATE %i t
+				'UPDATE %i t
 				 JOIN %i m ON m.transaction_id = t.transaction_id AND m.meta_key = %s AND m.meta_value = %s
 				 SET t.category = %s
-				 WHERE t.category = %s",
+				 WHERE t.category = %s',
 				$table,
 				$meta_table,
 				'_type',
@@ -388,10 +388,10 @@ function woo_wallet_update_163_db_schema() {
 	foreach ( $transfer_metas as $mk ) {
 		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
-				"UPDATE %i t
+				'UPDATE %i t
 				 JOIN %i m ON m.transaction_id = t.transaction_id AND m.meta_key = %s
 				 SET t.category = %s
-				 WHERE t.category = %s",
+				 WHERE t.category = %s',
 				$table,
 				$meta_table,
 				$mk,
@@ -400,4 +400,19 @@ function woo_wallet_update_163_db_schema() {
 			)
 		);
 	}
+}
+
+/**
+ * 1.6.4: flag legacy non-base ledger rows for normalization.
+ *
+ * The actual conversion of foreign-currency rows into base currency needs the
+ * live currency provider, which is only registered on `init` — long after these
+ * version migrations run (`plugins_loaded`). So we cannot convert here; instead
+ * we set a one-shot marker that `woo_wallet_maybe_normalize_legacy_currency_rows()`
+ * drains from `Woo_Wallet::init()` once a provider is available. Idempotent.
+ *
+ * @return void
+ */
+function woo_wallet_update_164_flag_legacy_currency_normalize() {
+	update_option( 'woo_wallet_pending_legacy_currency_normalize', 1, false );
 }

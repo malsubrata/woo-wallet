@@ -43,10 +43,20 @@ $menu_items                = apply_filters(
 	),
 	$is_rendred_from_myaccount
 );
-$current_action            = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : '' );
-// Default to transactions if no action or just 'woo-wallet' endpoint.
-if ( empty( $current_action ) && ! isset( $_GET['wallet_action'] ) ) {
-	$current_action = 'transactions';
+$current_action            = isset( $_GET['wallet_action'] ) ? sanitize_key( wp_unslash( $_GET['wallet_action'] ) ) : ( isset( $wp->query_vars['woo-wallet'] ) ? sanitize_key( $wp->query_vars['woo-wallet'] ) : 'dashboard' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab routing, value is allow-listed below.
+if ( empty( $current_action ) ) {
+	$current_action = 'dashboard';
+}
+// Allow-list the resolved action before it is interpolated into the dynamic
+// `do_action()`/`apply_filters()` hook names below, so a crafted `wallet_action`
+// query value cannot fire arbitrary `woo_wallet_<x>_content` hooks. Third-party
+// nav items are already enumerated in $menu_items, so this stays extensible.
+$ww_allowed_actions = apply_filters(
+	'woo_wallet_allowed_dashboard_actions',
+	array_values( array_unique( array_merge( array( 'dashboard', 'add', 'transfer', 'transactions' ), array_keys( (array) $menu_items ) ) ) )
+);
+if ( ! in_array( $current_action, $ww_allowed_actions, true ) ) {
+	$current_action = 'dashboard';
 }
 if ( ! function_exists( 'is_wallet_tab_active' ) ) {
 	/**
@@ -59,9 +69,6 @@ if ( ! function_exists( 'is_wallet_tab_active' ) ) {
 	 */
 	function is_wallet_tab_active( $tab_key, $current_action, $menu_item = null ) {
 		if ( $tab_key === $current_action ) {
-			return true;
-		}
-		if ( 'transactions' === $tab_key && empty( $current_action ) ) {
 			return true;
 		}
 
@@ -129,48 +136,10 @@ if ( ! function_exists( 'is_wallet_tab_active' ) ) {
 				do_action( "woo_wallet_{$current_action}_content" );
 			}
 			do_action( 'woo_wallet_menu_content' ); // will be removed in future.
-		} elseif ( apply_filters( 'woo_wallet_is_enable_transactions', true ) ) {
-			?>
-			<!-- Recent Transactions -->
-			<div class="woo-wallet-transactions-list">
-				<h3 class="woo-wallet-section-title"><?php esc_html_e( 'Balance History', 'woo-wallet' ); ?></h3>
-				<?php $transactions = get_wallet_transactions( array( 'limit' => apply_filters( 'woo_wallet_transactions_count', 10 ) ) ); ?>
-				<?php if ( ! empty( $transactions ) ) { ?>
-					<?php
-					$active_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
-						? Woo_Wallet_Currency_Manager::instance()->get_active_currency()
-						: strtoupper( (string) get_woocommerce_currency() );
-					?>
-					<table class="woo-wallet-transactions-table">
-						<thead>
-							<tr>
-								<th><?php esc_html_e( 'Date', 'woo-wallet' ); ?></th>
-								<th><?php esc_html_e( 'Description', 'woo-wallet' ); ?></th>
-								<th style="text-align: right;"><?php esc_html_e( 'Amount', 'woo-wallet' ); ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ( $transactions as $transaction ) : ?>
-								<tr>
-									<td><?php echo esc_html( wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ) ); ?></td>
-									<td><?php echo wp_kses_post( $transaction->details ); ?></td>
-									<td class="amount <?php echo esc_attr( $transaction->type ); ?>">
-										<?php
-										echo 'credit' === $transaction->type ? '+' : '-';
-										echo wp_kses_post( wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id, array( 'currency' => $active_currency ) ) ) );
-										?>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-					<?php
-				} else {
-					echo '<p style="padding: 20px; color: #666; text-align: center;">' . esc_html__( 'No transactions found', 'woo-wallet' ) . '</p>';
-				}
-				?>
-			</div>
-		<?php } ?>
+		} else {
+			do_action( 'woo_wallet_dashboard_content' );
+		}
+		?>
 	</div>
 </div>
 <?php

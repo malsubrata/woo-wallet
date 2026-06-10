@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.3
+Stable tag: 1.6.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,24 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.4 (June 10, 2026) =
+– **New:-** The customer wallet dashboard now shows a row of summary cards — **Total top-ups**, **Total spent** (covers both full wallet payments and partial payments), **Cashback earned** (shown only when the cashback reward program is enabled), and **Available balance** — above the recent transactions list. Third-party/add-on plugins can register their own cards (e.g. "Total withdrawn") via the new `woo_wallet_dashboard_stat_cards` filter. The figures share one helper (`woo_wallet_get_user_category_total()`) with the admin user report, so dashboard and admin always agree.
+– **New:-** Partial payment "Tax treatment" setting. Choose **Wallet pays goods only** (default — the non-taxable wallet fee is clamped to the ex-tax subtotal and the tax is charged on the order; correct when top-ups are not taxed) or **Wallet pays the whole order including tax** (a taxable wallet fee so the wallet can cover the tax line; use only when top-ups are taxed at load). This resolves the long-standing "tax stays on the full order" reports, caused by WooCommerce clamping negative fees to the ex-tax total (woocommerce/woocommerce#28028) so a non-taxable wallet fee could never pay the tax portion.
+– **New:-** Partial wallet payments are now refunded proportionally to the customer wallet when you issue a **partial** WooCommerce refund (previously only a full cancellation refunded the wallet). Opt out via the new "Refund wallet on partial refunds" setting; override the amount with the `woo_wallet_partial_payment_refund_amount` filter. Idempotent per refund and capped so the cumulative wallet refund can never exceed the original wallet debit.
+– **New:-** "Deduct wallet balance" timing setting — keep deducting at order placement (default) or switch to **When payment completes** so abandoned/failed orders never leave the wallet debited. If the balance was spent before payment cleared, the order is placed on-hold and the `woo_wallet_partial_payment_debit_failed` action fires instead of overdrafting.
+– **Fix:-** Closed a silent over-cap where entering a wallet amount larger than WooCommerce would accept showed one figure at checkout but debited a smaller one. The applied "Via wallet" amount is now capped to the active mode's true ceiling (filter `woo_wallet_partial_payment_max_amount`) so the displayed amount and the wallet debit always agree.
+– **Tweak:-** Partial-payment refunds (both full cancellation and partial refunds) now reverse the exact base-currency amount originally debited — captured on the order as `_partial_payment_base_amount` — rather than re-converting at a later exchange rate, eliminating phantom FX gain/loss on multicurrency stores.
+– **Tweak:-** The partial-payment debit is now serialised by a per-order lock (in addition to the existing idempotency meta) so concurrent gateway webhooks cannot double-debit.
+– **Tweak:-** The "Details" column in the customer wallet dashboard transaction table now shows its full text by wrapping onto multiple lines instead of truncating with an ellipsis. The column keeps its responsive priority (other columns still collapse into the expandable row on narrow screens), so long descriptions stay readable on mobile without widening the table.
+– **New:-** The wallet emails ("New wallet transaction" and "Low Wallet Balance") now carry the standard WooCommerce **Additional content** box and are grouped under **Payments** in WooCommerce 10.3+ email settings, matching how core WooCommerce emails behave.
+– **New:-** Both wallet emails now include action buttons — "View your wallet" on the transaction email and "Recharge your wallet now" on the low-balance email — linking straight to the customer's wallet/top-up page.
+– **Tweak:-** Reworked the wallet transaction email to clearly show the transaction type, amount, details, date and the resulting balance as separate, correctly formatted values.
+– **Fix:-** The plain-text wallet transaction email showed the current balance in place of the transacted amount (so the credited/debited figure was wrong) and ran words together; both are corrected.
+– **Fix:-** The low-balance email no longer re-sends on every subsequent debit while the balance is already low — it now fires once, only when a debit crosses the configured threshold.
+– **Fix:-** Corrected the "Please recharge you wallet" typo in the low-balance email.
+– **Security:-** Hardened the My Account wallet page so the `wallet_action` query value is sanitised and allow-listed before it is used to dispatch a tab's content hook, preventing a logged-in customer from triggering arbitrary `woo_wallet_*_content` actions/filters. The set of allowed tabs is filterable via `woo_wallet_allowed_dashboard_actions`.
+– **Fix:-** On single-currency (single_base) stores, debits could be silently rejected even though the dashboard showed an ample balance, on installs that had previously run in multi-currency / per-currency mode. The displayed balance currency-converted old foreign-currency rows, but the race-safe debit gate reads the raw ledger sum (which assumes every row is already in base currency), so the two figures diverged. A one-time upgrade routine now normalizes any leftover non-base ledger rows into the store base currency — converted at the same rate the dashboard already used, with the original amount/currency/rate preserved in the transaction's audit columns — so the spendable balance and the displayed balance always agree.
 
 = v1.6.3 (May 30, 2026) =
 – **New:-** Transaction category is now a first-class indexed column on `woo_wallet_transactions` (was previously only on transaction meta). Adds `(user_id, category, deleted)` index for cheap admin filters/aggregations.

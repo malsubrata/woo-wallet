@@ -317,45 +317,45 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 				'title'      => 'terawallet_me_transaction',
 				'type'       => 'object',
 				'properties' => array(
-					'id'        => array(
+					'id'                  => array(
 						'type'     => 'integer',
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'type'      => array(
+					'type'                => array(
 						'type'     => 'string',
 						'enum'     => array( 'credit', 'debit' ),
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'amount'    => array(
+					'amount'              => array(
 						'type'     => 'number',
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'currency'          => array(
+					'currency'            => array(
 						'type'     => 'string',
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'original_amount'   => array(
+					'original_amount'     => array(
 						'description' => __( 'Source amount the customer transacted in (only set on post-1.6 rows where source != canonical currency).', 'woo-wallet' ),
 						'type'        => array( 'number', 'null' ),
 						'context'     => array( 'view' ),
 						'readonly'    => true,
 					),
-					'original_currency' => array(
+					'original_currency'   => array(
 						'description' => __( 'Source currency code (only set on post-1.6 rows).', 'woo-wallet' ),
 						'type'        => array( 'string', 'null' ),
 						'context'     => array( 'view' ),
 						'readonly'    => true,
 					),
-					'details'   => array(
+					'details'             => array(
 						'type'     => 'string',
 						'context'  => array( 'view' ),
 						'readonly' => true,
 					),
-					'date'      => array(
+					'date'                => array(
 						'type'     => 'string',
 						'format'   => 'date-time',
 						'context'  => array( 'view' ),
@@ -364,7 +364,7 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Transactions_Controller' ) ) {
 					'category'            => array(
 						'description' => __( 'Typed category derived from the _type transaction meta.', 'woo-wallet' ),
 						'type'        => 'string',
-						'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
+						'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'purchase', 'transfer', 'refund', 'adjustment', 'other' ),
 						'context'     => array( 'view' ),
 						'readonly'    => true,
 					),

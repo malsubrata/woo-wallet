@@ -580,7 +580,7 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 				'category'            => array(
 					'description' => __( 'Transaction category.', 'woo-wallet' ),
 					'type'        => 'string',
-					'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
+					'enum'        => array( 'topup', 'cashback', 'cashback_adjustment', 'cashback_refund', 'purchase', 'partial_payment', 'transfer', 'refund', 'adjustment', 'other' ),
 					'context'     => array( 'view' ),
 					'readonly'    => true,
 				),

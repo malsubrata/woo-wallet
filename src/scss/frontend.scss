@@ -109,6 +109,104 @@ $wallet-border-color: #eee;
         }
     }
 
+    // Dashboard stat cards
+    .woo-wallet-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 5px;
+        margin-bottom: 24px;
+    }
+
+    .woo-wallet-stat-card {
+        background: #fff;
+        border: 1px solid var(--wallet-border-color);
+        border-radius: 12px;
+        padding: 20px 22px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        &__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f3f6;
+            color: #475467;
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .dashicons {
+                font-size: 20px;
+                width: 20px;
+                height: 20px;
+                line-height: 20px;
+            }
+        }
+
+        &__value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1f2d3d;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        &__label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        // Tone tints reuse the transaction badge palette. Use a literal child
+        // selector (not `&__icon`) so the nested `&` doesn't re-expand the full
+        // parent chain and double the container prefix.
+        &--success .woo-wallet-stat-card__icon {
+            background: #e7f6ec;
+            color: #1f7a47;
+        }
+
+        &--danger .woo-wallet-stat-card__icon {
+            background: #fdeceb;
+            color: #b42318;
+        }
+
+        &--brand .woo-wallet-stat-card__icon {
+            background: #ecebfb;
+            color: #4b3fd6;
+        }
+
+        &--neutral .woo-wallet-stat-card__icon {
+            background: #f1f3f6;
+            color: #475467;
+        }
+
+        &--info .woo-wallet-stat-card__icon {
+            background: #e8f1fb;
+            color: #1b6ec2;
+        }
+
+        &--warning .woo-wallet-stat-card__icon {
+            background: #fdf2e3;
+            color: #b25e09;
+        }
+
+        &--teal .woo-wallet-stat-card__icon {
+            background: #e3f6f4;
+            color: #0e7d77;
+        }
+
+        &--accent .woo-wallet-stat-card__icon {
+            background: #fceaf3;
+            color: #c0297a;
+        }
+    }
+
     /* Navigation Tabs */
     .woo-wallet-nav-tabs {
         display: flex;
@@ -247,60 +345,192 @@ $wallet-border-color: #eee;
         padding: 25px 0px;
     }
 
-    // Transactions Table
+    // Recent transactions card
     .woo-wallet-transactions-list {
         background: #fff;
-        border-radius: 12px;
+        border-radius: 14px;
         border: 1px solid var(--wallet-border-color);
         padding: 0;
         box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
         overflow: hidden;
     }
 
-    .woo-wallet-transactions-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 0;
+    // Card header: title + "Last N" meta
+    .ww-txn-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 22px 30px;
+        border-bottom: 1px solid #eef0f3;
 
-        th {
-            text-align: left;
-            padding: 20px 30px;
-            font-weight: 600;
-            color: #7f8c8d;
-            border-bottom: 1px solid #eee;
-            background: #f9f9f9;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
+        .ww-txn-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
             color: #2c3e50;
-            font-size: 1rem;
+            line-height: 1.2;
         }
 
-        tr:last-child td {
+        .ww-txn-meta {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #98a2b3;
+            white-space: nowrap;
+        }
+    }
+
+    // Div-based "table" — responsive grid rows
+    .ww-txn-table {
+        display: block;
+        width: 100%;
+
+        // Shared column track. Description flexes; date/type/amount are sized.
+        $ww-txn-cols: minmax(96px, 0.7fr) minmax(0, 2fr) minmax(110px, 0.9fr) minmax(96px, 0.7fr);
+
+        .ww-txn-row {
+            display: grid;
+            grid-template-columns: $ww-txn-cols;
+            align-items: center;
+            column-gap: 16px;
+            padding: 18px 30px;
+            border-bottom: 1px solid #f0f1f4;
+            transition: background-color 0.18s ease;
+        }
+
+        .ww-txn-row:last-child {
             border-bottom: none;
         }
 
-        tr:hover td {
-            background: #fafafa;
+        .ww-txn-row:not(.ww-txn-row--head):hover {
+            background: #fafbfc;
         }
 
-        .amount {
-            font-weight: 700;
+        // Header row: uppercase micro-labels
+        .ww-txn-row--head {
+            padding-top: 16px;
+            padding-bottom: 16px;
+            background: #fafbfc;
+            border-bottom: 1px solid #eef0f3;
+
+            .ww-txn-cell {
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: #98a2b3;
+            }
+        }
+
+        .ww-txn-cell {
+            min-width: 0;
+            font-size: 0.95rem;
+            color: #344054;
+        }
+
+        .ww-txn-cell--date {
+            color: #667085;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .ww-txn-cell--desc {
+            color: #2c3e50;
+            font-weight: 500;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .ww-txn-cell--type {
+            display: flex;
+        }
+
+        .ww-txn-cell--amount {
             text-align: right;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
 
             &.credit {
-                color: #27ae60;
+                color: #1f9d57;
             }
 
             &.debit {
-                color: #c0392b;
+                color: #d0342c;
             }
         }
+    }
+
+    // Category pill badges
+    .ww-txn-badge {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border: 1px solid transparent;
+
+        &--success {
+            color: #1f7a47;
+            background: #e7f6ec;
+            border-color: #c9ecd5;
+        }
+
+        &--danger {
+            color: #b42318;
+            background: #fdeceb;
+            border-color: #f7d3d0;
+        }
+
+        &--neutral {
+            color: #475467;
+            background: #f1f3f6;
+            border-color: #e3e7ed;
+        }
+
+        &--info {
+            color: #1b6ec2;
+            background: #e8f1fb;
+            border-color: #cfe3f7;
+        }
+
+        &--brand {
+            color: #4b3fd6;
+            background: #ecebfb;
+            border-color: #d7d4f6;
+        }
+
+        &--warning {
+            color: #b25e09;
+            background: #fdf2e3;
+            border-color: #f7e0bd;
+        }
+
+        &--accent {
+            color: #c0297a;
+            background: #fceaf3;
+            border-color: #f6cfe4;
+        }
+
+        &--teal {
+            color: #0e7d77;
+            background: #e3f6f4;
+            border-color: #c4ece9;
+        }
+    }
+
+    .ww-txn-empty {
+        margin: 0;
+        padding: 40px 30px;
+        text-align: center;
+        color: #98a2b3;
+        font-size: 0.95rem;
     }
 
     // Forms
@@ -762,9 +992,82 @@ $wallet-border-color: #eee;
             -webkit-overflow-scrolling: touch;
         }
 
-        .woo-wallet-transactions-table,
         .woo-wallet-referral-stats table {
             min-width: 600px;
+        }
+
+        // Recent transactions: collapse grid rows into stacked cards.
+        .ww-txn-head {
+            padding: 18px 18px;
+        }
+
+        .ww-txn-table {
+            padding: 8px;
+
+            // Compound selector so this beats the `.ww-txn-row { display: block }`
+            // rule below — both match the head row with equal specificity, and
+            // the block rule comes later in source, so a plain `.ww-txn-row--head`
+            // would lose the tie and the header would render as a ghost card.
+            .ww-txn-row.ww-txn-row--head {
+                display: none;
+            }
+
+            .ww-txn-row {
+                display: block;
+                padding: 14px 14px;
+                margin-bottom: 8px;
+                border: 1px solid #eef0f3;
+                border-radius: 10px;
+                background: #fff;
+            }
+
+            .ww-txn-row:last-child {
+                margin-bottom: 0;
+            }
+
+            .ww-txn-row:not(.ww-txn-row--head):hover {
+                background: #fff;
+            }
+
+            .ww-txn-cell {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 14px;
+                padding: 5px 0;
+                text-align: right;
+            }
+
+            .ww-txn-cell::before {
+                content: attr(data-label);
+                flex: 0 0 auto;
+                font-size: 0.7rem;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                color: #98a2b3;
+            }
+
+            // Description leads the card: bigger, no label, left aligned.
+            .ww-txn-cell--desc {
+                padding-top: 0;
+                font-size: 1rem;
+                font-weight: 600;
+                text-align: left;
+
+                &::before {
+                    display: none;
+                }
+            }
+
+            .ww-txn-cell--type {
+                justify-content: space-between;
+            }
+
+            .ww-txn-cell--amount {
+                padding-bottom: 0;
+                font-size: 1.05rem;
+            }
         }
 
         // Tabulator responsive tweaks
@@ -865,6 +1168,19 @@ $wallet-border-color: #eee;
 
         .woo-wallet-table-controls input[type="date"] {
             max-width: 120px;
+        }
+
+        .woo-wallet-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .woo-wallet-stat-card {
+            padding: 16px;
+
+            &__value {
+                font-size: 1.3rem;
+            }
         }
     }
 
@@ -1075,6 +1391,20 @@ $wallet-border-color: #eee;
 
                 &.tabulator-row-handle {
                     padding: 15px 20px;
+                }
+
+                // Details column: show the full text by wrapping it onto
+                // multiple lines instead of truncating with an ellipsis. The
+                // column keeps its responsive priority (never collapses), so
+                // wrapping here is what keeps the content readable on narrow
+                // screens without breaking the layout.
+                &.woo-wallet-details-cell {
+                    white-space: normal;
+                    overflow: visible;
+                    text-overflow: clip;
+                    word-break: break-word;
+                    overflow-wrap: anywhere;
+                    line-height: 1.45;
                 }
             }
 
