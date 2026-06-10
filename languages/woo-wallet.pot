@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.6.3\n"
+"Project-Id-Version: TeraWallet 1.6.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-31T02:14:51+00:00\n"
+"POT-Creation-Date: 2026-06-10T03:29:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -46,6 +46,7 @@ msgstr ""
 #: build/blocks/mini-wallet/render.php:78
 #: src/blocks/mini-wallet/render.php:77
 #: src/blocks/mini-wallet/render.php:78
+#: templates/emails/user-new-transaction.php:99
 #: build/blocks/mini-wallet/index.js:1
 #: src/blocks/mini-wallet/edit.js:194
 msgid "View your wallet"
@@ -65,8 +66,8 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-sell-content.php:42
 #: includes/actions/class-woo-wallet-action-sell-content.php:339
 #: includes/class-woo-wallet-payment-method.php:59
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:124
-#: includes/emails/class-woo-wallet-email-new-transaction.php:140
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:184
+#: includes/emails/class-woo-wallet-email-new-transaction.php:187
 msgid "Enable/Disable"
 msgstr ""
 
@@ -79,11 +80,13 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-product-review.php:41
 #: includes/admin/class-woo-wallet-transaction-details.php:45
 #: includes/class-woo-wallet-admin.php:628
-#: includes/class-woo-wallet-frontend.php:178
+#: includes/class-woo-wallet-frontend.php:179
 #: includes/export/class-terawallet-csv-exporter.php:98
 #: includes/export/class-terawallet-csv-exporter.php:107
+#: templates/dashboard.php:103
+#: templates/dashboard.php:130
+#: templates/emails/user-new-transaction.php:76
 #: templates/transfer.php:47
-#: templates/wc-endpoint-wallet.php:149
 msgid "Amount"
 msgstr ""
 
@@ -92,7 +95,7 @@ msgid "Enter amount which will be credited to the user wallet for daily visits."
 msgstr ""
 
 #: includes/actions/class-woo-wallet-action-daily-visits.php:46
-#: includes/class-woo-wallet-settings.php:409
+#: includes/class-woo-wallet-settings.php:446
 msgid "Exclude user role"
 msgstr ""
 
@@ -107,7 +110,8 @@ msgstr ""
 #: includes/class-woo-wallet-payment-method.php:73
 #: templates/admin/credit-debit-modal.php:42
 #: templates/admin/edit-balance.php:53
-#: templates/wc-endpoint-wallet.php:148
+#: templates/dashboard.php:101
+#: templates/dashboard.php:124
 msgid "Description"
 msgstr ""
 
@@ -442,8 +446,8 @@ msgid "Price"
 msgstr ""
 
 #: includes/actions/class-woo-wallet-action-sell-content.php:476
-#: includes/class-woo-wallet-frontend.php:401
-#: includes/class-woo-wallet-frontend.php:420
+#: includes/class-woo-wallet-frontend.php:408
+#: includes/class-woo-wallet-frontend.php:427
 msgid "Cheatin&#8217; huh?"
 msgstr ""
 
@@ -494,49 +498,57 @@ msgid "No users found."
 msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:336
-#: includes/admin/class-woo-wallet-balance-details.php:715
+#: includes/admin/class-woo-wallet-balance-details.php:712
 msgid "Edit Balance"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:482
+#: includes/admin/class-woo-wallet-balance-details.php:479
 msgid "Locked"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:484
+#: includes/admin/class-woo-wallet-balance-details.php:481
 msgid "Active"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:547
-#: includes/admin/class-woo-wallet-balance-details.php:658
+#. translators: %s: transaction type label
+#: includes/admin/class-woo-wallet-balance-details.php:544
+#: includes/admin/class-woo-wallet-balance-details.php:655
 #: includes/admin/class-woo-wallet-transaction-details.php:130
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:193
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:194
 #: includes/class-woo-wallet-admin.php:641
 #: templates/admin/edit-balance.php:39
+#: templates/dashboard.php:113
+#: templates/emails/plain/user-new-transaction.php:46
+#: templates/emails/user-new-transaction.php:73
 msgid "Credit"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:548
-#: includes/admin/class-woo-wallet-balance-details.php:661
+#. translators: %s: transaction type label
+#: includes/admin/class-woo-wallet-balance-details.php:545
+#: includes/admin/class-woo-wallet-balance-details.php:658
 #: includes/admin/class-woo-wallet-transaction-details.php:130
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:193
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:194
 #: includes/class-woo-wallet-admin.php:642
 #: templates/admin/edit-balance.php:40
+#: templates/dashboard.php:113
+#: templates/emails/plain/user-new-transaction.php:46
+#: templates/emails/user-new-transaction.php:73
 msgid "Debit"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:549
+#: includes/admin/class-woo-wallet-balance-details.php:546
 msgid "Delete Log"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:657
+#: includes/admin/class-woo-wallet-balance-details.php:654
 msgid "Credit wallet balance"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:660
+#: includes/admin/class-woo-wallet-balance-details.php:657
 msgid "Debit wallet balance"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-balance-details.php:698
+#: includes/admin/class-woo-wallet-balance-details.php:695
 msgid "Loading..."
 msgstr ""
 
@@ -554,6 +566,9 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:635
 #: includes/export/class-terawallet-csv-exporter.php:95
 #: templates/admin/edit-balance.php:33
+#: templates/dashboard.php:102
+#: templates/dashboard.php:127
+#: templates/emails/user-new-transaction.php:72
 #: templates/referrals.php:110
 msgid "Type"
 msgstr ""
@@ -569,10 +584,12 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-referral-report.php:118
 #: includes/admin/class-woo-wallet-transaction-details.php:48
-#: includes/class-woo-wallet-frontend.php:168
+#: includes/class-woo-wallet-frontend.php:169
 #: includes/export/class-terawallet-csv-exporter.php:101
+#: templates/dashboard.php:100
+#: templates/dashboard.php:121
+#: templates/emails/user-new-transaction.php:86
 #: templates/referrals.php:111
-#: templates/wc-endpoint-wallet.php:147
 msgid "Date"
 msgstr ""
 
@@ -637,8 +654,9 @@ msgid "Name"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-transaction-details.php:46
-#: includes/class-woo-wallet-frontend.php:173
+#: includes/class-woo-wallet-frontend.php:174
 #: includes/export/class-terawallet-csv-exporter.php:99
+#: templates/emails/user-new-transaction.php:81
 msgid "Details"
 msgstr ""
 
@@ -660,51 +678,56 @@ msgstr ""
 msgid "The Idempotency-Key request header is required for this operation."
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:270
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:271
 msgid "Top-up"
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:271
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:272
 #: includes/class-woo-wallet-admin.php:849
 #: includes/class-woo-wallet-admin.php:974
 #: includes/helper/woo-wallet-transaction-types.php:46
 msgid "Cashback"
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:272
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:273
 #: includes/helper/woo-wallet-transaction-types.php:51
 msgid "Cashback adjustment"
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:273
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:274
 #: includes/helper/woo-wallet-transaction-types.php:56
 msgid "Cashback refund"
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:274
-#: includes/helper/woo-wallet-transaction-types.php:61
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:275
+#: includes/helper/woo-wallet-transaction-types.php:66
 msgid "Partial payment"
 msgstr ""
 
-#: includes/api/abstracts/class-terawallet-rest-controller-base.php:275
-#: includes/helper/woo-wallet-transaction-types.php:66
-msgid "Transfer"
-msgstr ""
-
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:276
-#: includes/class-woo-wallet-admin.php:518
-#: includes/class-woo-wallet-admin.php:1213
-#: includes/helper/woo-wallet-transaction-types.php:71
-msgid "Refund"
+#: includes/helper/woo-wallet-transaction-types.php:61
+msgid "Purchase"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:277
-#: includes/helper/woo-wallet-transaction-types.php:76
-msgid "Adjustment"
+#: includes/helper/woo-wallet-transaction-types.php:71
+msgid "Transfer"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:278
-#: includes/helper/woo-wallet-transaction-types.php:86
+#: includes/class-woo-wallet-admin.php:518
+#: includes/class-woo-wallet-admin.php:1213
+#: includes/helper/woo-wallet-transaction-types.php:76
+msgid "Refund"
+msgstr ""
+
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:279
+#: includes/helper/woo-wallet-transaction-types.php:81
+msgid "Adjustment"
+msgstr ""
+
+#: includes/api/abstracts/class-terawallet-rest-controller-base.php:280
+#: includes/helper/woo-wallet-transaction-types.php:91
 msgid "Other"
 msgstr ""
 
@@ -888,9 +911,9 @@ msgstr ""
 
 #: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:283
 #: includes/api/v1/admin/class-terawallet-rest-admin-transfer-controller.php:70
-#: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:225
-#: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:234
-#: includes/helper/woo-wallet-util.php:1524
+#: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:240
+#: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:249
+#: includes/helper/woo-wallet-util.php:1645
 msgid "Invalid user id."
 msgstr ""
 
@@ -1048,8 +1071,8 @@ msgid "Invalid action ID."
 msgstr ""
 
 #: includes/api/v1/settings/class-terawallet-rest-settings-controller.php:158
-#: includes/class-woo-wallet-settings.php:755
-#: includes/class-woo-wallet-settings.php:782
+#: includes/class-woo-wallet-settings.php:792
+#: includes/class-woo-wallet-settings.php:819
 msgid "(no title)"
 msgstr ""
 
@@ -1098,7 +1121,7 @@ msgid "Wallet Management"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:188
-#: includes/class-woo-wallet-frontend.php:862
+#: includes/class-woo-wallet-frontend.php:898
 #: templates/mini-wallet.php:23
 msgid "Current wallet balance"
 msgstr ""
@@ -1171,17 +1194,17 @@ msgid "to customer wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:539
-#: includes/class-woo-wallet-frontend.php:220
+#: includes/class-woo-wallet-frontend.php:221
 msgid "Please enter 3 or more characters"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:540
-#: includes/class-woo-wallet-frontend.php:218
+#: includes/class-woo-wallet-frontend.php:219
 msgid "No results found"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:541
-#: includes/class-woo-wallet-frontend.php:221
+#: includes/class-woo-wallet-frontend.php:222
 msgid "Searching…"
 msgstr ""
 
@@ -1262,13 +1285,13 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:923
 #: includes/class-woo-wallet-admin.php:1091
 #: includes/class-woo-wallet-admin.php:1114
-#: includes/class-woo-wallet-settings.php:441
+#: includes/class-woo-wallet-settings.php:478
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:216
 msgid "Cashback type"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:871
-#: includes/class-woo-wallet-settings.php:442
+#: includes/class-woo-wallet-settings.php:479
 msgid "Select cashback type percentage or fixed"
 msgstr ""
 
@@ -1276,7 +1299,7 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:925
 #: includes/class-woo-wallet-admin.php:1093
 #: includes/class-woo-wallet-admin.php:1117
-#: includes/class-woo-wallet-settings.php:446
+#: includes/class-woo-wallet-settings.php:483
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:223
 msgid "Percentage"
 msgstr ""
@@ -1286,8 +1309,8 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:1094
 #: includes/class-woo-wallet-admin.php:1118
 #: includes/class-woo-wallet-settings.php:250
-#: includes/class-woo-wallet-settings.php:326
-#: includes/class-woo-wallet-settings.php:447
+#: includes/class-woo-wallet-settings.php:363
+#: includes/class-woo-wallet-settings.php:484
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:224
 msgid "Fixed"
 msgstr ""
@@ -1296,13 +1319,13 @@ msgstr ""
 #: includes/class-woo-wallet-admin.php:942
 #: includes/class-woo-wallet-admin.php:1098
 #: includes/class-woo-wallet-admin.php:1123
-#: includes/class-woo-wallet-settings.php:455
+#: includes/class-woo-wallet-settings.php:492
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:233
 msgid "Cashback Amount"
 msgstr ""
 
 #: includes/class-woo-wallet-admin.php:886
-#: includes/class-woo-wallet-settings.php:456
+#: includes/class-woo-wallet-settings.php:493
 msgid "Enter cashback amount"
 msgstr ""
 
@@ -1330,9 +1353,9 @@ msgstr ""
 
 #: includes/class-woo-wallet-admin.php:1056
 #: includes/class-woo-wallet-admin.php:1156
-#: includes/class-woo-wallet-frontend.php:149
-#: includes/class-woo-wallet-frontend.php:287
-#: templates/wc-endpoint-wallet.php:83
+#: includes/class-woo-wallet-frontend.php:150
+#: includes/class-woo-wallet-frontend.php:288
+#: templates/wc-endpoint-wallet.php:90
 msgid "My Wallet"
 msgstr ""
 
@@ -1491,144 +1514,144 @@ msgstr ""
 msgid "User not found"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:203
+#: includes/class-woo-wallet-frontend.php:204
 msgid "No transactions available"
 msgstr ""
 
 #. translators: menu length
-#: includes/class-woo-wallet-frontend.php:205
+#: includes/class-woo-wallet-frontend.php:206
 #, php-format
 msgid "Show %s entries"
 msgstr ""
 
 #. translators: 1.start 2.end 3.total
-#: includes/class-woo-wallet-frontend.php:207
+#: includes/class-woo-wallet-frontend.php:208
 #, php-format
 msgid "Showing %1$1s to %2$2s of %3$3s entries"
 msgstr ""
 
 #. translators: max length
-#: includes/class-woo-wallet-frontend.php:209
+#: includes/class-woo-wallet-frontend.php:210
 #, php-format
 msgid "(filtered from %1s total entries)"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:210
+#: includes/class-woo-wallet-frontend.php:211
 msgid "Showing 0 to 0 of 0 entries"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:212
+#: includes/class-woo-wallet-frontend.php:213
 msgid "First"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:213
+#: includes/class-woo-wallet-frontend.php:214
 msgid "Last"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:214
+#: includes/class-woo-wallet-frontend.php:215
 msgid "Next"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:215
+#: includes/class-woo-wallet-frontend.php:216
 msgid "Previous"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:217
+#: includes/class-woo-wallet-frontend.php:218
 msgid "Please enter a valid email address"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:219
+#: includes/class-woo-wallet-frontend.php:220
 msgid "No matching records found"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:224
+#: includes/class-woo-wallet-frontend.php:225
 msgid "yyyy-mm-dd"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:225
+#: includes/class-woo-wallet-frontend.php:226
 #: build/admin/settings/index.js:1
 #: src/admin/settings/components/CurrencyModePanel.jsx:101
 msgid "Cancel"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:226
+#: includes/class-woo-wallet-frontend.php:227
 #: templates/admin/credit-debit-modal.php:50
 #: build/partial-payment/index.js:1
-#: src/partial-payment/index.js:112
+#: src/partial-payment/index.js:116
 msgid "Apply"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:227
+#: includes/class-woo-wallet-frontend.php:228
 msgid "Custom"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:228
+#: includes/class-woo-wallet-frontend.php:229
 msgid "W"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:230
+#: includes/class-woo-wallet-frontend.php:231
 msgid "Sun"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:231
+#: includes/class-woo-wallet-frontend.php:232
 msgid "Mon"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:232
+#: includes/class-woo-wallet-frontend.php:233
 msgid "Tue"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:233
+#: includes/class-woo-wallet-frontend.php:234
 msgid "Wed"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:234
+#: includes/class-woo-wallet-frontend.php:235
 msgid "Thu"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:235
+#: includes/class-woo-wallet-frontend.php:236
 msgid "Fri"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:236
+#: includes/class-woo-wallet-frontend.php:237
 msgid "Sat"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:255
+#: includes/class-woo-wallet-frontend.php:256
 msgid "Today"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:256
+#: includes/class-woo-wallet-frontend.php:257
 msgid "Yesterday"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:257
+#: includes/class-woo-wallet-frontend.php:258
 msgid "Last 7 days"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:258
+#: includes/class-woo-wallet-frontend.php:259
 msgid "Last 30 days"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:259
+#: includes/class-woo-wallet-frontend.php:260
 msgid "This month"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:260
+#: includes/class-woo-wallet-frontend.php:261
 msgid "Last month"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:288
+#: includes/class-woo-wallet-frontend.php:289
 msgid "Account details"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:289
+#: includes/class-woo-wallet-frontend.php:290
 msgid "Logout"
 msgstr ""
 
 #. translators: Minimum topup amount
 #. translators: %s: minimum top-up amount
-#: includes/class-woo-wallet-frontend.php:381
+#: includes/class-woo-wallet-frontend.php:388
 #: includes/services/class-woo-wallet-topup-service.php:67
 #, php-format
 msgid "The minimum amount needed for wallet top up is %s"
@@ -1636,58 +1659,59 @@ msgstr ""
 
 #. translators: Maximum topup amount
 #. translators: %s: maximum top-up amount
-#: includes/class-woo-wallet-frontend.php:388
+#: includes/class-woo-wallet-frontend.php:395
 #: includes/services/class-woo-wallet-topup-service.php:74
 #, php-format
 msgid "Wallet top up amount should be less than %s"
 msgstr ""
 
 #. translators: 1. Minimum topup amount 2.Minimum topup amount
-#: includes/class-woo-wallet-frontend.php:395
+#: includes/class-woo-wallet-frontend.php:402
 #, php-format
 msgid "Wallet top up amount should be between %1$s and %2$s"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:428
+#: includes/class-woo-wallet-frontend.php:435
 #: includes/services/class-woo-wallet-transfer-service.php:67
 msgid "You must be logged in to transfer funds."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:442
+#: includes/class-woo-wallet-frontend.php:449
 msgid "This transfer was already submitted. Please refresh the form and try again."
 msgstr ""
 
 #. translators: 1:cashback amount
-#: includes/class-woo-wallet-frontend.php:580
+#: includes/class-woo-wallet-frontend.php:587
 #, php-format
 msgid "Upon placing this order a cashback of %s will be credited to your wallet."
 msgstr ""
 
 #. translators: 1: Login URL, 2:wallet amount
-#: includes/class-woo-wallet-frontend.php:583
+#: includes/class-woo-wallet-frontend.php:590
 #, php-format
 msgid "Please <a href=\"%1$s\">log in</a> to avail %2$s cashback from this order."
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:629
+#: includes/class-woo-wallet-frontend.php:636
 msgid "Wallet Cashback (coupon)"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:652
+#: includes/class-woo-wallet-frontend.php:679
+#: includes/class-woo-wallet-frontend.php:687
 msgid "Via wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:713
-#: includes/class-woo-wallet-frontend.php:746
+#: includes/class-woo-wallet-frontend.php:749
+#: includes/class-woo-wallet-frontend.php:782
 msgid " Cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-frontend.php:765
+#: includes/class-woo-wallet-frontend.php:801
 msgid "Coupon code applied successfully as cashback."
 msgstr ""
 
 #. translators: coupon code
-#: includes/class-woo-wallet-frontend.php:782
+#: includes/class-woo-wallet-frontend.php:818
 #, php-format
 msgid "Cashback: %s"
 msgstr ""
@@ -1725,7 +1749,7 @@ msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:266
 #: includes/class-woo-wallet-settings.php:38
-#: includes/class-woo-wallet.php:289
+#: includes/class-woo-wallet.php:300
 msgid "Settings"
 msgstr ""
 
@@ -1958,7 +1982,7 @@ msgid "Your wallet balance is low. Please add %s to proceed with this transactio
 msgstr ""
 
 #: includes/class-woo-wallet-payment-method.php:162
-#: includes/class-woo-wallet-wallet.php:552
+#: includes/class-woo-wallet-wallet.php:625
 msgid "For order payment #"
 msgstr ""
 
@@ -2075,7 +2099,7 @@ msgid "Choose how the gateway fee is calculated"
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:249
-#: includes/class-woo-wallet-settings.php:325
+#: includes/class-woo-wallet-settings.php:362
 msgid "Percentage (%)"
 msgstr ""
 
@@ -2103,224 +2127,264 @@ msgstr ""
 msgid "When the order total exceeds the wallet balance, deduct the balance first and charge the remainder to the selected payment method"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:289
-msgid "Enable Wallet Transfer"
+#: includes/class-woo-wallet-settings.php:286
+msgid "Tax treatment"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:287
+msgid "How the wallet interacts with order tax. \"Wallet pays goods only\" charges the tax on the order (correct when top-ups are not taxed). \"Wallet pays the whole order including tax\" lets the wallet cover the tax line — use this ONLY when top-ups are set Taxable, otherwise tax is under-collected. Confirm with your accountant."
 msgstr ""
 
 #: includes/class-woo-wallet-settings.php:290
+msgid "Wallet pays goods only; tax charged on order (recommended)"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:291
+msgid "Wallet pays the whole order including tax (top-ups taxed at load)"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:300
+msgid "Deduct wallet balance"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:301
+msgid "When to deduct the wallet amount. \"At order placement\" reserves the balance immediately (default). \"When payment completes\" deducts only once the order reaches a paid status — if the balance was spent meanwhile the order is held for review."
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:304
+msgid "At order placement"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:305
+msgid "When payment completes"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:314
+msgid "Refund wallet on partial refunds"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:315
+msgid "When you issue a partial refund on an order, return the wallet-paid portion proportionally to the customer wallet. Full cancellations always refund the wallet."
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:326
+msgid "Enable Wallet Transfer"
+msgstr ""
+
+#: includes/class-woo-wallet-settings.php:327
 msgid "Allow users to send wallet balance to other registered customers"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:294
+#: includes/class-woo-wallet-settings.php:331
 #: templates/transfer.php:34
 msgid "Wallet Transfer"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:295
+#: includes/class-woo-wallet-settings.php:332
 msgid "Peer-to-peer wallet transfer settings"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:299
+#: includes/class-woo-wallet-settings.php:336
 msgid "Minimum Transfer Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:300
+#: includes/class-woo-wallet-settings.php:337
 msgid "Users cannot transfer less than this amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:310
+#: includes/class-woo-wallet-settings.php:347
 msgid "Maximum Transfer Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:311
+#: includes/class-woo-wallet-settings.php:348
 msgid "Users cannot transfer more than this amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:321
+#: includes/class-woo-wallet-settings.php:358
 msgid "Transfer Charge Type"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:322
+#: includes/class-woo-wallet-settings.php:359
 msgid "Choose how the transfer fee is calculated"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:335
+#: includes/class-woo-wallet-settings.php:372
 msgid "Transfer Charge Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:336
+#: includes/class-woo-wallet-settings.php:373
 msgid "Fee charged to the sender for each transfer"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:357
+#: includes/class-woo-wallet-settings.php:394
 msgid "Wallet Currency Mode"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:358
+#: includes/class-woo-wallet-settings.php:395
 msgid "How wallet transactions are stored across currencies. \"Single base currency\" normalizes every credit/debit to the shop base on write — safest default. \"Per-currency sub-balances\" stores each transaction in its own currency so customers see balances per currency."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:361
+#: includes/class-woo-wallet-settings.php:398
 msgid "Single base currency (recommended)"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:362
+#: includes/class-woo-wallet-settings.php:399
 #: build/admin/settings/index.js:1
 #: src/admin/settings/components/CurrencyModePanel.jsx:223
 #: src/admin/settings/components/CurrencyModePanel.jsx:298
 msgid "Per-currency sub-balances"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:367
+#: includes/class-woo-wallet-settings.php:404
 msgid "Currency Handling"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:368
+#: includes/class-woo-wallet-settings.php:405
 msgid "Multi-currency storage and display behaviour"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:385
+#: includes/class-woo-wallet-settings.php:422
 msgid "Enable Cashback Rewards"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:386
+#: includes/class-woo-wallet-settings.php:423
 msgid "Customers earn wallet credit on qualifying orders"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:389
+#: includes/class-woo-wallet-settings.php:426
 msgid "Cashback Rewards"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:390
+#: includes/class-woo-wallet-settings.php:427
 msgid "Reward customers with wallet credits on purchases"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:394
+#: includes/class-woo-wallet-settings.php:431
 msgid "Process cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:395
+#: includes/class-woo-wallet-settings.php:432
 msgid "Select order status to process cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:410
+#: includes/class-woo-wallet-settings.php:447
 msgid "This option lets you specify which user role you want to exclude from the cashback program."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:421
+#: includes/class-woo-wallet-settings.php:458
 msgid "Cashback Rule"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:422
+#: includes/class-woo-wallet-settings.php:459
 msgid "Select Cashback Rule cart or product wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:428
+#: includes/class-woo-wallet-settings.php:465
 msgid "Cart wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:429
+#: includes/class-woo-wallet-settings.php:466
 msgid "Product wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:430
+#: includes/class-woo-wallet-settings.php:467
 msgid "Product category wise"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:465
+#: includes/class-woo-wallet-settings.php:502
 msgid "Minimum Cart Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:466
+#: includes/class-woo-wallet-settings.php:503
 msgid "Enter applicable minimum cart amount for cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:481
+#: includes/class-woo-wallet-settings.php:518
 msgid "Maximum Cashback Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:482
+#: includes/class-woo-wallet-settings.php:519
 msgid "Enter maximum cashback amount"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:491
+#: includes/class-woo-wallet-settings.php:528
 msgid "Allow Minimum cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:492
+#: includes/class-woo-wallet-settings.php:529
 msgid "If checked minimum cashback amount will be applied on product category cashback calculation."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:506
+#: includes/class-woo-wallet-settings.php:543
 msgid "Maximum Cashback Cap Scope"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:507
+#: includes/class-woo-wallet-settings.php:544
 msgid "Per order: the global maximum is applied once to the cart/order total. Per item: the maximum is applied to each line item individually (legacy behaviour)."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:512
+#: includes/class-woo-wallet-settings.php:549
 msgid "Per order (recommended)"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:513
+#: includes/class-woo-wallet-settings.php:550
 msgid "Per item (legacy)"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:520
+#: includes/class-woo-wallet-settings.php:557
 msgid "Refund Clawback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:521
+#: includes/class-woo-wallet-settings.php:558
 msgid "Claw back cashback prorated against the refunded fraction when an order is refunded. Off by default for upgrade safety."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:529
+#: includes/class-woo-wallet-settings.php:566
 msgid "Allow Negative Clawback"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:530
+#: includes/class-woo-wallet-settings.php:567
 msgid "Allow the cashback reversal to drive the wallet negative when the customer has already spent the credit. Off by default (partial-debit policy applies instead)."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:760
+#: includes/class-woo-wallet-settings.php:797
 msgid "Enter gateway charge amount for "
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:788
+#: includes/class-woo-wallet-settings.php:825
 msgid "Allow this gateway for recharge wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:811
+#: includes/class-woo-wallet-settings.php:848
 msgid "Rechargeable Product Tax status"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:812
+#: includes/class-woo-wallet-settings.php:849
 msgid "Define whether or not the rechargeable Product is taxable."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:815
+#: includes/class-woo-wallet-settings.php:852
 msgid "Taxable"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:816
+#: includes/class-woo-wallet-settings.php:853
 msgctxt "Tax status"
 msgid "None"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:823
+#: includes/class-woo-wallet-settings.php:860
 msgid "Rechargeable Product Tax class"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:826
+#: includes/class-woo-wallet-settings.php:863
 msgid "Choose a tax class for rechargeable product."
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:851
+#: includes/class-woo-wallet-settings.php:888
 msgid "Mini wallet display location"
 msgstr ""
 
-#: includes/class-woo-wallet-settings.php:852
+#: includes/class-woo-wallet-settings.php:889
 msgid "Select the location where you want to display mini wallet."
 msgstr ""
 
@@ -2350,62 +2414,78 @@ msgid "Wallet credit through cashback by applying coupon"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:561
+#: includes/class-woo-wallet-wallet.php:635
 #, php-format
 msgid "%s paid through wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:632
+#: includes/class-woo-wallet-wallet.php:648
+msgid "Wallet partial payment could not be debited (insufficient balance). Held for review. "
+msgstr ""
+
+#. translators: order number
+#: includes/class-woo-wallet-wallet.php:765
+#, php-format
+msgid "Partial refund for order #%s credited to wallet"
+msgstr ""
+
+#. translators: wallet amount
+#: includes/class-woo-wallet-wallet.php:779
+#, php-format
+msgid "%s of the wallet payment refunded to the customer wallet (partial refund)."
+msgstr ""
+
+#: includes/class-woo-wallet-wallet.php:861
 #, php-format
 msgid "Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:639
+#: includes/class-woo-wallet-wallet.php:869
 #, php-format
 msgid "Wallet amount %s has been credited to customer upon cancellation"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:731
-#: includes/class-woo-wallet-wallet.php:751
-#: includes/class-woo-wallet-wallet.php:777
+#: includes/class-woo-wallet-wallet.php:962
+#: includes/class-woo-wallet-wallet.php:982
+#: includes/class-woo-wallet-wallet.php:1008
 #, php-format
 msgid "Cashback for #%s debited upon cancellation"
 msgstr ""
 
 #. translators: 1: formatted amount
-#: includes/class-woo-wallet-wallet.php:742
+#: includes/class-woo-wallet-wallet.php:973
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation (wallet driven negative by setting)."
 msgstr ""
 
 #. translators: 1: formatted amount
-#: includes/class-woo-wallet-wallet.php:760
-#: includes/class-woo-wallet-wallet.php:796
+#: includes/class-woo-wallet-wallet.php:991
+#: includes/class-woo-wallet-wallet.php:1027
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation."
 msgstr ""
 
 #. translators: 1: formatted cashback total, 2: formatted available balance
-#: includes/class-woo-wallet-wallet.php:765
+#: includes/class-woo-wallet-wallet.php:996
 #, php-format
 msgid "Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written."
 msgstr ""
 
 #. translators: 1: formatted debit amount, 2: formatted unreversed amount
-#: includes/class-woo-wallet-wallet.php:793
+#: includes/class-woo-wallet-wallet.php:1024
 #, php-format
 msgid "Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback."
 msgstr ""
 
 #. translators: 1: order number, 2: reason
-#: includes/class-woo-wallet-wallet.php:941
+#: includes/class-woo-wallet-wallet.php:1172
 #, php-format
 msgid "Cashback adjustment for order #%1$s (%2$s)"
 msgstr ""
 
 #. translators: 1: order number
-#: includes/class-woo-wallet-wallet.php:943
+#: includes/class-woo-wallet-wallet.php:1174
 #, php-format
 msgid "Cashback adjustment for order #%s"
 msgstr ""
@@ -2435,82 +2515,94 @@ msgstr ""
 msgid "Title:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:289
+#: includes/class-woo-wallet.php:300
 msgid "View Wallet settings"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:16
+#: includes/emails/abstracts/abstract-woo-wallet-email.php:62
+msgid "Additional content"
+msgstr ""
+
+#: includes/emails/abstracts/abstract-woo-wallet-email.php:63
+msgid "Text to appear below the main email content."
+msgstr ""
+
+#: includes/emails/abstracts/abstract-woo-wallet-email.php:65
+msgid "N/A"
+msgstr ""
+
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:28
 msgid "Low Wallet Balance"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:17
-msgid "If the wallet balance reaches the lower limit set by admin for notification then the customer will get the notification for low wallet balance."
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:29
+msgid "Notifies the customer to recharge when their wallet balance drops to the threshold set by the admin."
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:35
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:48
 msgid "Your {site_title} wallet balance is low."
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:45
-msgid "Please recharge your wallet for continue using."
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:58
+msgid "Please recharge your wallet to continue using it"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:126
-#: includes/emails/class-woo-wallet-email-new-transaction.php:142
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:186
+#: includes/emails/class-woo-wallet-email-new-transaction.php:189
 msgid "Enable this email notification"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:130
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:190
 msgid "Threshold for low wallet balance"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:133
-msgid "A minimum balance on which customers will be notified to recharge again the wallet."
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:193
+msgid "A minimum balance at or below which customers will be notified to recharge their wallet."
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:137
-#: includes/emails/class-woo-wallet-email-new-transaction.php:146
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:197
+#: includes/emails/class-woo-wallet-email-new-transaction.php:193
 msgid "Subject"
 msgstr ""
 
-#. translators: %s: list of placeholders
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:141
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:150
-#: includes/emails/class-woo-wallet-email-new-transaction.php:150
-#: includes/emails/class-woo-wallet-email-new-transaction.php:159
+#. translators: %s: list of available placeholders
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:201
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:210
+#: includes/emails/class-woo-wallet-email-new-transaction.php:197
+#: includes/emails/class-woo-wallet-email-new-transaction.php:206
 #, php-format
 msgid "Available placeholders: %s"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:146
-#: includes/emails/class-woo-wallet-email-new-transaction.php:155
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:206
+#: includes/emails/class-woo-wallet-email-new-transaction.php:202
 msgid "Email heading"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:155
-#: includes/emails/class-woo-wallet-email-new-transaction.php:164
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:216
+#: includes/emails/class-woo-wallet-email-new-transaction.php:212
 msgid "Email type"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:157
-#: includes/emails/class-woo-wallet-email-new-transaction.php:166
+#: includes/emails/class-woo-wallet-email-low-wallet-balance.php:218
+#: includes/emails/class-woo-wallet-email-new-transaction.php:214
 msgid "Choose which format of email to send."
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-new-transaction.php:19
+#: includes/emails/class-woo-wallet-email-new-transaction.php:56
 msgid "New wallet transaction"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-new-transaction.php:20
-msgid "New wallet transaction emails are sent to user when a wallet transaction received."
+#: includes/emails/class-woo-wallet-email-new-transaction.php:57
+msgid "New wallet transaction emails are sent to the customer when their wallet is credited or debited."
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-new-transaction.php:40
+#: includes/emails/class-woo-wallet-email-new-transaction.php:77
 msgid "Your {site_title} wallet transaction from {transaction_date}"
 msgstr ""
 
-#: includes/emails/class-woo-wallet-email-new-transaction.php:50
-msgid "Thank you for using wallet"
+#: includes/emails/class-woo-wallet-email-new-transaction.php:87
+msgid "Your wallet has a new transaction"
 msgstr ""
 
 #: includes/export/class-terawallet-csv-exporter.php:93
@@ -2551,77 +2643,94 @@ msgid "Cashback unwound when its originating order is refunded."
 msgstr ""
 
 #: includes/helper/woo-wallet-transaction-types.php:62
+#: includes/helper/woo-wallet-transaction-types.php:67
 msgid "Wallet debit applied to an order at checkout."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:67
+#: includes/helper/woo-wallet-transaction-types.php:72
 msgid "Peer-to-peer transfer between two customer wallets."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:72
+#: includes/helper/woo-wallet-transaction-types.php:77
 msgid "Order refund credited back to the wallet."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:77
+#: includes/helper/woo-wallet-transaction-types.php:82
 msgid "Manual admin credit or debit."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:81
+#: includes/helper/woo-wallet-transaction-types.php:86
 msgid "Vendor commission"
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:82
+#: includes/helper/woo-wallet-transaction-types.php:87
 msgid "Marketplace commission paid into a vendor wallet."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:87
+#: includes/helper/woo-wallet-transaction-types.php:92
 msgid "Anything not matching a known category."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:223
+#: includes/helper/woo-wallet-transaction-types.php:228
 msgid "Transaction descriptions"
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:224
+#: includes/helper/woo-wallet-transaction-types.php:229
 msgid "Per-category description templates. When set, the template overrides the system-generated description on new transactions."
 msgstr ""
 
 #. translators: list of supported template tokens
-#: includes/helper/woo-wallet-transaction-types.php:239
+#: includes/helper/woo-wallet-transaction-types.php:244
 #, php-format
 msgid "Available tokens: %1$s. %2$sLeave blank to keep the system-generated description."
 msgstr ""
 
 #. translators: %s: example category template
-#: includes/helper/woo-wallet-transaction-types.php:255
+#: includes/helper/woo-wallet-transaction-types.php:260
 #, php-format
 msgid "e.g. \"%s\""
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:261
+#: includes/helper/woo-wallet-transaction-types.php:266
 msgid "Transaction description templates"
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:262
+#: includes/helper/woo-wallet-transaction-types.php:267
 msgid "These templates replace the auto-generated description on each new transaction record."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1079
+#: includes/helper/woo-wallet-util.php:1166
 msgid "Guest visitor"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1082
+#: includes/helper/woo-wallet-util.php:1169
 msgid "Deleted user"
 msgstr ""
 
 #. translators: %d: user id
-#: includes/helper/woo-wallet-util.php:1536
+#: includes/helper/woo-wallet-util.php:1657
 #, php-format
 msgid "Could not acquire wallet lock for user #%d. Try again."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1584
+#: includes/helper/woo-wallet-util.php:1705
 msgid "Balance carried over after deleting transaction logs"
+msgstr ""
+
+#: includes/helper/woo-wallet-util.php:2338
+msgid "Total top-ups"
+msgstr ""
+
+#: includes/helper/woo-wallet-util.php:2347
+msgid "Total spent"
+msgstr ""
+
+#: includes/helper/woo-wallet-util.php:2357
+msgid "Cashback earned"
+msgstr ""
+
+#: includes/helper/woo-wallet-util.php:2367
+msgid "Available balance"
 msgstr ""
 
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:82
@@ -2977,47 +3086,93 @@ msgstr ""
 msgid "Generate CSV"
 msgstr ""
 
-#. translators: 1: wallet amount
-#: templates/emails/low-wallet-balance.php:33
-#: templates/emails/plain/low-wallet-balance.php:26
-#, php-format
-msgid "Your %s wallet balance is low."
+#: templates/dashboard.php:66
+#: templates/dashboard.php:98
+msgid "Recent transactions"
 msgstr ""
 
-#. translators: 1: wallet amount
-#: templates/emails/low-wallet-balance.php:40
-#: templates/emails/plain/low-wallet-balance.php:29
+#. translators: %d: number of transactions shown.
+#: templates/dashboard.php:71
 #, php-format
-msgid "Current Balance: %s"
+msgid "Last %d"
+msgid_plural "Last %d"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/dashboard.php:141
+msgid "No transactions found"
 msgstr ""
 
+#. translators: %s: site name
 #: templates/emails/low-wallet-balance.php:45
-#: templates/emails/plain/low-wallet-balance.php:31
-msgid "Please recharge you wallet now to avoid any disruption."
+#: templates/emails/plain/low-wallet-balance.php:34
+#, php-format
+msgid "Your %s wallet balance is running low."
 msgstr ""
 
-#: templates/emails/plain/user-new-transaction.php:27
-#: templates/emails/plain/user-new-transaction.php:30
-#: templates/emails/user-new-transaction.php:30
-#: templates/emails/user-new-transaction.php:33
-msgid "Thank you for using your wallet."
+#. translators: %s: current wallet balance
+#: templates/emails/low-wallet-balance.php:58
+#: templates/emails/plain/low-wallet-balance.php:39
+#: templates/emails/plain/user-new-transaction.php:56
+#, php-format
+msgid "Current balance: %s"
 msgstr ""
 
-#: templates/emails/plain/user-new-transaction.php:27
-#: templates/emails/user-new-transaction.php:30
-msgid "has been credited to your wallet."
+#: templates/emails/low-wallet-balance.php:66
+#: templates/emails/plain/low-wallet-balance.php:41
+msgid "Please recharge your wallet now to avoid any disruption."
 msgstr ""
 
-#: templates/emails/plain/user-new-transaction.php:27
-#: templates/emails/plain/user-new-transaction.php:30
-#: templates/emails/user-new-transaction.php:30
-#: templates/emails/user-new-transaction.php:33
-msgid "Current wallet balance is"
+#: templates/emails/low-wallet-balance.php:71
+msgid "Recharge your wallet now"
 msgstr ""
 
-#: templates/emails/plain/user-new-transaction.php:30
-#: templates/emails/user-new-transaction.php:33
-msgid "has been debited from your wallet."
+#. translators: %s: wallet top-up URL
+#: templates/emails/plain/low-wallet-balance.php:45
+#, php-format
+msgid "Recharge your wallet: %s"
+msgstr ""
+
+#. translators: %s: credited amount
+#: templates/emails/plain/user-new-transaction.php:38
+#: templates/emails/user-new-transaction.php:49
+#, php-format
+msgid "Good news! %s has been credited to your wallet."
+msgstr ""
+
+#. translators: %s: debited amount
+#: templates/emails/plain/user-new-transaction.php:41
+#: templates/emails/user-new-transaction.php:61
+#, php-format
+msgid "%s has been debited from your wallet."
+msgstr ""
+
+#. translators: %s: transaction type label
+#: templates/emails/plain/user-new-transaction.php:46
+#, php-format
+msgid "Type: %s"
+msgstr ""
+
+#. translators: %s: transaction details
+#: templates/emails/plain/user-new-transaction.php:50
+#, php-format
+msgid "Details: %s"
+msgstr ""
+
+#. translators: %s: transaction date
+#: templates/emails/plain/user-new-transaction.php:54
+#, php-format
+msgid "Date: %s"
+msgstr ""
+
+#. translators: %s: wallet URL
+#: templates/emails/plain/user-new-transaction.php:61
+#, php-format
+msgid "View your wallet: %s"
+msgstr ""
+
+#: templates/emails/user-new-transaction.php:90
+msgid "Current balance"
 msgstr ""
 
 #: templates/no-access.php:24
@@ -3115,20 +3270,12 @@ msgstr ""
 msgid "Wallet transfer"
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:84
+#: templates/wc-endpoint-wallet.php:91
 msgid "Manage your wallet and transactions seamlessly."
 msgstr ""
 
-#: templates/wc-endpoint-wallet.php:91
+#: templates/wc-endpoint-wallet.php:98
 msgid "Total Balance"
-msgstr ""
-
-#: templates/wc-endpoint-wallet.php:136
-msgid "Balance History"
-msgstr ""
-
-#: templates/wc-endpoint-wallet.php:169
-msgid "No transactions found"
 msgstr ""
 
 #. translators: wallet amount
@@ -3547,6 +3694,11 @@ msgstr ""
 #: build/partial-payment/index.js:1
 #: src/partial-payment/index.js:101
 msgid "Amount cannot exceed your wallet balance"
+msgstr ""
+
+#: build/partial-payment/index.js:1
+#: src/partial-payment/index.js:105
+msgid "Amount cannot exceed the order total payable from your wallet"
 msgstr ""
 
 #: build/payment-method/index.js:1
