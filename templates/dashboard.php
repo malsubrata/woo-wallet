@@ -19,8 +19,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+// Make the authorization scope explicit: this template is only meaningful for the
+// logged-in customer, regardless of the (public) hook it is rendered from.
+if ( ! is_user_logged_in() ) {
+	return;
+}
+
 $ww_txn_limit = (int) apply_filters( 'woo_wallet_transactions_count', 10 );
-$transactions = get_wallet_transactions( array( 'limit' => $ww_txn_limit ) );
+$transactions = get_wallet_transactions(
+	array(
+		'limit'   => $ww_txn_limit,
+		'user_id' => get_current_user_id(),
+	)
+);
 
 $ww_stat_cards = function_exists( 'woo_wallet_get_dashboard_stat_cards' )
 	? woo_wallet_get_dashboard_stat_cards( get_current_user_id() )

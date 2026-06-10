@@ -1855,10 +1855,6 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 		if ( ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
 			return false;
 		}
-
-		if ( ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
-			return false;
-		}
 		$manager = Woo_Wallet_Currency_Manager::instance();
 
 		$base = strtoupper( (string) $manager->get_base_currency() );
@@ -1877,7 +1873,7 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 			$batch_size = 500;
 		}
 
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_id, user_id, amount, currency, original_amount, original_currency FROM {$table} WHERE currency <> %s ORDER BY user_id LIMIT %d", $base, $batch_size ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT transaction_id, user_id, amount, currency, original_amount, original_currency FROM {$table} WHERE currency <> %s AND deleted = 0 ORDER BY user_id LIMIT %d", $base, $batch_size ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		if ( empty( $rows ) ) {
 			// No foreign rows to normalize — provider availability is irrelevant
 			// (the common single_base store that never ran multicurrency lands
@@ -2221,6 +2217,7 @@ if ( ! function_exists( 'woo_wallet_get_stat_card_icon' ) ) {
 				'aria-hidden'     => true,
 				'focusable'       => true,
 			),
+			'title'    => array(),
 			'g'        => array(
 				'fill'      => true,
 				'stroke'    => true,

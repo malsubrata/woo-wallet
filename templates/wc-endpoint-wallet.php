@@ -43,8 +43,19 @@ $menu_items                = apply_filters(
 	),
 	$is_rendred_from_myaccount
 );
-$current_action            = isset( $_GET['wallet_action'] ) ? $_GET['wallet_action'] : ( isset( $wp->query_vars['woo-wallet'] ) ? $wp->query_vars['woo-wallet'] : 'dashboard' );
+$current_action            = isset( $_GET['wallet_action'] ) ? sanitize_key( wp_unslash( $_GET['wallet_action'] ) ) : ( isset( $wp->query_vars['woo-wallet'] ) ? sanitize_key( $wp->query_vars['woo-wallet'] ) : 'dashboard' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab routing, value is allow-listed below.
 if ( empty( $current_action ) ) {
+	$current_action = 'dashboard';
+}
+// Allow-list the resolved action before it is interpolated into the dynamic
+// `do_action()`/`apply_filters()` hook names below, so a crafted `wallet_action`
+// query value cannot fire arbitrary `woo_wallet_<x>_content` hooks. Third-party
+// nav items are already enumerated in $menu_items, so this stays extensible.
+$ww_allowed_actions = apply_filters(
+	'woo_wallet_allowed_dashboard_actions',
+	array_values( array_unique( array_merge( array( 'dashboard', 'add', 'transfer', 'transactions' ), array_keys( (array) $menu_items ) ) ) )
+);
+if ( ! in_array( $current_action, $ww_allowed_actions, true ) ) {
 	$current_action = 'dashboard';
 }
 if ( ! function_exists( 'is_wallet_tab_active' ) ) {
