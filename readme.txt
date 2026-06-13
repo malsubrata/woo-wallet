@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.4
+Stable tag: 1.6.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.5 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.4 (June 10, 2026) =
 – **New:-** The customer wallet dashboard now shows a row of summary cards — **Total top-ups**, **Total spent** (covers both full wallet payments and partial payments), **Cashback earned** (shown only when the cashback reward program is enabled), and **Available balance** — above the recent transactions list. Third-party/add-on plugins can register their own cards (e.g. "Total withdrawn") via the new `woo_wallet_dashboard_stat_cards` filter. The figures share one helper (`woo_wallet_get_user_category_total()`) with the admin user report, so dashboard and admin always agree.
