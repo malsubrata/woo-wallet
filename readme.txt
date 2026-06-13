@@ -139,7 +139,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.5 (Unreleased) =
-– **Tweak:-** Development in progress.
+– **Security:-** Fixed a missing-authorization flaw (≤ 1.6.3) that let any authenticated user (Subscriber and above) enumerate the login name, email address and user ID of every WordPress account — including administrators — through the `terawallet_export_user_search` AJAX action. The capability guard never fired because it tested the (always-truthy) capability *string* instead of `current_user_can()`; the admin exporter search now verifies the wallet capability and uses its own dedicated nonce that is never exposed on the front-end My Account page. The peer-to-peer transfer recipient search is unaffected.
 
 = v1.6.4 (June 10, 2026) =
 – **New:-** The customer wallet dashboard now shows a row of summary cards — **Total top-ups**, **Total spent** (covers both full wallet payments and partial payments), **Cashback earned** (shown only when the cashback reward program is enabled), and **Available balance** — above the recent transactions list. Third-party/add-on plugins can register their own cards (e.g. "Total withdrawn") via the new `woo_wallet_dashboard_stat_cards` filter. The figures share one helper (`woo_wallet_get_user_category_total()`) with the admin user report, so dashboard and admin always agree.

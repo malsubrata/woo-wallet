@@ -161,9 +161,14 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * Search users for export transactions.
 		 */
 		public function terawallet_export_user_search() {
-			check_ajax_referer( 'search-user', 'security' );
-			// Check permissions again and make sure we have what we need.
-			if ( ! get_wallet_user_capability() ) {
+			// Dedicated admin-exporter nonce — never localized on the front-end My Account
+			// page, so a Subscriber-obtainable nonce cannot reach this handler.
+			check_ajax_referer( 'terawallet-export-search-user', 'security' );
+			// Admin-only exporter search: verify the user actually holds the wallet capability.
+			// NOTE: get_wallet_user_capability() returns a capability *string* (truthy), so the
+			// previous `! get_wallet_user_capability()` guard never fired — it must be wrapped
+			// in current_user_can(). This fixes the Subscriber+ user/email enumeration flaw.
+			if ( ! current_user_can( get_wallet_user_capability() ) ) {
 				wp_die( -1 );
 			}
 			$term    = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
