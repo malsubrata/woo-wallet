@@ -486,7 +486,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 		$from   = "FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions";
 
 		// Validate and whitelist inputs that become SQL identifiers.
-		$allowed_order_cols = array( 'transaction_id', 'user_id', 'amount', 'currency', 'date', 'type', 'category', 'deleted' );
+		$allowed_order_cols = apply_filters( 'woo_wallet_transactions_query_order_cols', array( 'transaction_id', 'user_id', 'amount', 'currency', 'date', 'type', 'category', 'deleted' ) );
 		if ( ! in_array( $order_by, $allowed_order_cols, true ) ) {
 			$order_by = 'transaction_id';
 		}
