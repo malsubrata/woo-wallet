@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.5
+Stable tag: 1.6.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.6 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.5 (June 25, 2026) =
 – **Fix:-** Deleting a WordPress user now clears that user's wallet ledger for all of their transactions. The previous cleanup used an inner join between the transactions and transaction-meta tables, so transactions without any meta (most top-ups and plain credits/debits) were silently skipped. The user's transactions are now soft-deleted (marked deleted, recoverable) via the `deleted_user` hook; the `woo_wallet_delete_transaction_records` filter (now also passed the user ID) still lets you disable this.
