@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.5 (Unreleased) =
+= v1.6.5 (June 25, 2026) =
 – **Fix:-** Deleting a WordPress user now clears that user's wallet ledger for all of their transactions. The previous cleanup used an inner join between the transactions and transaction-meta tables, so transactions without any meta (most top-ups and plain credits/debits) were silently skipped. The user's transactions are now soft-deleted (marked deleted, recoverable) via the `deleted_user` hook; the `woo_wallet_delete_transaction_records` filter (now also passed the user ID) still lets you disable this.
 – **Security:-** Fixed a missing-authorization flaw (≤ 1.6.3) that let any authenticated user (Subscriber and above) enumerate the login name, email address and user ID of every WordPress account — including administrators — through the `terawallet_export_user_search` AJAX action. The capability guard never fired because it tested the (always-truthy) capability *string* instead of `current_user_can()`; the admin exporter search now verifies the wallet capability and uses its own dedicated nonce that is never exposed on the front-end My Account page. The peer-to-peer transfer recipient search is unaffected.
 – **Tweak:-** Hardened the new `woo_wallet_transactions_query_order_cols` filter: the order-by column whitelist is now passed through `sanitize_key()` so a third-party plugin that appends to the filter cannot smuggle SQL metacharacters into the transaction query's ORDER BY identifier.
