@@ -8,6 +8,9 @@ skills-lock.json
 .sass-cache/
 /build/
 
+# WordPress.org SVN packaging output
+/dist/
+
 # Claude/AI
 .claude/*
 !.claude/commands/

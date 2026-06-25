@@ -441,14 +441,16 @@ final class Woo_Wallet {
 		}
 	}
 	/**
-	 * Delete user transaction records.
+	 * Soft-delete a deleted user's wallet transaction records.
 	 *
-	 * @param Int $id Transaction ID.
+	 * Fires on the `deleted_user` hook. Marks the user's ledger rows as deleted
+	 * (recoverable) rather than physically removing them, preserving an audit trail.
+	 *
+	 * @param int $id Deleted user ID.
 	 */
 	public function delete_user_transaction_records( $id ) {
-		global $wpdb;
-		if ( apply_filters( 'woo_wallet_delete_transaction_records', true ) ) {
-			$wpdb->query( $wpdb->prepare( "DELETE t.*, tm.* FROM {$wpdb->base_prefix}woo_wallet_transactions t JOIN {$wpdb->base_prefix}woo_wallet_transaction_meta tm ON t.transaction_id = tm.transaction_id WHERE t.user_id = %d", $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( apply_filters( 'woo_wallet_delete_transaction_records', true, $id ) ) {
+			delete_user_wallet_transactions( absint( $id ), false );
 		}
 	}
 

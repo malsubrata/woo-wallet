@@ -541,7 +541,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'searching'     => __( 'Searching…', 'woo-wallet' ),
 					),
 					'export_nonce'        => wp_create_nonce( 'terawallet-exporter-script' ),
-					'search_user_nonce'   => wp_create_nonce( 'search-user' ),
+					'search_user_nonce'   => wp_create_nonce( 'terawallet-export-search-user' ),
 					'export_url'          => '',
 					'export_button_title' => __( 'Export', 'woo-wallet' ),
 				)

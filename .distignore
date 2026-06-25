@@ -1,0 +1,36 @@
+# .distignore — paths excluded when packaging for the WordPress.org plugin SVN repo.
+# Used by the /finish-release command: `rsync -a --exclude-from=.distignore ./ dist/`.
+# Everything NOT listed here ships to WordPress.org (woo-wallet.php, includes/, build/,
+# templates/, languages/, readme.txt, changelog.txt, uninstall.php, LICENSE, README.md,
+# ADMIN_GUIDE.md, CUSTOMER_GUIDE.md). build/ is the runtime asset dir and MUST be shipped.
+
+# Dev sources / build tooling (compiled output lives in build/)
+/src/
+/node_modules/
+/vendor/
+/bin/
+/tests/
+webpack.config.js
+postcss.config.js
+package.json
+package-lock.json
+composer.json
+composer.lock
+phpunit.xml.dist
+.phpunit.result.cache
+wp-tests-config.php
+
+# VCS / AI / scratch / project meta
+/.git/
+/.github/
+/.claude/
+/.agents/
+/docs/
+/.playwright-mcp/
+.gitignore
+.distignore
+skills-lock.json
+CLAUDE.md
+
+# Packaging output itself
+/dist/
