@@ -122,32 +122,11 @@ nothing to commit — skip this step.)
 - `git branch -d release/<version>`
 - `git push origin --delete release/<version>`
 
-## 12. Package for the WordPress.org plugin SVN repo
-
-Stage the exact set of runtime files that WordPress.org should receive into a `dist/`
-folder. This runs only after a successful merge/push (you are now on `master`). It uses the
-`build/` directory compiled in step 5 — `build/` is gitignored but is the only thing
-WordPress loads at runtime, so it is intentionally included.
-
-- Verify `build/` exists and is non-empty (e.g. `test -d build && [ -n "$(ls -A build)" ]`).
-  If it is missing or empty, STOP and tell the user to run `npm run build` — do not publish
-  an unbuilt plugin.
-- `rm -rf dist && mkdir dist`
-- `rsync -a --exclude-from=.distignore --exclude='/dist' ./ dist/`
-- `ls -la dist/` so the user can eyeball the payload, and confirm `dist/build/` is present
-  (`test -d dist/build`). Expect: `woo-wallet.php`, `includes/`, `build/`, `templates/`,
-  `languages/`, `readme.txt`, `changelog.txt`, `uninstall.php`, `LICENSE`, `README.md`,
-  `ADMIN_GUIDE.md`, `CUSTOMER_GUIDE.md` — and NOT `src/`, `node_modules/`, `vendor/`,
-  `tests/`, or project meta files.
-- `dist/` is the set of files to copy into the WordPress.org SVN `trunk/` (and a new
-  `tags/<version>/`). It is gitignored and is never committed.
-
-## 13. Report
+## 12. Report
 
 Tell the user:
 - The merge commit hash on `master` and the tag `v<version>` that was pushed.
 - A summary of the review (code review + security agent findings, build result).
-- That the publishable files are now staged in `dist/` (gitignored). The remaining manual
-  step is the actual SVN commit: copy `dist/` into the WordPress.org SVN `trunk/`, then
-  `svn cp trunk tags/<version>` and `svn ci`. This command only handles GitHub + staging
-  `dist/`.
+- That this command handles GitHub only. To publish to the WordPress.org plugin SVN repo,
+  they should run the separate **`/build-dist`** command (now on `master`), which stages the
+  runtime files into `dist/` and prints the `svn` steps. Do NOT package `dist/` here.
