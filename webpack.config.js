@@ -95,6 +95,7 @@ const vanillaAssetsConfig = {
         // 'admin/settings' replaced by React bundle in wcBuildConfig above
         'admin/export': './src/admin/export.js',
         'admin/main': './src/admin/main.js',
+        'admin/reports': './src/admin/reports.js',
 
         'frontend/main': './src/frontend/main.js',
     },
