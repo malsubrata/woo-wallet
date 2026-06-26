@@ -238,7 +238,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			$base_url = admin_url( 'admin.php?page=woo-wallet' );
 			?>
 			<div class="wrap woo-wallet-reports" id="twr-app">
-				<h1 class="twr-title"><?php esc_html_e( 'Wallet Dashboard', 'woo-wallet' ); ?></h1>
+				<h2 class="twr-title"><?php esc_html_e( 'Wallet Dashboard', 'woo-wallet' ); ?></h2>
 				<div class="twr-topbar">
 					<div class="twr-titlewrap">
 						<p class="twr-subtitle"><?php esc_html_e( 'Store-wide wallet liability at a glance.', 'woo-wallet' ); ?></p>
