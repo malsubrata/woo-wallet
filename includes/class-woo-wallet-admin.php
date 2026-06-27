@@ -55,6 +55,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function __construct() {
 			add_action( 'admin_init', array( $this, 'admin_init' ) );
+			add_action( 'in_admin_header', array( $this, 'suppress_reports_admin_notices' ), 1000 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10 );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ), 50 );
 			add_action( 'admin_post_woo_wallet_export_referrals', array( $this, 'export_referrals_csv' ) );
@@ -329,6 +330,23 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-reports.php';
 			$reports = new Woo_Wallet_Reports();
 			$reports->render();
+		}
+
+		/**
+		 * Strip every admin notice from the Wallet Dashboard reports screen — it
+		 * is a clean, self-contained dashboard and third-party/license nags break
+		 * its layout. Runs on `in_admin_header`, before notices are output.
+		 *
+		 * @return void
+		 */
+		public function suppress_reports_admin_notices() {
+			$screen = get_current_screen();
+			if ( $screen && in_array( $screen->id, array( 'toplevel_page_woo-wallet', 'terawallet_page_woo-wallet-settings' ), true ) ) {
+				remove_all_actions( 'admin_notices' );
+				remove_all_actions( 'all_admin_notices' );
+				remove_all_actions( 'user_admin_notices' );
+				remove_all_actions( 'network_admin_notices' );
+			}
 		}
 
 		/**

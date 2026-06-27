@@ -70,7 +70,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 		 * @return string[]
 		 */
 		protected function palette() {
-			return array( '#4338ca', '#6366f1', '#f59e0b', '#0ea5e9', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6' );
+			return array( '#5b5bd6', '#8487e0', '#0f9488', '#2563c9', '#15976a', '#8b5cf6', '#ec4899', '#14b8a6' );
 		}
 
 		/**
@@ -238,21 +238,41 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			$base_url = admin_url( 'admin.php?page=woo-wallet' );
 			?>
 			<div class="wrap woo-wallet-reports" id="twr-app">
-				<h2 class="twr-title"><?php esc_html_e( 'Wallet Dashboard', 'woo-wallet' ); ?></h2>
-				<div class="twr-topbar">
-					<div class="twr-titlewrap">
-						<p class="twr-subtitle"><?php esc_html_e( 'Store-wide wallet liability at a glance.', 'woo-wallet' ); ?></p>
+				<h2></h2>
+				<header class="twr-topbar">
+					<div class="twr-brand">
+						<div class="twr-brand__text">
+							<h2 class="twr-title"><?php esc_html_e( 'Wallet Dashboard', 'woo-wallet' ); ?></h2>
+							<p class="twr-subtitle"><?php esc_html_e( 'Store-wide wallet liability at a glance.', 'woo-wallet' ); ?></p>
+						</div>
 					</div>
 					<div class="twr-actions">
 						<span class="twr-updated" data-updated>
-							<?php esc_html_e( 'Updated', 'woo-wallet' ); ?>
+							<span class="twr-updated__label"><?php esc_html_e( 'Updated', 'woo-wallet' ); ?></span>
 							<time><?php echo esc_html( $this->data->get_summary( $args )['generated_at'] ); ?></time>
 						</span>
 						<button type="button" class="button twr-refresh">
 							<?php esc_html_e( 'Refresh', 'woo-wallet' ); ?>
 						</button>
+						<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'terawallet-exporter' ), admin_url( 'admin.php' ) ) ); ?>" class="button twr-export">
+							<span class="dashicons dashicons-download"></span>
+							<?php esc_html_e( 'Export', 'woo-wallet' ); ?>
+						</a>
+						<?php
+						/**
+						 * Fires in the reports topbar action area, right before Refresh.
+						 *
+						 * Pro hooks the Import button here. Echo button markup
+						 * (use the `button` class to match the topbar styling).
+						 *
+						 * @since 1.6.6
+						 *
+						 * @param array $context Render context (args, current_tab, data).
+						 */
+						do_action( 'woo_wallet_reports_actions', $context );
+						?>
 					</div>
-				</div>
+				</header>
 
 				<?php do_action( 'woo_wallet_reports_page_top' ); ?>
 
