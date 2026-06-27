@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.6 (Unreleased) =
+= v1.6.6 (June 27, 2026) =
 – **New:-** Added a **Wallet Dashboard** reports page — the new default TeraWallet admin landing screen — showing store-wide wallet liability at a glance: total outstanding liability, the number of wallets holding a positive balance, lifetime credited and debited totals, and an interactive composition bar that breaks the liability down by source (top-ups, cashback, refunds, partial payments, transfers, adjustments). The page is server-rendered (fully usable with JavaScript disabled) with a live **Refresh** button, and the summary is cached and automatically invalidated whenever a wallet transaction is recorded, so a page reload always reflects current data. Add-ons can inject their own metric cards and report tabs through the `woo_wallet_reports_metrics` and `woo_wallet_reports_tabs` filters and read the figures from the `terawallet/v1/admin/reports/summary` REST endpoint (see docs/EXTENDING_REPORTS.md).
 
 = v1.6.5 (June 25, 2026) =
