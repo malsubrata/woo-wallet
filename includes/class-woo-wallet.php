@@ -208,6 +208,9 @@ final class Woo_Wallet {
 
 		add_action( 'deleted_user', array( $this, 'delete_user_transaction_records' ) );
 
+		// Invalidate the Reports dashboard summary cache on any ledger write.
+		add_action( 'woo_wallet_transaction_recorded', array( $this, 'flush_reports_cache' ) );
+
 		add_action( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'filter_wallet_topup_orders' ), 10, 2 );
 
 		add_filter( 'woocommerce_get_query_vars', array( $this, 'add_woocommerce_query_vars' ) );
@@ -452,6 +455,17 @@ final class Woo_Wallet {
 		if ( apply_filters( 'woo_wallet_delete_transaction_records', true, $id ) ) {
 			delete_user_wallet_transactions( absint( $id ), false );
 		}
+	}
+
+	/**
+	 * Bump the Reports dashboard cache version so the next read recomputes.
+	 *
+	 * Hooked to `woo_wallet_transaction_recorded`; the version is part of the
+	 * summary transient key (see Woo_Wallet_Reports_Data::get_summary), so a
+	 * single incremented option invalidates every cached summary at once.
+	 */
+	public function flush_reports_cache() {
+		update_option( 'woo_wallet_reports_cache_version', (int) get_option( 'woo_wallet_reports_cache_version', 0 ) + 1, false );
 	}
 
 	/**

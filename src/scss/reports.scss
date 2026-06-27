@@ -1,0 +1,589 @@
+/**
+ * TeraWallet — Wallet Reports / admin dashboard.
+ *
+ * "Liability at a glance": soft neutral canvas, an ink hero card carrying the
+ * one headline number, rounded white metric cards and a thin segmented
+ * liability bar. Manrope for text, Space Grotesk for every figure. Progressive
+ * enhancement over the server-rendered PHP; fully responsive.
+ */
+
+/* ponytail: render-blocking CSS @import, admin-only page so it's fine; move to wp_enqueue_style if FOUT matters. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+.woo-wallet-reports {
+	--twr-accent: #5b5bd6;
+	--twr-accent-soft: #8487e0;
+	--twr-ink: #181b27;
+	--twr-text: #1c1f2a;
+	--twr-surface: #ffffff;
+	--twr-panel: #f0f1f4;
+	--twr-border: #e7e8ec;
+	--twr-muted: #6b7180;
+	--twr-faint: #9aa0ad;
+	--twr-green: #15976a;
+	--twr-red: #cf4040;
+
+	max-width: 1180px;
+	margin: 10px 20px 0 0;
+	padding: 24px 24px 56px;
+	border-radius: 18px;
+	background: #f5f6f8;
+	color: var(--twr-text);
+	font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+
+	* {
+		box-sizing: border-box;
+	}
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────────── */
+.twr-topbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px 24px;
+	margin: 0 0 28px;
+}
+
+.twr-brand {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.twr-brand__logo {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 11px;
+	background: var(--twr-accent);
+	color: #fff;
+	font-family: 'Space Grotesk', sans-serif;
+	font-weight: 700;
+	font-size: 20px;
+	line-height: 1;
+	box-shadow: 0 4px 14px rgba(91, 91, 214, 0.28);
+}
+
+.twr-title {
+	margin: 0;
+	padding: 0;
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.1;
+	color: var(--twr-text);
+}
+
+.twr-subtitle {
+	margin: 4px 0 0;
+	color: var(--twr-muted);
+	font-size: 13px;
+}
+
+.twr-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+}
+
+.twr-updated {
+	text-align: right;
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+.twr-updated__label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--twr-faint);
+}
+
+.twr-updated time {
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: 13px;
+	color: #4a4f5c;
+}
+
+/* Shared topbar buttons: Export, Import (Pro), Refresh. */
+.woo-wallet-reports .twr-actions .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	height: auto;
+	margin: 0;
+	padding: 9px 14px;
+	border: 1px solid var(--twr-border);
+	border-radius: 10px;
+	background: #fff;
+	color: var(--twr-accent);
+	font-family: 'Manrope', sans-serif;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+	box-shadow: none;
+
+	&:hover,
+	&:focus {
+		border-color: var(--twr-accent);
+		background: #fbfbfe;
+		color: var(--twr-accent);
+	}
+
+	/* legacy dashicon path (if a theme injects one) stays hidden — Refresh draws its own ring */
+	.dashicons {
+		line-height: 1.3;
+	}
+}
+
+.twr-refresh.button {
+	&::before {
+		content: "";
+		width: 13px;
+		height: 13px;
+		border: 1.6px solid currentColor;
+		border-top-color: transparent;
+		border-radius: 50%;
+	}
+
+	&.is-busy::before {
+		animation: twr-spin 0.8s linear infinite;
+	}
+}
+
+@keyframes twr-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+.twr-tabs {
+	display: flex;
+	gap: 28px;
+	margin-bottom: 28px;
+	border-bottom: 1px solid var(--twr-border);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.twr-tab {
+	position: relative;
+	flex: 0 0 auto;
+	margin-bottom: -1px;
+	padding: 0 0 14px;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	background: none;
+	font-size: 14px;
+	font-weight: 500;
+	color: #8a909c;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: color 0.15s ease, border-color 0.15s ease;
+
+	&:hover,
+	&:focus {
+		color: var(--twr-text);
+		box-shadow: none;
+	}
+
+	&.is-active {
+		font-weight: 600;
+		color: var(--twr-text);
+		border-bottom-color: var(--twr-accent);
+	}
+
+	&.is-locked {
+		color: #b0b5c0;
+	}
+
+	.dashicons-lock {
+		font-size: 13px;
+		width: 13px;
+		height: 13px;
+		vertical-align: -2px;
+		opacity: 0.7;
+	}
+}
+
+/* ── Summary layout ───────────────────────────────────────────────────── */
+.twr-summary {
+	display: grid;
+	gap: 18px;
+}
+
+/* Headline: the ink card carrying what the store owes. */
+.twr-headline {
+	position: relative;
+	overflow: hidden;
+	padding: 44px;
+	border-radius: 22px;
+	background: var(--twr-ink);
+	color: #fff;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: -80px;
+		right: -60px;
+		width: 320px;
+		height: 320px;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(91, 91, 214, 0.38), transparent 70%);
+		pointer-events: none;
+	}
+
+	> * {
+		position: relative;
+	}
+}
+
+.twr-headline__label {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	font-size: 11.5px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: #9da3b4;
+
+	&::before {
+		content: "";
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--twr-accent);
+	}
+}
+
+.twr-headline__value {
+	display: block;
+	margin: 18px 0 0;
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: clamp(52px, 8vw, 88px);
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	color: #fff;
+
+	em {
+		font-style: normal;
+		color: var(--twr-accent-soft);
+	}
+}
+
+.twr-headline__note {
+	display: block;
+	max-width: 460px;
+	margin-top: 18px;
+	font-size: 14.5px;
+	line-height: 1.5;
+	color: #aeb3c2;
+}
+
+/* Composition — the signature element. */
+.twr-composition {
+	padding: 26px 28px 24px;
+	border: 1px solid var(--twr-border);
+	border-radius: 18px;
+	background: var(--twr-surface);
+}
+
+.twr-composition__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.twr-composition__title {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--twr-text);
+}
+
+.twr-composition__total {
+	font-size: 13px;
+	color: var(--twr-muted);
+}
+
+.twr-bar {
+	display: flex;
+	gap: 3px;
+	height: 14px;
+	border-radius: 7px;
+	overflow: hidden;
+	background: var(--twr-panel);
+}
+
+.twr-bar__seg {
+	width: var(--w, 0%);
+	min-width: 6px;
+	border-radius: 4px;
+	background: var(--c, var(--twr-accent));
+	transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.15s ease, opacity 0.15s ease;
+	cursor: default;
+
+	&:first-child {
+		border-radius: 7px 4px 4px 7px;
+	}
+
+	&:last-child {
+		border-radius: 4px 7px 7px 4px;
+	}
+
+	&:hover,
+	&.is-active {
+		filter: brightness(1.08);
+	}
+}
+
+.twr-bar.has-dim .twr-bar__seg:not(.is-active) {
+	opacity: 0.35;
+}
+
+.twr-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 32px;
+	margin: 20px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.twr-legend__item {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 2px 4px;
+	border-radius: 6px;
+	font-size: 13px;
+	cursor: default;
+	transition: background 0.15s ease;
+
+	&.is-active {
+		background: #f7f7fb;
+	}
+}
+
+.twr-legend__dot {
+	flex: 0 0 auto;
+	width: 9px;
+	height: 9px;
+	border-radius: 3px;
+	background: var(--c, var(--twr-accent));
+}
+
+.twr-legend__label {
+	color: #4a4f5c;
+	font-weight: 500;
+}
+
+.twr-legend__amt {
+	font-family: 'Space Grotesk', sans-serif;
+	color: var(--twr-text);
+
+	&.is-negative {
+		color: var(--twr-red);
+	}
+}
+
+.twr-legend__share {
+	color: var(--twr-faint);
+	font-size: 12px;
+}
+
+/* ── Stat cards ───────────────────────────────────────────────────────── */
+.twr-cards,
+.twr-pro {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.twr-card {
+	padding: 22px 22px 24px;
+	border: 1px solid var(--twr-border);
+	border-radius: 16px;
+	background: var(--twr-surface);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 10px 24px -18px rgba(24, 27, 39, 0.5);
+	}
+}
+
+.twr-card__label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--twr-faint);
+}
+
+.twr-card__value {
+	display: block;
+	margin-top: 16px;
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: 34px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	color: var(--twr-ink);
+}
+
+.twr-card--credit .twr-card__value {
+	color: var(--twr-green);
+}
+
+.twr-card--debit .twr-card__value {
+	color: var(--twr-red);
+}
+
+/* ── Pro locked slots ─────────────────────────────────────────────────── */
+.twr-pro__card {
+	position: relative;
+	padding: 22px 22px 24px;
+	border: 1px dashed #d4d6dd;
+	border-radius: 16px;
+	background: repeating-linear-gradient(135deg, #fbfbfd, #fbfbfd 10px, #f6f7fb 10px, #f6f7fb 20px);
+	color: var(--twr-muted);
+}
+
+.twr-pro__label {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--twr-text);
+}
+
+.twr-pro__badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-top: 14px;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: rgba(91, 91, 214, 0.12);
+	color: var(--twr-accent);
+	font-size: 12px;
+	font-weight: 600;
+
+	.dashicons {
+		font-size: 13px;
+		width: 13px;
+		height: 13px;
+	}
+}
+
+/* ── Upsell tab body ──────────────────────────────────────────────────── */
+.twr-upsell {
+	padding: 56px 16px;
+	border: 1px dashed #d4d6dd;
+	border-radius: 18px;
+	background: #fff;
+	text-align: center;
+	color: var(--twr-muted);
+
+	.dashicons {
+		font-size: 34px;
+		width: 34px;
+		height: 34px;
+		color: var(--twr-accent);
+	}
+
+	p {
+		margin: 12px 0 0;
+		font-size: 14px;
+	}
+}
+
+.twr-disclaimer {
+	margin-top: 32px;
+	color: var(--twr-faint);
+	font-size: 12.5px;
+}
+
+/* Reveal animation (respecting reduced motion). */
+.twr-reveal {
+	opacity: 0;
+	transform: translateY(8px);
+}
+
+.twr-reveal.is-in {
+	opacity: 1;
+	transform: none;
+	transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.woo-wallet-reports * {
+		transition: none !important;
+		animation: none !important;
+	}
+
+	.twr-reveal {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media screen and (max-width: 960px) {
+	.twr-cards,
+	.twr-pro {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media screen and (max-width: 600px) {
+	.woo-wallet-reports {
+		margin-right: 10px;
+		padding: 18px 16px 40px;
+	}
+
+	.twr-actions {
+		width: 100%;
+		justify-content: flex-start;
+	}
+
+	.twr-headline {
+		padding: 28px 22px;
+	}
+
+	.twr-composition {
+		padding: 20px 18px;
+	}
+
+	.twr-cards,
+	.twr-pro {
+		grid-template-columns: 1fr;
+	}
+
+	.twr-legend {
+		gap: 10px 18px;
+	}
+}

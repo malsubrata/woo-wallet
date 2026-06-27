@@ -46,6 +46,7 @@ if ( ! class_exists( 'TeraWallet_REST_Route_Registry' ) ) {
 				'TeraWallet_REST_Admin_Transactions_Controller',
 				'TeraWallet_REST_Admin_Users_Controller',
 				'TeraWallet_REST_Admin_Transfer_Controller',
+				'TeraWallet_REST_Admin_Reports_Controller',
 				// settings/*
 				'TeraWallet_REST_Settings_V1_Controller',
 				'TeraWallet_REST_Settings_Section_Controller',

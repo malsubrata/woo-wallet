@@ -55,6 +55,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function __construct() {
 			add_action( 'admin_init', array( $this, 'admin_init' ) );
+			add_action( 'in_admin_header', array( $this, 'suppress_reports_admin_notices' ), 1000 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10 );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ), 50 );
 			add_action( 'admin_post_woo_wallet_export_referrals', array( $this, 'export_referrals_csv' ) );
@@ -297,9 +298,18 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Init admin menu
 		 */
 		public function admin_menu() {
-			$woo_wallet_menu_page_hook = add_menu_page( __( 'TeraWallet', 'woo-wallet' ), __( 'TeraWallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet', array( $this, 'wallet_page' ), '', 59 );
-			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'handle_wallet_balance_adjustment' ) );
-			add_action( "load-$woo_wallet_menu_page_hook", array( $this, 'add_woo_wallet_details' ) );
+			$reports_cap = apply_filters( 'woo_wallet_reports_capability', 'manage_woocommerce' );
+
+			// Top-level TeraWallet menu now lands on the wallet Dashboard (Reports).
+			add_menu_page( __( 'TeraWallet', 'woo-wallet' ), __( 'TeraWallet', 'woo-wallet' ), $reports_cap, 'woo-wallet', array( $this, 'reports_page' ), '', 59 );
+			// Explicit label for the auto-generated first submenu (shares the parent slug).
+			add_submenu_page( 'woo-wallet', __( 'Dashboard', 'woo-wallet' ), __( 'Dashboard', 'woo-wallet' ), $reports_cap, 'woo-wallet', array( $this, 'reports_page' ) );
+
+			// The former landing page (per-user wallet balances) moves to its own submenu.
+			$woo_wallet_users_hook = add_submenu_page( 'woo-wallet', __( 'Wallet Users', 'woo-wallet' ), __( 'Wallet Users', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-users', array( $this, 'wallet_page' ) );
+			add_action( "load-$woo_wallet_users_hook", array( $this, 'handle_wallet_balance_adjustment' ) );
+			add_action( "load-$woo_wallet_users_hook", array( $this, 'add_woo_wallet_details' ) );
+
 			$woo_wallet_menu_page_hook_view = add_submenu_page( 'null', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
 			// Actions submenu removed — actions are now part of the unified Settings page (React app).
@@ -308,6 +318,34 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			if ( $this->is_referral_action_enabled() ) {
 				add_submenu_page( 'woo-wallet', __( 'Referral Report', 'woo-wallet' ), __( 'Referral Report', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-referral-report', array( $this, 'referral_report_page' ) );
+			}
+		}
+
+		/**
+		 * Render the wallet liability Reports screen.
+		 *
+		 * @return void
+		 */
+		public function reports_page() {
+			include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-reports.php';
+			$reports = new Woo_Wallet_Reports();
+			$reports->render();
+		}
+
+		/**
+		 * Strip every admin notice from the Wallet Dashboard reports screen — it
+		 * is a clean, self-contained dashboard and third-party/license nags break
+		 * its layout. Runs on `in_admin_header`, before notices are output.
+		 *
+		 * @return void
+		 */
+		public function suppress_reports_admin_notices() {
+			$screen = get_current_screen();
+			if ( $screen && in_array( $screen->id, array( 'toplevel_page_woo-wallet', 'terawallet_page_woo-wallet-settings' ), true ) ) {
+				remove_all_actions( 'admin_notices' );
+				remove_all_actions( 'all_admin_notices' );
+				remove_all_actions( 'user_admin_notices' );
+				remove_all_actions( 'network_admin_notices' );
 			}
 		}
 
@@ -567,6 +605,39 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				wp_enqueue_style( 'terawallet-exporter-style' );
 			}
 
+			// Wallet Dashboard (Reports) assets — only on the top-level screen.
+			if ( 'toplevel_page_woo-wallet' === $screen_id ) {
+				$reports_asset_path = WOO_WALLET_ABSPATH . 'build/admin/reports.asset.php';
+				$reports_asset      = file_exists( $reports_asset_path )
+					? include $reports_asset_path
+					: array(
+						'dependencies' => array(),
+						'version'      => WOO_WALLET_PLUGIN_VERSION,
+					);
+
+				wp_enqueue_style( 'woo_wallet_reports', woo_wallet()->plugin_url() . '/build/admin/reports.css', array(), $reports_asset['version'] );
+				wp_style_add_data( 'woo_wallet_reports', 'rtl', 'replace' );
+				wp_enqueue_script( 'woo_wallet_reports', woo_wallet()->plugin_url() . '/build/admin/reports.js', $reports_asset['dependencies'], $reports_asset['version'], true );
+				wp_localize_script(
+					'woo_wallet_reports',
+					'wooWalletReports',
+					array(
+						'restUrl' => esc_url_raw( rest_url( 'terawallet/v1/admin/reports/summary' ) ),
+						'nonce'   => wp_create_nonce( 'wp_rest' ),
+						'price'   => array(
+							'symbol'   => html_entity_decode( get_woocommerce_currency_symbol() ),
+							'decimals' => wc_get_price_decimals(),
+							'decimal'  => wc_get_price_decimal_separator(),
+							'thousand' => wc_get_price_thousand_separator(),
+							'format'   => get_woocommerce_price_format(),
+						),
+						'i18n'    => array(
+							'justNow' => __( 'just now', 'woo-wallet' ),
+						),
+					)
+				);
+			}
+
 			wp_enqueue_script( 'terawallet_admin' );
 		}
 
@@ -614,7 +685,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<?php settings_errors(); ?>
-				<h2><?php /* translators: user display name and email */ printf( __( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), $user->display_name, $user->user_email ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<h2><?php /* translators: user display name and email */ printf( __( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), $user->display_name, $user->user_email ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
 				<p>
 					<?php
 					esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
@@ -684,7 +755,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				: strtoupper( (string) get_option( 'woocommerce_currency', 'USD' ) );
 			?>
 			<div class="wrap">
-				<h2><?php esc_html_e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<h2><?php esc_html_e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
 				<p>
 				<?php
 				esc_html_e( 'Current wallet balance: ', 'woo-wallet' );

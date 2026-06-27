@@ -1,10 +1,6 @@
 /* global terawallet_admin_params */
 import '../scss/admin.scss';
 jQuery(function ($) {
-    var $wallet_screen = $('.toplevel_page_woo-wallet'),
-            $title_action = $wallet_screen.find('.wrap h2:first');
-    $title_action.html($title_action.html() + ' <a href="' + terawallet_admin_params.export_url + '" class="page-title-action">' + terawallet_admin_params.export_title + '</a>');
-    
     $('.lock-unlock-user-wallet').on('click', function(){
         var self = $(this);
         var data = {

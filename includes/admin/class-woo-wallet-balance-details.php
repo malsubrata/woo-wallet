@@ -148,7 +148,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		$count_users = ! wp_is_large_user_count();
 
-		$url = 'admin.php?page=woo-wallet';
+		$url = 'admin.php?page=woo-wallet-users';
 
 		$role_links   = array();
 		$avail_roles  = array();
@@ -564,7 +564,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	public function add_js_scripts() {
 		$screen = get_current_screen();
-		if ( 'toplevel_page_woo-wallet' === $screen->id ) {
+		if ( 'terawallet_page_woo-wallet-users' === $screen->id ) {
 			ob_start();
 			woo_wallet()->get_template( 'admin/edit-balance.php' );
 			woo_wallet()->get_template( 'admin/delete-log-modal.php' );
@@ -582,23 +582,23 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				 * the Apply button when the viewport is too narrow.
 				 */
 				@media screen and (max-width: 782px) {
-					.toplevel_page_woo-wallet .tablenav.top .bulkactions,
-					.toplevel_page_woo-wallet .tablenav .actions.bulkactions {
+					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions,
+					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions {
 						display: block;
 						width: 100%;
 						margin-bottom: 8px;
 						padding: 0;
 					}
-					.toplevel_page_woo-wallet .tablenav.top .bulkactions select,
-					.toplevel_page_woo-wallet .tablenav .actions.bulkactions select {
+					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions select,
+					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions select {
 						display: inline-block;
 						width: calc(100% - 90px);
 						max-width: 320px;
 						margin-right: 6px;
 						vertical-align: middle;
 					}
-					.toplevel_page_woo-wallet .tablenav.top .bulkactions input[type="submit"],
-					.toplevel_page_woo-wallet .tablenav .actions.bulkactions input[type="submit"] {
+					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions input[type="submit"],
+					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions input[type="submit"] {
 						display: inline-block;
 						vertical-align: middle;
 					}
@@ -609,7 +609,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		?>
 		<script type="text/javascript">
 			jQuery(function ($) {
-				var $listForm = $('.toplevel_page_woo-wallet #posts-filter');
+				var $listForm = $('.terawallet_page_woo-wallet-users #posts-filter');
 
 				// Pick the action that's actually selected — bulkactions dropdowns
 				// duplicate the control above + below the table, so either one may
@@ -689,7 +689,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 					$('.wc-backbone-modal-backdrop.modal-close').trigger('click');
 					$listForm[0].submit();
 				});
-				$(document).on('click', '.toplevel_page_woo-wallet .edit-wallet-balance', function (event) {
+				$(document).on('click', '.terawallet_page_woo-wallet-users .edit-wallet-balance', function (event) {
 					event.preventDefault();
 					var self = $(this);
 					self.html('<?php echo esc_js( __( 'Loading...', 'woo-wallet' ) ); ?>');

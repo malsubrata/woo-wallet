@@ -88,6 +88,7 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 				'class-terawallet-rest-admin-transactions-controller.php',
 				'class-terawallet-rest-admin-users-controller.php',
 				'class-terawallet-rest-admin-transfer-controller.php',
+				'class-terawallet-rest-admin-reports-controller.php',
 			) as $file ) {
 				if ( file_exists( $admin_dir . $file ) ) {
 					include_once $admin_dir . $file;
