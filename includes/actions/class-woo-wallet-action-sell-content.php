@@ -336,11 +336,11 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 				}
 			</style>
 			<p class="meta-options hcf_field">
-				<label for="tw_sell_content"><?php echo esc_html_e( 'Enable/Disable', 'woo-wallet' ); ?></label>
+				<label for="tw_sell_content"><?php esc_html_e( 'Enable/Disable', 'woo-wallet' ); ?></label>
 				<input type="checkbox" name="tw_sell_content" id="tw_sell_content" value="1" <?php checked( $tw_sell_content, '1' ); ?> />
 			</p>
 			<p class="meta-options hcf_field">
-				<label for="tw_sell_content_amount"><?php echo esc_html_e( 'Price', 'woo-wallet' ); ?></label>
+				<label for="tw_sell_content_amount"><?php esc_html_e( 'Price', 'woo-wallet' ); ?></label>
 				<input type="number" min="0" step="any" name="tw_sell_content_amount" id="tw_sell_content_amount" value="<?php echo esc_attr( $tw_sell_content_amount ); ?>" />
 			</p>
 		</div>
