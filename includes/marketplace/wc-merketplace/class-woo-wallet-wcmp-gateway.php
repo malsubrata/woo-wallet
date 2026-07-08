@@ -65,7 +65,8 @@ if ( ! class_exists( 'WCMp_Gateway_Wallet' ) && class_exists( 'WCMp_Payment_Gate
 					return true;
 				} else {
 					$this->message[] = array(
-						'message' => __( 'Minimum threshold amount to withdrawal commission is ' . $thesold_amount, 'woo-wallet' ),
+						/* translators: %s: minimum threshold amount */
+						'message' => sprintf( __( 'Minimum threshold amount to withdrawal commission is %s', 'woo-wallet' ), $thesold_amount ),
 						'type'    => 'error',
 					);
 					return false;

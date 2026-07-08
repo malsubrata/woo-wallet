@@ -208,8 +208,38 @@ class TeraWallet_CSV_Exporter {
 	 * @return string
 	 */
 	protected function get_file_path() {
+		return trailingslashit( self::get_export_dir() ) . $this->get_filename();
+	}
+
+	/**
+	 * Get (and lazily create + harden) the export directory.
+	 *
+	 * Exports contain private financial data, so they must not live in the uploads
+	 * root where they are publicly readable. We store them in a dedicated subfolder
+	 * protected with an .htaccess deny + empty index.html (mirrors WooCommerce's own
+	 * woocommerce_uploads pattern).
+	 *
+	 * @return string Absolute path to the export directory (no trailing slash).
+	 */
+	protected static function get_export_dir() {
 		$upload_dir = wp_upload_dir();
-		return trailingslashit( $upload_dir['basedir'] ) . $this->get_filename();
+		$export_dir = trailingslashit( $upload_dir['basedir'] ) . 'woo-wallet-exports';
+
+		if ( ! file_exists( $export_dir ) ) {
+			wp_mkdir_p( $export_dir );
+		}
+
+		$htaccess = trailingslashit( $export_dir ) . '.htaccess';
+		if ( ! file_exists( $htaccess ) ) {
+			@file_put_contents( $htaccess, "deny from all\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+		}
+
+		$index = trailingslashit( $export_dir ) . 'index.html';
+		if ( ! file_exists( $index ) ) {
+			@file_put_contents( $index, '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+		}
+
+		return $export_dir;
 	}
 
 	/**
@@ -433,7 +463,7 @@ class TeraWallet_CSV_Exporter {
 
 		if ( $use_mb ) {
 			$encoding = mb_detect_encoding( $data, 'UTF-8, ISO-8859-1', true );
-			$data     = 'UTF-8' === $encoding ? $data : utf8_encode( $data );
+			$data     = 'UTF-8' === $encoding ? $data : mb_convert_encoding( $data, 'UTF-8', 'ISO-8859-1' );
 		}
 
 		return $this->escape_data( $data );

@@ -6,6 +6,10 @@
  * @package StandaloneTech
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 	/**
 	 * Plugin settings page class
