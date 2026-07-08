@@ -48,6 +48,6 @@
     "start": "wp-scripts start",
     "lint:js": "wp-scripts lint-js src/",
     "lint:css": "wp-scripts lint-style src/",
-    "make-pot": "wp i18n make-pot . languages/woo-wallet.pot"
+    "make-pot": "wp i18n make-pot . languages/woo-wallet.pot --exclude=dist,build"
   }
 }

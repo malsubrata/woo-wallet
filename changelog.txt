@@ -1,4 +1,14 @@
 *** Changelog ***
+= v1.6.7 (July 8, 2026) =
+– **Security:-** Wallet CSV exports are now written to a dedicated, access-protected `uploads/woo-wallet-exports/` directory (with an `.htaccess` deny rule and index file) instead of the public uploads root, so exported financial data is no longer directly downloadable by URL.
+– **Security:-** Settings saved through the Settings API are now sanitized by default even when a field does not declare its own `sanitize_callback`, preventing raw values from being stored.
+– **Security:-** Sell-content template output is now escaped with an allow-list (`wp_kses`) before rendering, while preserving the purchase form controls.
+– **Fix:-** Replaced the deprecated `utf8_encode()` call in the CSV exporter with `mb_convert_encoding()`.
+– **Fix:-** The order refund AJAX handler now closes its output buffer before returning, avoiding a stray/unbalanced buffer.
+– **Fix:-** Corrected two internationalization strings that passed variables into gettext calls (WCMp commission threshold message and the users list "All" count).
+– **Tweak:-** The "Upgrade to Pro" admin notice is now permanently dismissible — dismissing it no longer re-appears after 14 days.
+– **Tweak:-** Added a direct-access guard to the settings loader.
+
 = v1.6.6 (June 27, 2026) =
 – **New:-** Added a **Wallet Dashboard** reports page — the new default TeraWallet admin landing screen — showing store-wide wallet liability at a glance: total outstanding liability, the number of wallets holding a positive balance, lifetime credited and debited totals, and an interactive composition bar that breaks the liability down by source (top-ups, cashback, refunds, partial payments, transfers, adjustments). The page is server-rendered (fully usable with JavaScript disabled) with a live **Refresh** button, and the summary is cached and automatically invalidated whenever a wallet transaction is recorded, so a page reload always reflects current data. Add-ons can inject their own metric cards and report tabs through the `woo_wallet_reports_metrics` and `woo_wallet_reports_tabs` filters and read the figures from the `terawallet/v1/admin/reports/summary` REST endpoint (see docs/EXTENDING_REPORTS.md).
 

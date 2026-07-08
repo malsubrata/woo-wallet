@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.7 (Unreleased) =
+= v1.6.7 (July 8, 2026) =
 – **Security:-** Wallet CSV exports are now written to a dedicated, access-protected `uploads/woo-wallet-exports/` directory (with an `.htaccess` deny rule and index file) instead of the public uploads root, so exported financial data is no longer directly downloadable by URL.
 – **Security:-** Settings saved through the Settings API are now sanitized by default even when a field does not declare its own `sanitize_callback`, preventing raw values from being stored.
 – **Security:-** Sell-content template output is now escaped with an allow-list (`wp_kses`) before rendering, while preserving the purchase form controls.
