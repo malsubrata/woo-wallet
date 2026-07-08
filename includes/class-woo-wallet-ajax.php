@@ -315,8 +315,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					$response['status'] = 'fully_refunded';
 				}
 			} catch ( Exception $e ) {
+				ob_end_clean(); // Discard any stray output so the JSON response is clean.
 				wp_send_json_error( array( 'error' => $e->getMessage() ) );
 			}
+			ob_end_clean(); // Discard any stray output so the JSON response is clean.
 			// wp_send_json_success must be outside the try block not to break phpunit tests.
 			wp_send_json_success( $response );
 		}
@@ -395,7 +397,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
 				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
 			}
-			update_option( '_woo_wallet_promotion_snoozed_until', time() + ( 14 * DAY_IN_SECONDS ) );
+			// Permanent dismissal — the notice must not re-nag (WordPress.org guideline).
+			update_option( '_woo_wallet_promotion_snoozed_until', PHP_INT_MAX );
 			wp_send_json_success();
 		}
 

@@ -400,7 +400,26 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 		$content = str_replace( '#buy_button#', $this->render_buy_form( $tw_sell_content_amount, $id ), $content );
 		$content = str_replace( '#price#', wc_price( $tw_sell_content_amount ), $content );
 		$content = str_replace( '#balance#', woo_wallet()->wallet->get_wallet_balance(), $content );
-		return do_shortcode( $content );
+		return wp_kses( do_shortcode( $content ), $this->get_allowed_template_html() );
+	}
+	/**
+	 * Allowed HTML for sell-content templates: post-content tags plus the form
+	 * controls used by the generated buy button, so escaping does not strip the form.
+	 *
+	 * @return array
+	 */
+	private function get_allowed_template_html() {
+		$allowed = wp_kses_allowed_html( 'post' );
+
+		$allowed['form']     = array( 'method' => true, 'action' => true, 'class' => true, 'id' => true );
+		$allowed['input']    = array( 'type' => true, 'name' => true, 'value' => true, 'class' => true, 'id' => true, 'min' => true, 'max' => true, 'step' => true, 'placeholder' => true, 'required' => true );
+		$allowed['button']   = array( 'type' => true, 'name' => true, 'value' => true, 'class' => true, 'id' => true );
+		$allowed['select']   = array( 'name' => true, 'class' => true, 'id' => true );
+		$allowed['option']   = array( 'value' => true, 'selected' => true );
+		$allowed['label']    = array( 'for' => true, 'class' => true );
+		$allowed['textarea'] = array( 'name' => true, 'rows' => true, 'cols' => true, 'class' => true, 'id' => true );
+
+		return $allowed;
 	}
 	/**
 	 * Render buy button

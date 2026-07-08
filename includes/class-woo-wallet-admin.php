@@ -1503,7 +1503,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			);
 			?>
 			<div class="notice tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">
-				<button type="button" class="tw-pro-promo__dismiss" aria-label="<?php esc_attr_e( 'Remind me in 14 days', 'woo-wallet' ); ?>" title="<?php esc_attr_e( 'Remind me in 14 days', 'woo-wallet' ); ?>">
+				<button type="button" class="tw-pro-promo__dismiss" aria-label="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>" title="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>">
 					<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
 				</button>
 

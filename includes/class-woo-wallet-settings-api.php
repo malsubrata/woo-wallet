@@ -137,6 +137,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings_API' ) ) :
 					$options[ $option_slug ] = call_user_func( $sanitize_callback, $option_value );
 					continue;
 				}
+
+				// No per-field callback declared: apply a safe default so nothing is
+				// stored raw. Fields needing HTML/decimal/url declare their own callback.
+				$options[ $option_slug ] = is_array( $option_value )
+					? map_deep( $option_value, 'sanitize_text_field' )
+					: sanitize_text_field( $option_value );
 			}
 
 			return $options;

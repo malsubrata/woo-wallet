@@ -164,12 +164,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 			$all_text = sprintf(
 				/* translators: %s: Number of users. */
-				_nx(
-					'All <span class="count">(%s)</span>',
-					'All <span class="count">(%s)</span>',
-					$total_users,
-					'users'
-				),
+				__( 'All <span class="count">(%s)</span>', 'woo-wallet' ),
 				number_format_i18n( $total_users )
 			);
 		}
