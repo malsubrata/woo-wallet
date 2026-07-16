@@ -33,6 +33,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			add_action( 'admin_init', array( $this, 'plugin_settings_page_init' ) );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ), 60 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+			add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
 		}
 
 		/**
@@ -59,14 +60,33 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 		}
 
 		/**
+		 * Add a locale-stable body class on the settings screen.
+		 *
+		 * WP builds the default `<page-type>_page_<slug>` body class from
+		 * sanitize_title() of the *translated* parent menu title, so under a
+		 * non-Latin locale it is an unpredictable percent-encoded string that a
+		 * static stylesheet cannot target. Expose our own stable class instead.
+		 *
+		 * @param string $classes Space-separated list of admin body classes.
+		 * @return string
+		 */
+		public function admin_body_class( $classes ) {
+			$screen = get_current_screen();
+			if ( ! $screen ) {
+				return $classes;
+			}
+			if ( woo_wallet_get_screen_id( 'woo-wallet-settings' ) === $screen->id ) {
+				$classes .= ' woo-wallet-settings-page';
+			}
+			return $classes;
+		}
+
+		/**
 		 * Enqueue scripts and styles
 		 */
 		public function admin_enqueue_scripts() {
-			$screen    = get_current_screen();
-			$screen_id = $screen ? $screen->id : '';
-
-			$woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			if ( ! in_array( $screen_id, array( "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" ), true ) ) {
+			$screen = get_current_screen();
+			if ( ! $screen || woo_wallet_get_screen_id( 'woo-wallet-settings' ) !== $screen->id ) {
 				return;
 			}
 
@@ -207,7 +227,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Minimum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no minimum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+						'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -218,7 +238,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Maximum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no maximum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+						'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -340,7 +360,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Minimum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer less than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+					'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -351,7 +371,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Maximum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer more than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+					'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -506,7 +526,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Minimum Cart Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter applicable minimum cart amount for cashback', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+							'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => array(
@@ -522,7 +542,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Maximum Cashback Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter maximum cashback amount', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ),
+							'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => $cashbak_show_if,
