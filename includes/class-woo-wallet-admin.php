@@ -118,8 +118,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( ! $screen ) {
 				return;
 			}
-			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			if ( in_array( $screen->id, array( "{$woo_wallet_screen_id}_page_woo-wallet-actions" ), true ) ) {
+			if ( woo_wallet_get_screen_id( 'woo-wallet-actions' ) === $screen->id ) {
 				$screen->remove_help_tabs();
 			}
 		}
@@ -341,7 +340,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function suppress_reports_admin_notices() {
 			$screen = get_current_screen();
-			if ( $screen && in_array( $screen->id, array( 'toplevel_page_woo-wallet', 'terawallet_page_woo-wallet-settings' ), true ) ) {
+			if ( $screen && in_array( $screen->id, array( woo_wallet_get_screen_id( 'woo-wallet', '' ), woo_wallet_get_screen_id( 'woo-wallet-settings' ) ), true ) ) {
 				remove_all_actions( 'admin_notices' );
 				remove_all_actions( 'all_admin_notices' );
 				remove_all_actions( 'user_admin_notices' );
@@ -606,7 +605,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			// Wallet Dashboard (Reports) assets — only on the top-level screen.
-			if ( 'toplevel_page_woo-wallet' === $screen_id ) {
+			if ( woo_wallet_get_screen_id( 'woo-wallet', '' ) === $screen_id ) {
 				$reports_asset_path = WOO_WALLET_ABSPATH . 'build/admin/reports.asset.php';
 				$reports_asset      = file_exists( $reports_asset_path )
 					? include $reports_asset_path
@@ -624,12 +623,18 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					array(
 						'restUrl' => esc_url_raw( rest_url( 'terawallet/v1/admin/reports/summary' ) ),
 						'nonce'   => wp_create_nonce( 'wp_rest' ),
+						// reports.js builds the count-up figures with these and assigns
+						// them via textContent, so both the symbol and the format must
+						// be plain text. WooCommerce returns HTML for each: symbols are
+						// entities (₹ is "&#8377;") and the "…_space" currency positions
+						// use "&nbsp;" as the separator — left encoded, they render as
+						// literal "&nbsp;"/"&#8377;" instead of the character.
 						'price'   => array(
-							'symbol'   => html_entity_decode( get_woocommerce_currency_symbol() ),
+							'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 							'decimals' => wc_get_price_decimals(),
 							'decimal'  => wc_get_price_decimal_separator(),
 							'thousand' => wc_get_price_thousand_separator(),
-							'format'   => get_woocommerce_price_format(),
+							'format'   => html_entity_decode( get_woocommerce_price_format(), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 						),
 						'i18n'    => array(
 							'justNow' => __( 'just now', 'woo-wallet' ),
@@ -1088,9 +1093,13 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( ! current_user_can( get_wallet_user_capability() ) ) {
 				return $footer_text;
 			}
-			$current_screen                = get_current_screen();
-			$woo_wallet_settings_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			$woo_wallet_pages              = array( 'toplevel_page_woo-wallet', 'admin_page_woo-wallet-transactions', "{$woo_wallet_settings_screen_id}_page_woo-wallet-extensions", "{$woo_wallet_settings_screen_id}_page_woo-wallet-settings" );
+			$current_screen   = get_current_screen();
+			$woo_wallet_pages = array(
+				woo_wallet_get_screen_id( 'woo-wallet', '' ),
+				woo_wallet_get_screen_id( 'woo-wallet-transactions', 'null' ),
+				woo_wallet_get_screen_id( 'woo-wallet-extensions' ),
+				woo_wallet_get_screen_id( 'woo-wallet-settings' ),
+			);
 			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages, true ) ) {
 				if ( ! get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
 					$footer_text = sprintf(
@@ -1262,7 +1271,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @return array
 		 */
 		public function woocommerce_screen_ids_callback( $screen_ids ) {
-			$woo_wallet_screen_id = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
 			// woo-wallet-actions submenu removed; Actions are part of the unified Settings page.
 			return $screen_ids;
 		}
@@ -1457,7 +1465,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function show_purge_errors() {
 			$screen = get_current_screen();
-			if ( ! $screen || 'toplevel_page_woo-wallet' !== $screen->id ) {
+			if ( ! $screen || woo_wallet_get_screen_id( 'woo-wallet', '' ) !== $screen->id ) {
 				return;
 			}
 			$transient_key = 'woo_wallet_purge_error_' . get_current_user_id();

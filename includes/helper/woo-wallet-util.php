@@ -7,6 +7,38 @@
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
+if ( ! function_exists( 'woo_wallet_get_screen_id' ) ) {
+
+	/**
+	 * Get the admin screen id WordPress generates for a TeraWallet admin page.
+	 *
+	 * Never hardcode these. WordPress builds a submenu's screen id from
+	 * sanitize_title() of the *translated* parent menu title, so
+	 * "terawallet_page_woo-wallet-users" is only correct in English — under a
+	 * non-Latin locale (e.g. fa_IR) sanitize_title() percent-encodes the title
+	 * and the id becomes "%da%a9%db%8c%d9%81-%d9%be%d9%88%d9%84_page_…".
+	 *
+	 * This defers to core's get_plugin_page_hookname(), which reads the
+	 * $admin_page_hooks global WordPress itself populated at registration time,
+	 * so the result matches whatever WP actually built — including when a third
+	 * party filters the menu title.
+	 *
+	 * ponytail: must be called after `admin_menu` has run (any screen/enqueue/
+	 * footer hook qualifies); earlier than that $admin_page_hooks is empty and
+	 * core falls back to an "admin_page_" prefix.
+	 *
+	 * @param string $page_slug   Page slug, e.g. 'woo-wallet-users'. Pass 'woo-wallet' with an empty parent for the top-level screen.
+	 * @param string $parent_slug Parent menu slug. Defaults to the TeraWallet top-level menu.
+	 * @return string Screen id, e.g. as found in get_current_screen()->id.
+	 */
+	function woo_wallet_get_screen_id( $page_slug, $parent_slug = 'woo-wallet' ) {
+		if ( ! function_exists( 'get_plugin_page_hookname' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		return get_plugin_page_hookname( $page_slug, $parent_slug );
+	}
+}
+
 if ( ! function_exists( 'terawallet_pro_page_callback' ) ) {
 
 	/**

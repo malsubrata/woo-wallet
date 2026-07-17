@@ -72,34 +72,34 @@
    #wpcontent so the app stops just above the footer instead of hiding it.
    (Core hides #wpfooter itself on screens ≤782px, so the strip is desktop
    only, where the footer is a single ~40px line.) */
-.terawallet_page_woo-wallet-settings #wpcontent {
+.woo-wallet-settings-page #wpcontent {
   box-sizing: border-box;
   padding: 0 0 var(--ww-wpfooter-h, 46px) 0 !important;
   display: flex;
   flex-direction: column;
 }
 
-.terawallet_page_woo-wallet-settings #wpbody {
+.woo-wallet-settings-page #wpbody {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
-.terawallet_page_woo-wallet-settings #wpbody-content {
+.woo-wallet-settings-page #wpbody-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 0 !important;
 }
 
-.terawallet_page_woo-wallet-settings .wrap {
+.woo-wallet-settings-page .wrap {
   flex: 1;
   display: flex;
   flex-direction: column;
   margin: 0 !important;
 }
 
-.terawallet_page_woo-wallet-settings #woo-wallet-settings-root {
+.woo-wallet-settings-page #woo-wallet-settings-root {
   flex: 1;
   display: flex;
   flex-direction: column;

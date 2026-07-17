@@ -559,52 +559,54 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 	 */
 	public function add_js_scripts() {
 		$screen = get_current_screen();
-		if ( 'terawallet_page_woo-wallet-users' === $screen->id ) {
-			ob_start();
-			woo_wallet()->get_template( 'admin/edit-balance.php' );
-			woo_wallet()->get_template( 'admin/delete-log-modal.php' );
-			woo_wallet()->get_template( 'admin/credit-debit-modal.php' );
-			echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			wp_enqueue_script( 'wc-backbone-modal' );
-			?>
-			<style>
-				/*
-				 * WP core hides .bulkactions and .tablenav .actions below 783px
-				 * (common.css). The Wallet > Users screen has no per-row inline
-				 * actions, so without an override the bulk Credit / Debit /
-				 * Delete-log controls disappear entirely on mobile. Re-enable
-				 * them and let the action select wrap to the next line below
-				 * the Apply button when the viewport is too narrow.
-				 */
-				@media screen and (max-width: 782px) {
-					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions,
-					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions {
-						display: block;
-						width: 100%;
-						margin-bottom: 8px;
-						padding: 0;
-					}
-					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions select,
-					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions select {
-						display: inline-block;
-						width: calc(100% - 90px);
-						max-width: 320px;
-						margin-right: 6px;
-						vertical-align: middle;
-					}
-					.terawallet_page_woo-wallet-users .tablenav.top .bulkactions input[type="submit"],
-					.terawallet_page_woo-wallet-users .tablenav .actions.bulkactions input[type="submit"] {
-						display: inline-block;
-						vertical-align: middle;
-					}
-				}
-			</style>
-			<?php
+		if ( ! $screen || woo_wallet_get_screen_id( 'woo-wallet-users' ) !== $screen->id ) {
+			return;
 		}
+		ob_start();
+		woo_wallet()->get_template( 'admin/edit-balance.php' );
+		woo_wallet()->get_template( 'admin/delete-log-modal.php' );
+		woo_wallet()->get_template( 'admin/credit-debit-modal.php' );
+		echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		wp_enqueue_script( 'wc-backbone-modal' );
 		?>
+		<style>
+			/*
+				* WP core hides .bulkactions and .tablenav .actions below 783px
+				* (common.css). The Wallet > Users screen has no per-row inline
+				* actions, so without an override the bulk Credit / Debit /
+				* Delete-log controls disappear entirely on mobile. Re-enable
+				* them and let the action select wrap to the next line below
+				* the Apply button when the viewport is too narrow.
+				*/
+			@media screen and (max-width: 782px) {
+				.tablenav.top .bulkactions,
+				.tablenav .actions.bulkactions {
+					display: block;
+					width: 100%;
+					margin-bottom: 8px;
+					padding: 0;
+				}
+				.tablenav.top .bulkactions select,
+				.tablenav .actions.bulkactions select {
+					display: inline-block;
+					width: calc(100% - 90px);
+					max-width: 320px;
+					margin-right: 6px;
+					vertical-align: middle;
+				}
+				.tablenav.top .bulkactions input[type="submit"],
+				.tablenav .actions.bulkactions input[type="submit"] {
+					display: inline-block;
+					vertical-align: middle;
+				}
+			}
+		</style>
 		<script type="text/javascript">
 			jQuery(function ($) {
-				var $listForm = $('.terawallet_page_woo-wallet-users #posts-filter');
+				// Everything below only prints on the Wallet > Users screen (guarded
+				// above), so scope to the list form directly — the admin body class
+				// is derived from the translated menu title and is not stable.
+				var $listForm = $('#posts-filter');
 
 				// Pick the action that's actually selected — bulkactions dropdowns
 				// duplicate the control above + below the table, so either one may
@@ -684,7 +686,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 					$('.wc-backbone-modal-backdrop.modal-close').trigger('click');
 					$listForm[0].submit();
 				});
-				$(document).on('click', '.terawallet_page_woo-wallet-users .edit-wallet-balance', function (event) {
+				$(document).on('click', '.edit-wallet-balance', function (event) {
 					event.preventDefault();
 					var self = $(this);
 					self.html('<?php echo esc_js( __( 'Loading...', 'woo-wallet' ) ); ?>');

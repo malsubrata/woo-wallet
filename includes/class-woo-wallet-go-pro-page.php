@@ -85,10 +85,8 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * Enqueue dashicons on our screen.
 		 */
 		public function admin_enqueue_scripts() {
-			$screen    = get_current_screen();
-			$screen_id = $screen ? $screen->id : '';
-			$prefix    = sanitize_title( __( 'TeraWallet', 'woo-wallet' ) );
-			if ( "{$prefix}_page_" . self::MENU_SLUG === $screen_id ) {
+			$screen = get_current_screen();
+			if ( $screen && woo_wallet_get_screen_id( self::MENU_SLUG ) === $screen->id ) {
 				wp_enqueue_style( 'dashicons' );
 			}
 		}
