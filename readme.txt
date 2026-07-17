@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.8 (Unreleased) =
+= v1.6.8 (July 17, 2026) =
 – **Fix:-** TeraWallet admin screens were partly broken on sites running a non-English language (reported on Persian/fa_IR). WordPress builds each submenu's screen ID from the *translated* menu title, but several checks assumed the English "TeraWallet" spelling, so they never matched: on **Wallet → Users** the credit/debit, edit-balance and delete-log dialogs were never loaded — leaving those bulk actions unresponsive — the mobile bulk-action controls lost their styling, and on the Wallet Dashboard and Settings screens third-party admin notices were no longer suppressed while the Settings page lost its full-height layout. Screen IDs are now resolved from what WordPress actually registered, so every TeraWallet screen behaves identically in any language. English sites are unaffected.
 – **Fix:-** The Wallet Dashboard displayed a literal `&nbsp;` next to the currency amounts (for example `35,370,741&nbsp;تومان`) on stores whose currency position is "Left/Right with space" — the default for Persian Toman and several other currencies. The animated figures are rebuilt in the browser from WooCommerce's price format, which was passed through with its HTML entity intact. The amounts now render with a proper non-breaking space.
 – **Fix:-** The currency symbol shown beside the minimum/maximum top-up, minimum/maximum transfer, minimum cart and maximum cashback amount settings appeared as a raw HTML entity (for example `&#8377;` instead of ₹) for currencies whose symbol is not a plain character.
