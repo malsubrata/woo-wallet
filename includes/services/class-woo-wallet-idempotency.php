@@ -23,7 +23,11 @@ if ( ! class_exists( 'WooWallet_Idempotency' ) ) {
 
 		const TRANSIENT_PREFIX = 'wwidem_';
 		const TTL              = DAY_IN_SECONDS;
-		const IN_FLIGHT_TTL    = 5 * MINUTE_IN_SECONDS;
+		// Must exceed the host's hard request ceiling, or a still-running request
+		// outlives its own claim and a retry executes alongside it. PHP-FPM's
+		// `request_terminate_timeout` is commonly 300s, so 5 minutes sits exactly
+		// on the boundary; 15 clears it with room to spare.
+		const IN_FLIGHT_TTL    = 15 * MINUTE_IN_SECONDS;
 
 		/**
 		 * Run $callback once for ($user_id, $key); replay the stored response on retries.
@@ -81,15 +85,17 @@ if ( ! class_exists( 'WooWallet_Idempotency' ) ) {
 			// serialize the actual money move; the window being closed here is the
 			// sequential retry-after-crash. Upgrade path if simultaneity ever matters:
 			// atomic claim via add_option() on the raw `_transient_*` option name.
+			$token = uniqid( '', true );
 			set_transient(
 				$transient,
 				array(
 					'state' => 'in_progress',
 					'at'    => time(),
+					'token' => $token,
 				),
-				// ponytail: a request that truly dies unblocks after 5 minutes rather
-				// than staying wedged for the full 24h TTL. Past that a retry
-				// re-executes — today's behaviour, minus a 5-minute guard.
+				// ponytail: a request that truly dies unblocks after IN_FLIGHT_TTL
+				// rather than staying wedged for the full 24h TTL. Past that a retry
+				// re-executes — today's behaviour, minus the guard window.
 				self::IN_FLIGHT_TTL
 			);
 
@@ -107,8 +113,14 @@ if ( ! class_exists( 'WooWallet_Idempotency' ) ) {
 				);
 			} else {
 				// A genuine failure stays retryable — releasing the claim rather than
-				// leaving the key wedged behind an error the client can fix.
-				delete_transient( $transient );
+				// leaving the key wedged behind an error the client can fix. Release
+				// only OUR claim: if this request outlived its own in-flight window,
+				// what is stored now belongs to a later request and deleting it would
+				// re-open that request to a duplicate execution.
+				$current = get_transient( $transient );
+				if ( is_array( $current ) && isset( $current['token'] ) && $token === $current['token'] ) {
+					delete_transient( $transient );
+				}
 			}
 
 			return $result;

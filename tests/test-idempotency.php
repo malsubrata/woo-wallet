@@ -139,6 +139,34 @@ class Test_Idempotency extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A request that outlived its own in-flight window must not delete the record
+	 * a later request has since stored — doing so would re-open that request to a
+	 * duplicate execution.
+	 */
+	public function test_error_does_not_release_a_foreign_claim() {
+		$failing = function () {
+			// Simulate this request having outlived IN_FLIGHT_TTL: a later request
+			// claimed the key and stored its own completed response.
+			set_transient(
+				$this->transient_for( 'key-foreign' ),
+				array(
+					'status' => 200,
+					'body'   => array( 'owner' => 'later-request' ),
+					'at'     => time(),
+				),
+				DAY_IN_SECONDS
+			);
+			return new WP_Error( 'nope', 'Failed', array( 'status' => 400 ) );
+		};
+
+		WooWallet_Idempotency::run( $this->user_id, 'key-foreign', $failing );
+
+		$survivor = get_transient( $this->transient_for( 'key-foreign' ) );
+		$this->assertIsArray( $survivor, 'The later request\'s record must survive.' );
+		$this->assertSame( 'later-request', $survivor['body']['owner'] );
+	}
+
+	/**
 	 * With no key (or no user) the helper is a passthrough — unchanged behaviour
 	 * for callers that do not send the header.
 	 */

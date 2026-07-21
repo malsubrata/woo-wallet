@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.6.8\n"
+"Project-Id-Version: TeraWallet 1.6.9\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-17T06:09:07+00:00\n"
+"POT-Creation-Date: 2026-07-21T14:04:27+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -1003,11 +1003,11 @@ msgstr ""
 msgid "Invalid user id."
 msgstr ""
 
-#: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:352
+#: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:364
 msgid "user_ids and amount are required."
 msgstr ""
 
-#: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:381
+#: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:403
 msgid "ids are required."
 msgstr ""
 
@@ -2910,6 +2910,10 @@ msgstr ""
 
 #: includes/multicurrency/providers/class-woo-wallet-currency-provider-yaycurrency.php:51
 msgid "YayCurrency"
+msgstr ""
+
+#: includes/services/class-woo-wallet-idempotency.php:78
+msgid "A request with this Idempotency-Key is already being processed. Its outcome is not yet known — it may well have succeeded. Do not resubmit it as a new request; check the wallet transaction list, or retry this same key shortly."
 msgstr ""
 
 #: includes/services/class-woo-wallet-referral-service.php:55

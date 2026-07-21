@@ -1601,10 +1601,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			try {
 				// Security gate uses the raw ledger SUM only, NOT apply_filters('woo_wallet_current_balance').
 				// Third-party balance filters (credit-expiry, redeemed-totals plugins) recompute balance from
-				// columns updated by the post-commit `woo_wallet_transaction_recorded` hook — which fires AFTER
-				// our lock is released. A concurrent debit that ran the filter between RELEASE_LOCK and the
-				// async post-commit update would see an inflated balance and overdraft. The raw SUM is the
-				// only race-free source of truth — same property documented at the top of transfer().
+				// columns maintained by `woo_wallet_transaction_recorded` listeners. This method fires that
+				// hook inside the lock (below); transfer() fires it AFTER releasing its locks, so on that path
+				// a concurrent debit running the filter between RELEASE_LOCK and the listener's update would
+				// see an inflated balance and overdraft. The raw SUM is the only source of truth that is
+				// race-free on both paths — same property documented at the top of transfer(). Keep this gate
+				// on the raw SUM regardless of where the hook fires.
 				if ( 'per_currency' === $mode ) {
 					$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $this->user_id, $stored_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				} else {
@@ -1688,14 +1690,29 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			// lock held every other wallet write for this user behind an SMTP round
 			// trip, and stretched the window in which a dying request could leave the
 			// row committed but its caller's bookkeeping unwritten.
-			$wallet_emails = WC()->mailer()->emails;
-			$email_admin   = isset( $wallet_emails['Woo_Wallet_Email_New_Transaction'] ) ? $wallet_emails['Woo_Wallet_Email_New_Transaction'] : null;
-			if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
-				$email_admin->trigger( $transaction_id );
-			}
-			$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
-			if ( ! is_null( $low_balance_email ) ) {
-				$low_balance_email->trigger( $this->user_id, $type, $stored_amount );
+			//
+			// Notification failure must never mask a committed transaction: the row
+			// is already durable and the balance cache already updated, so throwing
+			// here would return false to a caller whose money HAS moved, and the
+			// linkage those callers write afterwards (transfer charge meta, order
+			// meta) would never be recorded. Log and carry on.
+			try {
+				$wallet_emails = WC()->mailer()->emails;
+				$email_admin   = isset( $wallet_emails['Woo_Wallet_Email_New_Transaction'] ) ? $wallet_emails['Woo_Wallet_Email_New_Transaction'] : null;
+				if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
+					$email_admin->trigger( $transaction_id );
+				}
+				$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
+				if ( ! is_null( $low_balance_email ) ) {
+					$low_balance_email->trigger( $this->user_id, $type, $stored_amount );
+				}
+			} catch ( Throwable $e ) {
+				if ( function_exists( 'wc_get_logger' ) ) {
+					wc_get_logger()->error(
+						sprintf( 'Wallet notification failed for transaction #%d: %s', $transaction_id, $e->getMessage() ),
+						array( 'source' => 'woo-wallet' )
+					);
+				}
 			}
 
 			return $transaction_id;
