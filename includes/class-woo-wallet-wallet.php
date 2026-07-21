@@ -1674,23 +1674,31 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					update_user_meta( $this->user_id, $this->meta_key, $balance );
 					clear_woo_wallet_cache( $this->user_id );
 					do_action( 'woo_wallet_transaction_recorded', $transaction_id, $this->user_id, $stored_amount, $type );
-					$wallet_emails = WC()->mailer()->emails;
-					$email_admin   = isset( $wallet_emails['Woo_Wallet_Email_New_Transaction'] ) ? $wallet_emails['Woo_Wallet_Email_New_Transaction'] : null;
-					if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
-						$email_admin->trigger( $transaction_id );
-					}
-					$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
-					if ( ! is_null( $low_balance_email ) ) {
-						$low_balance_email->trigger( $this->user_id, $type, $stored_amount );
-					}
-					return $transaction_id;
+				} else {
+					return false;
 				}
-				return false;
 			} finally {
 				if ( ! empty( $lock_acquired ) ) {
 					$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 				}
 			}
+
+			// Emails are sent AFTER the lock is released — same shape as transfer(),
+			// which fires its post-commit work after RELEASE_LOCK. Sending inside the
+			// lock held every other wallet write for this user behind an SMTP round
+			// trip, and stretched the window in which a dying request could leave the
+			// row committed but its caller's bookkeeping unwritten.
+			$wallet_emails = WC()->mailer()->emails;
+			$email_admin   = isset( $wallet_emails['Woo_Wallet_Email_New_Transaction'] ) ? $wallet_emails['Woo_Wallet_Email_New_Transaction'] : null;
+			if ( ! is_null( $email_admin ) && apply_filters( 'is_enable_email_notification_for_transaction', true, $transaction_id ) ) {
+				$email_admin->trigger( $transaction_id );
+			}
+			$low_balance_email = isset( $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] ) ? $wallet_emails['Woo_Wallet_Email_Low_Wallet_Balance'] : null;
+			if ( ! is_null( $low_balance_email ) ) {
+				$low_balance_email->trigger( $this->user_id, $type, $stored_amount );
+			}
+
+			return $transaction_id;
 		}
 	}
 

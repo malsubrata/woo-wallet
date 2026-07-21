@@ -44,6 +44,12 @@ if ( ! class_exists( 'WooWallet_API' ) ) {
 		 * @since 1.2.5
 		 */
 		private function rest_api_includes() {
+			// Service dependency of the admin + me controllers' idempotency wrappers.
+			// Loaded here (not in the plugin bootstrap) because REST is its only
+			// consumer, and here it is guaranteed to be present before any
+			// controller dispatches — a controller cannot forget to include it.
+			include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-idempotency.php';
+
 			// Abstract bases (loaded first — controllers extend these).
 			include_once __DIR__ . '/abstracts/class-terawallet-rest-controller-base.php';
 			include_once __DIR__ . '/abstracts/class-terawallet-rest-me-controller-base.php';
