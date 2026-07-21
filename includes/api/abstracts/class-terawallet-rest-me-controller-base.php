@@ -154,9 +154,6 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Controller_Base' ) ) {
 			if ( '' === $key ) {
 				return $callback();
 			}
-			if ( ! class_exists( 'WooWallet_Idempotency' ) ) {
-				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-idempotency.php';
-			}
 			return WooWallet_Idempotency::run( $this->current_user_id(), $key, $callback );
 		}
 	}

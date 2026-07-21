@@ -339,61 +339,76 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			return $idem_key;
 		}
 
-		$results = array();
-		if ( 'credit' === $action || 'debit' === $action ) {
-			$user_ids = array_filter( array_map( 'absint', (array) ( $params['user_ids'] ?? array() ) ) );
-			$amount   = (float) ( $params['amount'] ?? 0 );
-			$note     = isset( $params['note'] ) ? $params['note'] : '';
-			$call_args = array();
-			if ( ! empty( $params['currency'] ) ) {
-				$call_args['currency'] = strtoupper( $params['currency'] );
-			}
-			if ( ! $user_ids || $amount <= 0 ) {
-				return $this->error( 'terawallet_rest_bulk_invalid', __( 'user_ids and amount are required.', 'woo-wallet' ), 400 );
-			}
-			$current_user = get_current_user_id();
-			// Per-row idempotency: a retry after a mid-loop process death
-			// must not re-credit users who already received the credit on
-			// the first attempt. The wrapping `admin_txn_bulk` key still
-			// caches the envelope so an identical-shape replay returns the
-			// original response verbatim.
-			foreach ( $user_ids as $uid ) {
-				$row = WooWallet_Idempotency::run(
-					$current_user,
-					'admin_txn_bulk_row:' . $action . ':' . $idem_key . ':' . $uid,
-					function () use ( $action, $uid, $amount, $note, $call_args ) {
-						$args   = $call_args ?: null;
-						$txn_id = 'credit' === $action
-							? woo_wallet()->wallet->credit( $uid, $amount, $note, $args )
-							: woo_wallet()->wallet->debit( $uid, $amount, $note, $args );
-						return new WP_REST_Response(
-							array( 'user_id' => $uid, 'transaction_id' => (int) $txn_id, 'ok' => (bool) $txn_id ),
-							200
-						);
-					}
-				);
-				$results[] = $row instanceof WP_REST_Response ? $row->get_data() : array( 'user_id' => $uid, 'transaction_id' => 0, 'ok' => false );
-			}
-		} else {
-			$ids   = array_filter( array_map( 'absint', (array) ( $params['ids'] ?? array() ) ) );
-			$force = ! empty( $params['force'] );
-			if ( ! $ids ) {
-				return $this->error( 'terawallet_rest_bulk_invalid', __( 'ids are required.', 'woo-wallet' ), 400 );
-			}
-			foreach ( $ids as $id ) {
-				$ok        = woo_wallet()->wallet->delete_transaction( $id, $force );
-				$results[] = array( 'id' => $id, 'ok' => ! is_wp_error( $ok ), 'error' => is_wp_error( $ok ) ? $ok->get_error_message() : null );
-			}
-		}
-
-		$response = new WP_REST_Response( array( 'action' => $action, 'results' => $results ), 200 );
-		// Cache the aggregate envelope under the top-level key so a verbatim
-		// replay of the whole request returns the same response.
+		// The claim wraps the whole loop, not just the finished envelope. Claiming
+		// only the response meant every retry re-entered the loop and then cached
+		// whatever that second pass produced — so a retry arriving mid-run baked a
+		// transient per-row 409 into a 24h "failed" record for a row that had in
+		// fact succeeded. Wrapping the body means a completed replay returns the
+		// original envelope without re-entering the loop, and an in-flight retry
+		// gets one 409 for the request. The per-row claims stay: they are what
+		// guards a mid-loop process death.
 		return WooWallet_Idempotency::run(
 			get_current_user_id(),
 			'admin_txn_bulk:' . $action . ':' . $idem_key,
-			function () use ( $response ) {
-				return $response;
+			function () use ( $params, $action, $idem_key ) {
+				$results = array();
+				if ( 'credit' === $action || 'debit' === $action ) {
+					$user_ids = array_filter( array_map( 'absint', (array) ( $params['user_ids'] ?? array() ) ) );
+					$amount   = (float) ( $params['amount'] ?? 0 );
+					$note     = isset( $params['note'] ) ? $params['note'] : '';
+					$call_args = array();
+					if ( ! empty( $params['currency'] ) ) {
+						$call_args['currency'] = strtoupper( $params['currency'] );
+					}
+					if ( ! $user_ids || $amount <= 0 ) {
+						return $this->error( 'terawallet_rest_bulk_invalid', __( 'user_ids and amount are required.', 'woo-wallet' ), 400 );
+					}
+					$current_user = get_current_user_id();
+					// Per-row idempotency: a retry after a mid-loop process death
+					// must not re-credit users who already received the credit on
+					// the first attempt.
+					foreach ( $user_ids as $uid ) {
+						$row = WooWallet_Idempotency::run(
+							$current_user,
+							'admin_txn_bulk_row:' . $action . ':' . $idem_key . ':' . $uid,
+							function () use ( $action, $uid, $amount, $note, $call_args ) {
+								$args   = $call_args ?: null;
+								$txn_id = 'credit' === $action
+									? woo_wallet()->wallet->credit( $uid, $amount, $note, $args )
+									: woo_wallet()->wallet->debit( $uid, $amount, $note, $args );
+								return new WP_REST_Response(
+									array( 'user_id' => $uid, 'transaction_id' => (int) $txn_id, 'ok' => (bool) $txn_id ),
+									200
+								);
+							}
+						);
+						if ( $row instanceof WP_REST_Response ) {
+							$results[] = $row->get_data();
+						} else {
+							// An unresolved row is not a failed row. Say so, so an
+							// admin reconciling the report does not re-issue a credit
+							// that may already have landed.
+							$results[] = array(
+								'user_id'        => $uid,
+								'transaction_id' => 0,
+								'ok'             => false,
+								'in_progress'    => is_wp_error( $row ) && 'terawallet_rest_idempotency_in_progress' === $row->get_error_code(),
+							);
+						}
+					}
+				} else {
+					$ids   = array_filter( array_map( 'absint', (array) ( $params['ids'] ?? array() ) ) );
+					$force = ! empty( $params['force'] );
+					if ( ! $ids ) {
+						return $this->error( 'terawallet_rest_bulk_invalid', __( 'ids are required.', 'woo-wallet' ), 400 );
+					}
+					foreach ( $ids as $id ) {
+						$ok        = woo_wallet()->wallet->delete_transaction( $id, $force );
+						$results[] = array( 'id' => $id, 'ok' => ! is_wp_error( $ok ), 'error' => is_wp_error( $ok ) ? $ok->get_error_message() : null );
+					}
+				}
+
+				return new WP_REST_Response( array( 'action' => $action, 'results' => $results ), 200 );
 			}
 		);
 	}
