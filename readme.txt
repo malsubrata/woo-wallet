@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.8
+Stable tag: 1.6.9
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.9 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.8 (July 17, 2026) =
 – **Fix:-** TeraWallet admin screens were partly broken on sites running a non-English language (reported on Persian/fa_IR). WordPress builds each submenu's screen ID from the *translated* menu title, but several checks assumed the English "TeraWallet" spelling, so they never matched: on **Wallet → Users** the credit/debit, edit-balance and delete-log dialogs were never loaded — leaving those bulk actions unresponsive — the mobile bulk-action controls lost their styling, and on the Wallet Dashboard and Settings screens third-party admin notices were no longer suppressed while the Settings page lost its full-height layout. Screen IDs are now resolved from what WordPress actually registered, so every TeraWallet screen behaves identically in any language. English sites are unaffected.
