@@ -643,9 +643,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					}
 					do_action( 'woo_wallet_partial_payment_completed', $transaction_id, $locked_order );
 				} else {
-					// Insufficient balance (e.g. spent before payment cleared). Hold the
-					// order for review rather than overdrafting the wallet.
-					$locked_order->update_status( 'on-hold', __( 'Wallet partial payment could not be debited (insufficient balance). Held for review. ', 'woo-wallet' ) );
+					// Debit refused (locked wallet, or balance spent before payment
+					// cleared). Hold the order for review rather than undercharging.
+					$fail_note = is_wallet_account_locked( $locked_order->get_customer_id() )
+						? __( 'Wallet partial payment could not be debited (wallet is locked). Held for review. ', 'woo-wallet' )
+						: __( 'Wallet partial payment could not be debited (insufficient balance). Held for review. ', 'woo-wallet' );
+					$locked_order->update_status( 'on-hold', $fail_note );
 					do_action( 'woo_wallet_partial_payment_debit_failed', $locked_order, $partial_payment_amount );
 				}
 			} finally {

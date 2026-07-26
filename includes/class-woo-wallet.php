@@ -518,14 +518,20 @@ final class Woo_Wallet {
 			array(
 				'namespace' => 'apply-partial-payment',
 				'callback'  => function ( $data ) {
-					if ( ! is_null( wc()->session ) ) {
-						$amount = isset( $data['amount'] ) ? (float) $data['amount'] : 0;
-						$max    = woo_wallet_get_partial_payment_max_amount();
-						if ( $max > 0 && $amount > $max ) {
-							$amount = $max;
-						}
-						wc()->session->set( 'partial_payment_amount', $amount );
+					if ( is_null( wc()->session ) ) {
+						return;
 					}
+					// Locked wallets cannot be spent — clear any prior opt-in amount.
+					if ( is_wallet_account_locked() ) {
+						wc()->session->set( 'partial_payment_amount', 0 );
+						return;
+					}
+					$amount = isset( $data['amount'] ) ? (float) $data['amount'] : 0;
+					$max    = woo_wallet_get_partial_payment_max_amount();
+					if ( $max > 0 && $amount > $max ) {
+						$amount = $max;
+					}
+					wc()->session->set( 'partial_payment_amount', $amount );
 				},
 			)
 		);
