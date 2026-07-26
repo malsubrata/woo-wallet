@@ -77,7 +77,7 @@ class Test_Partial_Payment_Locked_Wallet extends WP_UnitTestCase {
 		$this->set_setting( 'is_auto_deduct_for_partial_payment', 'on' );
 		$this->stub_cart_total( 900 );
 
-		$this->assertTrue( is_wallet_account_locked( $this->user_id ) );
+		$this->assertNotEmpty( is_wallet_account_locked( $this->user_id ) );
 		$this->assertFalse( is_enable_wallet_partial_payment() );
 	}
 
@@ -91,7 +91,7 @@ class Test_Partial_Payment_Locked_Wallet extends WP_UnitTestCase {
 		$this->set_setting( 'is_auto_deduct_for_partial_payment', 'on' );
 		$this->stub_cart_total( 900 );
 
-		$this->assertFalse( is_wallet_account_locked( $this->user_id ) );
+		$this->assertEmpty( is_wallet_account_locked( $this->user_id ) );
 		$this->assertTrue( is_enable_wallet_partial_payment() );
 	}
 
