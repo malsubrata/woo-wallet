@@ -166,6 +166,53 @@ class Test_Partial_Payment_Refund extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Spam-cancel / double cancel credits the wallet debit only once.
+	 */
+	public function test_cancel_is_idempotent() {
+		woo_wallet()->wallet->credit( $this->user_id, 200, 'seed' );
+		$order = $this->make_order( 100, 0, 100 );
+		$this->debit_order( $order ); // balance 100.
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEquals( 200.0, $this->balance() ); // +100 once, not twice.
+		$fresh = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
+		$this->assertNotEmpty( $fresh->get_meta( '_woo_wallet_partial_payment_refunded' ) );
+		$this->assertEmpty( $fresh->get_meta( '_partial_pay_through_wallet_compleate' ) );
+	}
+
+	/**
+	 * A stale in-request order cache must not allow a second cancel credit
+	 * after another holder already claimed the refund marker.
+	 */
+	public function test_cancel_after_stale_order_cache() {
+		woo_wallet()->wallet->credit( $this->user_id, 200, 'seed' );
+		$order = $this->make_order( 100, 0, 100 );
+		$this->debit_order( $order ); // balance 100.
+
+		// Simulate request B holding a stale copy that still shows the debit marker.
+		$stale = wc_get_order( $order->get_id() );
+		$this->assertNotEmpty( $stale->get_meta( '_partial_pay_through_wallet_compleate' ) );
+
+		// Concurrent winner claims via a fresh write path.
+		$winner = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
+		$winner->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
+		$winner->update_meta_data( '_woo_wallet_partial_refunded_total', 100 );
+		$winner->delete_meta_data( '_partial_pay_through_wallet_compleate' );
+		$winner->save();
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'winner cancel refund' ); // balance 200.
+
+		// Stale handle still looks unrefunded — cancel must re-read and skip.
+		$this->assertNotEmpty( $stale->get_meta( '_partial_pay_through_wallet_compleate' ) );
+		$this->assertEmpty( $stale->get_meta( '_woo_wallet_partial_payment_refunded' ) );
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEquals( 200.0, $this->balance() ); // no second +100.
+	}
+
+	/**
 	 * A taxable fee's gross (base + tax) is the amount debited.
 	 */
 	public function test_tax_inclusive_gross_is_debited() {

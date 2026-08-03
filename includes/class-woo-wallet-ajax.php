@@ -211,23 +211,70 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 
 		/**
 		 * Wallet partial payment refund.
+		 *
+		 * Shares the per-order `woo_wallet_refund_partial_<id>` lock with
+		 * cancel / WC refund handlers and claims the refunded marker before
+		 * crediting so double-clicks cannot return the wallet debit twice.
 		 */
 		public function woo_wallet_refund_partial_payment() {
+			global $wpdb;
+
 			if ( ! current_user_can( 'edit_shop_orders' ) ) {
 				wp_die( -1 );
 			}
-			$response               = array( 'success' => false );
-			$order_id               = absint( filter_input( INPUT_POST, 'order_id' ) );
-			$order                  = wc_get_order( $order_id );
-			$partial_payment_amount = get_order_partial_payment_amount( $order_id );
-			$transaction_id         = woo_wallet()->wallet->credit( $order->get_customer_id(), $partial_payment_amount, __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number(), array( 'currency' => $order->get_currency( 'edit' ) ) );
-			if ( $transaction_id ) {
-				$response['success'] = true;
-				/* translators: wallet amount */
-				$order->add_order_note( sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_partial_payment_refunded', true, false );
-				WOO_Wallet_Helper::update_order_meta_data( $order, '_partial_payment_refund_id', $transaction_id );
-				do_action( 'woo_wallet_partial_order_refunded', $order_id, $transaction_id );
+			$response = array( 'success' => false );
+			$order_id = absint( filter_input( INPUT_POST, 'order_id' ) );
+			if ( ! $order_id ) {
+				wp_send_json( $response );
+			}
+
+			$lock_name    = 'woo_wallet_refund_partial_' . $order_id;
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order_id );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== (string) $got_lock ) {
+				wp_send_json( $response );
+			}
+
+			try {
+				$order = WOO_Wallet_Helper::get_order_for_update( $order_id );
+				if ( ! $order || ! $order->get_meta( '_partial_pay_through_wallet_compleate' ) || $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
+					wp_send_json( $response );
+				}
+
+				$partial_payment_amount = (float) get_order_partial_payment_amount( $order_id );
+				$already_refunded       = (float) $order->get_meta( '_woo_wallet_partial_refunded_total' );
+				$refund_gross           = max( 0.0, $partial_payment_amount - $already_refunded );
+				if ( $refund_gross <= 0 ) {
+					$order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
+					$order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
+					$order->save();
+					wp_send_json( $response );
+				}
+
+				// Claim before credit — first click wins.
+				$order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
+				$order->update_meta_data( '_woo_wallet_partial_refunded_total', $already_refunded + $refund_gross );
+				$order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
+				$order->save();
+
+				$transaction_id = woo_wallet()->wallet->credit(
+					$order->get_customer_id(),
+					$refund_gross,
+					__( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number(),
+					array( 'currency' => $order->get_currency( 'edit' ) )
+				);
+				if ( $transaction_id ) {
+					$response['success'] = true;
+					/* translators: wallet amount */
+					$order->add_order_note( sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $refund_gross, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_partial_payment_refund_id', $transaction_id );
+					do_action( 'woo_wallet_partial_order_refunded', $order_id, $transaction_id );
+				} else {
+					$order->add_order_note( __( 'Wallet partial refund was claimed but the credit failed. Manual review required.', 'woo-wallet' ) );
+					$order->save();
+				}
+			} finally {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
 			wp_send_json( $response );
 		}
