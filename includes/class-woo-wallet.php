@@ -544,9 +544,22 @@ final class Woo_Wallet {
 	 * @return void
 	 */
 	public function woocommerce_order_item_fee_after_calculate_taxes_callback( $item ) {
+		if ( ! is_a( $item, 'WC_Order_Item_Fee' ) ) {
+			return;
+		}
+		// `_legacy_fee_key` meta is only written once the item is saved (see
+		// woocommerce_new_order_item), but the Store API recalculates taxes on the
+		// unsaved item — there the key exists solely as the public property set by
+		// WC_Checkout::create_order_fee_lines(). Without this fallback WooCommerce's
+		// negative-fee tax apportionment survives and the wallet debit is inflated
+		// by the fee tax.
+		$fee_key = $item->get_meta( '_legacy_fee_key' );
+		if ( ! $fee_key && property_exists( $item, 'legacy_fee_key' ) ) {
+			$fee_key = $item->legacy_fee_key;
+		}
 		// Keep the fee tax in `tax_inclusive_wallet` mode (the wallet pays the tax);
 		// only zero it in `payment` mode.
-		if ( is_a( $item, 'WC_Order_Item_Fee' ) && '_via_wallet_partial_payment' === $item->get_meta( '_legacy_fee_key' ) && 'tax_inclusive_wallet' !== woo_wallet_get_partial_payment_tax_mode() ) {
+		if ( '_via_wallet_partial_payment' === $fee_key && 'tax_inclusive_wallet' !== woo_wallet_get_partial_payment_tax_mode() ) {
 			$item->set_taxes( false );
 		}
 	}
