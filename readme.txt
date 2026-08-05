@@ -138,7 +138,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.9 (July 21, 2026) =
+= v1.6.9 (August 05, 2026) =
 – **Fix:-** Wallet write requests made through the REST API — creating a credit or debit from `terawallet/v1/admin/transactions`, purging a customer's transaction log, and admin-initiated transfers — failed with a critical error on every 1.6.8 site. The replay-protection service these endpoints depend on was never loaded. It is now loaded with the rest of the REST API, so no endpoint can miss it. Sites that are not integrating with the REST API are unaffected; the wallet itself, the admin screens and the customer dashboard never used this path.
 – **Fix:-** Retrying a wallet transaction whose original request timed out could report an already-completed transaction as failed, and — when the balance allowed it — could have charged the customer a second time. The `Idempotency-Key` was only recorded once a request finished, so a request that died after the money moved (for example while the transaction email was being sent) left nothing behind for the retry to recognise. The key is now claimed before the transaction is attempted: a retry that arrives while the original is still unresolved is refused with a clear "already in progress" response (HTTP 409) instead of running a second time.
 – **Fix:-** A wallet transaction is no longer reported as failed when only its notification email failed. The transaction row and the updated balance were already saved at that point, but an error from the mail server (or from a third-party mail plugin) was passed back to the caller as a failure, and any follow-up record the caller writes — such as the transfer fee note or the order link — was skipped. Mail problems are now logged and the transaction is reported correctly.
@@ -261,51 +261,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 – **Tweak:-** `woo_wallet_wc_price_args()` is now mode-aware; in per-currency mode it defaults to the active provider's currency while explicit per-row currency overrides still win.
 – **Tweak:-** Database migration `1.6.0` is idempotent — fresh installs and upgrades both land on the new schema; pre-1.6 rows keep working with `original_*` NULL and `mode=0`.
 
-= v1.5.18 (April 23, 2026) =
-– **New:-** Added Go Pro admin page showcasing Pro features with a Free vs Pro comparison and license activation UI, replacing the legacy Extensions page.
-– **Security:-** Implement idempotency key for wallet transfers to prevent duplicate submissions and TOCTOU race condition vulnerabilities.
-– **Tweak:-** Enhanced partial payment tooltip to provide a clearer breakdown of amounts debited from the wallet and paid via other gateways.
-– **Tweak:-** Enhance database schema and optimize wallet transaction queries for improved performance.
-– **Tweak:-** Improved CSV exporter for wallet transactions with better query handling.
-– **Tweak:-** Update Pro upgrade URLs with UTM parameters for better tracking.
-
-= v1.5.17 (March 12, 2026) =
-– **Fix:-** Remove space in limit parameter for wallet transactions query.
-– **Fix:-** Simplify wallet transactions query preparation by removing redundant parameter checks.
-
-= v1.5.16 (February 12, 2026) =
-– **Tweak:-** Enhance SQL query construction for wallet transactions with improved safety and readability.
-– **Tweak:-** Remove return type declarations for compatibility and enhance permission checks in content handling.
-– **Tweak:-** Update version retrieval for script and style assets.
-– **Tweak:-** Enhance partial payment validation in frontend.
-– **Tweak:-** Add checks for zero currency rates in multi-currency conversion methods
-– **Tweak:-** Database Lock to serialize requests for the same user.
-– **Tweak:-** Adjust wallet transfer logic to debit before crediting, ensuring proper transaction flow.
-
-= v1.5.15 (December 10, 2025) =
-– **New:-** User wallet dashboard design.
-– **Tweak:-** Replace thickbox with wc backbone modal.
-– **Fix:-** Removed moment js and used WordPress core momentjs Library.
-– **Added:-** WordPress 6.9 support.
-
-= v1.5.14 (October 08, 2025) =
-– **Fix:-** RTL CSS issue.
-
-= v1.5.13 (August 21, 2025) =
-– **Fix:-** PHP warning.
-
-= v1.5.12 (August 21, 2025) =
-– **New:-** Date range filter in wallet transaction page.
-– **New:-** Settings panel design.
-– **New:-** Now site admin can enable/disable wallet topup.
-– **Fix:-** Partial payment issue.
-– **Fix:-** Cashback display issue on cart and checkout page.
-
-= v1.5.11 ( May 08, 2025) =
-– **Fix:-** Text Domain loading issue.
-
-= v1.5.10 ( December 12, 2024) =
-– **Fix:-** Refund issue.
+[See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
