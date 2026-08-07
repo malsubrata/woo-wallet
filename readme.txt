@@ -139,7 +139,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.10 (Unreleased) =
-– **Tweak:-** Development in progress.
+– **Security:-** A wallet top-up paid with a discount coupon no longer credits more than the customer actually paid (CVE-2026-16538). Top-ups go through the normal WooCommerce cart, so an ordinary store coupon could be applied to one — the wallet was then credited with the full pre-discount amount while only the discounted total was collected, letting a customer buy store credit for a fraction of its value, repeatedly. The credited amount is now taken from what the order actually collected. Top-ups that carry tax or shipping are unaffected and still credit the requested amount, and the `woo_wallet_credit_purchase_amount` filter continues to work for sites that customise this. The admin dashboard's monthly top-up figure used the same pre-discount amount and has been corrected to match. Sites that do not issue coupons usable on top-up orders were never at risk. Reported by Guillermo Álvarez Fernández.
 
 = v1.6.9 (August 05, 2026) =
 – **Fix:-** Wallet write requests made through the REST API — creating a credit or debit from `terawallet/v1/admin/transactions`, purging a customer's transaction log, and admin-initiated transfers — failed with a critical error on every 1.6.8 site. The replay-protection service these endpoints depend on was never loaded. It is now loaded with the rest of the REST API, so no endpoint can miss it. Sites that are not integrating with the REST API are unaffected; the wallet itself, the admin screens and the customer dashboard never used this path.

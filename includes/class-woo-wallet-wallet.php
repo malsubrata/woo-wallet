@@ -321,7 +321,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( ! $order || $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
 					return;
 				}
-				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal(), $order_id );
+				// Credit what was actually collected, never the pre-discount line subtotal.
+				// A store coupon applied to a top-up order lowers the total while leaving the
+				// subtotal intact, so crediting the subtotal mints wallet credit for free
+				// (CVE-2026-16538). Tax/shipping push the total above the subtotal, so clamp
+				// with min() rather than switching to get_total() outright.
+				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', min( (float) $order->get_subtotal(), (float) $order->get_total() ), $order_id );
 				if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
 					$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
 					if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {

@@ -248,7 +248,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				$top_up_amount = 0;
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
 					$order           = wc_get_order( $order_id );
-					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal( 'edit' ), $order_id );
+					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', min( (float) $order->get_subtotal(), (float) $order->get_total( 'edit' ) ), $order_id );
 					$charge_amount   = $order->get_meta( '_wc_wallet_purchase_gateway_charge' );
 					if ( $charge_amount ) {
 						$recharge_amount -= $charge_amount;
