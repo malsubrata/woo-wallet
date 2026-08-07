@@ -173,17 +173,67 @@ class Test_Credit_Purchase_Discount extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The public filter still overrides the credited amount.
+	 * Merchandise sharing the order with a top-up is not wallet value.
+	 */
+	public function test_mixed_order_credits_only_the_topup_line() {
+		$order = $this->make_topup_order( 10 );
+
+		$other = new WC_Order_Item_Product();
+		$other->set_product_id( self::factory()->post->create( array( 'post_type' => 'product' ) ) );
+		$other->set_quantity( 1 );
+		$other->set_subtotal( 500 );
+		$other->set_total( 500 );
+		$order->add_item( $other );
+		$order->set_total( 510 );
+		$order->save();
+
+		$this->credit_order( $order );
+
+		$this->assertEqualsWithDelta( 10.0, $this->balance(), 0.01, 'Credited merchandise as wallet value.' );
+	}
+
+	/**
+	 * A fixed gateway charge larger than the collected amount credits nothing
+	 * rather than writing an empty row.
+	 */
+	public function test_fixed_gateway_charge_over_collected_writes_no_row() {
+		update_option(
+			'_wallet_settings_general',
+			array_merge(
+				(array) get_option( '_wallet_settings_general', array() ),
+				array(
+					'is_enable_gateway_charge' => 'on',
+					'gateway_charge_type'      => 'fixed',
+					'charge_amount_'           => 5,
+				)
+			)
+		);
+
+		// 100 requested, 97% coupon → 3 collected, 5 fixed charge → nothing left.
+		$this->credit_order( $this->make_topup_order( 100, 3 ) );
+
+		$this->assertSame( 0, $this->row_count(), 'Wrote a ledger row for a negative amount.' );
+		$this->assertEqualsWithDelta( 0.0, $this->balance(), 0.01 );
+	}
+
+	/**
+	 * The public filter still overrides the credited amount, and receives the
+	 * collected figure and the order id.
 	 */
 	public function test_filter_overrides_credited_amount() {
-		$callback = function () {
+		$seen     = array();
+		$callback = function ( $amount, $order_id ) use ( &$seen ) {
+			$seen = array( $amount, $order_id );
 			return 42.0;
 		};
-		add_filter( 'woo_wallet_credit_purchase_amount', $callback );
-		$this->credit_order( $this->make_topup_order( 100, 10 ) );
-		remove_filter( 'woo_wallet_credit_purchase_amount', $callback );
+		add_filter( 'woo_wallet_credit_purchase_amount', $callback, 10, 2 );
+		$order = $this->make_topup_order( 100, 10 );
+		$this->credit_order( $order );
+		remove_filter( 'woo_wallet_credit_purchase_amount', $callback, 10 );
 
 		$this->assertEqualsWithDelta( 42.0, $this->balance(), 0.01 );
+		$this->assertEqualsWithDelta( 10.0, $seen[0], 0.01, 'Filter did not receive the collected amount.' );
+		$this->assertSame( $order->get_id(), $seen[1] );
 	}
 
 	/**
