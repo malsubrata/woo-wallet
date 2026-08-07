@@ -247,8 +247,17 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				}
 				$top_up_amount = 0;
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
-					$order           = wc_get_order( $order_id );
-					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', min( (float) $order->get_subtotal(), (float) $order->get_total( 'edit' ) ), $order_id );
+					$order = wc_get_order( $order_id );
+					if ( ! $order ) {
+						continue;
+					}
+					// Mirrors the credited figure in Woo_Wallet_Wallet::wallet_credit_purchase():
+					// post-discount, pre-tax line totals, so the report matches the ledger.
+					$collected = 0.0;
+					foreach ( $order->get_items() as $line_item ) {
+						$collected += (float) $line_item->get_total();
+					}
+					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $collected, $order_id );
 					$charge_amount   = $order->get_meta( '_wc_wallet_purchase_gateway_charge' );
 					if ( $charge_amount ) {
 						$recharge_amount -= $charge_amount;

@@ -321,12 +321,25 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( ! $order || $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
 					return;
 				}
-				// Credit what was actually collected, never the pre-discount line subtotal.
-				// A store coupon applied to a top-up order lowers the total while leaving the
-				// subtotal intact, so crediting the subtotal mints wallet credit for free
-				// (CVE-2026-16538). Tax/shipping push the total above the subtotal, so clamp
-				// with min() rather than switching to get_total() outright.
-				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', min( (float) $order->get_subtotal(), (float) $order->get_total() ), $order_id );
+				// Credit the top-up value the store actually keeps, never the pre-discount
+				// line subtotal. Top-ups go through the normal cart, so an ordinary store
+				// coupon lowers what is collected while leaving the subtotal intact —
+				// crediting the subtotal minted free wallet credit (CVE-2026-16538). Summing
+				// the line totals gives the post-discount, pre-tax figure: the order total
+				// would wrongly include tax and shipping, which are collected but not kept.
+				$collected = 0.0;
+				foreach ( $order->get_items() as $line_item ) {
+					$collected += (float) $line_item->get_total();
+				}
+				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $collected, $order_id );
+
+				// A fully discounted top-up collects nothing. Mark the order credited so the
+				// next paid-status transition does not retry, and skip the empty ledger row.
+				if ( $recharge_amount <= 0 ) {
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_credited', true );
+					$order->add_order_note( __( 'Top-up collected no wallet value; nothing credited.', 'woo-wallet' ) );
+					return;
+				}
 				if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
 					$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
 					if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {
