@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.9
+Stable tag: 1.6.10
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.10 (August 07, 2026) =
+– **Security:-** A wallet top-up paid with a discount coupon no longer credits more than the customer actually paid (CVE-2026-16538). Top-ups go through the normal WooCommerce cart, so an ordinary store coupon could be applied to one — the wallet was then credited with the full pre-discount amount while only the discounted total was collected, letting a customer buy store credit for a fraction of its value, repeatedly. The wallet is now credited with the value the store actually keeps for the top-up: the amount after any discount, excluding tax and shipping. An undiscounted top-up still credits the full requested amount on stores that charge tax or shipping on it, and the `woo_wallet_credit_purchase_amount` filter continues to work for sites that customise this. A top-up left at zero by a full-value coupon now records an order note instead of an empty transaction. The admin dashboard's monthly top-up figure used the same pre-discount amount and has been corrected to match. Sites that do not issue coupons usable on top-up orders were never at risk. Reported by Guillermo Álvarez Fernández.
 
 = v1.6.9 (August 05, 2026) =
 – **Fix:-** Wallet write requests made through the REST API — creating a credit or debit from `terawallet/v1/admin/transactions`, purging a customer's transaction log, and admin-initiated transfers — failed with a critical error on every 1.6.8 site. The replay-protection service these endpoints depend on was never loaded. It is now loaded with the rest of the REST API, so no endpoint can miss it. Sites that are not integrating with the REST API are unaffected; the wallet itself, the admin screens and the customer dashboard never used this path.

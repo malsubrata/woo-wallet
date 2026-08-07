@@ -321,7 +321,21 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( ! $order || $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
 					return;
 				}
-				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $order->get_subtotal(), $order_id );
+				// Credit the top-up value the store actually keeps, never the pre-discount
+				// line subtotal. Top-ups go through the normal cart, so an ordinary store
+				// coupon lowers what is collected while leaving the subtotal intact —
+				// crediting the subtotal minted free wallet credit (CVE-2026-16538). The
+				// recharge line's own total is the post-discount, pre-tax figure: the order
+				// total would wrongly include tax and shipping, which are collected but not
+				// kept, and any other line item is merchandise the customer also receives.
+				$collected = 0.0;
+				foreach ( $order->get_items() as $line_item ) {
+					if ( $wallet_product->get_id() !== $line_item->get_product_id() ) {
+						continue;
+					}
+					$collected += (float) $line_item->get_total();
+				}
+				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $collected, $order_id );
 				if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
 					$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );
 					if ( 'percent' === woo_wallet()->settings_api->get_option( 'gateway_charge_type', '_wallet_settings_general', 'percent' ) ) {
@@ -330,6 +344,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$recharge_amount -= $charge_amount;
 					}
 					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_gateway_charge', $charge_amount );
+				}
+
+				// A top-up fully consumed by a coupon or by a fixed gateway charge leaves
+				// nothing to credit. Mark the order credited so the next paid-status
+				// transition does not retry, and skip the empty ledger row and its email.
+				if ( $recharge_amount <= 0 ) {
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_credited', true );
+					$order->add_order_note( __( 'Top-up collected no wallet value; nothing credited.', 'woo-wallet' ) );
+					return;
 				}
 				$transaction_id = $this->credit(
 					$order->get_customer_id(),
