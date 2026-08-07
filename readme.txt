@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.9
+Stable tag: 1.6.10
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -137,6 +137,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.10 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.9 (August 05, 2026) =
 – **Fix:-** Wallet write requests made through the REST API — creating a credit or debit from `terawallet/v1/admin/transactions`, purging a customer's transaction log, and admin-initiated transfers — failed with a critical error on every 1.6.8 site. The replay-protection service these endpoints depend on was never loaded. It is now loaded with the rest of the REST API, so no endpoint can miss it. Sites that are not integrating with the REST API are unaffected; the wallet itself, the admin screens and the customer dashboard never used this path.
