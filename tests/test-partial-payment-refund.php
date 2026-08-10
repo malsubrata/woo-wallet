@@ -183,31 +183,81 @@ class Test_Partial_Payment_Refund extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Re-seed the in-request order cache with a pre-claim snapshot.
+	 *
+	 * WC's own `save()` clears OrderCache, so a plain winner->save() cannot
+	 * reproduce the cross-request race (request B still holding the object it
+	 * loaded before waiting on GET_LOCK). Re-poisoning the cache after the
+	 * winner's write makes `wc_get_order()` return that stale snapshot again.
+	 *
+	 * @param WC_Order $stale_order Order instance with pre-claim meta.
+	 */
+	private function poison_order_cache( $stale_order ) {
+		$order_id = $stale_order->get_id();
+		wp_cache_set( 'order-' . $order_id, $stale_order, 'orders' );
+		wp_cache_set( 'order-' . $order_id, $stale_order, 'order_objects' );
+		wp_cache_set( $order_id, $stale_order, 'posts' );
+
+		if ( class_exists( '\Automattic\WooCommerce\Caches\OrderCache' ) && function_exists( 'wc_get_container' ) ) {
+			try {
+				$order_cache = wc_get_container()->get( \Automattic\WooCommerce\Caches\OrderCache::class );
+				if ( $order_cache && is_callable( array( $order_cache, 'set' ) ) ) {
+					$order_cache->set( $stale_order, $order_id );
+				}
+			} catch ( Exception $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+				// Cache container unavailable — wp_cache_set above is enough on older WC.
+			}
+		}
+	}
+
+	/**
 	 * A stale in-request order cache must not allow a second cancel credit
 	 * after another holder already claimed the refund marker.
+	 *
+	 * Unlike a bare winner->save() (which invalidates WC's cache in-process),
+	 * this re-poisons the cache with the pre-claim snapshot so plain
+	 * `wc_get_order()` still looks unrefunded while
+	 * `get_order_for_update()` / cancel see the claim.
 	 */
 	public function test_cancel_after_stale_order_cache() {
 		woo_wallet()->wallet->credit( $this->user_id, 200, 'seed' );
-		$order = $this->make_order( 100, 0, 100 );
+		$order    = $this->make_order( 100, 0, 100 );
+		$order_id = $order->get_id();
 		$this->debit_order( $order ); // balance 100.
 
-		// Simulate request B holding a stale copy that still shows the debit marker.
-		$stale = wc_get_order( $order->get_id() );
+		// Pre-lock snapshot held by the losing request.
+		$stale = wc_get_order( $order_id );
 		$this->assertNotEmpty( $stale->get_meta( '_partial_pay_through_wallet_compleate' ) );
 
-		// Concurrent winner claims via a fresh write path.
-		$winner = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
+		// Concurrent winner claims + credits (mirrors first cancel holder).
+		$winner = WOO_Wallet_Helper::get_order_for_update( $order_id );
 		$winner->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
 		$winner->update_meta_data( '_woo_wallet_partial_refunded_total', 100 );
 		$winner->delete_meta_data( '_partial_pay_through_wallet_compleate' );
 		$winner->save();
 		woo_wallet()->wallet->credit( $this->user_id, 100, 'winner cancel refund' ); // balance 200.
 
-		// Stale handle still looks unrefunded — cancel must re-read and skip.
+		// Prove the local $stale handle is still the pre-claim view.
 		$this->assertNotEmpty( $stale->get_meta( '_partial_pay_through_wallet_compleate' ) );
 		$this->assertEmpty( $stale->get_meta( '_woo_wallet_partial_payment_refunded' ) );
 
-		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		// Re-poison so wc_get_order() returns that snapshot (cross-request stand-in).
+		$this->poison_order_cache( $stale );
+		$from_cache = wc_get_order( $order_id );
+		$this->assertNotEmpty(
+			$from_cache->get_meta( '_partial_pay_through_wallet_compleate' ),
+			'Poisoned wc_get_order() must still look unrefunded — otherwise this test is not exercising the stale-read path.'
+		);
+		$this->assertEmpty( $from_cache->get_meta( '_woo_wallet_partial_payment_refunded' ) );
+
+		// Helper must bust the poison and see the winner's claim.
+		$fresh = WOO_Wallet_Helper::get_order_for_update( $order_id );
+		$this->assertNotEmpty( $fresh->get_meta( '_woo_wallet_partial_payment_refunded' ) );
+		$this->assertEmpty( $fresh->get_meta( '_partial_pay_through_wallet_compleate' ) );
+
+		// Cancel under a re-poisoned cache must not double-credit.
+		$this->poison_order_cache( $stale );
+		woo_wallet()->wallet->process_cancelled_order( $order_id );
 
 		$this->assertEquals( 200.0, $this->balance() ); // no second +100.
 	}
