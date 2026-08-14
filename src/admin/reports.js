@@ -204,6 +204,42 @@ import '../scss/reports.scss';
 		}
 	}
 
+	/**
+	 * Locked Pro slots open a server-rendered <dialog> explaining the feature.
+	 * The markup and copy all come from PHP; this only opens and closes it, and
+	 * degrades to doing nothing on browsers without <dialog>.
+	 *
+	 * @param {HTMLElement} root Reports page root.
+	 */
+	function wireProModals( root ) {
+		root.addEventListener( 'click', function ( event ) {
+			var opener = event.target.closest( '[data-twr-pro-modal]' );
+			if ( opener ) {
+				var dialog = root.querySelector(
+					'#twr-pro-modal-' + opener.getAttribute( 'data-twr-pro-modal' )
+				);
+				if ( dialog && typeof dialog.showModal === 'function' ) {
+					event.preventDefault();
+					dialog.showModal();
+				}
+				return;
+			}
+
+			var closer = event.target.closest( '[data-twr-modal-close]' );
+			if ( closer ) {
+				event.preventDefault();
+				closer.closest( 'dialog' ).close();
+				return;
+			}
+
+			// Click on the backdrop (the dialog element itself, outside its
+			// inner panel) closes it.
+			if ( 'DIALOG' === event.target.tagName ) {
+				event.target.close();
+			}
+		} );
+	}
+
 	function init() {
 		var root = document.querySelector( '.woo-wallet-reports' );
 		if ( ! root ) {
@@ -213,6 +249,7 @@ import '../scss/reports.scss';
 		reveal( root );
 		wireComposition( root );
 		wireRefresh( root );
+		wireProModals( root );
 	}
 
 	if ( document.readyState === 'loading' ) {
