@@ -201,6 +201,21 @@ import '../scss/reports.scss';
 					amt.textContent = formatCurrency( parseFloat( c.amount ) );
 				}
 			} );
+
+			// Keep the stated denominator and the net reconciliation in step
+			// with the refreshed rows, or the card stops tying out.
+			var basis = root.querySelector( '.twr-composition__basis-value' );
+			if ( basis ) {
+				basis.textContent = formatCurrency( total );
+			}
+			var net = root.querySelector( '.twr-composition__net-value' );
+			if ( net ) {
+				net.textContent = formatCurrency(
+					data.composition.reduce( function ( s, c ) {
+						return s + parseFloat( c.amount );
+					}, 0 )
+				);
+			}
 		}
 	}
 

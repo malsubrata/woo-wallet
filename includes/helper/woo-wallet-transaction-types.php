@@ -37,57 +37,62 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function woo_wallet_get_transaction_types() {
 	$types = array(
-		'topup'               => array(
+		'topup'                  => array(
 			'label'            => __( 'Top up', 'woo-wallet' ),
 			'description'      => __( 'Funds added to the wallet via a WooCommerce gateway.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'cashback'            => array(
+		'cashback'               => array(
 			'label'            => __( 'Cashback', 'woo-wallet' ),
 			'description'      => __( 'Earned through cashback rules on completed orders.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'cashback_adjustment' => array(
+		'cashback_adjustment'    => array(
 			'label'            => __( 'Cashback adjustment', 'woo-wallet' ),
 			'description'      => __( 'Manual or automated correction to a previously credited cashback.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'cashback_refund'     => array(
+		'cashback_refund'        => array(
 			'label'            => __( 'Cashback refund', 'woo-wallet' ),
 			'description'      => __( 'Cashback unwound when its originating order is refunded.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'purchase'            => array(
+		'purchase'               => array(
 			'label'            => __( 'Purchase', 'woo-wallet' ),
 			'description'      => __( 'Wallet debit applied to an order at checkout.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'partial_payment'     => array(
+		'partial_payment'        => array(
 			'label'            => __( 'Partial payment', 'woo-wallet' ),
 			'description'      => __( 'Wallet debit applied to an order at checkout.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'transfer'            => array(
+		'partial_payment_refund' => array(
+			'label'            => __( 'Partial payment refund', 'woo-wallet' ),
+			'description'      => __( 'Wallet share of a cancelled or refunded order credited back.', 'woo-wallet' ),
+			'default_template' => '',
+		),
+		'transfer'               => array(
 			'label'            => __( 'Transfer', 'woo-wallet' ),
 			'description'      => __( 'Peer-to-peer transfer between two customer wallets.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'refund'              => array(
+		'refund'                 => array(
 			'label'            => __( 'Refund', 'woo-wallet' ),
 			'description'      => __( 'Order refund credited back to the wallet.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'adjustment'          => array(
+		'adjustment'             => array(
 			'label'            => __( 'Adjustment', 'woo-wallet' ),
 			'description'      => __( 'Manual admin credit or debit.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'vendor_commission'   => array(
+		'vendor_commission'      => array(
 			'label'            => __( 'Vendor commission', 'woo-wallet' ),
 			'description'      => __( 'Marketplace commission paid into a vendor wallet.', 'woo-wallet' ),
 			'default_template' => '',
 		),
-		'other'               => array(
+		'other'                  => array(
 			'label'            => __( 'Other', 'woo-wallet' ),
 			'description'      => __( 'Anything not matching a known category.', 'woo-wallet' ),
 			'default_template' => '',

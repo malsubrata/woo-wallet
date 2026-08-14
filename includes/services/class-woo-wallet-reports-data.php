@@ -29,19 +29,18 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 		 * @return array<string,string>
 		 */
 		protected function category_labels() {
-			return apply_filters(
-				'woo_wallet_reports_category_labels',
-				array(
-					'topup'           => __( 'Top-ups', 'woo-wallet' ),
-					'cashback'        => __( 'Cashback', 'woo-wallet' ),
-					'refund'          => __( 'Refunds', 'woo-wallet' ),
-					'purchase'        => __( 'Purchases', 'woo-wallet' ),
-					'partial_payment' => __( 'Partial payments', 'woo-wallet' ),
-					'transfer'        => __( 'Transfers', 'woo-wallet' ),
-					'adjustment'      => __( 'Adjustments', 'woo-wallet' ),
-					'other'           => __( 'Other', 'woo-wallet' ),
-				)
-			);
+			// Derived from the canonical registry rather than a second hard-coded
+			// map: the local copy silently missed cashback_refund,
+			// cashback_adjustment and vendor_commission, which then displayed as
+			// a ucwords() of their slug.
+			$labels = array();
+			if ( function_exists( 'woo_wallet_get_transaction_types' ) ) {
+				foreach ( woo_wallet_get_transaction_types() as $slug => $type ) {
+					$labels[ $slug ] = $type['label'];
+				}
+			}
+
+			return apply_filters( 'woo_wallet_reports_category_labels', $labels );
 		}
 
 		/**

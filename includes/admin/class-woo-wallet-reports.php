@@ -127,7 +127,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			);
 			$metrics[] = array(
 				'id'              => 'composition',
-				'label'           => __( 'Liability composition by source', 'woo-wallet' ),
+				'label'           => __( 'Where wallet credit came from', 'woo-wallet' ),
 				'raw'             => $summary['composition'],
 				'render_callback' => array( $this, 'render_composition_card' ),
 			);
@@ -693,14 +693,29 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 
 			$palette  = $this->palette();
 			$positive = 0.0;
+			$negative = 0.0;
 			foreach ( $rows as $row ) {
 				if ( $row['amount'] > 0 ) {
 					$positive += (float) $row['amount'];
+				} else {
+					$negative += (float) $row['amount'];
 				}
 			}
 
-			// Segmented bar (positive contributors only).
-			echo '<div class="twr-bar" role="img" aria-label="' . esc_attr__( 'Liability composition by source', 'woo-wallet' ) . '">';
+			// State the denominator. The shares below are of credit issued, not
+			// of the net liability in the headline card — without saying so, a
+			// sole positive category reads as "100%" of a number that is not
+			// what the store actually owes.
+			echo '<p class="twr-composition__basis">';
+			printf(
+				/* translators: %s: total wallet credit issued, formatted */
+				esc_html__( 'Share of %s credited to wallets. Debits are listed separately below.', 'woo-wallet' ),
+				'<strong class="twr-composition__basis-value">' . esc_html( $this->data->format_amount( $positive ) ) . '</strong>' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inline.
+			);
+			echo '</p>';
+
+			// Segmented bar (credit sources only).
+			echo '<div class="twr-bar" role="img" aria-label="' . esc_attr__( 'Wallet credit by source', 'woo-wallet' ) . '">';
 			$i = 0;
 			foreach ( $rows as $row ) {
 				if ( $row['amount'] <= 0 || $positive <= 0 ) {
@@ -719,26 +734,54 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			}
 			echo '</div>';
 
-			// Legend (all rows, colour-matched to the bar).
+			// Legend — credit sources only, colour-matched to the bar.
 			echo '<ul class="twr-legend">';
 			$i = 0;
 			foreach ( $rows as $row ) {
-				$is_pos = $row['amount'] > 0;
-				$color  = $is_pos ? $palette[ $i % count( $palette ) ] : '#cbd5e1';
-				$share  = ( $is_pos && $positive > 0 ) ? round( ( (float) $row['amount'] / $positive ) * 100 ) : 0;
+				if ( $row['amount'] <= 0 ) {
+					continue;
+				}
+				$color = $palette[ $i % count( $palette ) ];
+				$share = $positive > 0 ? round( ( (float) $row['amount'] / $positive ) * 100 ) : 0;
 				echo '<li class="twr-legend__item" data-slug="' . esc_attr( $row['slug'] ) . '">';
 				echo '<span class="twr-legend__dot" style="--c:' . esc_attr( $color ) . '"></span>';
 				echo '<span class="twr-legend__label">' . esc_html( $row['label'] ) . '</span>';
-				echo '<span class="twr-legend__amt' . ( $is_pos ? '' : ' is-negative' ) . '">' . esc_html( $this->data->format_amount( $row['amount'] ) ) . '</span>';
-				if ( $is_pos ) {
-					echo '<span class="twr-legend__share">' . esc_html( $share . '%' ) . '</span>';
-				}
+				echo '<span class="twr-legend__amt">' . esc_html( $this->data->format_amount( $row['amount'] ) ) . '</span>';
+				echo '<span class="twr-legend__share">' . esc_html( $share . '%' ) . '</span>';
 				echo '</li>';
-				if ( $is_pos ) {
-					++$i;
-				}
+				++$i;
 			}
 			echo '</ul>';
+
+			// Debit categories are not components of the liability — they are
+			// what has already been drawn down against it. Listing them in the
+			// same legend, negative and share-less, read as broken data.
+			$debits = array();
+			foreach ( $rows as $row ) {
+				if ( $row['amount'] < 0 ) {
+					$debits[] = $row;
+				}
+			}
+
+			if ( $debits ) {
+				echo '<h3 class="twr-composition__subhead">' . esc_html__( 'Reduced by', 'woo-wallet' ) . '</h3>';
+				echo '<ul class="twr-legend twr-legend--negative">';
+				foreach ( $debits as $row ) {
+					echo '<li class="twr-legend__item" data-slug="' . esc_attr( $row['slug'] ) . '">';
+					echo '<span class="twr-legend__dot" style="--c:#cbd5e1"></span>';
+					echo '<span class="twr-legend__label">' . esc_html( $row['label'] ) . '</span>';
+					echo '<span class="twr-legend__amt is-negative">' . esc_html( $this->data->format_amount( $row['amount'] ) ) . '</span>';
+					echo '</li>';
+				}
+				echo '</ul>';
+			}
+
+			// Reconcile to the headline figure, so the card visibly ties out to
+			// the number above it.
+			echo '<p class="twr-composition__net">';
+			echo '<span>' . esc_html__( 'Net outstanding', 'woo-wallet' ) . '</span>';
+			echo '<strong class="twr-composition__net-value">' . esc_html( $this->data->format_amount( $positive + $negative ) ) . '</strong>';
+			echo '</p>';
 		}
 
 		/**
