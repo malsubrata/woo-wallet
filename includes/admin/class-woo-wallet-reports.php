@@ -406,7 +406,60 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			if ( ! empty( $metric['note'] ) ) {
 				echo '<span class="twr-headline__note">' . esc_html( $metric['note'] ) . '</span>';
 			}
+			$this->render_liability_nudge( $metric );
 			echo '</div>';
+		}
+
+		/**
+		 * Make the Pro case from the store's own liability figure.
+		 *
+		 * Only renders above a threshold: on a store carrying a trivial balance
+		 * the pitch is noise, and quoting a two-figure sum makes the case worse
+		 * rather than better.
+		 *
+		 * @since 1.6.11
+		 * @param array $metric Headline metric (total liability).
+		 * @return void
+		 */
+		protected function render_liability_nudge( $metric ) {
+			if ( woo_wallet_is_pro_active() ) {
+				return;
+			}
+			if ( ! isset( $metric['raw'] ) ) {
+				return;
+			}
+
+			$liability = (float) $metric['raw'];
+
+			/**
+			 * Minimum outstanding liability, in the store's base currency, before
+			 * the Pro nudge appears beneath the headline figure.
+			 *
+			 * ponytail: a flat default cannot be right for every currency — 1000
+			 * means something different in USD and in IDR. Filter it per store
+			 * rather than trying to infer a purchasing-power conversion here.
+			 *
+			 * @since 1.6.11
+			 * @param float $threshold Default 1000 in base currency.
+			 */
+			$threshold = (float) apply_filters( 'woo_wallet_pro_liability_nudge_threshold', 1000.0 );
+
+			if ( $liability < $threshold ) {
+				return;
+			}
+
+			echo '<span class="twr-headline__nudge">';
+			printf(
+				/* translators: %s: formatted outstanding wallet liability, e.g. $4,820.00 */
+				esc_html__( "You're carrying %s in outstanding wallet credit. Pro's credit expiry reclaims unspent balance automatically, and breakage reporting shows you how much of it is never coming back.", 'woo-wallet' ),
+				'<strong>' . esc_html( $this->data->format_amount( $liability ) ) . '</strong>' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inline.
+			);
+			printf(
+				' <a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+				esc_url( woo_wallet_pro_url( 'dashboard-liability' ) ),
+				esc_html__( 'See how', 'woo-wallet' )
+			);
+			echo '</span>';
 		}
 
 		/**
