@@ -325,45 +325,127 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		}
 
 		/**
+		 * Single source of truth for the Pro feature set.
+		 *
+		 * Every marketing section on this page reads from here so the feature
+		 * list, the comparison table and the CTAs can never drift apart. Each
+		 * entry carries a merchant *outcome* (what the store gets) alongside the
+		 * capability bullets, and its own `utm_content` slug for attribution.
+		 *
+		 * @return array<int,array<string,mixed>>
+		 */
+		private function pro_features() {
+			return array(
+				array(
+					'id'      => 'withdrawals',
+					'icon'    => 'dashicons-money-alt',
+					'title'   => __( 'Wallet Withdrawals', 'woo-wallet' ),
+					'outcome' => __( 'Unblocks marketplace and affiliate payouts — money can finally leave the wallet without you touching a bank portal.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Payouts via PayPal, Stripe, bank transfer (BACS), Razorpay, Cashfree and Paystack.', 'woo-wallet' ),
+						__( 'Review, approve or cancel every request from an admin queue, with customer-facing and private notes.', 'woo-wallet' ),
+						__( 'Per-gateway processing fees: percentage, fixed, or both — deducted from the payout.', 'woo-wallet' ),
+						__( 'Idempotent payouts plus signed provider webhooks, so re-approving a request can never pay twice.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'credit-expiry',
+					'icon'    => 'dashicons-clock',
+					'title'   => __( 'Credit Expiry', 'woo-wallet' ),
+					'outcome' => __( 'Reclaims unspent wallet liability instead of carrying it on your books forever.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'A global expiry period, with per-category overrides so cashback can expire faster than paid top-ups.', 'woo-wallet' ),
+						__( 'FIFO redemption: the oldest credit is always spent first, per currency.', 'woo-wallet' ),
+						__( 'Reminder emails a configurable number of days before credit expires.', 'woo-wallet' ),
+						__( 'Expired credit drops out of the spendable balance automatically on a daily scheduled run.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'earning-actions',
+					'icon'    => 'dashicons-buddicons-activity',
+					'title'   => __( 'Spend Milestone &amp; Birthday Bonuses', 'woo-wallet' ),
+					'outcome' => __( 'Drives repeat purchases: customers earn a reason to come back before they have thought about leaving.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Spend milestone bonus: credit the wallet every time lifetime spend crosses another multiple of a threshold you set.', 'woo-wallet' ),
+						__( 'Birthday bonus: credit the wallet once a year, automatically.', 'woo-wallet' ),
+						__( 'Adds a birthdate field to My Account and to the WordPress user profile screen.', 'woo-wallet' ),
+						__( 'Both appear alongside the free earning actions in Settings — nothing new to learn.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'reports',
+					'icon'    => 'dashicons-chart-area',
+					'title'   => __( 'Breakage, Aging &amp; Payout Reports', 'woo-wallet' ),
+					'outcome' => __( 'Tells you how much of your outstanding liability is never going to be spent — the number your accountant keeps asking for.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Unlocks the five locked report slots on your Wallet Dashboard: breakage, aging, expiry trend, withdrawals and coupons.', 'woo-wallet' ),
+						__( 'See how much credit is about to expire, and how much already has.', 'woo-wallet' ),
+						__( 'Withdrawal and coupon activity broken out instead of lumped into "Other".', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'coupons',
+					'icon'    => 'dashicons-tag',
+					'title'   => __( 'Wallet Coupons', 'woo-wallet' ),
+					'outcome' => __( 'Turns a discount campaign into stored credit that has to be spent with you.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Coupon codes that top up the wallet instead of discounting one order.', 'woo-wallet' ),
+						__( 'Bulk-generate hundreds of unique codes for a campaign in one screen.', 'woo-wallet' ),
+						__( 'Per-coupon currency, redeemed by the customer from My Account.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'importer',
+					'icon'    => 'dashicons-upload',
+					'title'   => __( 'Bulk CSV Importer', 'woo-wallet' ),
+					'outcome' => __( 'Migrates an existing credit programme in one upload instead of hundreds of manual adjustments.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Credit or debit any number of customers from a single CSV.', 'woo-wallet' ),
+						__( 'Optional per-row expiry date and currency columns.', 'woo-wallet' ),
+						__( 'Progress and per-row errors reported as the import runs.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'affiliatewp',
+					'icon'    => 'dashicons-groups',
+					'title'   => __( 'AffiliateWP Payouts', 'woo-wallet' ),
+					'outcome' => __( 'Pays commission as store credit, so affiliate earnings come back to you as orders instead of leaving as cash.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Adds the wallet as an AffiliateWP payout method.', 'woo-wallet' ),
+						__( 'Affiliates opt in from their own dashboard.', 'woo-wallet' ),
+						__( 'Commissions land in the wallet with no bank round-trip.', 'woo-wallet' ),
+					),
+				),
+			);
+		}
+
+		/**
 		 * Feature grid.
 		 */
 		private function render_features() {
-			$features = array(
-				array(
-					'icon'  => 'dashicons-money-alt',
-					'title' => __( 'Wallet Withdrawal', 'woo-wallet' ),
-					'desc'  => __( 'Let customers cash out wallet balance to bank, PayPal, Stripe, Razorpay, Cashfree, or Paystack.', 'woo-wallet' ),
-				),
-				array(
-					'icon'  => 'dashicons-tag',
-					'title' => __( 'Wallet Coupons', 'woo-wallet' ),
-					'desc'  => __( 'Create redeemable coupon codes that drop credit straight into customer wallets.', 'woo-wallet' ),
-				),
-				array(
-					'icon'  => 'dashicons-upload',
-					'title' => __( 'Bulk Importer', 'woo-wallet' ),
-					'desc'  => __( 'Top-up, debit, or adjust balances for hundreds of users in a single CSV upload.', 'woo-wallet' ),
-				),
-				array(
-					'icon'  => 'dashicons-clock',
-					'title' => __( 'Credit Expiry (FIFO)', 'woo-wallet' ),
-					'desc'  => __( 'Automatically expire old credits first with a precise FIFO ledger and scheduled cleanup.', 'woo-wallet' ),
-				),
-				array(
-					'icon'  => 'dashicons-groups',
-					'title' => __( 'AffiliateWP Integration', 'woo-wallet' ),
-					'desc'  => __( 'Pay affiliate commissions directly into the partner wallet — no bank round-trip required.', 'woo-wallet' ),
-				),
-			);
 			?>
 			<section class="tw-section">
-				<h2 class="tw-section__title"><?php esc_html_e( 'Everything you get with Pro', 'woo-wallet' ); ?></h2>
+				<h2 class="tw-section__title"><?php esc_html_e( 'What Pro adds to your store', 'woo-wallet' ); ?></h2>
 				<div class="tw-features">
-					<?php foreach ( $features as $f ) : ?>
+					<?php foreach ( $this->pro_features() as $feature ) : ?>
 						<div class="tw-feature">
-							<span class="tw-feature__icon dashicons <?php echo esc_attr( $f['icon'] ); ?>" aria-hidden="true"></span>
-							<h3><?php echo esc_html( $f['title'] ); ?></h3>
-							<p><?php echo esc_html( $f['desc'] ); ?></p>
+							<span class="tw-feature__icon dashicons <?php echo esc_attr( $feature['icon'] ); ?>" aria-hidden="true"></span>
+							<h3><?php echo wp_kses( $feature['title'], array() ); ?></h3>
+							<p class="tw-feature__outcome"><?php echo esc_html( $feature['outcome'] ); ?></p>
+							<ul class="tw-feature__list">
+								<?php foreach ( $feature['bullets'] as $bullet ) : ?>
+									<li><?php echo esc_html( $bullet ); ?></li>
+								<?php endforeach; ?>
+							</ul>
+							<a class="tw-feature__link" href="<?php echo esc_url( woo_wallet_pro_url( 'feature-' . $feature['id'] ) ); ?>" target="_blank" rel="noopener noreferrer">
+								<?php
+								printf(
+									/* translators: %s: Pro feature name. */
+									esc_html__( 'Get %s', 'woo-wallet' ),
+									esc_html( wp_strip_all_tags( html_entity_decode( $feature['title'], ENT_QUOTES, 'UTF-8' ) ) )
+								);
+								?>
+							</a>
 						</div>
 					<?php endforeach; ?>
 				</div>
@@ -589,6 +671,20 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				}
 				.tw-feature h3 { margin: 0 0 6px; font-size: 16px; color: #1d2327; }
 				.tw-feature p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.55; }
+				.tw-feature__outcome { font-weight: 600; color: #1d2327 !important; }
+				.tw-feature__list {
+					margin: 10px 0 0; padding: 0 0 0 18px;
+					color: #50575e; font-size: 13px; line-height: 1.55;
+					list-style: disc;
+				}
+				.tw-feature__list li { margin: 0 0 4px; }
+				.tw-feature__link {
+					display: inline-block; margin-top: 12px;
+					font-size: 13px; font-weight: 600;
+					color: #674399; text-decoration: none;
+				}
+				.tw-feature__link:hover, .tw-feature__link:focus { color: #4a2e73; text-decoration: underline; }
+				.tw-feature__link::after { content: " \2192"; }
 
 				.tw-compare {
 					width: 100%;
