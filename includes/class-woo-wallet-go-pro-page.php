@@ -448,7 +448,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			?>
 			<section class="tw-bottom-cta">
 				<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
-				<p><?php esc_html_e( 'Join thousands of stores running a full-featured wallet economy on TeraWallet Pro.', 'woo-wallet' ); ?></p>
+				<p><?php esc_html_e( 'Everything in Free, plus withdrawals, wallet coupons, bulk imports, credit expiry and AffiliateWP payouts — one licence, five add-ons.', 'woo-wallet' ); ?></p>
 				<a class="tw-btn tw-btn--primary" href="
 				<?php
 				echo esc_url(
