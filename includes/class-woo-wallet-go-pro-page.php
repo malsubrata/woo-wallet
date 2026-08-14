@@ -185,6 +185,14 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					break;
 			}
 
+			/**
+			 * Fires at the bottom of the Go Pro page, inside its wrapper.
+			 *
+			 * @since 1.6.11
+			 * @param string $state Pro runtime state.
+			 */
+			do_action( 'woo_wallet_go_pro_page_bottom', $state );
+
 			echo '</div>';
 		}
 
