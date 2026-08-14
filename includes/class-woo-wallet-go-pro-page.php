@@ -446,37 +446,119 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * Free vs Pro comparison table.
 		 */
 		private function render_comparison() {
-			$rows = array(
-				array( __( 'Wallet System', 'woo-wallet' ), true, true ),
-				array( __( 'Withdrawal', 'woo-wallet' ), false, true ),
-				array( __( 'Coupons', 'woo-wallet' ), false, true ),
-				array( __( 'Importer', 'woo-wallet' ), false, true ),
-				array( __( 'Credit Expiry', 'woo-wallet' ), false, true ),
-				array( __( 'Affiliate Integration', 'woo-wallet' ), false, true ),
-			);
+			$groups = $this->comparison_groups();
 			?>
 			<section class="tw-section">
 				<h2 class="tw-section__title"><?php esc_html_e( 'Free vs Pro', 'woo-wallet' ); ?></h2>
-				<table class="tw-compare">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Feature', 'woo-wallet' ); ?></th>
-							<th><?php esc_html_e( 'Free', 'woo-wallet' ); ?></th>
-							<th><?php esc_html_e( 'Pro', 'woo-wallet' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $rows as $row ) : ?>
+				<p class="tw-section__intro"><?php esc_html_e( 'The free plugin is a complete wallet. Pro is what you need once that wallet is holding real money.', 'woo-wallet' ); ?></p>
+				<div class="tw-compare__scroll">
+					<table class="tw-compare">
+						<thead>
 							<tr>
-								<td><?php echo esc_html( $row[0] ); ?></td>
-								<td class="tw-compare__cell"><?php echo $this->tick( $row[1] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-								<td class="tw-compare__cell"><?php echo $this->tick( $row[2] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+								<th><?php esc_html_e( 'Feature', 'woo-wallet' ); ?></th>
+								<th class="tw-compare__cell"><?php esc_html_e( 'Free', 'woo-wallet' ); ?></th>
+								<th class="tw-compare__cell"><?php esc_html_e( 'Pro', 'woo-wallet' ); ?></th>
 							</tr>
+						</thead>
+						<?php foreach ( $groups as $group ) : ?>
+							<tbody>
+								<tr class="tw-compare__group">
+									<th colspan="3" scope="colgroup"><?php echo esc_html( $group['title'] ); ?></th>
+								</tr>
+								<?php foreach ( $group['rows'] as $row ) : ?>
+									<tr>
+										<td><?php echo esc_html( $row[0] ); ?></td>
+										<td class="tw-compare__cell"><?php echo $this->tick( $row[1] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+										<td class="tw-compare__cell"><?php echo $this->tick( $row[2] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
 						<?php endforeach; ?>
-					</tbody>
-				</table>
+					</table>
+				</div>
+				<p class="tw-compare__cta">
+					<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php
+						printf(
+							/* translators: %s: licence price, e.g. $79. */
+							esc_html__( 'Get everything in the Pro column — %s per year', 'woo-wallet' ),
+							esc_html( self::PRICE )
+						);
+						?>
+					</a>
+				</p>
 			</section>
 			<?php
+		}
+
+		/**
+		 * Comparison rows, grouped by area of the plugin.
+		 *
+		 * Free rows are the free plugin's actual shipped feature set — the point
+		 * is that Free reads as generous and clearly bounded, not as a crippled
+		 * demo.
+		 *
+		 * @return array<int,array{title:string,rows:array<int,array{0:string,1:bool,2:bool}>}>
+		 */
+		private function comparison_groups() {
+			return array(
+				array(
+					'title' => __( 'Wallet core', 'woo-wallet' ),
+					'rows'  => array(
+						array( __( 'Wallet ledger with credit, debit and full transaction history', 'woo-wallet' ), true, true ),
+						array( __( 'Customer top-ups through any WooCommerce gateway', 'woo-wallet' ), true, true ),
+						array( __( 'Pay for an order fully from the wallet', 'woo-wallet' ), true, true ),
+						array( __( 'Partial payment: wallet balance plus another gateway', 'woo-wallet' ), true, true ),
+						array( __( 'Peer-to-peer transfers between customers', 'woo-wallet' ), true, true ),
+						array( __( 'Manual admin credit and debit, wallet lock/unlock', 'woo-wallet' ), true, true ),
+						array( __( 'Multi-currency support (WOOCS, WPML, CURCY, YayCurrency, Aelia)', 'woo-wallet' ), true, true ),
+						array( __( 'WooCommerce Blocks checkout support', 'woo-wallet' ), true, true ),
+					),
+				),
+				array(
+					'title' => __( 'Rewards and earning', 'woo-wallet' ),
+					'rows'  => array(
+						array( __( 'Cashback engine: cart, product and category rules', 'woo-wallet' ), true, true ),
+						array( __( 'Signup bonus', 'woo-wallet' ), true, true ),
+						array( __( 'Daily visit reward', 'woo-wallet' ), true, true ),
+						array( __( 'Product review reward', 'woo-wallet' ), true, true ),
+						array( __( 'Referral rewards', 'woo-wallet' ), true, true ),
+						array( __( 'Spend milestone bonus', 'woo-wallet' ), false, true ),
+						array( __( 'Birthday bonus, with a birthdate field on My Account', 'woo-wallet' ), false, true ),
+					),
+				),
+				array(
+					'title' => __( 'Getting money out', 'woo-wallet' ),
+					'rows'  => array(
+						array( __( 'Customer withdrawal requests with an admin approval queue', 'woo-wallet' ), false, true ),
+						array( __( 'Payouts via PayPal, Stripe, BACS, Razorpay, Cashfree, Paystack', 'woo-wallet' ), false, true ),
+						array( __( 'Per-gateway withdrawal processing fees', 'woo-wallet' ), false, true ),
+						array( __( 'AffiliateWP commissions paid as wallet credit', 'woo-wallet' ), false, true ),
+					),
+				),
+				array(
+					'title' => __( 'Liability and operations', 'woo-wallet' ),
+					'rows'  => array(
+						array( __( 'Wallet Dashboard: outstanding liability, wallet count, composition', 'woo-wallet' ), true, true ),
+						array( __( 'Credit expiry with FIFO redemption', 'woo-wallet' ), false, true ),
+						array( __( 'Per-category expiry periods and pre-expiry reminder emails', 'woo-wallet' ), false, true ),
+						array( __( 'Breakage, aging and expiry-trend reports', 'woo-wallet' ), false, true ),
+						array( __( 'Withdrawal and coupon reports', 'woo-wallet' ), false, true ),
+						array( __( 'Bulk CSV import of balances', 'woo-wallet' ), false, true ),
+						array( __( 'Wallet coupons and bulk coupon generation', 'woo-wallet' ), false, true ),
+					),
+				),
+				array(
+					'title' => __( 'Integrations and developers', 'woo-wallet' ),
+					'rows'  => array(
+						array( __( 'Marketplace support: Dokan, WCFM and WC Marketplace', 'woo-wallet' ), true, true ),
+						array( __( 'REST API for balances and transactions', 'woo-wallet' ), true, true ),
+						array( __( 'Hooks and filters for custom wallet logic', 'woo-wallet' ), true, true ),
+						array( __( 'Coupon REST API', 'woo-wallet' ), false, true ),
+						array( __( 'Automatic updates and priority support', 'woo-wallet' ), false, true ),
+					),
+				),
+			);
 		}
 
 		/**
@@ -676,8 +758,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				.tw-feature__link:hover, .tw-feature__link:focus { color: #4a2e73; text-decoration: underline; }
 				.tw-feature__link::after { content: " \2192"; }
 
+				.tw-section__intro { margin: -8px 0 16px; color: #50575e; font-size: 14px; max-width: 720px; }
+
+				.tw-compare__scroll { overflow-x: auto; }
 				.tw-compare {
 					width: 100%;
+					min-width: 480px;
 					border-collapse: separate;
 					border-spacing: 0;
 					background: #fff;
@@ -691,7 +777,20 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					border-bottom: 1px solid #f0edf5;
 				}
 				.tw-compare thead th { background: #faf8ff; color: #1d2327; font-weight: 600; }
-				.tw-compare tbody tr:last-child td { border-bottom: 0; }
+				.tw-compare tbody:last-child tr:last-child td { border-bottom: 0; }
+				.tw-compare__group th {
+					background: #f6f7f7;
+					font-size: 12px;
+					font-weight: 700;
+					text-transform: uppercase;
+					letter-spacing: .04em;
+					color: #50575e;
+					padding: 10px 18px;
+				}
+				.tw-compare__cta { margin: 14px 0 0; font-size: 14px; font-weight: 600; }
+				.tw-compare__cta a { color: #674399; text-decoration: none; }
+				.tw-compare__cta a:hover, .tw-compare__cta a:focus { color: #4a2e73; text-decoration: underline; }
+				.tw-compare__cta a::after { content: " \2192"; }
 				.tw-compare__cell { text-align: center; width: 120px; }
 				.tw-tick { font-size: 20px; width: 20px; height: 20px; }
 				.tw-tick--yes { color: #1f8a45; }
