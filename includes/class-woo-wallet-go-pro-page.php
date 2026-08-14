@@ -524,17 +524,20 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<?php endforeach; ?>
 					</table>
 				</div>
-				<p class="tw-compare__cta">
-					<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php
-						printf(
-							/* translators: %s: licence price, e.g. $79. */
-							esc_html__( 'Get everything in the Pro column — %s per year', 'woo-wallet' ),
-							esc_html( self::PRICE )
-						);
-						?>
-					</a>
-				</p>
+				<?php // The table itself is a factual feature list, but its CTA is an upsell: never rendered for someone who already has Pro. ?>
+				<?php if ( ! woo_wallet_is_pro_active() ) : ?>
+					<p class="tw-compare__cta">
+						<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php
+							printf(
+								/* translators: %s: licence price, e.g. $79. */
+								esc_html__( 'Get everything in the Pro column — %s per year', 'woo-wallet' ),
+								esc_html( self::PRICE )
+							);
+							?>
+						</a>
+					</p>
+				<?php endif; ?>
 			</section>
 			<?php
 		}

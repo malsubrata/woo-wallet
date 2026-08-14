@@ -203,7 +203,16 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 		 */
 		public function format_amount( $amount ) {
 			if ( function_exists( 'wc_price' ) ) {
-				return wp_strip_all_tags( wc_price( (float) $amount, array( 'currency' => $this->base_currency() ) ) );
+				// wc_price() returns the currency symbol as an HTML entity
+				// (&#8377; for ₹). Every caller escapes this string before
+				// printing it, which would re-encode the ampersand and render
+				// the entity literally, so decode it here — at the single point
+				// all of them route through.
+				return html_entity_decode(
+					wp_strip_all_tags( wc_price( (float) $amount, array( 'currency' => $this->base_currency() ) ) ),
+					ENT_QUOTES,
+					'UTF-8'
+				);
 			}
 			return (string) $amount;
 		}
