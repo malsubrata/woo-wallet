@@ -137,13 +137,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			/**
-			 * The Premium plugins URL.
-			 *
-			 * @since 1.4.6
-			 */
-			$premium_plugings_url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/product/woocommerce-wallet-pro/' );
-
-			/**
 			 * The TeraWallet API documentation URL.
 			 *
 			 * @since 1.4.6
@@ -159,14 +152,12 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 			$row_meta = array(
 				'plugins' => '<a style="font-weight: 600;" href="' . esc_url(
-					add_query_arg(
+					woo_wallet_pro_url(
+						'plugins-row',
 						array(
-							'utm_source'   => 'free_plugin',
-							'utm_medium'   => 'plugin_page',
-							'utm_campaign' => 'upgrade',
-							'utm_site_id'  => md5( home_url( '/' ) ),
-						),
-						$premium_plugings_url
+							'utm_medium'  => 'plugin_page',
+							'utm_site_id' => md5( home_url( '/' ) ),
+						)
 					)
 				) . '" aria-label="' . esc_attr__( 'View TeraWallet pro plugins', 'woo-wallet' ) . '"><span class="dashicons dashicons-admin-network"></span> ' . esc_html__( 'Upgrade to Pro', 'woo-wallet' ) . '</a>',
 				'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet docs', 'woo-wallet' ) . '">' . esc_html__( 'Docs', 'woo-wallet' ) . '</a>',

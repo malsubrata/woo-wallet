@@ -291,14 +291,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<a class="tw-btn tw-btn--primary" href="
 						<?php
 						echo esc_url(
-							add_query_arg(
+							woo_wallet_pro_url(
+								'upgrade-page-hero',
 								array(
-									'utm_source'   => 'free_plugin',
-									'utm_medium'   => 'go_pro_page',
-									'utm_campaign' => 'upgrade',
-									'utm_site_id'  => md5( home_url( '/' ) ),
-								),
-								self::UPGRADE_URL
+									'utm_medium'  => 'go_pro_page',
+									'utm_site_id' => md5( home_url( '/' ) ),
+								)
 							)
 						);
 						?>
@@ -308,14 +306,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<a class="tw-btn tw-btn--ghost" href="
 						<?php
 						echo esc_url(
-							add_query_arg(
+							woo_wallet_pro_url(
+								'upgrade-page-pricing',
 								array(
-									'utm_source'   => 'free_plugin',
-									'utm_medium'   => 'go_pro_page',
-									'utm_campaign' => 'upgrade',
-									'utm_site_id'  => md5( home_url( '/' ) ),
-								),
-								self::UPGRADE_URL
+									'utm_medium'  => 'go_pro_page',
+									'utm_site_id' => md5( home_url( '/' ) ),
+								)
 							)
 						);
 						?>
@@ -448,14 +444,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				<a class="tw-btn tw-btn--primary" href="
 				<?php
 				echo esc_url(
-					add_query_arg(
+					woo_wallet_pro_url(
+						'upgrade-page-bottom-cta',
 						array(
-							'utm_source'   => 'free_plugin',
-							'utm_medium'   => 'go_pro_page',
-							'utm_campaign' => 'upgrade',
-							'utm_site_id'  => md5( home_url( '/' ) ),
-						),
-						self::UPGRADE_URL
+							'utm_medium'  => 'go_pro_page',
+							'utm_site_id' => md5( home_url( '/' ) ),
+						)
 					)
 				);
 				?>

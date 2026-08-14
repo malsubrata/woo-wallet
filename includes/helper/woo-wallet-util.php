@@ -110,6 +110,11 @@ if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
 		);
 		$args = array_merge( $args, (array) $extra );
 
+		/**
+		 * The Premium plugins URL.
+		 *
+		 * @since 1.4.6
+		 */
 		$url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/product/woocommerce-wallet-pro/' );
 
 		return add_query_arg( $args, $url );
