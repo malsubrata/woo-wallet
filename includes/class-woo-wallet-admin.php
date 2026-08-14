@@ -347,9 +347,52 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		}
 
 		/**
-		 * Strip every admin notice from the Wallet Dashboard reports screen — it
-		 * is a clean, self-contained dashboard and third-party/license nags break
-		 * its layout. Runs on `in_admin_header`, before notices are output.
+		 * Screen ids of the plugin's own admin pages.
+		 *
+		 * Upsell surfaces are confined to these — the WordPress.org guideline
+		 * against hijacking other people's screens means a promo may only render
+		 * on pages belonging to this plugin. The Go Pro page is excluded on
+		 * purpose: it is itself the upsell, and stacking a promo notice above it
+		 * would be noise.
+		 *
+		 * @since 1.6.11
+		 * @return string[]
+		 */
+		protected function wallet_own_screen_ids() {
+			return array(
+				woo_wallet_get_screen_id( 'woo-wallet', '' ),
+				woo_wallet_get_screen_id( 'woo-wallet-users' ),
+				woo_wallet_get_screen_id( 'woo-wallet-settings' ),
+				woo_wallet_get_screen_id( 'woo-wallet-referral-report' ),
+				woo_wallet_get_screen_id( 'woo-wallet-transactions', 'null' ),
+			);
+		}
+
+		/**
+		 * Whether the current request is on one of this plugin's own screens.
+		 *
+		 * @since 1.6.11
+		 * @return bool
+		 */
+		protected function is_wallet_own_screen() {
+			if ( ! function_exists( 'get_current_screen' ) ) {
+				return false;
+			}
+			$screen = get_current_screen();
+			return $screen && in_array( $screen->id, $this->wallet_own_screen_ids(), true );
+		}
+
+		/**
+		 * Strip third-party admin notices from the Wallet Dashboard and Settings
+		 * screens — they are clean, self-contained layouts and license/upsell
+		 * nags from other plugins break them. Runs on `in_admin_header`, before
+		 * notices are output.
+		 *
+		 * Our own promo is re-attached afterwards: the point of this suppression
+		 * is to keep *other* plugins out of our layout, not to silence the
+		 * plugin's own contextual upsell on the screen an admin lands on first.
+		 * Between 1.6.6 and 1.6.10 it removed ours too, which left the default
+		 * landing screen with no upgrade path at all.
 		 *
 		 * @return void
 		 */
@@ -360,6 +403,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				remove_all_actions( 'all_admin_notices' );
 				remove_all_actions( 'user_admin_notices' );
 				remove_all_actions( 'network_admin_notices' );
+
+				// Re-attach the plugin's own surfaces stripped by the calls above.
+				add_action( 'admin_notices', array( $this, 'show_promotions' ) );
+				add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			}
 		}
 
@@ -1504,25 +1551,21 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( ! current_user_can( 'manage_options' ) ) {
 				return;
 			}
-			if ( ! function_exists( 'is_plugin_active' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
-			}
-			if ( is_plugin_active( 'woo-wallet-pro/woo-wallet-pro.php' ) ) {
+			if ( woo_wallet_is_pro_active() ) {
 				return;
 			}
-			$snoozed_until = (int) get_option( '_woo_wallet_promotion_snoozed_until', 0 );
-			if ( $snoozed_until && time() < $snoozed_until ) {
+			if ( ! $this->is_wallet_own_screen() ) {
 				return;
 			}
-			$pro_url = 'https://standalonetech.com/product/woocommerce-wallet-pro/';
-			$pro_url = add_query_arg(
+			if ( woo_wallet_is_promotion_dismissed() ) {
+				return;
+			}
+			$pro_url = woo_wallet_pro_url(
+				'admin-promo',
 				array(
-					'utm_source'   => 'free_plugin',
-					'utm_medium'   => 'admin_promo',
-					'utm_campaign' => 'upgrade',
-					'utm_site_id'  => md5( home_url( '/' ) ),
-				),
-				$pro_url
+					'utm_medium'  => 'admin_promo',
+					'utm_site_id' => md5( home_url( '/' ) ),
+				)
 			);
 			?>
 			<div class="notice tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">

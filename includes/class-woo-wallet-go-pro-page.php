@@ -97,13 +97,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * @return string One of: 'not_installed' | 'unlicensed' | 'licensed'.
 		 */
 		private function get_pro_state() {
-			if ( ! function_exists( 'is_plugin_active' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
-			}
-			if ( ! is_plugin_active( self::PRO_BASENAME ) ) {
-				return 'not_installed';
-			}
-			return get_option( self::LICENSE_FLAG ) ? 'licensed' : 'unlicensed';
+			return woo_wallet_pro_state();
 		}
 
 		/**

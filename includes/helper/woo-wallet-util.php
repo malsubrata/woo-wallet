@@ -39,6 +39,139 @@ if ( ! function_exists( 'woo_wallet_get_screen_id' ) ) {
 	}
 }
 
+if ( ! function_exists( 'woo_wallet_pro_state' ) ) {
+
+	/**
+	 * Runtime state of the TeraWallet Pro plugin.
+	 *
+	 * Single source of truth for Pro detection. Every upsell surface in the
+	 * free plugin gates on this — do not re-implement the is_plugin_active()
+	 * check inline, or the gates drift apart and Pro customers start seeing
+	 * upsells on some screens but not others.
+	 *
+	 * @since 1.6.11
+	 * @return string One of: 'not_installed' | 'unlicensed' | 'licensed'.
+	 */
+	function woo_wallet_pro_state() {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		if ( ! is_plugin_active( 'woo-wallet-pro/woo-wallet-pro.php' ) ) {
+			return 'not_installed';
+		}
+		return get_option( 'woo_wallet_pro_license_activated' ) ? 'licensed' : 'unlicensed';
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_is_pro_active' ) ) {
+
+	/**
+	 * Whether the Pro plugin is active (licensed or not).
+	 *
+	 * Upsell surfaces gate on this rather than on the licensed state: someone
+	 * who has installed Pro has already converted, and nagging them to buy
+	 * what they own is worse than showing nothing.
+	 *
+	 * @since 1.6.11
+	 * @return bool
+	 */
+	function woo_wallet_is_pro_active() {
+		return 'not_installed' !== woo_wallet_pro_state();
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
+
+	/**
+	 * Build a UTM-tagged TeraWallet Pro upgrade URL.
+	 *
+	 * Centralised so per-placement attribution cannot drift: every Pro link in
+	 * the plugin must come from here and must pass a distinct $content.
+	 *
+	 * `utm_source` stays `free_plugin` — order attribution on the store reads
+	 * "Source: Free_plugin", and changing it would break continuity with every
+	 * historical order.
+	 *
+	 * Note: no site identifier is attached. The pre-existing links that send
+	 * `utm_site_id` pass it explicitly via $extra; new placements deliberately
+	 * omit it.
+	 *
+	 * @since 1.6.11
+	 * @param string $content Placement identifier for utm_content, e.g. 'withdrawals-gate'.
+	 * @param array  $extra   Additional query args (e.g. a different utm_medium).
+	 * @return string Escaped-on-output-ready URL.
+	 */
+	function woo_wallet_pro_url( $content, $extra = array() ) {
+		$args = array(
+			'utm_source'   => 'free_plugin',
+			'utm_medium'   => 'plugin',
+			'utm_campaign' => 'upgrade',
+			'utm_content'  => sanitize_key( $content ),
+		);
+		$args = array_merge( $args, (array) $extra );
+
+		$url = apply_filters( 'terawallet_premium_plugin_url', 'https://standalonetech.com/product/woocommerce-wallet-pro/' );
+
+		return add_query_arg( $args, $url );
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_is_promotion_dismissed' ) ) {
+
+	/**
+	 * Whether the current user has permanently dismissed the Pro promo.
+	 *
+	 * Dismissal is per-user and permanent: once an admin closes the promo it
+	 * never returns for them. It is stored in user meta rather than a site
+	 * option so that one administrator's choice is not imposed on colleagues
+	 * who have never seen it — on a multi-user store the old site-wide option
+	 * meant a contractor's stray click silenced the notice for the owner.
+	 *
+	 * @since 1.6.11
+	 * @param int $user_id Optional user id. Defaults to the current user.
+	 * @return bool
+	 */
+	function woo_wallet_is_promotion_dismissed( $user_id = 0 ) {
+		$user_id = $user_id ? absint( $user_id ) : get_current_user_id();
+		if ( ! $user_id ) {
+			return true;
+		}
+		if ( get_user_meta( $user_id, '_woo_wallet_promotion_dismissed', true ) ) {
+			return true;
+		}
+
+		// Legacy site-wide dismissal keeps governing until the 1.6.11 migration
+		// has stamped it onto existing administrators. Without this fallback a
+		// site whose upgrade routine has not run yet would re-show a promo its
+		// admin already dismissed.
+		if ( ! get_option( 'woo_wallet_promotion_dismissal_migrated' ) ) {
+			$snoozed_until = (int) get_option( '_woo_wallet_promotion_snoozed_until', 0 );
+			if ( $snoozed_until && time() < $snoozed_until ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
+if ( ! function_exists( 'woo_wallet_dismiss_promotion' ) ) {
+
+	/**
+	 * Permanently dismiss the Pro promo for a user.
+	 *
+	 * @since 1.6.11
+	 * @param int $user_id Optional user id. Defaults to the current user.
+	 * @return void
+	 */
+	function woo_wallet_dismiss_promotion( $user_id = 0 ) {
+		$user_id = $user_id ? absint( $user_id ) : get_current_user_id();
+		if ( $user_id ) {
+			update_user_meta( $user_id, '_woo_wallet_promotion_dismissed', 1 );
+		}
+	}
+}
+
 if ( ! function_exists( 'terawallet_pro_page_callback' ) ) {
 
 	/**
