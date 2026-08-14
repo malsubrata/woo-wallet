@@ -29,6 +29,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		const LICENSE_OPTION = '_wallet_settings_extensions_woo_wallet_pro_license';
 		const LICENSE_FLAG   = 'woo_wallet_pro_license_activated';
 		const UPGRADE_URL    = 'https://standalonetech.com/product/woocommerce-wallet-pro/';
+
+		/**
+		 * Displayed licence price. Hard-coded on purpose: this page must render
+		 * fully offline, so it never fetches pricing from the store.
+		 */
+		const PRICE = '$79';
 		const API_KEYS_URL   = 'https://standalonetech.com/my-account/';
 		const DOCS_URL       = 'https://docs.standalonetech.com/';
 		const SUPPORT_URL    = 'https://standalonetech.com/support-forum/';
@@ -278,47 +284,30 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 
 		/**
 		 * Hero / top banner.
+		 *
+		 * One CTA only: the old "View Pricing" button sent people off-site at
+		 * peak interest, so the price is stated here instead.
 		 */
 		private function render_hero() {
 			?>
 			<section class="tw-hero">
 				<div class="tw-hero__inner">
-					<h1><?php esc_html_e( 'Unlock the Full Power of TeraWallet Pro', 'woo-wallet' ); ?></h1>
+					<h1><?php esc_html_e( 'TeraWallet Pro', 'woo-wallet' ); ?></h1>
 					<p class="tw-hero__subtitle">
-						<?php esc_html_e( 'Withdrawals, coupons, bulk imports, credit expiry and AffiliateWP payouts — everything you need to run a complete wallet economy, in one premium upgrade.', 'woo-wallet' ); ?>
+						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — everything your wallet needs once customers actually start using it.', 'woo-wallet' ); ?>
+					</p>
+					<p class="tw-hero__price">
+						<span class="tw-hero__amount"><?php echo esc_html( self::PRICE ); ?></span>
+						<span class="tw-hero__term"><?php esc_html_e( 'per year, one site', 'woo-wallet' ); ?></span>
 					</p>
 					<div class="tw-hero__cta">
-						<a class="tw-btn tw-btn--primary" href="
-						<?php
-						echo esc_url(
-							woo_wallet_pro_url(
-								'upgrade-page-hero',
-								array(
-									'utm_medium'  => 'go_pro_page',
-									'utm_site_id' => md5( home_url( '/' ) ),
-								)
-							)
-						);
-						?>
-																" target="_blank" rel="noopener noreferrer">
-							<?php esc_html_e( 'Upgrade to Pro', 'woo-wallet' ); ?>
-						</a>
-						<a class="tw-btn tw-btn--ghost" href="
-						<?php
-						echo esc_url(
-							woo_wallet_pro_url(
-								'upgrade-page-pricing',
-								array(
-									'utm_medium'  => 'go_pro_page',
-									'utm_site_id' => md5( home_url( '/' ) ),
-								)
-							)
-						);
-						?>
-						" target="_blank" rel="noopener noreferrer">
-							<?php esc_html_e( 'View Pricing', 'woo-wallet' ); ?>
+						<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
 						</a>
 					</div>
+					<p class="tw-hero__reassure">
+						<?php esc_html_e( '30-day money-back guarantee. Includes one year of updates and priority support.', 'woo-wallet' ); ?>
+					</p>
 				</div>
 			</section>
 			<?php
@@ -522,22 +511,19 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			?>
 			<section class="tw-bottom-cta">
 				<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
-				<p><?php esc_html_e( 'Everything in Free, plus withdrawals, wallet coupons, bulk imports, credit expiry and AffiliateWP payouts — one licence, five add-ons.', 'woo-wallet' ); ?></p>
-				<a class="tw-btn tw-btn--primary" href="
-				<?php
-				echo esc_url(
-					woo_wallet_pro_url(
-						'upgrade-page-bottom-cta',
-						array(
-							'utm_medium'  => 'go_pro_page',
-							'utm_site_id' => md5( home_url( '/' ) ),
-						)
-					)
-				);
-				?>
-						" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Upgrade to Pro Now', 'woo-wallet' ); ?>
+				<p>
+					<?php
+					printf(
+						/* translators: %s: licence price, e.g. $79. */
+						esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year for one site.', 'woo-wallet' ),
+						esc_html( self::PRICE )
+					);
+					?>
+				</p>
+				<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( woo_wallet_pro_url( 'footer' ) ); ?>" target="_blank" rel="noopener noreferrer">
+					<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
 				</a>
+				<p class="tw-bottom-cta__reassure"><?php esc_html_e( '30-day money-back guarantee.', 'woo-wallet' ); ?></p>
 			</section>
 			<?php
 		}
@@ -630,8 +616,12 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				}
 				.tw-hero__inner { max-width: 760px; margin: 0 auto; }
 				.tw-hero h1 { color: #fff; font-size: 32px; line-height: 1.2; margin: 0 0 12px; font-weight: 600; }
-				.tw-hero__subtitle { font-size: 16px; line-height: 1.6; opacity: .92; margin: 0 0 28px; }
+				.tw-hero__subtitle { font-size: 16px; line-height: 1.6; opacity: .92; margin: 0 0 24px; }
+				.tw-hero__price { margin: 0 0 20px; display: flex; align-items: baseline; justify-content: center; gap: 8px; flex-wrap: wrap; }
+				.tw-hero__amount { font-size: 40px; font-weight: 700; line-height: 1; }
+				.tw-hero__term { font-size: 15px; opacity: .9; }
 				.tw-hero__cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+				.tw-hero__reassure { margin: 16px 0 0; font-size: 13px; opacity: .88; }
 
 				.tw-btn {
 					display: inline-block;
@@ -736,6 +726,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					background: #674399; color: #fff; border-color: #674399;
 				}
 				.tw-bottom-cta .tw-btn--primary:hover { background: #4a2e73; border-color: #4a2e73; color: #fff; }
+				.tw-bottom-cta__reassure { margin: 16px 0 0; color: #50575e; font-size: 13px; }
 
 				.tw-card {
 					background: #fff;
