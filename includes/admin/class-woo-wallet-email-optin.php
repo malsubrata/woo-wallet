@@ -88,6 +88,12 @@ if ( ! class_exists( 'Woo_Wallet_Email_Optin' ) ) :
 		 * @return void
 		 */
 		public function render() {
+			// The constructor already declines to register the hooks that reach
+			// here when Pro is active; re-check so a direct call from a theme or
+			// third-party integration cannot surface it to a Pro customer.
+			if ( woo_wallet_is_pro_active() ) {
+				return;
+			}
 			if ( ! current_user_can( get_wallet_user_capability() ) ) {
 				return;
 			}
