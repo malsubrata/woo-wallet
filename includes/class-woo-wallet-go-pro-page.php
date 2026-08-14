@@ -203,10 +203,58 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 */
 		private function render_marketing() {
 			$this->render_hero();
+			$this->render_store_case();
 			$this->render_features();
 			$this->render_comparison();
 			$this->render_use_cases();
+			$this->render_faq();
 			$this->render_bottom_cta();
+		}
+
+		/**
+		 * Make the Pro case from the store's own figures.
+		 *
+		 * Renders nothing at all unless the store has meaningful wallet activity:
+		 * a fresh install would otherwise be told it is carrying $0.00 across 0
+		 * wallets, which reads as a broken page rather than an argument. Shares
+		 * the threshold filter with the Wallet Dashboard nudge so a store tunes
+		 * it once.
+		 */
+		private function render_store_case() {
+			// Loaded on demand: the reports data service is only pulled in by the
+			// Reports screen and the reports REST controller.
+			require_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-reports-data.php';
+
+			$data    = new Woo_Wallet_Reports_Data();
+			$summary = $data->get_summary();
+
+			$liability = isset( $summary['total_liability'] ) ? (float) $summary['total_liability'] : 0.0;
+			$wallets   = isset( $summary['positive_wallets'] ) ? (int) $summary['positive_wallets'] : 0;
+
+			/** This filter is documented in includes/admin/class-woo-wallet-reports.php */
+			$threshold = (float) apply_filters( 'woo_wallet_pro_liability_nudge_threshold', 1000.0 );
+
+			if ( $liability < $threshold || $wallets < 1 ) {
+				return;
+			}
+			?>
+			<section class="tw-section tw-storecase">
+				<h2 class="tw-section__title"><?php esc_html_e( 'What this is worth on your store', 'woo-wallet' ); ?></h2>
+				<div class="tw-storecase__figures">
+					<div class="tw-storecase__figure">
+						<span class="tw-storecase__value"><?php echo esc_html( $data->format_amount( $liability ) ); ?></span>
+						<span class="tw-storecase__label"><?php esc_html_e( 'Outstanding wallet credit you owe customers today', 'woo-wallet' ); ?></span>
+					</div>
+					<div class="tw-storecase__figure">
+						<span class="tw-storecase__value"><?php echo esc_html( number_format_i18n( $wallets ) ); ?></span>
+						<span class="tw-storecase__label"><?php esc_html_e( 'Customers holding a positive wallet balance', 'woo-wallet' ); ?></span>
+					</div>
+				</div>
+				<p class="tw-storecase__copy">
+					<?php esc_html_e( 'Credit expiry reclaims the part of that balance nobody is ever going to spend, and breakage reporting tells you how much of it that is. Milestone and birthday bonuses give the customers already holding credit a reason to come back and spend it.', 'woo-wallet' ); ?>
+				</p>
+			</section>
+			<?php
 		}
 
 		/**
@@ -566,22 +614,99 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 */
 		private function render_use_cases() {
 			$cases = array(
-				array( 'dashicons-store', __( 'Marketplace payouts', 'woo-wallet' ) ),
-				array( 'dashicons-awards', __( 'Cashback rewards', 'woo-wallet' ) ),
-				array( 'dashicons-networking', __( 'Affiliate commissions', 'woo-wallet' ) ),
-				array( 'dashicons-update', __( 'Store credit automation', 'woo-wallet' ) ),
+				array(
+					'icon'  => 'dashicons-store',
+					'title' => __( 'Multi-vendor marketplace', 'woo-wallet' ),
+					'copy'  => __( 'Vendor commissions already land in the wallet on Dokan, WCFM and WC Marketplace. Withdrawals are what lets vendors actually take that money out — to PayPal, Stripe or their bank — with an approval queue and per-gateway fees you control.', 'woo-wallet' ),
+					'uses'  => __( 'Uses: Wallet Withdrawals, withdrawal reports.', 'woo-wallet' ),
+				),
+				array(
+					'icon'  => 'dashicons-awards',
+					'title' => __( 'Loyalty and repeat purchase', 'woo-wallet' ),
+					'copy'  => __( 'Free cashback rewards the order a customer has already placed. Milestone and birthday bonuses reward the next one — credit that appears when someone crosses a spend threshold, or on their birthday, with an expiry date attached so it prompts a visit rather than sitting there.', 'woo-wallet' ),
+					'uses'  => __( 'Uses: Spend milestone bonus, birthday bonus, credit expiry, wallet coupons.', 'woo-wallet' ),
+				),
+				array(
+					'icon'  => 'dashicons-chart-bar',
+					'title' => __( 'Controlling wallet liability', 'woo-wallet' ),
+					'copy'  => __( 'Every credit you issue is money you owe. Expiry caps how long you carry it, per category, with reminder emails so customers are told before it lapses — and breakage and aging reports show what is about to expire and what already has.', 'woo-wallet' ),
+					'uses'  => __( 'Uses: Credit expiry, breakage, aging and expiry-trend reports.', 'woo-wallet' ),
+				),
+				array(
+					'icon'  => 'dashicons-migrate',
+					'title' => __( 'Migrating or running a campaign', 'woo-wallet' ),
+					'copy'  => __( 'Moving off another credit system, or issuing credit to a segment, means hundreds of adjustments. Import them from a CSV in one pass — with expiry and currency per row — or generate a batch of unique coupon codes that redeem into the wallet.', 'woo-wallet' ),
+					'uses'  => __( 'Uses: Bulk CSV importer, wallet coupons, coupon REST API.', 'woo-wallet' ),
+				),
 			);
 			?>
 			<section class="tw-section">
 				<h2 class="tw-section__title"><?php esc_html_e( 'Built for every wallet use case', 'woo-wallet' ); ?></h2>
 				<div class="tw-usecases">
-					<?php foreach ( $cases as $c ) : ?>
+					<?php foreach ( $cases as $case ) : ?>
 						<div class="tw-usecase">
-							<span class="dashicons <?php echo esc_attr( $c[0] ); ?>" aria-hidden="true"></span>
-							<span><?php echo esc_html( $c[1] ); ?></span>
+							<h3>
+								<span class="dashicons <?php echo esc_attr( $case['icon'] ); ?>" aria-hidden="true"></span>
+								<?php echo esc_html( $case['title'] ); ?>
+							</h3>
+							<p><?php echo esc_html( $case['copy'] ); ?></p>
+							<p class="tw-usecase__uses"><?php echo esc_html( $case['uses'] ); ?></p>
 						</div>
 					<?php endforeach; ?>
 				</div>
+			</section>
+			<?php
+		}
+
+		/**
+		 * Purchase FAQ.
+		 *
+		 * Native <details> elements: no JavaScript, and every answer is readable
+		 * with the accordion collapsed by a screen reader.
+		 */
+		private function render_faq() {
+			$faq = array(
+				array(
+					'q' => __( 'What does the licence cover?', 'woo-wallet' ),
+					'a' => sprintf(
+						/* translators: %s: licence price, e.g. $79. */
+						__( '%s per year covers one site, and includes every Pro feature — no per-module or per-gateway extras.', 'woo-wallet' ),
+						self::PRICE
+					),
+				),
+				array(
+					'q' => __( 'Does Pro replace the free plugin?', 'woo-wallet' ),
+					'a' => __( 'No — Pro extends it. TeraWallet Pro is an add-on and requires this free plugin to stay installed and active. Nothing is removed or replaced: your existing wallets, transactions and settings carry straight over, and the Pro features appear alongside what you already have.', 'woo-wallet' ),
+				),
+				array(
+					'q' => __( 'Is there a refund policy?', 'woo-wallet' ),
+					'a' => __( 'Yes — 30 days, no questions asked.', 'woo-wallet' ),
+				),
+				array(
+					'q' => __( 'What happens if I do not renew?', 'woo-wallet' ),
+					'a' => __( 'Pro keeps working. An expired licence stops automatic updates and support until you renew; it does not switch any feature off or touch your wallet data.', 'woo-wallet' ),
+				),
+				array(
+					'q' => __( 'What do updates and support include?', 'woo-wallet' ),
+					'a' => __( 'The licence includes one year of automatic updates and priority support, and renews automatically each year until you cancel.', 'woo-wallet' ),
+				),
+			);
+			?>
+			<section class="tw-section">
+				<h2 class="tw-section__title"><?php esc_html_e( 'Before you buy', 'woo-wallet' ); ?></h2>
+				<div class="tw-faq">
+					<?php foreach ( $faq as $item ) : ?>
+						<details class="tw-faq__item">
+							<summary><?php echo esc_html( $item['q'] ); ?></summary>
+							<p><?php echo esc_html( $item['a'] ); ?></p>
+						</details>
+					<?php endforeach; ?>
+				</div>
+				<p class="tw-faq__cta">
+					<a href="<?php echo esc_url( woo_wallet_pro_url( 'faq' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'See full licence and purchase details', 'woo-wallet' ); ?>
+					</a>
+				</p>
 			</section>
 			<?php
 		}
@@ -796,20 +921,57 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				.tw-tick--yes { color: #1f8a45; }
 				.tw-tick--no  { color: #c1c5cc; }
 
-				.tw-usecases {
+				.tw-storecase__figures {
 					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-					gap: 12px;
+					grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+					gap: 16px;
+					margin: 0 0 14px;
 				}
-				.tw-usecase {
-					display: flex; align-items: center; gap: 10px;
+				.tw-storecase__figure {
 					background: #faf8ff;
 					border: 1px solid #e8e1f4;
-					border-radius: 6px;
-					padding: 14px 16px;
-					color: #1d2327; font-weight: 500;
+					border-radius: 8px;
+					padding: 20px 22px;
 				}
+				.tw-storecase__value { display: block; font-size: 28px; font-weight: 700; color: #1d2327; line-height: 1.2; }
+				.tw-storecase__label { display: block; margin-top: 6px; color: #50575e; font-size: 13px; line-height: 1.5; }
+				.tw-storecase__copy { margin: 0; color: #50575e; font-size: 14px; line-height: 1.6; max-width: 760px; }
+
+				.tw-usecases {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+					gap: 16px;
+				}
+				.tw-usecase {
+					background: #faf8ff;
+					border: 1px solid #e8e1f4;
+					border-radius: 8px;
+					padding: 20px 22px;
+					color: #1d2327;
+				}
+				.tw-usecase h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; }
+				.tw-usecase p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.6; }
+				.tw-usecase__uses { margin-top: 10px !important; font-weight: 600; color: #1d2327 !important; }
 				.tw-usecase .dashicons { color: #674399; }
+
+				.tw-faq { display: grid; gap: 8px; max-width: 820px; }
+				.tw-faq__item {
+					background: #fff;
+					border: 1px solid #e0dce8;
+					border-radius: 8px;
+					padding: 14px 18px;
+				}
+				.tw-faq__item summary {
+					cursor: pointer;
+					font-weight: 600;
+					color: #1d2327;
+					font-size: 14px;
+				}
+				.tw-faq__item summary:focus { outline: 2px solid #674399; outline-offset: 2px; }
+				.tw-faq__item p { margin: 10px 0 0; color: #50575e; font-size: 13px; line-height: 1.6; }
+				.tw-faq__cta { margin: 14px 0 0; font-size: 13px; }
+				.tw-faq__cta a { color: #674399; text-decoration: none; font-weight: 600; }
+				.tw-faq__cta a:hover, .tw-faq__cta a:focus { color: #4a2e73; text-decoration: underline; }
 
 				.tw-bottom-cta {
 					background: #faf8ff;
@@ -889,11 +1051,23 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				.tw-quicklink h3 { margin: 0 0 6px; font-size: 16px; }
 				.tw-quicklink p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.5; }
 
+				@media (max-width: 782px) {
+					.woo-wallet-go-pro-wrap { margin: 12px auto 32px; }
+					.tw-hero { padding: 36px 22px; }
+					.tw-hero h1 { font-size: 26px; }
+					.tw-hero__amount { font-size: 34px; }
+					.tw-hero__cta .tw-btn { width: 100%; text-align: center; }
+					.tw-features, .tw-usecases, .tw-storecase__figures { grid-template-columns: 1fr; }
+					.tw-compare th, .tw-compare td { padding: 12px 14px; }
+					.tw-compare__cell { width: 72px; }
+				}
+
 				@media (max-width: 600px) {
-					.tw-hero { padding: 32px 20px; }
-					.tw-hero h1 { font-size: 24px; }
+					.tw-hero { padding: 28px 18px; }
+					.tw-hero h1 { font-size: 22px; }
+					.tw-section__title { font-size: 19px; }
 					.tw-compare th, .tw-compare td { padding: 10px 12px; }
-					.tw-compare__cell { width: 70px; }
+					.tw-compare__cell { width: 64px; }
 				}
 			</style>
 			<?php
