@@ -702,14 +702,16 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 				}
 			}
 
-			// State the denominator. The shares below are of credit issued, not
-			// of the net liability in the headline card — without saying so, a
-			// sole positive category reads as "100%" of a number that is not
-			// what the store actually owes.
+			// State the denominator. The shares below are of the net-positive
+			// categories only — rows come from liability_by_category(), which
+			// nets credit against debit per category, so a category that nets
+			// negative (cashback after clawback) drops out of $positive and is
+			// listed under "Reduced by" instead. Calling this "credited to
+			// wallets" would overstate it; that figure is lifetime_credited.
 			echo '<p class="twr-composition__basis">';
 			printf(
-				/* translators: %s: total wallet credit issued, formatted */
-				esc_html__( 'Share of %s credited to wallets. Debits are listed separately below.', 'woo-wallet' ),
+				/* translators: %s: net wallet credit by source, formatted */
+				esc_html__( 'Share of %s — net credit by source. Debits are listed separately below.', 'woo-wallet' ),
 				'<strong class="twr-composition__basis-value">' . esc_html( $this->data->format_amount( $positive ) ) . '</strong>' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inline.
 			);
 			echo '</p>';

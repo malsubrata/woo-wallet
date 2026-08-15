@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-14T15:20:21+00:00\n"
+"POT-Creation-Date: 2026-08-15T05:18:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -912,29 +912,29 @@ msgstr ""
 msgid "No wallet activity yet."
 msgstr ""
 
-#. translators: %s: total wallet credit issued, formatted
-#: includes/admin/class-woo-wallet-reports.php:712
+#. translators: %s: net wallet credit by source, formatted
+#: includes/admin/class-woo-wallet-reports.php:714
 #, php-format
-msgid "Share of %s credited to wallets. Debits are listed separately below."
+msgid "Share of %s — net credit by source. Debits are listed separately below."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:718
+#: includes/admin/class-woo-wallet-reports.php:720
 msgid "Wallet credit by source"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:767
+#: includes/admin/class-woo-wallet-reports.php:769
 msgid "Reduced by"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:782
+#: includes/admin/class-woo-wallet-reports.php:784
 msgid "Net outstanding"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:807
+#: includes/admin/class-woo-wallet-reports.php:809
 msgid "What this report shows"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:810
+#: includes/admin/class-woo-wallet-reports.php:812
 msgid "This report is available in TeraWallet Pro."
 msgstr ""
 

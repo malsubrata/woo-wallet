@@ -140,7 +140,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.11 (Unreleased) =
+= v1.6.11 (August 15, 2026) =
 – **Notice:-** The "Upgrade to Pro" promo no longer appears on admin screens that do not belong to TeraWallet. Until now it was attached to the global admin notice hook, so it rendered on every screen in wp-admin — including other plugins' pages, Posts and Settings. It is now confined to the TeraWallet menu and its subpages.
 – **Notice:-** The same promo is shown again on the Wallet Dashboard and the Settings screen, where it had been invisible since 1.6.6. Version 1.6.6 made the Wallet Dashboard the default TeraWallet landing screen and, in the same release, began stripping every admin notice from the Dashboard and Settings screens to keep third-party nags out of their layout — which removed TeraWallet's own promo from the two screens an administrator sees first. That side effect was not documented at the time. Third-party notices are still suppressed on those two screens; only TeraWallet's own surfaces are exempt.
 – **Notice:-** Dismissing the promo is now recorded per administrator instead of per site. Dismissal remains permanent and the promo never reappears for anyone who has dismissed it — this only stops one administrator's dismissal from silencing it for colleagues who have never seen it. Sites upgrading with an existing dismissal have it applied to every current administrator account, so nobody who already dismissed it sees it again. For the record, 1.6.7 changed dismissal from a 14-day reminder to permanent (required by the WordPress.org plugin review team) without a changelog entry.
