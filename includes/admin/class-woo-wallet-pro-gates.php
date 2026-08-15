@@ -219,7 +219,7 @@ if ( ! class_exists( 'Woo_Wallet_Pro_Gates' ) ) :
 
 			printf(
 				'<p><button type="button" class="button tw-gate-btn" disabled aria-disabled="true">
-					<span class="dashicons dashicons-lock" aria-hidden="true"></span> %1$s
+					<span style="vertical-align:middle;line-height:0.8;" class="dashicons dashicons-lock" aria-hidden="true"></span> %1$s
 				</button><span class="tw-gate-note">%2$s <a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a></span></p>',
 				esc_html__( 'Bulk Import', 'woo-wallet' ),
 				esc_html__( 'Credit or debit hundreds of wallets at once from a CSV.', 'woo-wallet' ),

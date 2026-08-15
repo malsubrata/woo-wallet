@@ -236,9 +236,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						)
 					);
 				}
-				$top_up_amount   = 0;
-				$wallet_product  = get_wallet_rechargeable_product();
-				$wallet_prod_id  = $wallet_product ? $wallet_product->get_id() : 0;
+				$top_up_amount  = 0;
+				$wallet_product = get_wallet_rechargeable_product();
+				$wallet_prod_id = $wallet_product ? $wallet_product->get_id() : 0;
 				foreach ( $wallet_recharge_order_ids as $order_id ) {
 					$order = wc_get_order( $order_id );
 					if ( ! $order ) {
@@ -1146,14 +1146,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( ! current_user_can( get_wallet_user_capability() ) ) {
 				return $footer_text;
 			}
-			$current_screen   = get_current_screen();
-			$woo_wallet_pages = array(
-				woo_wallet_get_screen_id( 'woo-wallet', '' ),
-				woo_wallet_get_screen_id( 'woo-wallet-transactions', 'null' ),
-				woo_wallet_get_screen_id( 'woo-wallet-extensions' ),
-				woo_wallet_get_screen_id( 'woo-wallet-settings' ),
-			);
-			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $woo_wallet_pages, true ) ) {
+			$current_screen = get_current_screen();
+			if ( isset( $current_screen->id ) && in_array( $current_screen->id, $this->wallet_own_screen_ids(), true ) ) {
 				if ( ! get_option( 'woocommerce_wallet_admin_footer_text_rated' ) ) {
 					$footer_text = sprintf(
 						/* translators: Plugin name */
@@ -1745,7 +1739,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 				.tw-pro-promo__lede {
 					margin: 0 0 12px;
-					color: rgba(255,255,255,0.92);
+					color: rgba(255,255,255,0.92) !important;
 					font-size: 13.5px;
 					line-height: 1.55;
 					max-width: 620px;
@@ -1825,7 +1819,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					color: #4f46e5 !important;
 					font-size: 13.5px;
 					font-weight: 700;
-					text-decoration: none;
+					text-decoration: none !important;
 					border-radius: 8px;
 					box-shadow: 0 4px 14px rgba(0,0,0,0.15);
 					transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
