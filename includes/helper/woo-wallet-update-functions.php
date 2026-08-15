@@ -416,3 +416,39 @@ function woo_wallet_update_163_db_schema() {
 function woo_wallet_update_164_flag_legacy_currency_normalize() {
 	update_option( 'woo_wallet_pending_legacy_currency_normalize', 1, false );
 }
+
+/**
+ * 1.6.11: migrate the Pro promo dismissal from a site option to per-user meta.
+ *
+ * Before 1.6.11 dismissal lived in the `_woo_wallet_promotion_snoozed_until`
+ * site option, so whichever admin clicked the dismiss control silenced the
+ * promo for every user on the site, permanently. Dismissal is now per-user.
+ *
+ * Migrating naively would re-show the promo to every administrator on sites
+ * that had already dismissed it — a mass re-nag, and precisely what the
+ * WordPress.org guideline forbids. So an existing site-wide dismissal is
+ * stamped onto every current administrator instead: nobody who has dismissed
+ * ever sees it again, and only accounts created after this upgrade get a first
+ * view. Idempotent.
+ *
+ * @return void
+ */
+function woo_wallet_update_1611_migrate_promotion_dismissal() {
+	$snoozed_until = (int) get_option( '_woo_wallet_promotion_snoozed_until', 0 );
+
+	if ( $snoozed_until && time() < $snoozed_until ) {
+		$admins = get_users(
+			array(
+				'role'   => 'administrator',
+				'fields' => 'ID',
+			)
+		);
+		foreach ( $admins as $admin_id ) {
+			update_user_meta( (int) $admin_id, '_woo_wallet_promotion_dismissed', 1 );
+		}
+	}
+
+	// Marker the runtime check reads: until this is set, the legacy site option
+	// still governs so a site whose upgrade routine has not run cannot re-nag.
+	update_option( 'woo_wallet_promotion_dismissal_migrated', 1, false );
+}

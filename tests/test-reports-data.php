@@ -119,6 +119,62 @@ class Test_Reports_Data extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Category labels come from the canonical transaction-type registry, not a
+	 * second hard-coded map that silently omits slugs.
+	 */
+	public function test_category_labels_cover_every_registered_type() {
+		$service = new ReflectionMethod( 'Woo_Wallet_Reports_Data', 'category_labels' );
+		$service->setAccessible( true );
+		$labels = $service->invoke( $this->service );
+
+		foreach ( array_keys( woo_wallet_get_transaction_types() ) as $slug ) {
+			$this->assertArrayHasKey(
+				$slug,
+				$labels,
+				"Registered category '{$slug}' has no report label and would display as a raw slug."
+			);
+		}
+	}
+
+	/**
+	 * Partial-payment cancellation refunds must not fall through to 'other'.
+	 *
+	 * Woo_Wallet_Wallet passes `for => partial_payment_refund` when crediting a
+	 * cancelled order back; before 1.6.11 that slug was unregistered, so
+	 * resolve_category_and_details() collapsed it to 'other' and the credit
+	 * showed up as an uncategorised chunk of liability.
+	 */
+	public function test_partial_payment_refund_is_a_known_category() {
+		$this->assertTrue(
+			woo_wallet_is_known_transaction_type( 'partial_payment_refund' ),
+			'partial_payment_refund must be registered or cancellation refunds land in "other".'
+		);
+	}
+
+	/**
+	 * The composition rows reconcile: credits plus debits equal the headline
+	 * liability figure the dashboard renders above the card.
+	 */
+	public function test_composition_credits_and_debits_reconcile() {
+		$summary  = $this->service->get_summary();
+		$positive = 0.0;
+		$negative = 0.0;
+		foreach ( $summary['composition'] as $row ) {
+			if ( $row['amount'] > 0 ) {
+				$positive += (float) $row['amount'];
+			} else {
+				$negative += (float) $row['amount'];
+			}
+		}
+
+		$this->assertEquals( $summary['total_liability'], round( $positive + $negative, 8 ) );
+
+		// The shares rendered in the card are of credit issued, so that
+		// denominator must be the positive subtotal — never the net.
+		$this->assertGreaterThanOrEqual( $summary['total_liability'], $positive );
+	}
+
+	/**
 	 * The woo_wallet_reports_metrics filter mutates the assembled cards.
 	 */
 	public function test_metrics_filter_mutates_output() {

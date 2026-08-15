@@ -126,6 +126,7 @@ final class Woo_Wallet {
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-go-pro-page.php';
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-admin.php';
+			include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-pro-gates.php';
 		}
 		if ( $this->is_request( 'frontend' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-frontend.php';

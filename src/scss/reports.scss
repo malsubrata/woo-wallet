@@ -23,7 +23,6 @@
 	--twr-green: #15976a;
 	--twr-red: #cf4040;
 
-	max-width: 1180px;
 	margin: 10px 20px 0 0;
 	padding: 24px 24px 56px;
 	border-radius: 18px;
@@ -211,8 +210,19 @@
 		border-bottom-color: var(--twr-accent);
 	}
 
+	/* Locked tabs render as <button> (they open the explainer dialog rather
+	   than navigating), so normalise them back to the anchor's look. */
 	&.is-locked {
 		color: #b0b5c0;
+		font-family: inherit;
+		font-size: 14px;
+		line-height: inherit;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			color: var(--twr-text);
+		}
 	}
 
 	.dashicons-lock {
@@ -298,6 +308,38 @@
 	font-size: 14.5px;
 	line-height: 1.5;
 	color: #aeb3c2;
+}
+
+/* Pro nudge sitting inside the ink headline card, argued from the store's own
+   liability figure. Only rendered above a threshold — see
+   Woo_Wallet_Reports::render_liability_nudge(). */
+.twr-headline__nudge {
+	display: block;
+	max-width: 560px;
+	margin-top: 20px;
+	padding-top: 18px;
+	border-top: 1px solid rgba(255, 255, 255, 0.14);
+	font-size: 13.5px;
+	line-height: 1.6;
+	color: #c3c7d4;
+
+	strong {
+		color: #fff;
+		font-weight: 600;
+	}
+
+	a {
+		color: #fff;
+		font-weight: 600;
+		text-decoration: underline;
+		white-space: nowrap;
+
+		&:hover,
+		&:focus-visible {
+			color: #fff;
+			opacity: 0.85;
+		}
+	}
 }
 
 /* Composition — the signature element. */
@@ -464,13 +506,178 @@
 }
 
 /* ── Pro locked slots ─────────────────────────────────────────────────── */
+/* The card is a <button>: it opens the slot's explainer dialog. Reset the UA
+   button styling so it still reads as a dashboard card. */
 .twr-pro__card {
 	position: relative;
+	display: block;
+	width: 100%;
 	padding: 22px 22px 24px;
 	border: 1px dashed #d4d6dd;
 	border-radius: 16px;
-	background: repeating-linear-gradient(135deg, #fbfbfd, #fbfbfd 10px, #f6f7fb 10px, #f6f7fb 20px);
+	background: var(--twr-surface);
 	color: var(--twr-muted);
+	text-align: left;
+	font: inherit;
+	cursor: pointer;
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+	&:hover,
+	&:focus-visible {
+		transform: translateY(-2px);
+		border-color: var(--twr-accent);
+		box-shadow: 0 10px 24px -18px rgba(24, 27, 39, 0.5);
+	}
+
+	&:hover .twr-pro__sample,
+	&:focus-visible .twr-pro__sample {
+		filter: blur(2px);
+		opacity: 0.75;
+	}
+}
+
+/* Sample rendering of the real report. Blurred and non-interactive so it can't
+   be mistaken for the store's own figures. */
+.twr-pro__sample {
+	display: block;
+	margin-top: 14px;
+	color: var(--twr-accent);
+	filter: blur(3px);
+	opacity: 0.6;
+	user-select: none;
+	pointer-events: none;
+	transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.twr-pro__sample-value {
+	display: block;
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: 28px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	color: var(--twr-ink);
+}
+
+.twr-spark {
+	display: block;
+	width: 100%;
+	height: 32px;
+	margin-top: 10px;
+}
+
+.twr-pro__benefit {
+	display: block;
+	margin-top: 14px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--twr-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.twr-pro__card,
+	.twr-pro__sample {
+		transition: none;
+	}
+}
+
+/* ── Pro explainer dialog ─────────────────────────────────────────────── */
+.twr-modal {
+	width: min(520px, calc(100vw - 40px));
+	padding: 0;
+	border: 0;
+	border-radius: 18px;
+	background: transparent;
+
+	&::backdrop {
+		background: rgba(24, 27, 39, 0.55);
+	}
+}
+
+.twr-modal__inner {
+	position: relative;
+	padding: 32px 34px 34px;
+	border-radius: 18px;
+	background: var(--twr-surface);
+	color: var(--twr-text);
+}
+
+.twr-modal__close {
+	position: absolute;
+	top: 14px;
+	right: 16px;
+	border: 0;
+	background: none;
+	color: var(--twr-faint);
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--twr-ink);
+	}
+}
+
+.twr-modal__badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: rgba(91, 91, 214, 0.12);
+	color: var(--twr-accent);
+	font-size: 12px;
+	font-weight: 600;
+
+	.dashicons {
+		font-size: 13px;
+		width: 13px;
+		height: 13px;
+	}
+}
+
+.twr-modal__title {
+	margin: 14px 0 8px;
+	font-size: 22px;
+	font-weight: 600;
+	color: var(--twr-ink);
+}
+
+.twr-modal__body {
+	margin: 0 0 16px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--twr-muted);
+}
+
+.twr-modal__list {
+	margin: 0 0 22px 18px;
+	list-style: disc;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--twr-muted);
+
+	li {
+		margin-bottom: 6px;
+	}
+}
+
+.twr-modal__cta {
+	display: inline-block;
+	padding: 10px 22px;
+	border-radius: 8px;
+	background: var(--twr-accent);
+	color: #fff;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		background: var(--twr-ink);
+		color: #fff;
+	}
 }
 
 .twr-pro__label {
@@ -515,9 +722,20 @@
 		color: var(--twr-accent);
 	}
 
+	h2 {
+		margin: 12px 0 0;
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--twr-ink);
+	}
+
 	p {
 		margin: 12px 0 0;
 		font-size: 14px;
+	}
+
+	.button {
+		margin-top: 18px;
 	}
 }
 
@@ -585,5 +803,44 @@
 
 	.twr-legend {
 		gap: 10px 18px;
+	}
+}
+
+/* ── Composition: denominator, reductions and net reconciliation ───────── */
+.twr-composition__basis {
+	margin: 0 0 14px;
+	font-size: 13px;
+	color: var(--twr-muted);
+
+	strong {
+		color: var(--twr-ink);
+		font-weight: 600;
+	}
+}
+
+.twr-composition__subhead {
+	margin: 20px 0 8px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--twr-faint);
+}
+
+.twr-composition__net {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	margin: 18px 0 0;
+	padding-top: 14px;
+	border-top: 1px solid var(--twr-border);
+	font-size: 13px;
+	color: var(--twr-muted);
+
+	strong {
+		font-family: 'Space Grotesk', sans-serif;
+		font-size: 18px;
+		font-weight: 600;
+		color: var(--twr-ink);
 	}
 }

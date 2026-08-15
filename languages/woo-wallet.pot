@@ -2,22 +2,22 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.6.10\n"
+"Project-Id-Version: TeraWallet 1.6.11\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-07T02:59:10+00:00\n"
+"POT-Creation-Date: 2026-08-15T05:18:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
 
 #. Plugin Name of the plugin
 #: woo-wallet.php
-#: includes/class-woo-wallet-admin.php:318
-#: includes/class-woo-wallet-admin.php:1123
+#: includes/class-woo-wallet-admin.php:309
+#: includes/class-woo-wallet-admin.php:1155
 msgid "TeraWallet"
 msgstr ""
 
@@ -64,7 +64,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-new-registration.php:47
 #: includes/actions/class-woo-wallet-action-product-review.php:41
 #: includes/admin/class-woo-wallet-transaction-details.php:45
-#: includes/class-woo-wallet-admin.php:719
+#: includes/class-woo-wallet-admin.php:757
 #: includes/class-woo-wallet-frontend.php:179
 #: includes/export/class-terawallet-csv-exporter.php:98
 #: includes/export/class-terawallet-csv-exporter.php:107
@@ -91,7 +91,7 @@ msgstr ""
 #: includes/actions/class-woo-wallet-action-daily-visits.php:55
 #: includes/actions/class-woo-wallet-action-new-registration.php:54
 #: includes/actions/class-woo-wallet-action-product-review.php:48
-#: includes/class-woo-wallet-admin.php:750
+#: includes/class-woo-wallet-admin.php:788
 #: includes/class-woo-wallet-payment-method.php:73
 #: templates/admin/credit-debit-modal.php:42
 #: templates/admin/edit-balance.php:53
@@ -506,7 +506,7 @@ msgstr ""
 #: includes/admin/class-woo-wallet-balance-details.php:652
 #: includes/admin/class-woo-wallet-transaction-details.php:130
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:194
-#: includes/class-woo-wallet-admin.php:732
+#: includes/class-woo-wallet-admin.php:770
 #: templates/admin/edit-balance.php:39
 #: templates/dashboard.php:113
 #: templates/emails/plain/user-new-transaction.php:46
@@ -519,7 +519,7 @@ msgstr ""
 #: includes/admin/class-woo-wallet-balance-details.php:655
 #: includes/admin/class-woo-wallet-transaction-details.php:130
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:194
-#: includes/class-woo-wallet-admin.php:733
+#: includes/class-woo-wallet-admin.php:771
 #: templates/admin/edit-balance.php:40
 #: templates/dashboard.php:113
 #: templates/emails/plain/user-new-transaction.php:46
@@ -543,6 +543,86 @@ msgstr ""
 msgid "Loading..."
 msgstr ""
 
+#: includes/admin/class-woo-wallet-pro-gates.php:118
+#: includes/admin/class-woo-wallet-pro-gates.php:119
+#: includes/admin/class-woo-wallet-pro-gates.php:144
+#: includes/admin/class-woo-wallet-reports.php:172
+#: includes/class-woo-wallet-admin.php:1585
+msgid "Withdrawals"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:133
+#: includes/class-woo-wallet-go-pro-page.php:159
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:137
+msgid "Customers request payouts from their wallet balance in My Account."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:138
+msgid "Pay out via PayPal, Stripe, Razorpay, BACS or a manual method."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:139
+msgid "Approve, reject and track every request from one admin queue."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:140
+msgid "Set minimum amounts, withdrawal charges and per-user limits."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:146
+msgid "Let customers cash out their wallet balance"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:147
+msgid "Wallet credit is a liability until it is spent or paid out. Withdrawals give customers a way to take their balance out, which is a requirement for marketplaces, refunds-to-wallet and cashback programs in many jurisdictions."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:184
+#: includes/admin/class-woo-wallet-pro-gates.php:196
+#: includes/class-woo-wallet-admin.php:1590
+#: includes/class-woo-wallet-go-pro-page.php:391
+msgid "Credit Expiry"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:185
+msgid "Automatically expire wallet balance that has gone unused for a set period, with reminder emails before it lapses. Reclaims outstanding liability and brings dormant customers back. Available in TeraWallet Pro."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:187
+msgid "Learn about Credit Expiry"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:197
+msgid "Reclaim wallet credit that is never spent"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:224
+msgid "Bulk Import"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:225
+msgid "Credit or debit hundreds of wallets at once from a CSV."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:227
+msgid "Available in TeraWallet Pro"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:246
+#: includes/admin/class-woo-wallet-reports.php:591
+#: includes/admin/class-woo-wallet-reports.php:657
+#: includes/class-woo-wallet-go-pro-page.php:343
+msgid "TeraWallet Pro"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-pro-gates.php:261
+#: includes/admin/class-woo-wallet-reports.php:672
+msgid "See TeraWallet Pro"
+msgstr ""
+
 #: includes/admin/class-woo-wallet-referral-report.php:112
 msgid "Referrer"
 msgstr ""
@@ -554,7 +634,7 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-referral-report.php:114
 #: includes/admin/class-woo-wallet-transaction-details.php:44
-#: includes/class-woo-wallet-admin.php:726
+#: includes/class-woo-wallet-admin.php:764
 #: includes/export/class-terawallet-csv-exporter.php:95
 #: templates/admin/edit-balance.php:33
 #: templates/dashboard.php:102
@@ -661,75 +741,200 @@ msgid "Lifetime debited"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-reports.php:130
-#: includes/admin/class-woo-wallet-reports.php:460
-msgid "Liability composition by source"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-reports.php:155
-msgid "Breakage"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-reports.php:156
-msgid "Aging"
+msgid "Where wallet credit came from"
 msgstr ""
 
 #: includes/admin/class-woo-wallet-reports.php:157
+msgid "Breakage"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:158
+msgid "Aging"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:159
 msgid "Expiry trend"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:170
-#: includes/class-woo-wallet-admin.php:1557
-msgid "Withdrawals"
-msgstr ""
-
-#: includes/admin/class-woo-wallet-reports.php:171
-#: includes/class-woo-wallet-go-pro-page.php:391
+#: includes/admin/class-woo-wallet-reports.php:173
 msgid "Coupons"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:195
+#: includes/admin/class-woo-wallet-reports.php:197
 msgid "Summary"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:226
+#: includes/admin/class-woo-wallet-reports.php:230
 msgid "You do not have permission to view wallet reports."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:245
+#: includes/admin/class-woo-wallet-reports.php:249
 msgid "Wallet Dashboard"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:246
+#: includes/admin/class-woo-wallet-reports.php:250
 msgid "Store-wide wallet liability at a glance."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:251
+#: includes/admin/class-woo-wallet-reports.php:255
 msgid "Updated"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:255
+#: includes/admin/class-woo-wallet-reports.php:259
 msgid "Refresh"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:259
-#: includes/class-woo-wallet-admin.php:598
-#: includes/class-woo-wallet-admin.php:611
+#: includes/admin/class-woo-wallet-reports.php:263
+#: includes/class-woo-wallet-admin.php:636
+#: includes/class-woo-wallet-admin.php:649
 msgid "Export"
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:303
+#: includes/admin/class-woo-wallet-reports.php:316
 msgid "Indicative reporting. Not a substitute for your accounting records."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:431
-msgid "TeraWallet Pro"
+#. translators: %s: formatted outstanding wallet liability, e.g. $4,820.00
+#: includes/admin/class-woo-wallet-reports.php:454
+#, php-format
+msgid "You're carrying %s in outstanding wallet credit. Pro's credit expiry reclaims unspent balance automatically, and breakage reporting shows you how much of it is never coming back."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:447
+#: includes/admin/class-woo-wallet-reports.php:460
+msgid "See how"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:502
+msgid "See how much wallet credit is never spent — and reclaim it."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:503
+msgid "Breakage tracks the share of issued wallet credit that customers never redeem. It tells you what your cashback and refund-to-wallet programs actually cost, rather than what they nominally cost."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:505
+msgid "Breakage rate by month, cohort and credit source."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:506
+msgid "Separates genuinely dormant credit from credit still in play."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:507
+msgid "Exports alongside your existing wallet CSV."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:513
+msgid "Know how long credit has been sitting in customer wallets."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:514
+msgid "Aging buckets every open wallet balance by how long it has gone untouched, so you can see the difference between credit issued last week and credit that has been dormant for a year."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:516
+msgid "0–30, 31–90, 91–180 and 180+ day buckets."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:517
+msgid "Drill into the customers holding the oldest balances."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:518
+msgid "Pairs with Credit Expiry to target reminders."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:524
+msgid "Project how much liability expires, and when."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:525
+msgid "The expiry trend projects forward from your current balances and expiry rules, so you can see what is due to lapse next month rather than discovering it after the fact."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:527
+msgid "Forward projection of expiring balance by month."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:528
+msgid "Compare projected against actually expired."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:529
+msgid "Feeds the reminder emails sent before credit lapses."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:535
+msgid "Let customers cash out, and track every payout."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:536
+msgid "Withdrawals give customers a way to take their wallet balance out via PayPal, Stripe, Razorpay, BACS or a manual method, with an approval queue and a full audit trail on the admin side."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:538
+msgid "Approve, reject and track requests from one queue."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:539
+msgid "Minimum amounts, withdrawal charges and per-user limits."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:540
+msgid "Required for most marketplace and cashback setups."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:546
+msgid "Issue redeemable top-up codes for campaigns."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:547
+msgid "Wallet coupons are redeemable codes that load credit straight into a customer wallet — useful for promotions, gift campaigns, service recovery and offline redemption."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:549
+msgid "Bulk-generate codes with usage and expiry limits."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:550
+msgid "Track redemption rate per campaign."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:551
+msgid "Credit lands in the wallet through the normal ledger."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:655
+msgid "Close"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:690
 msgid "No wallet activity yet."
 msgstr ""
 
-#: includes/admin/class-woo-wallet-reports.php:510
+#. translators: %s: net wallet credit by source, formatted
+#: includes/admin/class-woo-wallet-reports.php:714
+#, php-format
+msgid "Share of %s — net credit by source. Debits are listed separately below."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:720
+msgid "Wallet credit by source"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:769
+msgid "Reduced by"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:784
+msgid "Net outstanding"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:809
+msgid "What this report shows"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-reports.php:812
 msgid "This report is available in TeraWallet Pro."
 msgstr ""
 
@@ -767,10 +972,9 @@ msgid "Top-up"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:272
-#: includes/class-woo-wallet-admin.php:940
-#: includes/class-woo-wallet-admin.php:1065
+#: includes/class-woo-wallet-admin.php:978
+#: includes/class-woo-wallet-admin.php:1103
 #: includes/helper/woo-wallet-transaction-types.php:46
-#: includes/services/class-woo-wallet-reports-data.php:36
 msgid "Cashback"
 msgstr ""
 
@@ -795,25 +999,24 @@ msgid "Purchase"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:277
-#: includes/helper/woo-wallet-transaction-types.php:71
+#: includes/helper/woo-wallet-transaction-types.php:76
 msgid "Transfer"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:278
-#: includes/class-woo-wallet-admin.php:570
-#: includes/class-woo-wallet-admin.php:1307
-#: includes/helper/woo-wallet-transaction-types.php:76
+#: includes/class-woo-wallet-admin.php:608
+#: includes/class-woo-wallet-admin.php:1339
+#: includes/helper/woo-wallet-transaction-types.php:81
 msgid "Refund"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:279
-#: includes/helper/woo-wallet-transaction-types.php:81
+#: includes/helper/woo-wallet-transaction-types.php:86
 msgid "Adjustment"
 msgstr ""
 
 #: includes/api/abstracts/class-terawallet-rest-controller-base.php:280
-#: includes/helper/woo-wallet-transaction-types.php:91
-#: includes/services/class-woo-wallet-reports-data.php:42
+#: includes/helper/woo-wallet-transaction-types.php:96
 msgid "Other"
 msgstr ""
 
@@ -999,7 +1202,7 @@ msgstr ""
 #: includes/api/v1/admin/class-terawallet-rest-admin-transfer-controller.php:70
 #: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:240
 #: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:249
-#: includes/helper/woo-wallet-util.php:1692
+#: includes/helper/woo-wallet-util.php:1830
 msgid "Invalid user id."
 msgstr ""
 
@@ -1174,91 +1377,90 @@ msgstr ""
 msgid "Invalid section ID."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:171
+#: includes/class-woo-wallet-admin.php:162
 msgid "View TeraWallet pro plugins"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:171
-#: includes/class-woo-wallet-admin.php:1580
-#: includes/class-woo-wallet-go-pro-page.php:76
-#: includes/class-woo-wallet-go-pro-page.php:77
-#: includes/class-woo-wallet-go-pro-page.php:312
+#: includes/class-woo-wallet-admin.php:162
+#: includes/class-woo-wallet-admin.php:1608
+#: includes/class-woo-wallet-go-pro-page.php:82
+#: includes/class-woo-wallet-go-pro-page.php:83
 msgid "Upgrade to Pro"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:172
+#: includes/class-woo-wallet-admin.php:163
 msgid "View TeraWallet docs"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:172
+#: includes/class-woo-wallet-admin.php:163
 msgid "Docs"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:173
+#: includes/class-woo-wallet-admin.php:164
 msgid "Visit community forums"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:173
+#: includes/class-woo-wallet-admin.php:164
 msgid "Support forum"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:185
+#: includes/class-woo-wallet-admin.php:176
 msgid "Wallet Management"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:188
+#: includes/class-woo-wallet-admin.php:179
 #: includes/class-woo-wallet-frontend.php:898
 #: templates/mini-wallet.php:23
 msgid "Current wallet balance"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:196
+#: includes/class-woo-wallet-admin.php:187
 msgid "Lock / Unlock"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:201
+#: includes/class-woo-wallet-admin.php:192
 #: includes/class-woo-wallet-ajax.php:81
 msgid "Unlock"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:203
+#: includes/class-woo-wallet-admin.php:194
 #: includes/class-woo-wallet-ajax.php:92
 msgid "Lock"
 msgstr ""
 
 #. translators: %s: wallet top-up
-#: includes/class-woo-wallet-admin.php:279
+#: includes/class-woo-wallet-admin.php:270
 #, php-format
 msgid "%s wallet top-up this month"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:320
+#: includes/class-woo-wallet-admin.php:311
 msgid "Dashboard"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:323
+#: includes/class-woo-wallet-admin.php:314
 msgid "Wallet Users"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:327
+#: includes/class-woo-wallet-admin.php:318
 msgid "Woo Wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:334
-#: includes/class-woo-wallet-admin.php:433
+#: includes/class-woo-wallet-admin.php:325
+#: includes/class-woo-wallet-admin.php:471
 msgid "Referral Report"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:434
+#: includes/class-woo-wallet-admin.php:472
 msgid "Download CSV"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:437
+#: includes/class-woo-wallet-admin.php:475
 msgid "Summary:"
 msgstr ""
 
 #. translators: %s: total number of referral records.
-#: includes/class-woo-wallet-admin.php:440
+#: includes/class-woo-wallet-admin.php:478
 #, php-format
 msgid "%s referral"
 msgid_plural "%s referrals"
@@ -1266,7 +1468,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: number of credited sign-up referrals.
-#: includes/class-woo-wallet-admin.php:443
+#: includes/class-woo-wallet-admin.php:481
 #, php-format
 msgid "%s credited sign-up"
 msgid_plural "%s credited sign-ups"
@@ -1274,133 +1476,133 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: total rewards paid.
-#: includes/class-woo-wallet-admin.php:446
+#: includes/class-woo-wallet-admin.php:484
 #, php-format
 msgid "%s paid"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:467
+#: includes/class-woo-wallet-admin.php:505
 msgid "You do not have permission to export referrals."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:571
+#: includes/class-woo-wallet-admin.php:609
 msgid "to customer wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:591
+#: includes/class-woo-wallet-admin.php:629
 #: includes/class-woo-wallet-frontend.php:221
 msgid "Please enter 3 or more characters"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:592
+#: includes/class-woo-wallet-admin.php:630
 #: includes/class-woo-wallet-frontend.php:219
 msgid "No results found"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:593
+#: includes/class-woo-wallet-admin.php:631
 #: includes/class-woo-wallet-frontend.php:222
 msgid "Searching…"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:655
+#: includes/class-woo-wallet-admin.php:693
 msgid "just now"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:670
+#: includes/class-woo-wallet-admin.php:708
 msgid "Users wallet details"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:675
+#: includes/class-woo-wallet-admin.php:713
 msgid "Search Users"
 msgstr ""
 
 #. translators: user display name and email
-#: includes/class-woo-wallet-admin.php:708
+#: includes/class-woo-wallet-admin.php:746
 #, php-format
 msgid "Adjust Balance: %1$s (%2$s)"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:711
-#: includes/class-woo-wallet-admin.php:781
+#: includes/class-woo-wallet-admin.php:749
+#: includes/class-woo-wallet-admin.php:819
 msgid "Current wallet balance: "
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:722
+#: includes/class-woo-wallet-admin.php:760
 msgid "Enter Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:745
+#: includes/class-woo-wallet-admin.php:783
 msgid "Select payment type"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:753
+#: includes/class-woo-wallet-admin.php:791
 msgid "Enter Description"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:778
+#: includes/class-woo-wallet-admin.php:816
 msgid "Transaction details"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:829
+#: includes/class-woo-wallet-admin.php:867
 #: includes/services/class-woo-wallet-transfer-service.php:85
 #: includes/services/class-woo-wallet-transfer-service.php:88
 msgid "Invalid user"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:834
+#: includes/class-woo-wallet-admin.php:872
 msgid "Please enter amount"
 msgstr ""
 
 #. translators: 1: User login.
-#: includes/class-woo-wallet-admin.php:843
+#: includes/class-woo-wallet-admin.php:881
 #, php-format
 msgid "%s has insufficient balance for debit."
 msgstr ""
 
 #. translators: 1: amount name, 2: username, 3: transaction details url.
-#: includes/class-woo-wallet-admin.php:853
+#: includes/class-woo-wallet-admin.php:891
 #, php-format
 msgid "%1$s has been debited from %2$s wallet account. <a href=\"%3$s\">View all transactions&rarr;</a>"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:868
-#: includes/class-woo-wallet-admin.php:894
+#: includes/class-woo-wallet-admin.php:906
+#: includes/class-woo-wallet-admin.php:932
 msgid "There may be some issue with database connection. Please deactivate TeraWallet plugin and activate again."
 msgstr ""
 
 #. translators: 1: amount name, 2: username, 3: transaction details url.
-#: includes/class-woo-wallet-admin.php:879
+#: includes/class-woo-wallet-admin.php:917
 #, php-format
 msgid "%1$s has been credited to %2$s wallet account. <a href=\"%3$s\">View all transactions&rarr;</a>"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:961
-#: includes/class-woo-wallet-admin.php:1014
-#: includes/class-woo-wallet-admin.php:1186
-#: includes/class-woo-wallet-admin.php:1209
+#: includes/class-woo-wallet-admin.php:999
+#: includes/class-woo-wallet-admin.php:1052
+#: includes/class-woo-wallet-admin.php:1218
+#: includes/class-woo-wallet-admin.php:1241
 #: includes/class-woo-wallet-settings.php:502
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:216
 msgid "Cashback type"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:962
+#: includes/class-woo-wallet-admin.php:1000
 #: includes/class-woo-wallet-settings.php:503
 msgid "Select cashback type percentage or fixed"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:964
-#: includes/class-woo-wallet-admin.php:1016
-#: includes/class-woo-wallet-admin.php:1188
-#: includes/class-woo-wallet-admin.php:1212
+#: includes/class-woo-wallet-admin.php:1002
+#: includes/class-woo-wallet-admin.php:1054
+#: includes/class-woo-wallet-admin.php:1220
+#: includes/class-woo-wallet-admin.php:1244
 #: includes/class-woo-wallet-settings.php:507
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:223
 msgid "Percentage"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:965
-#: includes/class-woo-wallet-admin.php:1017
-#: includes/class-woo-wallet-admin.php:1189
-#: includes/class-woo-wallet-admin.php:1213
+#: includes/class-woo-wallet-admin.php:1003
+#: includes/class-woo-wallet-admin.php:1055
+#: includes/class-woo-wallet-admin.php:1221
+#: includes/class-woo-wallet-admin.php:1245
 #: includes/class-woo-wallet-settings.php:274
 #: includes/class-woo-wallet-settings.php:387
 #: includes/class-woo-wallet-settings.php:508
@@ -1408,160 +1610,155 @@ msgstr ""
 msgid "Fixed"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:976
-#: includes/class-woo-wallet-admin.php:1033
-#: includes/class-woo-wallet-admin.php:1193
-#: includes/class-woo-wallet-admin.php:1218
+#: includes/class-woo-wallet-admin.php:1014
+#: includes/class-woo-wallet-admin.php:1071
+#: includes/class-woo-wallet-admin.php:1225
+#: includes/class-woo-wallet-admin.php:1250
 #: includes/class-woo-wallet-settings.php:516
 #: includes/marketplace/dokan/class-woo-wallet-dokan.php:233
 msgid "Cashback Amount"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:977
+#: includes/class-woo-wallet-admin.php:1015
 #: includes/class-woo-wallet-settings.php:517
 msgid "Enter cashback amount"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1084
+#: includes/class-woo-wallet-admin.php:1122
 msgid "Apply as cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1085
+#: includes/class-woo-wallet-admin.php:1123
 msgid "Check this box if the coupon should apply as cashback."
 msgstr ""
 
 #. translators: Plugin name
-#: includes/class-woo-wallet-admin.php:1122
+#: includes/class-woo-wallet-admin.php:1154
 #, php-format
 msgid "If you like %1$s please leave us a %2$s rating. A huge thanks in advance!"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1124
+#: includes/class-woo-wallet-admin.php:1156
 msgid "Thanks :)"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1134
+#: includes/class-woo-wallet-admin.php:1166
 msgid "Thank you for using TeraWallet."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1151
-#: includes/class-woo-wallet-admin.php:1251
+#: includes/class-woo-wallet-admin.php:1183
+#: includes/class-woo-wallet-admin.php:1283
 #: includes/class-woo-wallet-frontend.php:150
 #: includes/class-woo-wallet-frontend.php:288
 #: templates/wc-endpoint-wallet.php:90
 msgid "My Wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1152
+#: includes/class-woo-wallet-admin.php:1184
 msgid "Endpoint for the \"My account &rarr; My Wallet\" page."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1163
+#: includes/class-woo-wallet-admin.php:1195
 msgid "Wallet endpoints"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1165
+#: includes/class-woo-wallet-admin.php:1197
 msgid "Endpoints are appended to your page URLs to handle specific actions on the accounts pages. They should be unique and can be left blank to disable the endpoint."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1263
+#: includes/class-woo-wallet-admin.php:1295
 msgid "Wallet Balance"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1278
+#: includes/class-woo-wallet-admin.php:1310
 msgid "View details"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1305
+#: includes/class-woo-wallet-admin.php:1337
 msgid "Refunded"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1326
+#: includes/class-woo-wallet-admin.php:1358
 msgid "Recalculate order cashback"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1366
+#: includes/class-woo-wallet-admin.php:1398
 msgid "Cashback recalculation: amount unchanged, no adjustment row written."
 msgstr ""
 
 #. translators: 1: formatted amount (positive or negative)
-#: includes/class-woo-wallet-admin.php:1373
+#: includes/class-woo-wallet-admin.php:1405
 #, php-format
 msgid "Cashback adjusted by %s via manual recalculation."
 msgstr ""
 
 #. translators: 1: settings page link open, 2: settings page link close
-#: includes/class-woo-wallet-admin.php:1404
+#: includes/class-woo-wallet-admin.php:1436
 #, php-format
 msgid "<strong>TeraWallet 1.6.1:</strong> Cashback can now be clawed back when an order is refunded. This is <strong>off by default</strong> — %1$senable it in Settings → Wallet Credit → Refund Clawback%2$s if you want it."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1412
-#: includes/class-woo-wallet-admin.php:1445
+#: includes/class-woo-wallet-admin.php:1444
+#: includes/class-woo-wallet-admin.php:1477
 msgid "Dismiss this notice"
 msgstr ""
 
 #. translators: 1: settings page link open, 2: settings page link close
-#: includes/class-woo-wallet-admin.php:1437
+#: includes/class-woo-wallet-admin.php:1469
 #, php-format
 msgid "<strong>TeraWallet 1.6.1:</strong> Coupon cashback is now recomputed from the live order at credit time rather than trusting the checkout-frozen meta. For upgraded sites the legacy discount_total/total mutation is preserved via an internal flag. %1$sReview your cashback settings.%2$s"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1492
+#: includes/class-woo-wallet-admin.php:1524
 msgid "TeraWallet: some users could not be purged."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1528
+#: includes/class-woo-wallet-admin.php:1556
 msgid "TeraWallet Pro upgrade offer"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1529
+#: includes/class-woo-wallet-admin.php:1557
 msgid "Dismiss"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1548
+#: includes/class-woo-wallet-admin.php:1576
 msgid "Upgrade to TeraWallet Pro"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1549
+#: includes/class-woo-wallet-admin.php:1577
 msgid "5 add-ons · 1 plugin"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1552
+#: includes/class-woo-wallet-admin.php:1580
 msgid "Everything you need to run a profitable wallet program — unified in one premium plugin. No more juggling separate add-ons."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1558
+#: includes/class-woo-wallet-admin.php:1586
 msgid "— let customers cash out via PayPal, Stripe, Razorpay, BACS & more"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1562
-#: includes/class-woo-wallet-go-pro-page.php:393
-msgid "Credit Expiry"
-msgstr ""
-
-#: includes/class-woo-wallet-admin.php:1563
+#: includes/class-woo-wallet-admin.php:1591
 msgid "— auto-expire unused balance to drive repeat purchases"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1567
-#: includes/class-woo-wallet-go-pro-page.php:349
+#: includes/class-woo-wallet-admin.php:1595
+#: includes/class-woo-wallet-go-pro-page.php:426
 msgid "Wallet Coupons"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1568
+#: includes/class-woo-wallet-admin.php:1596
 msgid "— redeemable top-up codes for campaigns & promotions"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1576
+#: includes/class-woo-wallet-admin.php:1604
 msgid "/ year"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1578
+#: includes/class-woo-wallet-admin.php:1606
 msgid "Bulk Import & AffiliateWP included"
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1583
+#: includes/class-woo-wallet-admin.php:1611
 msgid "See all features"
 msgstr ""
 
@@ -1604,7 +1801,7 @@ msgstr ""
 msgid "Invalid nonce"
 msgstr ""
 
-#: includes/class-woo-wallet-ajax.php:521
+#: includes/class-woo-wallet-ajax.php:523
 msgid "User not found"
 msgstr ""
 
@@ -1808,202 +2005,555 @@ msgstr ""
 msgid "Cashback: %s"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:76
-#: includes/class-woo-wallet-go-pro-page.php:77
+#: includes/class-woo-wallet-go-pro-page.php:82
+#: includes/class-woo-wallet-go-pro-page.php:83
 msgid "Pro License"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:159
-msgid "You do not have permission to access this page."
+#: includes/class-woo-wallet-go-pro-page.php:242
+msgid "What this is worth on your store"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:220
+#: includes/class-woo-wallet-go-pro-page.php:246
+msgid "Outstanding wallet credit you owe customers today"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:250
+msgid "Customers holding a positive wallet balance"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:254
+msgid "Credit expiry reclaims the part of that balance nobody is ever going to spend, and breakage reporting tells you how much of it that is. Milestone and birthday bonuses give the customers already holding credit a reason to come back and spend it."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:268
 msgid "Activate your license"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:221
+#: includes/class-woo-wallet-go-pro-page.php:269
 msgid "TeraWallet Pro is installed. Activate your license to receive automatic updates and priority support."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:240
+#: includes/class-woo-wallet-go-pro-page.php:288
 msgid "TeraWallet Pro is active and licensed"
 msgstr ""
 
 #. translators: %s: masked license key.
-#: includes/class-woo-wallet-go-pro-page.php:245
+#: includes/class-woo-wallet-go-pro-page.php:293
 #, php-format
 msgid "License key: %s"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:255
+#: includes/class-woo-wallet-go-pro-page.php:303
 msgid "Deactivate License"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:264
+#: includes/class-woo-wallet-go-pro-page.php:312
 #: includes/class-woo-wallet-settings.php:43
-#: includes/class-woo-wallet.php:303
+#: includes/class-woo-wallet.php:304
 msgid "Settings"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:265
+#: includes/class-woo-wallet-go-pro-page.php:313
 msgid "Configure wallet behavior, payments, cashback, and rewards."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:269
+#: includes/class-woo-wallet-go-pro-page.php:317
 msgid "Documentation"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:270
+#: includes/class-woo-wallet-go-pro-page.php:318
 msgid "Step-by-step guides for every Pro feature."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:274
+#: includes/class-woo-wallet-go-pro-page.php:322
 msgid "Support"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:275
+#: includes/class-woo-wallet-go-pro-page.php:323
 msgid "Get priority help from our support team."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:292
-msgid "Unlock the Full Power of TeraWallet Pro"
-msgstr ""
-
-#: includes/class-woo-wallet-go-pro-page.php:294
-msgid "Withdrawals, coupons, bulk imports, credit expiry and AffiliateWP payouts — everything you need to run a complete wallet economy, in one premium upgrade."
-msgstr ""
-
-#: includes/class-woo-wallet-go-pro-page.php:329
-msgid "View Pricing"
-msgstr ""
-
-#: includes/class-woo-wallet-go-pro-page.php:344
-msgid "Wallet Withdrawal"
-msgstr ""
-
 #: includes/class-woo-wallet-go-pro-page.php:345
-msgid "Let customers cash out wallet balance to bank, PayPal, Stripe, Razorpay, Cashfree, or Paystack."
+msgid "Withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — everything your wallet needs once customers actually start using it."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:350
-msgid "Create redeemable coupon codes that drop credit straight into customer wallets."
+#: includes/class-woo-wallet-go-pro-page.php:349
+msgid "per year, one site"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:354
-msgid "Bulk Importer"
+#: includes/class-woo-wallet-go-pro-page.php:353
+#: includes/class-woo-wallet-go-pro-page.php:734
+msgid "Get TeraWallet Pro"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:355
-msgid "Top-up, debit, or adjust balances for hundreds of users in a single CSV upload."
+#: includes/class-woo-wallet-go-pro-page.php:357
+msgid "30-day money-back guarantee. Includes one year of updates and priority support."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:359
-msgid "Credit Expiry (FIFO)"
+#: includes/class-woo-wallet-go-pro-page.php:379
+msgid "Wallet Withdrawals"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:360
-msgid "Automatically expire old credits first with a precise FIFO ledger and scheduled cleanup."
+#: includes/class-woo-wallet-go-pro-page.php:380
+msgid "Unblocks marketplace and affiliate payouts — money can finally leave the wallet without you touching a bank portal."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:364
-msgid "AffiliateWP Integration"
+#: includes/class-woo-wallet-go-pro-page.php:382
+msgid "Payouts via PayPal, Stripe, bank transfer (BACS), Razorpay, Cashfree and Paystack."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:365
-msgid "Pay affiliate commissions directly into the partner wallet — no bank round-trip required."
+#: includes/class-woo-wallet-go-pro-page.php:383
+msgid "Review, approve or cancel every request from an admin queue, with customer-facing and private notes."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:370
-msgid "Everything you get with Pro"
+#: includes/class-woo-wallet-go-pro-page.php:384
+msgid "Per-gateway processing fees: percentage, fixed, or both — deducted from the payout."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:389
-msgid "Wallet System"
-msgstr ""
-
-#: includes/class-woo-wallet-go-pro-page.php:390
-msgid "Withdrawal"
+#: includes/class-woo-wallet-go-pro-page.php:385
+msgid "Idempotent payouts plus signed provider webhooks, so re-approving a request can never pay twice."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:392
-msgid "Importer"
+msgid "Reclaims unspent wallet liability instead of carrying it on your books forever."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:394
-msgid "Affiliate Integration"
+msgid "A global expiry period, with per-category overrides so cashback can expire faster than paid top-ups."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:398
-msgid "Free vs Pro"
+#: includes/class-woo-wallet-go-pro-page.php:395
+msgid "FIFO redemption: the oldest credit is always spent first, per currency."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:402
-msgid "Feature"
+#: includes/class-woo-wallet-go-pro-page.php:396
+msgid "Reminder emails a configurable number of days before credit expires."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:397
+msgid "Expired credit drops out of the spendable balance automatically on a daily scheduled run."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:403
-msgid "Free"
+msgid "Spend Milestone &amp; Birthday Bonuses"
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:404
-msgid "Pro"
+msgid "Drives repeat purchases: customers earn a reason to come back before they have thought about leaving."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:426
-msgid "Marketplace payouts"
+#: includes/class-woo-wallet-go-pro-page.php:406
+msgid "Spend milestone bonus: credit the wallet every time lifetime spend crosses another multiple of a threshold you set."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:407
+msgid "Birthday bonus: credit the wallet once a year, automatically."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:408
+msgid "Adds a birthdate field to My Account and to the WordPress user profile screen."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:409
+msgid "Both appear alongside the free earning actions in Settings — nothing new to learn."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:415
+msgid "Breakage, Aging &amp; Payout Reports"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:416
+msgid "Tells you how much of your outstanding liability is never going to be spent — the number your accountant keeps asking for."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:418
+msgid "Unlocks the five locked report slots on your Wallet Dashboard: breakage, aging, expiry trend, withdrawals and coupons."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:419
+msgid "See how much credit is about to expire, and how much already has."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:420
+msgid "Withdrawal and coupon activity broken out instead of lumped into \"Other\"."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:427
-msgid "Cashback rewards"
-msgstr ""
-
-#: includes/class-woo-wallet-go-pro-page.php:428
-msgid "Affiliate commissions"
+msgid "Turns a discount campaign into stored credit that has to be spent with you."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:429
-msgid "Store credit automation"
+msgid "Coupon codes that top up the wallet instead of discounting one order."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:433
-msgid "Built for every wallet use case"
+#: includes/class-woo-wallet-go-pro-page.php:430
+msgid "Bulk-generate hundreds of unique codes for a campaign in one screen."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:431
+msgid "Per-coupon currency, redeemed by the customer from My Account."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:437
+msgid "Bulk CSV Importer"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:438
+msgid "Migrates an existing credit programme in one upload instead of hundreds of manual adjustments."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:440
+msgid "Credit or debit any number of customers from a single CSV."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:441
+msgid "Optional per-row expiry date and currency columns."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:442
+msgid "Progress and per-row errors reported as the import runs."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:448
+msgid "AffiliateWP Payouts"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:449
+msgid "Pays commission as store credit, so affiliate earnings come back to you as orders instead of leaving as cash."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:451
+msgid "Adds the wallet as an AffiliateWP payout method."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:452
-msgid "Ready to upgrade?"
+msgid "Affiliates opt in from their own dashboard."
 msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:453
-msgid "Join thousands of stores running a full-featured wallet economy on TeraWallet Pro."
+msgid "Commissions land in the wallet with no bank round-trip."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:469
-msgid "Upgrade to Pro Now"
+#: includes/class-woo-wallet-go-pro-page.php:465
+msgid "What Pro adds to your store"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:483
+#. translators: %s: Pro feature name.
+#: includes/class-woo-wallet-go-pro-page.php:481
+#, php-format
+msgid "Get %s"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:500
+msgid "Free vs Pro"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:501
+msgid "The free plugin is a complete wallet. Pro is what you need once that wallet is holding real money."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:506
+msgid "Feature"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:507
+msgid "Free"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:508
+msgid "Pro"
+msgstr ""
+
+#. translators: %s: licence price, e.g. $79.
+#: includes/class-woo-wallet-go-pro-page.php:534
+#, php-format
+msgid "Get everything in the Pro column — %s per year"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:557
+msgid "Wallet core"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:559
+msgid "Wallet ledger with credit, debit and full transaction history"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:560
+msgid "Customer top-ups through any WooCommerce gateway"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:561
+msgid "Pay for an order fully from the wallet"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:562
+msgid "Partial payment: wallet balance plus another gateway"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:563
+msgid "Peer-to-peer transfers between customers"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:564
+msgid "Manual admin credit and debit, wallet lock/unlock"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:565
+msgid "Multi-currency support (WOOCS, WPML, CURCY, YayCurrency, Aelia)"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:566
+msgid "WooCommerce Blocks checkout support"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:570
+msgid "Rewards and earning"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:572
+msgid "Cashback engine: cart, product and category rules"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:573
+msgid "Signup bonus"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:574
+msgid "Daily visit reward"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:575
+msgid "Product review reward"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:576
+msgid "Referral rewards"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:577
+msgid "Spend milestone bonus"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:578
+msgid "Birthday bonus, with a birthdate field on My Account"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:582
+msgid "Getting money out"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:584
+msgid "Customer withdrawal requests with an admin approval queue"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:585
+msgid "Payouts via PayPal, Stripe, BACS, Razorpay, Cashfree, Paystack"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:586
+msgid "Per-gateway withdrawal processing fees"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:587
+msgid "AffiliateWP commissions paid as wallet credit"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:591
+msgid "Liability and operations"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:593
+msgid "Wallet Dashboard: outstanding liability, wallet count, composition"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:594
+msgid "Credit expiry with FIFO redemption"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:595
+msgid "Per-category expiry periods and pre-expiry reminder emails"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:596
+msgid "Breakage, aging and expiry-trend reports"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:597
+msgid "Withdrawal and coupon reports"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:598
+msgid "Bulk CSV import of balances"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:599
+msgid "Wallet coupons and bulk coupon generation"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:603
+msgid "Integrations and developers"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:605
+msgid "Marketplace support: Dokan, WCFM and WC Marketplace"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:606
+msgid "REST API for balances and transactions"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:607
+msgid "Hooks and filters for custom wallet logic"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:608
+msgid "Coupon REST API"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:609
+msgid "Automatic updates and priority support"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:622
+msgid "Multi-vendor marketplace"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:623
+msgid "Vendor commissions already land in the wallet on Dokan, WCFM and WC Marketplace. Withdrawals are what lets vendors actually take that money out — to PayPal, Stripe or their bank — with an approval queue and per-gateway fees you control."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:624
+msgid "Uses: Wallet Withdrawals, withdrawal reports."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:628
+msgid "Loyalty and repeat purchase"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:629
+msgid "Free cashback rewards the order a customer has already placed. Milestone and birthday bonuses reward the next one — credit that appears when someone crosses a spend threshold, or on their birthday, with an expiry date attached so it prompts a visit rather than sitting there."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:630
+msgid "Uses: Spend milestone bonus, birthday bonus, credit expiry, wallet coupons."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:634
+msgid "Controlling wallet liability"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:635
+msgid "Every credit you issue is money you owe. Expiry caps how long you carry it, per category, with reminder emails so customers are told before it lapses — and breakage and aging reports show what is about to expire and what already has."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:636
+msgid "Uses: Credit expiry, breakage, aging and expiry-trend reports."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:640
+msgid "Migrating or running a campaign"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:641
+msgid "Moving off another credit system, or issuing credit to a segment, means hundreds of adjustments. Import them from a CSV in one pass — with expiry and currency per row — or generate a batch of unique coupon codes that redeem into the wallet."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:642
+msgid "Uses: Bulk CSV importer, wallet coupons, coupon REST API."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:647
+msgid "Built for every wallet use case"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:673
+msgid "What does the licence cover?"
+msgstr ""
+
+#. translators: %s: licence price, e.g. $79.
+#: includes/class-woo-wallet-go-pro-page.php:676
+#, php-format
+msgid "%s per year covers one site, and includes every Pro feature — no per-module or per-gateway extras."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:681
+msgid "Does Pro replace the free plugin?"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:682
+msgid "No — Pro extends it. TeraWallet Pro is an add-on and requires this free plugin to stay installed and active. Nothing is removed or replaced: your existing wallets, transactions and settings carry straight over, and the Pro features appear alongside what you already have."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:685
+msgid "Is there a refund policy?"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:686
+msgid "Yes — 30 days, no questions asked."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:689
+msgid "What happens if I do not renew?"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:690
+msgid "Pro keeps working. An expired licence stops automatic updates and support until you renew; it does not switch any feature off or touch your wallet data."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:693
+msgid "What do updates and support include?"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:694
+msgid "The licence includes one year of automatic updates and priority support, and renews automatically each year until you cancel."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:699
+msgid "Before you buy"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:710
+msgid "See full licence and purchase details"
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:723
+msgid "Ready to upgrade?"
+msgstr ""
+
+#. translators: %s: licence price, e.g. $79.
+#: includes/class-woo-wallet-go-pro-page.php:728
+#, php-format
+msgid "Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year for one site."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:736
+msgid "30-day money-back guarantee."
+msgstr ""
+
+#: includes/class-woo-wallet-go-pro-page.php:749
 msgid "License activation"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:486
+#: includes/class-woo-wallet-go-pro-page.php:752
 msgid "API License Key"
 msgstr ""
 
 #. translators: %s: URL to the customer API-keys page.
-#: includes/class-woo-wallet-go-pro-page.php:500
+#: includes/class-woo-wallet-go-pro-page.php:766
 #, php-format
 msgid "Your license key is available at <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">standalonetech.com &rarr; My Account &rarr; API Keys</a>."
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:506
+#: includes/class-woo-wallet-go-pro-page.php:772
 msgid "Activate License"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:525
+#: includes/class-woo-wallet-go-pro-page.php:791
 msgid "Included"
 msgstr ""
 
-#: includes/class-woo-wallet-go-pro-page.php:527
+#: includes/class-woo-wallet-go-pro-page.php:793
 msgid "Not included"
 msgstr ""
 
@@ -2608,7 +3158,7 @@ msgstr ""
 msgid "Title:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:303
+#: includes/class-woo-wallet.php:304
 msgid "View Wallet settings"
 msgstr ""
 
@@ -2740,89 +3290,97 @@ msgstr ""
 msgid "Wallet debit applied to an order at checkout."
 msgstr ""
 
+#: includes/helper/woo-wallet-transaction-types.php:71
+msgid "Partial payment refund"
+msgstr ""
+
 #: includes/helper/woo-wallet-transaction-types.php:72
-msgid "Peer-to-peer transfer between two customer wallets."
+msgid "Wallet share of a cancelled or refunded order credited back."
 msgstr ""
 
 #: includes/helper/woo-wallet-transaction-types.php:77
-msgid "Order refund credited back to the wallet."
+msgid "Peer-to-peer transfer between two customer wallets."
 msgstr ""
 
 #: includes/helper/woo-wallet-transaction-types.php:82
-msgid "Manual admin credit or debit."
-msgstr ""
-
-#: includes/helper/woo-wallet-transaction-types.php:86
-msgid "Vendor commission"
+msgid "Order refund credited back to the wallet."
 msgstr ""
 
 #: includes/helper/woo-wallet-transaction-types.php:87
-msgid "Marketplace commission paid into a vendor wallet."
+msgid "Manual admin credit or debit."
+msgstr ""
+
+#: includes/helper/woo-wallet-transaction-types.php:91
+msgid "Vendor commission"
 msgstr ""
 
 #: includes/helper/woo-wallet-transaction-types.php:92
+msgid "Marketplace commission paid into a vendor wallet."
+msgstr ""
+
+#: includes/helper/woo-wallet-transaction-types.php:97
 msgid "Anything not matching a known category."
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:228
+#: includes/helper/woo-wallet-transaction-types.php:233
 msgid "Transaction descriptions"
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:229
+#: includes/helper/woo-wallet-transaction-types.php:234
 msgid "Per-category description templates. When set, the template overrides the system-generated description on new transactions."
 msgstr ""
 
 #. translators: list of supported template tokens
-#: includes/helper/woo-wallet-transaction-types.php:244
+#: includes/helper/woo-wallet-transaction-types.php:249
 #, php-format
 msgid "Available tokens: %1$s. %2$sLeave blank to keep the system-generated description."
 msgstr ""
 
 #. translators: %s: example category template
-#: includes/helper/woo-wallet-transaction-types.php:260
+#: includes/helper/woo-wallet-transaction-types.php:265
 #, php-format
 msgid "e.g. \"%s\""
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:266
+#: includes/helper/woo-wallet-transaction-types.php:271
 msgid "Transaction description templates"
 msgstr ""
 
-#: includes/helper/woo-wallet-transaction-types.php:267
+#: includes/helper/woo-wallet-transaction-types.php:272
 msgid "These templates replace the auto-generated description on each new transaction record."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1213
+#: includes/helper/woo-wallet-util.php:1351
 msgid "Guest visitor"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1216
+#: includes/helper/woo-wallet-util.php:1354
 msgid "Deleted user"
 msgstr ""
 
 #. translators: %d: user id
-#: includes/helper/woo-wallet-util.php:1704
+#: includes/helper/woo-wallet-util.php:1842
 #, php-format
 msgid "Could not acquire wallet lock for user #%d. Try again."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1752
+#: includes/helper/woo-wallet-util.php:1890
 msgid "Balance carried over after deleting transaction logs"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2385
+#: includes/helper/woo-wallet-util.php:2523
 msgid "Total top-ups"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2394
+#: includes/helper/woo-wallet-util.php:2532
 msgid "Total spent"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2404
+#: includes/helper/woo-wallet-util.php:2542
 msgid "Cashback earned"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2414
+#: includes/helper/woo-wallet-util.php:2552
 msgid "Available balance"
 msgstr ""
 
@@ -2983,30 +3541,6 @@ msgstr ""
 
 #: includes/services/class-woo-wallet-referral-service.php:251
 msgid "Sign-up referral reward amount is zero."
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:35
-msgid "Top-ups"
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:37
-msgid "Refunds"
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:38
-msgid "Purchases"
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:39
-msgid "Partial payments"
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:40
-msgid "Transfers"
-msgstr ""
-
-#: includes/services/class-woo-wallet-reports-data.php:41
-msgid "Adjustments"
 msgstr ""
 
 #: includes/services/class-woo-wallet-topup-service.php:50

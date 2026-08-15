@@ -55,6 +55,9 @@ class Woo_Wallet_Install {
 		'1.6.4'  => array(
 			'woo_wallet_update_164_flag_legacy_currency_normalize',
 		),
+		'1.6.11' => array(
+			'woo_wallet_update_1611_migrate_promotion_dismissal',
+		),
 	);
 	/**
 	 * Class constructor.

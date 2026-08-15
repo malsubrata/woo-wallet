@@ -42,5 +42,13 @@ abstract class TeraWallet_REST_Settings_Controller_Base extends TeraWallet_REST_
 		if ( ! class_exists( 'Woo_Wallet_Settings' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';
 		}
+
+		// The settings screen is React over REST, and `is_admin()` is false on a
+		// REST request — so the admin-only include never runs here and anything
+		// that adds fields via `woo_wallet_settings_fields` would be missing
+		// from the payload the UI renders. Load the gates the same way.
+		if ( ! class_exists( 'Woo_Wallet_Pro_Gates' ) ) {
+			include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-pro-gates.php';
+		}
 	}
 }

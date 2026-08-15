@@ -448,8 +448,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
 				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
 			}
-			// Permanent dismissal — the notice must not re-nag (WordPress.org guideline).
-			update_option( '_woo_wallet_promotion_snoozed_until', PHP_INT_MAX );
+			// Permanent dismissal — the notice must not re-nag (WordPress.org
+			// guideline). Stored per-user since 1.6.11: permanent for whoever
+			// dismissed it, without silencing colleagues who never saw it.
+			woo_wallet_dismiss_promotion();
 			wp_send_json_success();
 		}
 
