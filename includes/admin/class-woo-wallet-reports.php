@@ -243,6 +243,18 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 			?>
 			<div class="wrap woo-wallet-reports" id="twr-app">
 				<h2></h2>
+				<?php
+				/**
+				 * Fires at the top of every TeraWallet admin page, inside `.wrap`.
+				 *
+				 * TeraWallet's own page-content hook — deliberately not
+				 * `admin_notices`, so anything attached here (the Pro banner) stays
+				 * on this plugin's screens and never reaches the wider dashboard.
+				 *
+				 * @since 1.6.12
+				 */
+				do_action( 'woo_wallet_admin_page_header' );
+				?>
 				<header class="twr-topbar">
 					<div class="twr-brand">
 						<div class="twr-brand__text">

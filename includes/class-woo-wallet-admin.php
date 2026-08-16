@@ -91,7 +91,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_filter( 'woocommerce_order_actions', array( $this, 'woocommerce_order_actions' ) );
 			add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback' ) );
 
-			add_action( 'admin_notices', array( $this, 'show_promotions' ) );
+			// Not an admin notice: the promo is page content, emitted only by
+			// TeraWallet's own screens through their `woo_wallet_admin_page_header`
+			// hook. See show_promotions().
+			add_action( 'woo_wallet_admin_page_header', array( $this, 'show_promotions' ) );
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
 			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
@@ -360,30 +363,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		}
 
 		/**
-		 * Whether the current request is on one of this plugin's own screens.
-		 *
-		 * @since 1.6.11
-		 * @return bool
-		 */
-		protected function is_wallet_own_screen() {
-			if ( ! function_exists( 'get_current_screen' ) ) {
-				return false;
-			}
-			$screen = get_current_screen();
-			return $screen && in_array( $screen->id, $this->wallet_own_screen_ids(), true );
-		}
-
-		/**
 		 * Strip third-party admin notices from the Wallet Dashboard and Settings
 		 * screens — they are clean, self-contained layouts and license/upsell
 		 * nags from other plugins break them. Runs on `in_admin_header`, before
 		 * notices are output.
 		 *
-		 * Our own promo is re-attached afterwards: the point of this suppression
-		 * is to keep *other* plugins out of our layout, not to silence the
-		 * plugin's own contextual upsell on the screen an admin lands on first.
-		 * Between 1.6.6 and 1.6.10 it removed ours too, which left the default
-		 * landing screen with no upgrade path at all.
+		 * Our own surfaces are re-attached afterwards: the point of this
+		 * suppression is to keep *other* plugins out of our layout, not to
+		 * silence our own messages. The Pro promo is unaffected either way — it
+		 * is page content on `woo_wallet_admin_page_header`, not a notice.
 		 *
 		 * @return void
 		 */
@@ -396,7 +384,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				remove_all_actions( 'network_admin_notices' );
 
 				// Re-attach the plugin's own surfaces stripped by the calls above.
-				add_action( 'admin_notices', array( $this, 'show_promotions' ) );
 				add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			}
 		}
@@ -471,6 +458,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<h1 class="wp-heading-inline"><?php esc_html_e( 'Referral Report', 'woo-wallet' ); ?></h1>
 				<a href="<?php echo esc_url( $export_url ); ?>" class="page-title-action"><?php esc_html_e( 'Download CSV', 'woo-wallet' ); ?></a>
 				<hr class="wp-header-end" />
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<p>
 					<strong><?php esc_html_e( 'Summary:', 'woo-wallet' ); ?></strong>
 					<?php
@@ -706,6 +694,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Users wallet details', 'woo-wallet' ); ?></h2>
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<?php settings_errors(); ?>
 				<?php do_action( 'woo_wallet_before_balance_details_table' ); ?>
 				<?php $this->balance_details_table->views(); ?>
@@ -814,6 +803,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<p>
 				<?php
 				esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
@@ -1528,7 +1518,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			echo '</ul></div>';
 		}
 		/**
-		 * Show promotional message.
+		 * Render the Pro upgrade banner.
+		 *
+		 * Hooked to `woo_wallet_admin_page_header`, which only TeraWallet's own
+		 * admin pages fire — so this is page content on our own screens, not a
+		 * dashboard notice. That is what lets it be permanent: WordPress.org
+		 * guideline 11 requires *site-wide* notices to be dismissible, and this
+		 * is never rendered outside our own pages. It disappears on its own once
+		 * Pro is installed, which is the only exit condition it needs. The Go Pro
+		 * page does not fire the hook — it is itself the upsell.
 		 *
 		 * @return void
 		 */
@@ -1539,350 +1537,313 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( woo_wallet_is_pro_active() ) {
 				return;
 			}
-			if ( ! $this->is_wallet_own_screen() ) {
-				return;
-			}
-			if ( woo_wallet_is_promotion_dismissed() ) {
-				return;
-			}
-			$pro_url = woo_wallet_pro_url(
-				'admin-promo',
-				array(
-					'utm_medium'  => 'admin_promo',
-					'utm_site_id' => md5( home_url( '/' ) ),
-				)
-			);
+
+			$stats   = $this->promo_store_figures();
+			$pro_url = add_query_arg( array( 'page' => Woo_Wallet_Go_Pro_Page::MENU_SLUG ), admin_url( 'admin.php' ) );
 			?>
-			<div class="notice tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">
-				<button type="button" class="tw-pro-promo__dismiss" aria-label="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>" title="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>">
-					<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
-				</button>
+			<aside class="tw-promo" role="complementary" aria-labelledby="tw-promo-title">
+				<div class="tw-promo__pitch">
+					<p class="tw-promo__eyebrow"><?php esc_html_e( 'TeraWallet Pro', 'woo-wallet' ); ?></p>
 
-				<div class="tw-pro-promo__icon" aria-hidden="true">
-					<svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M20 7H5a2 2 0 0 1-2-2 2 2 0 0 1 2-2h14v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M3 5v14a2 2 0 0 0 2 2h16V7H5a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-						<circle cx="16.5" cy="14" r="1.5" fill="currentColor"/>
-					</svg>
-					<span class="tw-pro-promo__sparkle" aria-hidden="true">
-						<svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-							<path d="M12 2 L13.6 9.2 L21 10.8 L13.6 12.4 L12 22 L10.4 12.4 L3 10.8 L10.4 9.2 Z" fill="#fbbf24"/>
-						</svg>
-					</span>
+					<?php if ( $stats ) : ?>
+						<div class="tw-promo__statement">
+							<span class="tw-promo__figure"><?php echo esc_html( $stats['amount'] ); ?></span>
+							<span class="tw-promo__caption">
+								<?php
+								printf(
+									/* translators: %s: number of customers holding a positive wallet balance. */
+									esc_html( _n( 'Outstanding wallet credit · %s customer', 'Outstanding wallet credit · %s customers', $stats['wallets'], 'woo-wallet' ) ),
+									esc_html( number_format_i18n( $stats['wallets'] ) )
+								);
+								?>
+							</span>
+						</div>
+						<h2 class="tw-promo__title" id="tw-promo-title"><?php esc_html_e( 'Some of this will never be spent.', 'woo-wallet' ); ?></h2>
+						<p class="tw-promo__sub"><?php esc_html_e( 'Pro measures how much, reclaims it on a schedule, and lets the rest leave your store as real payouts.', 'woo-wallet' ); ?></p>
+					<?php else : ?>
+						<h2 class="tw-promo__title" id="tw-promo-title"><?php esc_html_e( 'Everything the wallet needs once customers actually use it.', 'woo-wallet' ); ?></h2>
+						<p class="tw-promo__sub"><?php esc_html_e( 'Money has to be able to leave the wallet, unspent credit has to be reclaimed, and someone will ask what the balance is really worth. Pro answers all three.', 'woo-wallet' ); ?></p>
+					<?php endif; ?>
 				</div>
 
-				<div class="tw-pro-promo__body">
-					<h2 class="tw-pro-promo__title">
-						<?php esc_html_e( 'Upgrade to TeraWallet Pro', 'woo-wallet' ); ?>
-						<span class="tw-pro-promo__tag"><?php esc_html_e( '5 add-ons · 1 plugin', 'woo-wallet' ); ?></span>
-					</h2>
-					<p class="tw-pro-promo__lede">
-						<?php esc_html_e( 'Everything you need to run a profitable wallet program — unified in one premium plugin. No more juggling separate add-ons.', 'woo-wallet' ); ?>
+				<ul class="tw-promo__ledger">
+					<li>
+						<span class="tw-promo__item"><?php esc_html_e( 'Withdrawals', 'woo-wallet' ); ?></span>
+						<span class="tw-promo__note"><?php esc_html_e( 'Customers cash out via PayPal, Stripe, BACS, Razorpay, Cashfree or Paystack, through an approval queue you control.', 'woo-wallet' ); ?></span>
+					</li>
+					<li>
+						<span class="tw-promo__item"><?php esc_html_e( 'Credit expiry', 'woo-wallet' ); ?></span>
+						<span class="tw-promo__note"><?php esc_html_e( 'Oldest credit spends first, reminder emails go out before it lapses, and a daily run clears what has expired.', 'woo-wallet' ); ?></span>
+					</li>
+					<li>
+						<span class="tw-promo__item"><?php esc_html_e( 'Breakage &amp; aging reports', 'woo-wallet' ); ?></span>
+						<span class="tw-promo__note"><?php esc_html_e( 'Unlocks the five locked report slots on your Wallet Dashboard, including the number your accountant asks for.', 'woo-wallet' ); ?></span>
+					</li>
+					<li class="tw-promo__rest">
+						<?php esc_html_e( 'Also: spend milestone and birthday bonuses, wallet coupons, bulk CSV import, AffiliateWP payouts.', 'woo-wallet' ); ?>
+					</li>
+				</ul>
+
+				<div class="tw-promo__act">
+					<p class="tw-promo__price">
+						<span class="tw-promo__amount"><?php echo esc_html( Woo_Wallet_Go_Pro_Page::PRICE ); ?></span>
+						<span class="tw-promo__term"><?php esc_html_e( 'per year, one site', 'woo-wallet' ); ?></span>
 					</p>
-					<ul class="tw-pro-promo__features">
-						<li>
-							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
-							<strong><?php esc_html_e( 'Withdrawals', 'woo-wallet' ); ?></strong>
-							<?php esc_html_e( '— let customers cash out via PayPal, Stripe, Razorpay, BACS & more', 'woo-wallet' ); ?>
-						</li>
-						<li>
-							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
-							<strong><?php esc_html_e( 'Credit Expiry', 'woo-wallet' ); ?></strong>
-							<?php esc_html_e( '— auto-expire unused balance to drive repeat purchases', 'woo-wallet' ); ?>
-						</li>
-						<li>
-							<span class="tw-pro-promo__check" aria-hidden="true">✓</span>
-							<strong><?php esc_html_e( 'Wallet Coupons', 'woo-wallet' ); ?></strong>
-							<?php esc_html_e( '— redeemable top-up codes for campaigns & promotions', 'woo-wallet' ); ?>
-						</li>
-					</ul>
-				</div>
-
-				<div class="tw-pro-promo__cta">
-					<div class="tw-pro-promo__price">
-						<span class="tw-pro-promo__price-amount">$79</span>
-						<span class="tw-pro-promo__price-period"><?php esc_html_e( '/ year', 'woo-wallet' ); ?></span>
-					</div>
-					<div class="tw-pro-promo__price-note"><?php esc_html_e( 'Bulk Import & AffiliateWP included', 'woo-wallet' ); ?></div>
-					<a href="<?php echo esc_url( $pro_url ); ?>" class="tw-pro-promo__btn" target="_blank" rel="noopener">
-						<?php esc_html_e( 'Upgrade to Pro', 'woo-wallet' ); ?>
-						<span aria-hidden="true">→</span>
+					<a class="tw-promo__btn" href="<?php echo esc_url( $pro_url ); ?>">
+						<?php esc_html_e( 'See what Pro adds', 'woo-wallet' ); ?>
 					</a>
-					<a href="<?php echo esc_url( $pro_url ); ?>" class="tw-pro-promo__link" target="_blank" rel="noopener"><?php esc_html_e( 'See all features', 'woo-wallet' ); ?></a>
+					<p class="tw-promo__reassure"><?php esc_html_e( '30-day money-back guarantee', 'woo-wallet' ); ?></p>
 				</div>
-			</div>
+			</aside>
 			<style>
-				.tw-pro-promo {
-					position: relative;
-					display: flex;
-					align-items: stretch;
-					gap: 24px;
-					margin: 16px 20px 16px 2px;
-					padding: 22px 28px;
-					border: 0 !important;
-					border-radius: 12px;
-					background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
-					box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.45), 0 4px 12px -4px rgba(124, 58, 237, 0.35);
-					color: #fff;
-					overflow: hidden;
+				.tw-promo {
+					--tw-promo-ink: #16191d;
+					--tw-promo-inset: #1e2329;
+					--tw-promo-line: rgba(255, 255, 255, 0.10);
+					--tw-promo-text: #f0f0f1;
+					--tw-promo-muted: #a7aaad;
+					--tw-promo-accent: #b183e0;
+					--tw-promo-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+					display: grid;
+					grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr) minmax(0, 0.5fr);
+					gap: 0;
+					margin: 16px 0 24px;
+					border: 1px solid var(--tw-promo-line);
+					border-radius: 6px;
+					background: var(--tw-promo-ink);
+					color: var(--tw-promo-text);
 					box-sizing: border-box;
+					overflow: hidden;
 				}
-				.tw-pro-promo::before {
-					content: '';
-					position: absolute;
-					top: -40%;
-					right: -10%;
-					width: 420px;
-					height: 420px;
-					background: radial-gradient(closest-side, rgba(255,255,255,0.14), rgba(255,255,255,0));
-					pointer-events: none;
-				}
-				.tw-pro-promo::after {
-					content: '';
-					position: absolute;
-					bottom: -60%;
-					left: -5%;
-					width: 380px;
-					height: 380px;
-					background: radial-gradient(closest-side, rgba(255,255,255,0.08), rgba(255,255,255,0));
-					pointer-events: none;
-				}
-				.tw-pro-promo > * { position: relative; z-index: 1; }
+				.tw-promo * { box-sizing: border-box; }
 
-				.tw-pro-promo__dismiss {
-					position: absolute;
-					top: 10px;
-					right: 12px;
-					background: transparent;
-					border: 0;
-					padding: 4px;
-					margin: 0;
-					color: rgba(255,255,255,0.75);
-					cursor: pointer;
-					border-radius: 4px;
-					transition: color 0.15s, background 0.15s;
-					line-height: 0;
-				}
-				.tw-pro-promo__dismiss:hover,
-				.tw-pro-promo__dismiss:focus {
-					color: #fff;
-					background: rgba(255,255,255,0.15);
-					outline: 0;
-				}
-				.tw-pro-promo__dismiss .dashicons { font-size: 18px; width: 18px; height: 18px; }
+				/*
+				 * The Settings screen mounts a deliberately full-bleed React app
+				 * inside a zero-padding flex `.wrap`, so the banner would sit hard
+				 * against the admin menu. Give it back the inset the other screens
+				 * inherit from their own `.wrap`.
+				 */
+				.woo-wallet-settings-page .tw-promo { margin: 16px 20px 24px; }
 
-				.tw-pro-promo__icon {
-					position: relative;
-					flex: 0 0 auto;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					width: 64px;
-					height: 64px;
-					margin-top: 18px;
-					background: rgba(255,255,255,0.15);
-					border: 1px solid rgba(255,255,255,0.25);
-					border-radius: 14px;
-					color: #fff;
-					backdrop-filter: blur(4px);
-					overflow: visible;
-				}
-				.tw-pro-promo__sparkle {
-					position: absolute;
-					top: -10px;
-					left: -10px;
-					width: 24px;
-					height: 24px;
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.55));
-					animation: tw-pro-promo-sparkle 2.4s ease-in-out infinite;
-					transform-origin: center;
-				}
-				@keyframes tw-pro-promo-sparkle {
-					0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
-					50% { transform: scale(1.15) rotate(12deg); opacity: 0.92; }
-				}
-				@media (prefers-reduced-motion: reduce) {
-					.tw-pro-promo__sparkle { animation: none; }
-				}
+				.tw-promo__pitch { padding: 24px 26px; min-width: 0; }
 
-				.tw-pro-promo__body {
-					flex: 1 1 auto;
-					min-width: 0;
-					padding-top: 14px;
-				}
-
-				.tw-pro-promo__title {
-					margin: 0 0 6px;
-					padding: 0;
-					color: #fff;
-					font-size: 20px;
-					font-weight: 700;
-					line-height: 1.3;
-					letter-spacing: -0.2px;
-				}
-				.tw-pro-promo__tag {
-					display: inline-block;
-					margin-left: 10px;
-					padding: 3px 10px;
+				.tw-promo__eyebrow {
+					margin: 0 0 18px;
+					font-family: var(--tw-promo-mono);
 					font-size: 11px;
 					font-weight: 600;
-					letter-spacing: 0.3px;
-					background: rgba(255,255,255,0.18);
-					border: 1px solid rgba(255,255,255,0.3);
-					border-radius: 12px;
-					vertical-align: middle;
-					white-space: nowrap;
+					letter-spacing: 0.14em;
+					text-transform: uppercase;
+					color: var(--tw-promo-accent);
 				}
 
-				.tw-pro-promo__lede {
-					margin: 0 0 12px;
-					color: rgba(255,255,255,0.92) !important;
-					font-size: 13.5px;
-					line-height: 1.55;
-					max-width: 620px;
+				/*
+				 * The signature: a balance-sheet line — the figure over a hairline
+				 * rule, set in tabular numerals so it reads as a real ledger entry.
+				 */
+				.tw-promo__statement {
+					display: block;
+					padding-bottom: 12px;
+					margin-bottom: 14px;
+					border-bottom: 1px solid var(--tw-promo-line);
+				}
+				.tw-promo__figure {
+					display: block;
+					font-family: var(--tw-promo-mono);
+					font-size: 34px;
+					font-weight: 600;
+					line-height: 1.1;
+					letter-spacing: -0.02em;
+					font-variant-numeric: tabular-nums;
+					font-feature-settings: "tnum" 1;
+					color: var(--tw-promo-text);
+				}
+				.tw-promo__caption {
+					display: block;
+					margin-top: 7px;
+					font-family: var(--tw-promo-mono);
+					font-size: 11px;
+					letter-spacing: 0.05em;
+					text-transform: uppercase;
+					color: var(--tw-promo-muted);
 				}
 
-				.tw-pro-promo__features {
-					margin: 0;
+				.tw-promo__title {
+					margin: 0 0 8px;
 					padding: 0;
-					list-style: none;
-					display: grid;
-					grid-template-columns: 1fr;
-					gap: 4px;
+					font-size: 20px;
+					font-weight: 600;
+					line-height: 1.3;
+					color: var(--tw-promo-text);
 				}
-				.tw-pro-promo__features li {
+				.tw-promo__sub {
 					margin: 0;
 					font-size: 13px;
-					line-height: 1.5;
-					color: rgba(255,255,255,0.95);
-				}
-				.tw-pro-promo__features strong { color: #fff; font-weight: 600; }
-				.tw-pro-promo__check {
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					width: 16px;
-					height: 16px;
-					margin-right: 8px;
-					background: rgba(255,255,255,0.2);
-					border-radius: 50%;
-					font-size: 10px;
-					font-weight: 700;
-					vertical-align: -2px;
+					line-height: 1.6;
+					color: var(--tw-promo-muted);
 				}
 
-				.tw-pro-promo__cta {
-					flex: 0 0 auto;
-					width: 200px;
+				.tw-promo__ledger {
+					margin: 0;
+					padding: 24px 26px;
+					list-style: none;
+					border-left: 1px solid var(--tw-promo-line);
+					min-width: 0;
+				}
+				.tw-promo__ledger li {
+					margin: 0 0 13px;
+					padding: 0 0 0 15px;
+					position: relative;
+					font-size: 13px;
+					line-height: 1.55;
+				}
+				.tw-promo__ledger li::before {
+					content: "";
+					position: absolute;
+					left: 0;
+					top: 9px;
+					width: 7px;
+					height: 1px;
+					background: var(--tw-promo-accent);
+				}
+				.tw-promo__ledger li:last-child { margin-bottom: 0; }
+				.tw-promo__item {
+					color: var(--tw-promo-text);
+					font-weight: 600;
+				}
+				.tw-promo__note {
+					color: var(--tw-promo-muted);
+				}
+				.tw-promo__note::before { content: " — "; }
+				.tw-promo__rest {
+					color: var(--tw-promo-muted);
+					padding-top: 13px !important;
+					border-top: 1px solid var(--tw-promo-line);
+					font-size: 12px !important;
+				}
+				.tw-promo__rest::before { display: none; }
+
+				.tw-promo__act {
+					padding: 24px 26px;
+					background: var(--tw-promo-inset);
+					border-left: 1px solid var(--tw-promo-line);
 					display: flex;
 					flex-direction: column;
-					align-items: stretch;
+					align-items: flex-start;
 					justify-content: center;
-					text-align: center;
-					padding: 8px 0;
+					min-width: 0;
 				}
-				.tw-pro-promo__price {
+				.tw-promo__price {
+					margin: 0 0 12px;
 					display: flex;
 					align-items: baseline;
-					justify-content: center;
-					gap: 4px;
-					margin-bottom: 2px;
-					color: #fff;
+					gap: 7px;
+					flex-wrap: wrap;
 				}
-				.tw-pro-promo__price-amount {
-					font-size: 34px;
-					font-weight: 800;
-					line-height: 1;
-					letter-spacing: -1px;
+				.tw-promo__amount {
+					font-family: var(--tw-promo-mono);
+					font-size: 26px;
+					font-weight: 600;
+					letter-spacing: -0.02em;
+					font-variant-numeric: tabular-nums;
+					color: var(--tw-promo-text);
 				}
-				.tw-pro-promo__price-period {
-					font-size: 13px;
-					font-weight: 500;
-					color: rgba(255,255,255,0.8);
-				}
-				.tw-pro-promo__price-note {
-					margin-bottom: 12px;
-					font-size: 11px;
-					color: rgba(255,255,255,0.75);
-					letter-spacing: 0.2px;
-				}
-				.tw-pro-promo__btn {
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					gap: 6px;
-					padding: 10px 18px;
-					background: #fff;
-					color: #4f46e5 !important;
-					font-size: 13.5px;
-					font-weight: 700;
-					text-decoration: none !important;
-					border-radius: 8px;
-					box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-					transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
-				}
-				.tw-pro-promo__btn:hover,
-				.tw-pro-promo__btn:focus {
-					transform: translateY(-1px);
-					box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-					background: #f9fafb;
-					color: #4338ca !important;
-					outline: 0;
-				}
-				.tw-pro-promo__btn:active { transform: translateY(0); }
-				.tw-pro-promo__link {
-					display: inline-block;
-					margin-top: 8px;
-					color: rgba(255,255,255,0.85) !important;
+				.tw-promo__term {
 					font-size: 12px;
-					text-decoration: underline;
-					text-underline-offset: 2px;
+					color: var(--tw-promo-muted);
 				}
-				.tw-pro-promo__link:hover,
-				.tw-pro-promo__link:focus { color: #fff !important; outline: 0; }
+				.tw-promo__btn {
+					display: inline-block;
+					padding: 9px 18px;
+					border-radius: 3px;
+					background: #7f54b3;
+					color: #fff !important;
+					font-size: 13px;
+					font-weight: 600;
+					text-decoration: none;
+					transition: background 0.15s ease;
+				}
+				.tw-promo__btn:hover { background: #6b449b; color: #fff !important; }
+				.tw-promo__btn:focus {
+					background: #6b449b;
+					color: #fff !important;
+					outline: 2px solid var(--tw-promo-accent);
+					outline-offset: 2px;
+					box-shadow: none;
+				}
+				.tw-promo__reassure {
+					margin: 11px 0 0;
+					font-size: 11px;
+					line-height: 1.5;
+					color: var(--tw-promo-muted);
+				}
 
-				@media screen and (max-width: 960px) {
-					.tw-pro-promo {
+				@media screen and (max-width: 1200px) {
+					.tw-promo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+					.tw-promo__act {
+						grid-column: 1 / -1;
+						border-left: 0;
+						border-top: 1px solid var(--tw-promo-line);
+						flex-direction: row;
+						align-items: center;
+						gap: 18px;
 						flex-wrap: wrap;
-						padding: 20px;
-						gap: 16px;
 					}
-					.tw-pro-promo__icon { margin-top: 22px; }
-					.tw-pro-promo__body { flex: 1 1 100%; order: 2; padding-top: 0; }
-					.tw-pro-promo__cta { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 14px; order: 3; text-align: left; }
-					.tw-pro-promo__price { margin-bottom: 0; }
-					.tw-pro-promo__price-note { margin-bottom: 0; flex: 1 1 auto; }
-					.tw-pro-promo__btn { padding: 9px 20px; }
-					.tw-pro-promo__link { margin-top: 0; width: 100%; }
+					.tw-promo__price { margin: 0; }
+					.tw-promo__reassure { margin: 0; }
 				}
-				@media screen and (max-width: 600px) {
-					.tw-pro-promo { padding: 18px; }
-					.tw-pro-promo__icon { display: none; }
-					.tw-pro-promo__title { font-size: 17px; }
-					.tw-pro-promo__tag { display: inline-block; margin-left: 0; margin-top: 6px; }
-					.tw-pro-promo__price-amount { font-size: 28px; }
+				@media screen and (max-width: 782px) {
+					.tw-promo { grid-template-columns: minmax(0, 1fr); }
+					.tw-promo__ledger {
+						border-left: 0;
+						border-top: 1px solid var(--tw-promo-line);
+					}
+					.tw-promo__pitch,
+					.tw-promo__ledger,
+					.tw-promo__act { padding: 20px; }
+					.tw-promo__figure { font-size: 30px; }
+					.tw-promo__title { font-size: 18px; }
+					.tw-promo__btn { width: 100%; text-align: center; }
 				}
 			</style>
-			<script type='text/javascript'>
-				jQuery(document).ready(function($){
-					$('body').on('click', '.tw-pro-promo .tw-pro-promo__dismiss', function(e) {
-						e.preventDefault();
-						var $banner = $(this).closest('.tw-pro-promo');
-						wp.ajax.send( 'woo-wallet-dismiss-promotional-notice', {
-							data: {
-								nonce: '<?php echo esc_attr( wp_create_nonce( 'woo_wallet_admin' ) ); ?>'
-							},
-							complete: function() {
-								$banner.fadeOut(200);
-							}
-						} );
-					});
-				});
-			</script>
 			<?php
+		}
+
+		/**
+		 * The store's own wallet figures, for the promo's opening line.
+		 *
+		 * Returns null unless the store carries enough wallet credit for the
+		 * number to be an argument rather than an embarrassment — a fresh install
+		 * told it is holding $0.00 across 0 wallets reads as a broken page. Shares
+		 * its threshold filter with the Wallet Dashboard nudge and the Go Pro
+		 * page, so a store tunes the figure once.
+		 *
+		 * `get_summary()` is transient-cached, so this costs nothing on repeat
+		 * page loads.
+		 *
+		 * @since 1.6.12
+		 * @return array{amount:string,wallets:int}|null
+		 */
+		private function promo_store_figures() {
+			require_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-reports-data.php';
+
+			$data      = new Woo_Wallet_Reports_Data();
+			$summary   = $data->get_summary();
+			$liability = isset( $summary['total_liability'] ) ? (float) $summary['total_liability'] : 0.0;
+			$wallets   = isset( $summary['positive_wallets'] ) ? (int) $summary['positive_wallets'] : 0;
+
+			/** This filter is documented in includes/admin/class-woo-wallet-reports.php */
+			$threshold = (float) apply_filters( 'woo_wallet_pro_liability_nudge_threshold', 1000.0 );
+
+			if ( $liability < $threshold || $wallets < 1 ) {
+				return null;
+			}
+
+			return array(
+				'amount'  => $data->format_amount( $liability ),
+				'wallets' => $wallets,
+			);
 		}
 	}
 
