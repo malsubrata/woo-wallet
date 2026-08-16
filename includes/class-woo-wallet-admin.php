@@ -91,7 +91,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_filter( 'woocommerce_order_actions', array( $this, 'woocommerce_order_actions' ) );
 			add_action( 'woocommerce_order_action_recalculate_order_cashback', array( $this, 'recalculate_order_cashback' ) );
 
-			add_action( 'admin_notices', array( $this, 'show_promotions' ) );
+			// Not an admin notice: the promo is page content, emitted only by
+			// TeraWallet's own screens through their `woo_wallet_admin_page_header`
+			// hook. See show_promotions().
+			add_action( 'woo_wallet_admin_page_header', array( $this, 'show_promotions' ) );
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
 			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
@@ -360,30 +363,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		}
 
 		/**
-		 * Whether the current request is on one of this plugin's own screens.
-		 *
-		 * @since 1.6.11
-		 * @return bool
-		 */
-		protected function is_wallet_own_screen() {
-			if ( ! function_exists( 'get_current_screen' ) ) {
-				return false;
-			}
-			$screen = get_current_screen();
-			return $screen && in_array( $screen->id, $this->wallet_own_screen_ids(), true );
-		}
-
-		/**
 		 * Strip third-party admin notices from the Wallet Dashboard and Settings
 		 * screens — they are clean, self-contained layouts and license/upsell
 		 * nags from other plugins break them. Runs on `in_admin_header`, before
 		 * notices are output.
 		 *
-		 * Our own promo is re-attached afterwards: the point of this suppression
-		 * is to keep *other* plugins out of our layout, not to silence the
-		 * plugin's own contextual upsell on the screen an admin lands on first.
-		 * Between 1.6.6 and 1.6.10 it removed ours too, which left the default
-		 * landing screen with no upgrade path at all.
+		 * Our own surfaces are re-attached afterwards: the point of this
+		 * suppression is to keep *other* plugins out of our layout, not to
+		 * silence our own messages. The Pro promo is unaffected either way — it
+		 * is page content on `woo_wallet_admin_page_header`, not a notice.
 		 *
 		 * @return void
 		 */
@@ -396,7 +384,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				remove_all_actions( 'network_admin_notices' );
 
 				// Re-attach the plugin's own surfaces stripped by the calls above.
-				add_action( 'admin_notices', array( $this, 'show_promotions' ) );
 				add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			}
 		}
@@ -471,6 +458,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<h1 class="wp-heading-inline"><?php esc_html_e( 'Referral Report', 'woo-wallet' ); ?></h1>
 				<a href="<?php echo esc_url( $export_url ); ?>" class="page-title-action"><?php esc_html_e( 'Download CSV', 'woo-wallet' ); ?></a>
 				<hr class="wp-header-end" />
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<p>
 					<strong><?php esc_html_e( 'Summary:', 'woo-wallet' ); ?></strong>
 					<?php
@@ -706,6 +694,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Users wallet details', 'woo-wallet' ); ?></h2>
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<?php settings_errors(); ?>
 				<?php do_action( 'woo_wallet_before_balance_details_table' ); ?>
 				<?php $this->balance_details_table->views(); ?>
@@ -814,6 +803,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<h2><?php esc_html_e( 'Transaction details', 'woo-wallet' ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<p>
 				<?php
 				esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
@@ -1528,7 +1518,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			echo '</ul></div>';
 		}
 		/**
-		 * Show promotional message.
+		 * Render the Pro upgrade banner.
+		 *
+		 * Hooked to `woo_wallet_admin_page_header`, which only TeraWallet's own
+		 * admin pages fire — so this is page content on our own screens, not a
+		 * dashboard notice. That is what lets it be permanent: WordPress.org
+		 * guideline 11 requires *site-wide* notices to be dismissible, and this
+		 * is never rendered outside our own pages. It disappears on its own once
+		 * Pro is installed, which is the only exit condition it needs. The Go Pro
+		 * page does not fire the hook — it is itself the upsell.
 		 *
 		 * @return void
 		 */
@@ -1539,12 +1537,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			if ( woo_wallet_is_pro_active() ) {
 				return;
 			}
-			if ( ! $this->is_wallet_own_screen() ) {
-				return;
-			}
-			if ( woo_wallet_is_promotion_dismissed() ) {
-				return;
-			}
 			$pro_url = woo_wallet_pro_url(
 				'admin-promo',
 				array(
@@ -1553,11 +1545,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				)
 			);
 			?>
-			<div class="notice tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">
-				<button type="button" class="tw-pro-promo__dismiss" aria-label="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>" title="<?php esc_attr_e( 'Dismiss', 'woo-wallet' ); ?>">
-					<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
-				</button>
-
+			<div class="tw-pro-promo" role="complementary" aria-label="<?php esc_attr_e( 'TeraWallet Pro upgrade offer', 'woo-wallet' ); ?>">
 				<div class="tw-pro-promo__icon" aria-hidden="true">
 					<svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path d="M20 7H5a2 2 0 0 1-2-2 2 2 0 0 1 2-2h14v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1617,9 +1605,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					display: flex;
 					align-items: stretch;
 					gap: 24px;
-					margin: 16px 20px 16px 2px;
+					margin: 16px 0 24px;
 					padding: 22px 28px;
-					border: 0 !important;
+					border: 0;
 					border-radius: 12px;
 					background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
 					box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.45), 0 4px 12px -4px rgba(124, 58, 237, 0.35);
@@ -1648,28 +1636,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					pointer-events: none;
 				}
 				.tw-pro-promo > * { position: relative; z-index: 1; }
-
-				.tw-pro-promo__dismiss {
-					position: absolute;
-					top: 10px;
-					right: 12px;
-					background: transparent;
-					border: 0;
-					padding: 4px;
-					margin: 0;
-					color: rgba(255,255,255,0.75);
-					cursor: pointer;
-					border-radius: 4px;
-					transition: color 0.15s, background 0.15s;
-					line-height: 0;
-				}
-				.tw-pro-promo__dismiss:hover,
-				.tw-pro-promo__dismiss:focus {
-					color: #fff;
-					background: rgba(255,255,255,0.15);
-					outline: 0;
-				}
-				.tw-pro-promo__dismiss .dashicons { font-size: 18px; width: 18px; height: 18px; }
 
 				.tw-pro-promo__icon {
 					position: relative;
@@ -1866,22 +1832,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					.tw-pro-promo__price-amount { font-size: 28px; }
 				}
 			</style>
-			<script type='text/javascript'>
-				jQuery(document).ready(function($){
-					$('body').on('click', '.tw-pro-promo .tw-pro-promo__dismiss', function(e) {
-						e.preventDefault();
-						var $banner = $(this).closest('.tw-pro-promo');
-						wp.ajax.send( 'woo-wallet-dismiss-promotional-notice', {
-							data: {
-								nonce: '<?php echo esc_attr( wp_create_nonce( 'woo_wallet_admin' ) ); ?>'
-							},
-							complete: function() {
-								$banner.fadeOut(200);
-							}
-						} );
-					});
-				});
-			</script>
 			<?php
 		}
 	}

@@ -43,7 +43,6 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			add_action( 'wp_ajax_woo-wallet-user-search', array( $this, 'woo_wallet_user_search' ) );
 			add_action( 'wp_ajax_woo_wallet_partial_payment_update_session', array( $this, 'woo_wallet_partial_payment_update_session' ) );
 			add_action( 'wp_ajax_woo_wallet_refund_partial_payment', array( $this, 'woo_wallet_refund_partial_payment' ) );
-			add_action( 'wp_ajax_woo-wallet-dismiss-promotional-notice', array( $this, 'woo_wallet_dismiss_promotional_notice' ) );
 			add_action( 'wp_ajax_draw_wallet_transaction_details_table', array( $this, 'draw_wallet_transaction_details_table' ) );
 
 			// NOTE: woocommerce_order_after_calculate_totals was removed in 1.6.1 (R4).
@@ -435,26 +434,6 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			}
 			wp_die();
 		}
-		/**
-		 * Dismiss wallet promotonal message.
-		 *
-		 * @return void
-		 */
-		public function woo_wallet_dismiss_promotional_notice() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_send_json_error( __( 'You have no permission to do that', 'woo-wallet' ) );
-			}
-
-			if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'woo_wallet_admin' ) ) {
-				wp_send_json_error( __( 'Invalid nonce', 'woo-wallet' ) );
-			}
-			// Permanent dismissal — the notice must not re-nag (WordPress.org
-			// guideline). Stored per-user since 1.6.11: permanent for whoever
-			// dismissed it, without silencing colleagues who never saw it.
-			woo_wallet_dismiss_promotion();
-			wp_send_json_success();
-		}
-
 		/**
 		 * Send wallet transaction AJAX response.
 		 */

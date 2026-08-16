@@ -800,7 +800,9 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 		 * Display plugin settings page — mounts the React settings app.
 		 */
 		public function plugin_page() {
-			echo '<div class="wrap"><div id="woo-wallet-settings-root"></div></div>';
+			echo '<div class="wrap">';
+			do_action( 'woo_wallet_admin_page_header' );
+			echo '<div id="woo-wallet-settings-root"></div></div>';
 		}
 
 		/**
