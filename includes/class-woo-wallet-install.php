@@ -55,17 +55,7 @@ class Woo_Wallet_Install {
 		'1.6.4'  => array(
 			'woo_wallet_update_164_flag_legacy_currency_normalize',
 		),
-		'1.6.11' => array(
-			'woo_wallet_update_1611_migrate_promotion_dismissal',
-		),
 	);
-	/**
-	 * Class constructor.
-	 */
-	public function __construct() {
-		self::update();
-	}
-
 	/**
 	 * Plugin install
 	 *
@@ -105,7 +95,7 @@ class Woo_Wallet_Install {
 		if ( $wpdb->has_cap( 'collation' ) ) {
 			$collate = $wpdb->get_charset_collate();
 		}
-		$tables = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_transactions (
+		$tables  = "CREATE TABLE IF NOT EXISTS {$wpdb->base_prefix}woo_wallet_transactions (
             transaction_id BIGINT UNSIGNED NOT NULL auto_increment,
             blog_id BIGINT UNSIGNED NOT NULL DEFAULT 1,
             user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -255,9 +245,25 @@ class Woo_Wallet_Install {
 	}
 
 	/**
-	 * Update plugin
+	 * Run any pending DB update callbacks.
+	 *
+	 * Hooked to `plugins_loaded` (priority 20) rather than executed at
+	 * plugin-include time. WordPress includes active plugins *before* it
+	 * requires `wp-includes/pluggable.php`, so at include time
+	 * `wp_get_current_user()`, `current_user_can()`, `wp_mail()`,
+	 * `wp_insert_user()` and the nonce functions do not exist yet — and
+	 * WooCommerce has not necessarily loaded either (`woo-wallet` sorts before
+	 * `woocommerce` in the plugin load order, so its autoloader may be absent).
+	 * A migration callback touching any of those fatalled on every request.
+	 *
+	 * By `plugins_loaded`:20 the pluggable functions are defined and
+	 * WooCommerce has finished loading, while everything downstream — notably
+	 * `Woo_Wallet::init()` on `init`:5, which reads the 1.6.4 normalization
+	 * flag — still sees a fully migrated schema.
+	 *
+	 * @since 1.6.12 Moved off plugin-include time onto `plugins_loaded`.
 	 */
-	private static function update() {
+	public static function update() {
 		$current_db_version = get_option( 'woo_wallet_db_version' );
 		if ( version_compare( WOO_WALLET_PLUGIN_VERSION, $current_db_version, '=' ) ) {
 			return;
@@ -282,5 +288,3 @@ class Woo_Wallet_Install {
 		add_option( 'woo_wallet_db_version', is_null( $version ) ? WOO_WALLET_PLUGIN_VERSION : $version );
 	}
 }
-
-new Woo_Wallet_Install();

@@ -150,6 +150,9 @@ final class Woo_Wallet {
 	 */
 	private function init_hooks() {
 		register_activation_hook( WOO_WALLET_PLUGIN_FILE, array( 'Woo_Wallet_Install', 'install' ) );
+		// Pending DB migrations run here, not at include time — see the docblock
+		// on Woo_Wallet_Install::update() for why.
+		add_action( 'plugins_loaded', array( 'Woo_Wallet_Install', 'update' ), 20 );
 		register_deactivation_hook( WOO_WALLET_PLUGIN_FILE, array( $this, 'deactivate_plugin' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );

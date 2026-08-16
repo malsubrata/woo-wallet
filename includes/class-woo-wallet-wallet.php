@@ -30,16 +30,31 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 * Class constructor.
 		 */
 		public function __construct() {
-			$this->user_id = get_current_user_id();
 		}
 
 		/**
 		 * Setter method
 		 *
+		 * The current-user fallback resolves lazily, on first use. This class is
+		 * instantiated while WordPress is still including plugin files — before
+		 * `wp-includes/pluggable.php` is loaded — so resolving it in the
+		 * constructor asked for `wp_get_current_user()` before it existed and
+		 * core's guard in `get_current_user_id()` silently returned 0. The
+		 * property was therefore pinned to 0 for the whole request, and a
+		 * `credit()`/`debit()` call that omitted the user id wrote to user 0
+		 * instead of the current user.
+		 *
+		 * @since 1.6.12 Resolve the current user lazily instead of in the constructor.
 		 * @param int $user_id User ID.
 		 */
 		private function set_user_id( $user_id = '' ) {
-			$this->user_id = $user_id ? intval( $user_id ) : $this->user_id;
+			if ( $user_id ) {
+				$this->user_id = intval( $user_id );
+				return;
+			}
+			if ( ! $this->user_id ) {
+				$this->user_id = get_current_user_id();
+			}
 		}
 
 		/**

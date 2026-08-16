@@ -141,7 +141,8 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.12 (Unreleased) =
-– **Tweak:-** Development in progress.
+– **Fix:-** A wallet credit or debit that did not name a user explicitly was applied to user ID 0 instead of the logged-in customer. The wallet object resolved "the current user" while WordPress was still including plugin files — before the function that answers that question exists — so it silently settled on 0 and kept that value for the whole request. It is now resolved at the moment it is needed. Only third-party code using the shorthand `credit()`/`debit()` form was affected; nothing in TeraWallet itself calls it that way, so no existing balances are wrong.
+– **Tweak:-** Pending database upgrades now run on `plugins_loaded` instead of while the plugin file is still being included. At the earlier point WordPress has not yet loaded its pluggable functions and WooCommerce may not have loaded at all, so an upgrade routine that needed either one would end the request with a fatal error. This has constrained what upgrade routines could safely do since 1.0.8; they can now use the full WordPress and WooCommerce API.
 
 = v1.6.11 (August 15, 2026) =
 – **Notice:-** The "Upgrade to Pro" promo no longer appears on admin screens that do not belong to TeraWallet. Until now it was attached to the global admin notice hook, so it rendered on every screen in wp-admin — including other plugins' pages, Posts and Settings. It is now confined to the TeraWallet menu and its subpages.
