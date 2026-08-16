@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.11
+Stable tag: 1.6.12
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -139,6 +139,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.12 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.11 (August 15, 2026) =
 – **Notice:-** The "Upgrade to Pro" promo no longer appears on admin screens that do not belong to TeraWallet. Until now it was attached to the global admin notice hook, so it rendered on every screen in wp-admin — including other plugins' pages, Posts and Settings. It is now confined to the TeraWallet menu and its subpages.
