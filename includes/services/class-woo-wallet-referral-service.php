@@ -396,7 +396,7 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 			$table = $wpdb->base_prefix . 'woo_wallet_referrals';
 			return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND type = %s AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )",
+					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND type = %s AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is built from $wpdb->base_prefix.
 					$referrer_id,
 					$type,
 					$period_seconds
@@ -607,7 +607,7 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 			$window = $period_seconds > 0 ? (int) $period_seconds : DAY_IN_SECONDS;
 			$count  = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND referred_user_id = %d AND type = 'visit' AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )",
+					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND referred_user_id = %d AND type = 'visit' AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is built from $wpdb->base_prefix.
 					(int) $referrer_id,
 					(int) $referred_user_id,
 					$window

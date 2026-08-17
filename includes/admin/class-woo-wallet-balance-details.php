@@ -152,7 +152,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		$role_links   = array();
 		$avail_roles  = array();
-		$all_text     = __( 'All' );
+		$all_text     = __( 'All', 'woo-wallet' );
 		$selcted_role = isset( $_REQUEST['role'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['role'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
 		if ( $count_users ) {
@@ -184,7 +184,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 			if ( $count_users ) {
 				$name = sprintf(
 					/* translators: 1: User role name, 2: Number of users. */
-					__( '%1$s <span class="count">(%2$s)</span>' ),
+					__( '%1$s <span class="count">(%2$s)</span>', 'woo-wallet' ),
 					$name,
 					number_format_i18n( $avail_roles[ $this_role ] )
 				);
@@ -199,10 +199,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 
 		if ( ! empty( $avail_roles['none'] ) ) {
 
-			$name = __( 'No role' );
+			$name = __( 'No role', 'woo-wallet' );
 			$name = sprintf(
 				/* translators: 1: User role name, 2: Number of users. */
-				__( '%1$s <span class="count">(%2$s)</span>' ),
+				__( '%1$s <span class="count">(%2$s)</span>', 'woo-wallet' ),
 				$name,
 				number_format_i18n( $avail_roles['none'] )
 			);

@@ -271,8 +271,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				printf(
 						/* translators: %s: wallet top-up */
 					esc_html__( '%s wallet top-up this month', 'woo-wallet' ),
-					'<strong>' . wc_price( $top_up_amount ) . '</strong>'
-				); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+					'<strong>' . wp_kses_post( wc_price( $top_up_amount ) ) . '</strong>'
+				);
 				?>
 					</a>
 				</li>

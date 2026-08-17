@@ -135,9 +135,9 @@ class Test_Referral_Service extends WP_UnitTestCase {
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
 		$action   = $this->make_action(
 			array(
-				'referrals__referring_visitors_amount'         => '5',
+				'referrals__referring_visitors_amount' => '5',
 				'referrals__referring_visitors_limit_duration' => '0',
-				'referrals__referring_visitors_description'    => 'Visit',
+				'referrals__referring_visitors_description' => 'Visit',
 			)
 		);
 
@@ -165,12 +165,14 @@ class Test_Referral_Service extends WP_UnitTestCase {
 	 * be written — a referral credit must never exist without its audit row.
 	 */
 	public function test_record_visit_does_not_credit_without_a_row() {
+		global $wpdb;
+		$suppress = $wpdb->suppress_errors( true );
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
 		$action   = $this->make_action(
 			array(
-				'referrals__referring_visitors_amount'         => '5',
+				'referrals__referring_visitors_amount' => '5',
 				'referrals__referring_visitors_limit_duration' => '0',
-				'referrals__referring_visitors_description'    => 'Visit',
+				'referrals__referring_visitors_description' => 'Visit',
 			)
 		);
 
@@ -186,6 +188,7 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			$this->count_credits( $referrer ),
 			'No wallet credit may happen when the referral row was not written.'
 		);
+		$wpdb->suppress_errors( $suppress );
 	}
 
 	/**
@@ -264,10 +267,10 @@ class Test_Referral_Service extends WP_UnitTestCase {
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
 		$action   = $this->make_action(
 			array(
-				'referrals__referring_visitors_amount'         => '5',
+				'referrals__referring_visitors_amount' => '5',
 				'referrals__referring_visitors_limit_duration' => 'day',
-				'referrals__referring_visitors_limit'          => '1',
-				'referrals__referring_visitors_description'    => 'Visit',
+				'referrals__referring_visitors_limit'  => '1',
+				'referrals__referring_visitors_description' => 'Visit',
 			)
 		);
 
@@ -320,9 +323,9 @@ class Test_Referral_Service extends WP_UnitTestCase {
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
 		$action   = $this->make_action(
 			array(
-				'referrals__referring_visitors_amount'         => '2',
+				'referrals__referring_visitors_amount' => '2',
 				'referrals__referring_visitors_limit_duration' => '0',
-				'referrals__referring_visitors_description'    => 'Visit',
+				'referrals__referring_visitors_description' => 'Visit',
 			)
 		);
 

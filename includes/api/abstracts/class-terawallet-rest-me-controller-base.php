@@ -87,9 +87,10 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Controller_Base' ) ) {
 		 * @return bool
 		 */
 		private static function is_consumer_key_request() {
-			if ( ! empty( $_SERVER['PHP_AUTH_USER'] ) && 0 === strpos( (string) $_SERVER['PHP_AUTH_USER'], 'ck_' ) ) {
+			if ( ! empty( $_SERVER['PHP_AUTH_USER'] ) && 0 === strpos( sanitize_text_field( wp_unslash( $_SERVER['PHP_AUTH_USER'] ) ), 'ck_' ) ) {
 				return true;
 			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- REST auth heuristic, presence check only.
 			if ( ! empty( $_GET['consumer_key'] ) || ! empty( $_GET['consumer_secret'] ) ) {
 				return true;
 			}

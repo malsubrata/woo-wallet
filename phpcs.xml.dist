@@ -39,7 +39,9 @@
 	     that was repeated in three separate prompt files. -->
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="woo-wallet"/>
+			<property name="text_domain" type="array">
+				<element value="woo-wallet"/>
+			</property>
 		</properties>
 	</rule>
 

@@ -170,7 +170,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 					do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response );
 					$order->save();
 				} else {
-					throw new Exception( __( 'Something went wrong with processing payment please try again.', 'woo-wallet' ) );
+					throw new Exception( esc_html__( 'Something went wrong with processing payment please try again.', 'woo-wallet' ) );
 				}
 			}
 		}
@@ -189,7 +189,7 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 			$refund_reason  = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
 			$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
 			if ( ! $transaction_id ) {
-				throw new Exception( __( 'Refund not credited to customer', 'woo-wallet' ) );
+				throw new Exception( esc_html__( 'Refund not credited to customer', 'woo-wallet' ) );
 			}
 			do_action( 'woo_wallet_order_refunded', $order, $amount, $transaction_id );
 			return true;
