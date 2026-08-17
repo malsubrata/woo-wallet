@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.6.12
+Stable tag: 1.6.13
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -139,6 +139,9 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 10. Wallet actions.
 
 == Changelog ==
+
+= v1.6.13 (Unreleased) =
+– **Tweak:-** Development in progress.
 
 = v1.6.12 (August 16, 2026) =
 – **Fix:-** A wallet credit or debit that did not name a user explicitly was applied to user ID 0 instead of the logged-in customer. The wallet object resolved "the current user" while WordPress was still including plugin files — before the function that answers that question exists — so it silently settled on 0 and kept that value for the whole request. It is now resolved at the moment it is needed. Only third-party code using the shorthand `credit()`/`debit()` form was affected; nothing in TeraWallet itself calls it that way, so no existing balances are wrong.
