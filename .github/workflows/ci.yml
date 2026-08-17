@@ -1,0 +1,205 @@
+name: CI
+
+on:
+  push:
+    branches: [master, 'release/**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }}, WP ${{ matrix.wp }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.0', '8.2', '8.3']
+        wp: ['latest']
+        include:
+          # Guard the declared floor: WordPress 6.4 is the minimum in the plugin header.
+          - php: '7.4'
+            wp: '6.4'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # bin/install-wp-tests.sh derives WP_CORE_DIR from <plugin>/../../.. so the plugin
+      # must sit at wp/wp-content/plugins/woo-wallet for the existing script to work
+      # unmodified. Keep this layout if you change anything here.
+      - name: Check out plugin into the WordPress plugin path
+        uses: actions/checkout@v4
+        with:
+          path: wp/wp-content/plugins/woo-wallet
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, zip, gd
+          coverage: none
+          tools: composer, wp-cli
+
+      - name: Install Composer dependencies
+        working-directory: wp/wp-content/plugins/woo-wallet
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Download WordPress core
+        working-directory: wp
+        run: wp core download --version=${{ matrix.wp }} --force --allow-root
+
+      - name: Create wp-config
+        working-directory: wp
+        run: |
+          wp config create \
+            --dbname=wordpress_test \
+            --dbuser=root \
+            --dbpass=root \
+            --dbhost=127.0.0.1:3306 \
+            --skip-check --allow-root
+
+      - name: Install WordPress
+        working-directory: wp
+        run: |
+          wp db create --allow-root || true
+          wp core install \
+            --url=http://example.org \
+            --title="TeraWallet CI" \
+            --admin_user=admin \
+            --admin_password=password \
+            --admin_email=ci@example.org \
+            --skip-email --allow-root
+
+      # tests/bootstrap.php requires WooCommerce as a sibling plugin directory.
+      - name: Install WooCommerce
+        working-directory: wp
+        run: wp plugin install woocommerce --activate --allow-root
+
+      - name: Provision the test database
+        working-directory: wp/wp-content/plugins/woo-wallet
+        run: bash bin/install-wp-tests.sh
+
+      - name: Run PHPUnit
+        working-directory: wp/wp-content/plugins/woo-wallet
+        run: composer test
+
+  phpcs:
+    name: PHPCS
+    runs-on: ubuntu-latest
+    # NOTE: non-blocking on first landing so the ruleset can be tuned against real output
+    # instead of red-lighting every PR on day one. Flip this to false once a full run is
+    # clean — an advisory linter that stays advisory forever is just noise.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+
+      - run: composer install --prefer-dist --no-interaction --no-progress
+
+      # Errors only. Warnings are surfaced locally via `composer lint`, not enforced here.
+      - run: vendor/bin/phpcs --warning-severity=0
+
+  assets:
+    name: Build & lint assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      # build/ is the only thing WordPress loads at runtime — a broken build is a broken
+      # release, so this is blocking.
+      - run: npm run build
+
+      - run: npm run lint:js
+      - run: npm run lint:css
+
+  invariants:
+    name: Repo invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version consistency across all four locations
+        run: |
+          header=$(grep -m1 '^ \* Version:' woo-wallet.php | sed -E 's/.*Version:[[:space:]]*//')
+          define=$(grep -m1 "define( 'WOO_WALLET_PLUGIN_VERSION'" woo-wallet.php | sed -E "s/.*,[[:space:]]*'([0-9.]+)'.*/\1/")
+          stable=$(grep -m1 '^Stable tag:' readme.txt | sed -E 's/.*Stable tag:[[:space:]]*//')
+          pkg=$(node -p "require('./package.json').version")
+          echo "header=$header define=$define stable=$stable package.json=$pkg"
+          if [ "$header" != "$define" ] || [ "$header" != "$stable" ] || [ "$header" != "$pkg" ]; then
+            echo "::error::Version mismatch across woo-wallet.php / readme.txt / package.json"
+            exit 1
+          fi
+
+      - name: No direct writes to the transactions table outside the wallet class
+        run: |
+          hits=$(grep -rnE "(INSERT INTO|UPDATE|DELETE FROM)[^;]*woo_wallet_transactions\b" \
+            --include='*.php' includes/ \
+            | grep -v 'includes/class-woo-wallet-wallet.php' \
+            | grep -v 'includes/class-woo-wallet-install.php' \
+            | grep -v 'includes/helper/woo-wallet-update-functions.php' || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo "::error::Ledger writes must go through Woo_Wallet_Wallet::credit/debit/transfer"
+            exit 1
+          fi
+
+      - name: uninstall.php drops every table install creates
+        run: |
+          created=$(grep -oE "CREATE TABLE (IF NOT EXISTS )?\{\\\$wpdb->base_prefix\}[a-z_]+" \
+            includes/class-woo-wallet-install.php | grep -oE '[a-z_]+$' | sort -u)
+          missing=""
+          for t in $created; do
+            grep -q "$t" uninstall.php || missing="$missing $t"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::uninstall.php does not drop:$missing"
+            exit 1
+          fi
+
+      # "WC tested up to" and the HPOS/Blocks FeaturesUtil declarations are deliberately
+      # NOT checked yet — both are claims about verified compatibility, and neither has
+      # been verified. Add them here once they are true.
+      - name: Required plugin headers are present
+        run: |
+          fail=0
+          for h in "Requires PHP" "Requires at least" "WC requires at least"; do
+            grep -q "$h:" woo-wallet.php || { echo "::error::Missing plugin header: $h"; fail=1; }
+          done
+          exit $fail
+
+      - name: Plugin header PHP floor matches readme.txt and composer.json
+        run: |
+          hdr=$(grep -m1 'Requires PHP:' woo-wallet.php | sed -E 's/.*Requires PHP:[[:space:]]*//')
+          rdm=$(grep -m1 '^Requires PHP:' readme.txt | sed -E 's/.*Requires PHP:[[:space:]]*//')
+          cmp=$(node -p "require('./composer.json').require.php.replace('>=','')")
+          echo "header=$hdr readme=$rdm composer=$cmp"
+          if [ "$hdr" != "$rdm" ] || [ "$hdr" != "$cmp" ]; then
+            echo "::error::PHP floor disagrees across woo-wallet.php / readme.txt / composer.json"
+            exit 1
+          fi

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<ruleset name="TeraWallet">
+	<description>
+		High-signal PHPCS ruleset for TeraWallet.
+
+		Deliberately NOT the full "WordPress" standard. On a 32k-LOC codebase with a long
+		legacy tail, enabling every formatting sniff at once produces thousands of warnings,
+		which gets the linter disabled within a week. This ruleset starts with the sniffs
+		that catch *defects* — security, SQL, i18n, PHP-version portability — and leaves
+		pure style for later.
+
+		To widen coverage once this run is clean, uncomment the WordPress-Extra block at the
+		bottom and work through it one directory at a time.
+	</description>
+
+	<file>.</file>
+
+	<exclude-pattern>/vendor/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/build/</exclude-pattern>
+	<exclude-pattern>/dist/</exclude-pattern>
+	<exclude-pattern>/languages/</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg name="basepath" value="."/>
+	<arg value="ps"/>
+	<arg name="parallel" value="8"/>
+
+	<!--
+		PHP version floor. This is the deterministic enforcement of the 7.4 floor declared in
+		readme.txt and composer.json — it replaces the (previously wrong, 5.6) prose rule that
+		lived in the agent prompts.
+	-->
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- Text domain correctness. Replaces the "text domain must be woo-wallet" instruction
+	     that was repeated in three separate prompt files. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array" value="woo-wallet"/>
+		</properties>
+	</rule>
+
+	<!-- SQL injection: $wpdb->prepare() usage, placeholder correctness, esc_like. -->
+	<rule ref="WordPress.DB.PreparedSQL"/>
+	<rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+
+	<!-- Output escaping, input sanitization, nonce verification. -->
+	<rule ref="WordPress.Security"/>
+
+	<!-- Dangerous / deprecated PHP and WP functions. -->
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions"/>
+	<rule ref="WordPress.WP.DeprecatedFunctions"/>
+	<rule ref="WordPress.WP.DeprecatedParameters"/>
+	<rule ref="WordPress.WP.AlternativeFunctions"/>
+
+	<rule ref="Generic.PHP.Syntax"/>
+
+	<!-- Tests exercise internals directly; escaping/nonce sniffs are noise there. -->
+	<rule ref="WordPress.Security">
+		<exclude-pattern>/tests/</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.DB.PreparedSQL">
+		<exclude-pattern>/tests/</exclude-pattern>
+	</rule>
+
+	<!--
+		PHASE 2 — uncomment when the above is clean:
+
+		<rule ref="WordPress-Extra">
+			<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+			<exclude name="Squiz.Commenting.FileComment.Missing"/>
+		</rule>
+		<rule ref="WordPress-Docs"/>
+	-->
+</ruleset>

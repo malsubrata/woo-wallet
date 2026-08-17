@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-TeraWallet (slug `woo-wallet`, formerly WooWallet) is a WooCommerce wallet plugin: digital ledger, top-ups via WooCommerce gateways, partial payments, cashback, peer-to-peer transfers, marketplace integrations. WordPress 6.4+, PHP ≥5.6, requires WooCommerce.
+TeraWallet (slug `woo-wallet`, formerly WooWallet) is a WooCommerce wallet plugin: digital ledger, top-ups via WooCommerce gateways, partial payments, cashback, peer-to-peer transfers, marketplace integrations. WordPress 6.4+, **PHP 7.4+**, requires WooCommerce.
+
+The PHP floor is **7.4** (`readme.txt` `Requires PHP`, `composer.json`). Write modern PHP 7.4:
+return types, scalar type hints, `??`, short array syntax. Match the surrounding file's style,
+but do not hand-cripple new code to an older floor.
 
 The plugin entry point is `woo-wallet.php`, which boots `Woo_Wallet::instance()` (singleton in `includes/class-woo-wallet.php`). Access the global instance with `woo_wallet()`.
 
@@ -21,7 +25,7 @@ npm run make-pot    # regenerate languages/woo-wallet.pot (requires WP-CLI)
 ```
 
 There **is** a PHP integration test suite (PHPUnit + the WordPress test
-framework), but **no CI config in-tree** — tests run locally only.
+framework), run locally and in CI (`.github/workflows/ci.yml`).
 
 ```bash
 composer install                  # install dev dependencies (PHPUnit, wp-phpunit)
@@ -32,10 +36,12 @@ composer test                     # run the suite
 Tests live in `tests/` (`tests/bootstrap.php` boots real WP + WooCommerce
 against a dedicated test database; cases are `tests/test-*.php`). Each test
 runs inside a rolled-back DB transaction, so the live site database is never
-mutated. The suite currently covers the ledger core (credit/debit/balance,
-transfer) and the earning-actions base-currency behaviour; extend it when you
-touch money-moving code. Don't claim "tests pass" without running `composer
-test` and reading the output.
+mutated. **96 tests across 16 files** currently cover the ledger core
+(credit/debit/balance, transfer, precision), idempotency, partial-payment
+debit timing / locked wallet / refunds / fee-tax blocking, the referral
+service, transaction categories, reports data and legacy currency
+normalisation. Extend it when you touch money-moving code. Don't claim "tests
+pass" without running `composer test` and reading the output.
 
 `build/` is gitignored but is the only thing WordPress loads at runtime. After editing anything in `src/`, run `npm run build` or the change won't show up.
 
@@ -57,9 +63,13 @@ Hot extension points: `woo_wallet_loaded`, `woo_wallet_init`, `woo_wallet_activa
 
 ### Ledger and concurrency (critical)
 
-Two custom tables, created/updated by `Woo_Wallet_Install` (`includes/class-woo-wallet-install.php`):
+**Three** custom tables, created/updated by `Woo_Wallet_Install` (`includes/class-woo-wallet-install.php`):
 - `{prefix}woo_wallet_transactions` — append-only credit/debit rows, balance is `SUM(credit − debit) WHERE deleted=0`. The `_current_woo_wallet_balance` user meta is a cache.
 - `{prefix}woo_wallet_transaction_meta`
+- `{prefix}woo_wallet_referrals` (`class-woo-wallet-install.php:157`)
+
+If you add or remove a table, update `uninstall.php` in the same change — it currently drops
+only the first two.
 
 Schema migrations are version-keyed in the `$db_updates` array (`class-woo-wallet-install.php:20`); the callbacks live in `includes/helper/woo-wallet-update-functions.php`. **When you bump `WOO_WALLET_PLUGIN_VERSION` and need a schema change, register both the version key and the callback.**
 
@@ -123,4 +133,16 @@ The admin settings page is a React app at `src/admin/settings/` (entry `index.js
 - Text domain is `woo-wallet`. Don't introduce a different domain.
 - Ledger writes must go through `Woo_Wallet_Wallet::credit/debit/transfer`. Don't write directly to `woo_wallet_transactions`.
 - `WOO_WALLET_PLUGIN_VERSION` lives in **both** `woo-wallet.php` (header + `define`) and is referenced by `Woo_Wallet_Install`. Bump together.
-- `package.json` `version` is independent of the PHP plugin version — historically lags behind. The PHP version is the source of truth for releases.
+- The version string lives in **four** places and they must always agree: `woo-wallet.php` header `Version:`, `woo-wallet.php` `WOO_WALLET_PLUGIN_VERSION`, `readme.txt` `Stable tag:`, `package.json` `version`. `/start-release` bumps all four; `/finish-release` verifies them.
+
+## Agents and commands
+
+Subagents live in `.claude/agents/`. All are **read-only** — they investigate and report;
+the main session makes every edit, so the diff stays visible to the developer.
+
+- `terawallet-feature-architect` — design docs for non-trivial features. No code.
+- `terawallet-security-auditor` — attacker-perspective audit of a diff or named files.
+- `wallet-ledger-auditor` — money-correctness only (locks, TOCTOU, precision, refund symmetry).
+
+Dispatch the two auditors **in parallel** on any diff touching REST/AJAX/caps/SQL or
+money paths. Release workflow: `/start-release` → `/finish-release` → `/build-dist`.

@@ -26,9 +26,14 @@ delete_option( '_woo_wallet_recharge_product' );
  * and to ensure only the site owner can perform this action.
  */
 if ( defined( 'WALLET_REMOVE_ALL_DATA' ) && true === WALLET_REMOVE_ALL_DATA ) {
-	// Tables.
+	// Tables. Must stay in sync with every CREATE TABLE in Woo_Wallet_Install — the
+	// "uninstall.php drops every table install creates" CI check enforces this.
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transactions" );
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_transaction_meta" );
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_referrals" );
+
+	// Delete the balance cache user meta — the ledger it mirrored no longer exists.
+	$wpdb->query( "DELETE FROM $wpdb->usermeta WHERE meta_key = '_current_woo_wallet_balance'" );
 
 	// Delete options.
 	$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_wallet\_%';" );
