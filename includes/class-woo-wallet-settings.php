@@ -495,6 +495,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Cashback Rule', 'woo-wallet' ),
 							'desc'    => __( 'Select Cashback Rule cart or product wise', 'woo-wallet' ),
 							'type'    => 'select',
+							'default' => 'cart',
 							'group'   => 'wallet_cashback',
 							'options' => apply_filters(
 								'woo_wallet_cashback_rules',
@@ -515,6 +516,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Cashback type', 'woo-wallet' ),
 							'desc'    => __( 'Select cashback type percentage or fixed', 'woo-wallet' ),
 							'type'    => 'select',
+							'default' => 'percent',
 							'group'   => 'wallet_cashback',
 							'options' => array(
 								'percent' => __( 'Percentage', 'woo-wallet' ),

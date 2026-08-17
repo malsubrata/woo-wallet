@@ -74,6 +74,35 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Hold a select field to the values it actually offers.
+	 *
+	 * The settings UI posts every field in a section, falling back to the
+	 * field's declared `default` for anything the admin never touched — so a
+	 * select with no `default` in its schema arrives as an empty string while
+	 * the browser displays its first option as though it were selected. An
+	 * enum field has no empty state, so an empty or unknown value is resolved
+	 * to the declared default rather than persisted.
+	 *
+	 * @param mixed $value Raw posted value.
+	 * @param array $field Field definition.
+	 * @return string
+	 */
+	public static function constrain_select_value( $value, array $field ): string {
+		$value   = sanitize_text_field( is_scalar( $value ) ? (string) $value : '' );
+		$options = array_map( 'strval', array_keys( (array) ( $field['options'] ?? array() ) ) );
+
+		if ( in_array( $value, $options, true ) ) {
+			return $value;
+		}
+
+		if ( isset( $field['default'] ) && is_scalar( $field['default'] ) ) {
+			return (string) $field['default'];
+		}
+
+		return isset( $options[0] ) ? $options[0] : '';
+	}
+
+	/**
 	 * Order statuses that trigger cashback, in the shape the rest of the
 	 * plugin speaks.
 	 *
