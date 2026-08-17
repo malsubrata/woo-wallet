@@ -42,7 +42,7 @@ jobs:
       # must sit at wp/wp-content/plugins/woo-wallet for the existing script to work
       # unmodified. Keep this layout if you change anything here.
       - name: Check out plugin into the WordPress plugin path
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: wp/wp-content/plugins/woo-wallet
 
@@ -105,7 +105,7 @@ jobs:
     # clean — an advisory linter that stays advisory forever is just noise.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -122,9 +122,9 @@ jobs:
     name: Build & lint assets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: npm
@@ -142,7 +142,7 @@ jobs:
     name: Repo invariants
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Version consistency across all four locations
         run: |
