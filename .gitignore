@@ -1,6 +1,5 @@
 # Grunt
 /node_modules/
-package-lock.json
 skills-lock.json
 
 # Sass
