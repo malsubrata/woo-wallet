@@ -12,12 +12,13 @@ skills-lock.json
 /dist/
 
 # Claude/AI
-.claude/*
-!.claude/commands/
-CLAUDE.md
-.agents
-
-docs
+# The shared agentic architecture (CLAUDE.md, .claude/{agents,skills,rules,hooks,commands},
+# docs/) IS version-controlled — it is project infrastructure, not local scratch.
+# Only per-developer and agent-generated state is ignored.
+.claude/agent-memory/
+.claude/settings.local.json
+.claude/.scratch/
+.agents/
 
 # PHP / Composer / tests
 /vendor/

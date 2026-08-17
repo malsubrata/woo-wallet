@@ -36,19 +36,23 @@ Review the full diff against the conventions in `CLAUDE.md`. Flag any of:
   `includes/helper/woo-wallet-update-functions.php`.
 - General WordPress/WooCommerce coding-standard issues, missing escaping/sanitization.
 
-## 4. Security review
+## 4. Security & ledger review
 
-Dispatch the **`terawallet-security-auditor`** agent (via the Agent tool) with the full
-diff and ask it to audit the release branch changes for security vulnerabilities.
+Dispatch the **`security-auditor`** agent (via the Agent tool) with the full diff and ask
+it to audit the release branch changes for security vulnerabilities.
 
-If the diff touches money-moving code — `includes/class-woo-wallet-wallet.php`,
-anything in `includes/services/`, or REST controllers that mutate balances — ALSO
-dispatch the **`wallet-ledger-auditor`** agent on the diff.
+If the diff touches money-moving code — `includes/class-woo-wallet-wallet.php`, anything
+in `includes/services/`, `includes/helper/woo-wallet-update-functions.php`, or REST
+controllers that mutate balances — ALSO dispatch the **`wallet-ledger-auditor`** agent on
+the diff. Dispatch both **in parallel**; they have separate remits and do not need each
+other's output.
 
-Collect every finding from these agents.
+Both agents are read-only. Collect every finding; do not let them apply fixes.
 
 ## 5. Build, lint & translations
 
+- `composer test` — the full PHPUnit suite MUST pass. Read the output; do not infer.
+- `composer lint` — PHPCS. Errors are blocking, warnings are not.
 - `npm run build` — this MUST complete with no errors.
 - `npm run lint:js` and `npm run lint:css` — report any warnings/errors (warnings are
   not blocking, errors are).
