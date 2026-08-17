@@ -19,6 +19,9 @@ skills-lock.json
 .claude/settings.local.json
 .claude/.scratch/
 .agents/
+# Generated agent/tool output — not project knowledge
+docs/superpowers/
+docs/QA_SETTINGS_EXTENSION.md
 
 # PHP / Composer / tests
 /vendor/
