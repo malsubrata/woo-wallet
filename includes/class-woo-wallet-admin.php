@@ -1364,7 +1364,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @since 1.6.1 Rewrote to use adjust_cashback() (R4).
 		 */
 		public function recalculate_order_cashback( $order ) {
-			$cashback_statuses = apply_filters( 'wallet_cashback_order_status', woo_wallet()->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) );
+			$cashback_statuses = WOO_Wallet_Helper::get_cashback_order_statuses();
 			if ( ! in_array( $order->get_status(), $cashback_statuses, true ) ) {
 				return;
 			}

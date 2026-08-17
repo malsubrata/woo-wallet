@@ -194,7 +194,7 @@ final class Woo_Wallet {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'maybe_debit_partial_payment_on_status' ) );
 		}
 
-		foreach ( apply_filters( 'wallet_cashback_order_status', $this->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) ) as $status ) {
+		foreach ( WOO_Wallet_Helper::get_cashback_order_statuses() as $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_cashback' ), 12 );
 		}
 

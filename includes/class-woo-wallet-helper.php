@@ -72,4 +72,57 @@ class WOO_Wallet_Helper {
 		}
 		return $order;
 	}
+
+	/**
+	 * Order statuses that trigger cashback, in the shape the rest of the
+	 * plugin speaks.
+	 *
+	 * The `process_cashback_status` setting offers `wc_get_order_statuses()`
+	 * as its options, whose keys are prefixed (`wc-processing`), while the
+	 * field default, the `woocommerce_order_status_{$status}` hook name and
+	 * `WC_Order::get_status()` are all unprefixed. A store that never saved
+	 * the setting therefore ran on the correct shape and a store that saved
+	 * it once did not. Both readers go through here so they cannot drift.
+	 *
+	 * The `wallet_cashback_order_status` filter keeps its existing contract:
+	 * it still receives the stored value and still decides the final list.
+	 * Normalisation runs after it, and is a no-op on unprefixed input.
+	 *
+	 * @return array Unprefixed order statuses.
+	 */
+	public static function get_cashback_order_statuses(): array {
+		$statuses = woo_wallet()->settings_api->get_option(
+			'process_cashback_status',
+			'_wallet_settings_credit',
+			array( 'processing', 'completed' )
+		);
+
+		return self::normalize_order_statuses( apply_filters( 'wallet_cashback_order_status', $statuses ) );
+	}
+
+	/**
+	 * Drop WooCommerce's `wc-` status prefix.
+	 *
+	 * Anchored and applied once: a status slug that legitimately contains
+	 * `wc-` further along keeps it, and `wc-wc-shipped` becomes `wc-shipped`.
+	 *
+	 * @param mixed $statuses Order statuses, in either shape. A scalar from a
+	 *                        third-party filter is tolerated.
+	 * @return array Unprefixed, de-duplicated order statuses.
+	 */
+	public static function normalize_order_statuses( $statuses ): array {
+		$normalized = array();
+
+		foreach ( (array) $statuses as $status ) {
+			if ( ! is_scalar( $status ) ) {
+				continue;
+			}
+			$status = preg_replace( '/^wc-/', '', (string) $status );
+			if ( '' !== $status && ! in_array( $status, $normalized, true ) ) {
+				$normalized[] = $status;
+			}
+		}
+
+		return $normalized;
+	}
 }
