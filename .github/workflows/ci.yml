@@ -52,7 +52,17 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mysqli, zip, gd
           coverage: none
-          tools: composer, wp-cli
+          tools: composer
+
+      # Installed directly rather than via setup-php's `tools:` list — that path warns
+      # instead of failing when it cannot install, so a missing `wp` only surfaced six
+      # steps later. The `wp --info` call makes failure land here instead.
+      - name: Install WP-CLI
+        run: |
+          curl -sSL -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+          wp --info --allow-root
 
       - name: Install Composer dependencies
         working-directory: wp/wp-content/plugins/woo-wallet
@@ -127,9 +137,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-          cache: npm
+          # No `cache: npm` and no `npm ci`: package-lock.json is gitignored, so there is
+          # no lockfile to cache against or install from. This makes every CI build resolve
+          # fresh dependency versions — a transitive update can break the build with no
+          # code change. Commit package-lock.json and switch this to `cache: npm` + `npm ci`
+          # when you want reproducible builds.
 
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
 
       # build/ is the only thing WordPress loads at runtime — a broken build is a broken
       # release, so this is blocking.
