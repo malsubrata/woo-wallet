@@ -25,6 +25,7 @@ wp-tests-config.php
 /.git/
 /.github/
 /.claude/
+/.codex/
 /.agents/
 /docs/
 /.playwright-mcp/
@@ -32,6 +33,7 @@ wp-tests-config.php
 .distignore
 skills-lock.json
 CLAUDE.md
+AGENTS.md
 
 # Repo docs not shipped to WordPress.org (readme.txt is the canonical user-facing doc)
 README.md
