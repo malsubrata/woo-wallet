@@ -290,9 +290,10 @@ class TeraWallet_CSV_Exporter {
 	 * @return void
 	 */
 	public function write_csv_header() {
-		$file  = $this->get_file();
-		$file .= $this->export_column_headers();
-		@file_put_contents( $this->get_file_path(), $file );
+		// Step 1 starts the file: truncate so a leftover file from an earlier
+		// export under the same name cannot be appended to.
+		@file_put_contents( $this->get_file_path(), $this->export_column_headers() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+		@chmod( $this->get_file_path(), 0664 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_chmod, Generic.PHP.NoSilencedErrors.Discouraged
 	}
 	/**
 	 * Get records count to export
@@ -302,7 +303,7 @@ class TeraWallet_CSV_Exporter {
 	public function get_tota_record_count() {
 		global $wpdb;
 		if ( 'transactions' === $this->get_export_type() ) {
-			$where  = '1 = 1';
+			$where  = '1 = 1 AND transactions.deleted = 0';
 			$params = array();
 			if ( ! empty( $this->selected_users ) ) {
 				$placeholders = implode( ', ', array_fill( 0, count( $this->selected_users ), '%d' ) );
@@ -339,7 +340,7 @@ class TeraWallet_CSV_Exporter {
 	public function get_records() {
 		global $wpdb;
 		if ( 'transactions' === $this->get_export_type() ) {
-			$where  = '1 = 1';
+			$where  = '1 = 1 AND transactions.deleted = 0';
 			$params = array();
 			if ( ! empty( $this->selected_users ) ) {
 				$placeholders = implode( ', ', array_fill( 0, count( $this->selected_users ), '%d' ) );
@@ -355,12 +356,14 @@ class TeraWallet_CSV_Exporter {
 				$params[] = $after;
 				$params[] = $before;
 			}
+			// Ascending: importers replay the CSV row by row through credit()/debit(),
+			// so credits must land before the debits that consumed them.
 			$offset   = absint( $this->per_page * ( $this->get_step() - 1 ) );
 			$per_page = absint( $this->per_page );
 			$params[] = $offset;
 			$params[] = $per_page;
 			$sql      = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
-				"SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where} ORDER BY transactions.transaction_id DESC LIMIT %d, %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT * FROM {$wpdb->base_prefix}woo_wallet_transactions AS transactions WHERE {$where} ORDER BY transactions.transaction_id ASC LIMIT %d, %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				...$params
 			);
 			return $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
@@ -412,12 +415,16 @@ class TeraWallet_CSV_Exporter {
 	 */
 	protected function export_rows() {
 		$records = $this->get_records();
+		$rows    = '';
 		foreach ( $records as $record ) {
-			$file            = $this->get_file();
 			$record['email'] = ! isset( $record['email'] ) ? get_userdata( $record['user_id'] )->user_email : $record['email'];
 			$record          = apply_filters( 'terawallet_transaction_export_row', $record );
-			$file           .= $this->export_row( $record );
-			@file_put_contents( $this->get_file_path(), $file );
+			$rows           .= $this->export_row( $record );
+		}
+		if ( '' !== $rows ) {
+			// One append per step. Rewriting the whole file per row made a large
+			// export quadratic in its own size.
+			@file_put_contents( $this->get_file_path(), $rows, FILE_APPEND ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 		$this->set_step( $this->get_step() + 1 );
 	}
