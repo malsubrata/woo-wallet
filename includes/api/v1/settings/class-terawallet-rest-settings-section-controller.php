@@ -136,6 +136,8 @@ class TeraWallet_REST_Settings_Section_Controller extends TeraWallet_REST_Settin
 				$sanitized[ $skey ] = is_numeric( $value ) ? $value : '';
 			} elseif ( 'attachment' === $type ) {
 				$sanitized[ $skey ] = absint( $value );
+			} elseif ( 'select' === $type && empty( $field['multiple'] ) && ! empty( $field['options'] ) ) {
+				$sanitized[ $skey ] = WOO_Wallet_Helper::constrain_select_value( $value, $field );
 			} elseif ( is_array( $value ) ) {
 				$sanitized[ $skey ] = array_map( 'sanitize_text_field', array_map( 'strval', $value ) );
 			} else {

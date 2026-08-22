@@ -82,6 +82,15 @@ class TeraWallet_REST_Settings_V1_Controller extends TeraWallet_REST_Settings_Co
 			$values[ $option_name ] = get_option( $option_name, array() );
 		}
 
+		// Stores that saved the cashback statuses before the option keys were
+		// unprefixed hold `wc-processing`; hand React the normalised shape so
+		// the selection still matches an option and re-saving heals the row.
+		if ( isset( $values['_wallet_settings_credit']['process_cashback_status'] ) ) {
+			$values['_wallet_settings_credit']['process_cashback_status'] = WOO_Wallet_Helper::normalize_order_statuses(
+				$values['_wallet_settings_credit']['process_cashback_status']
+			);
+		}
+
 		// Action checkbox fields persist as 'yes'/'no'; flip to 'on'/'off' for React.
 		if ( isset( $values['_wallet_settings_actions'] ) && is_array( $values['_wallet_settings_actions'] ) ) {
 			$values['_wallet_settings_actions'] = $settings_obj->prepare_actions_values_for_react( $values['_wallet_settings_actions'] );

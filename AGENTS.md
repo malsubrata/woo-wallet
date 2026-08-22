@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## What this is
 
@@ -137,13 +137,12 @@ The admin settings page is a React app at `src/admin/settings/` (entry `index.js
 
 ## Agents and commands
 
-Subagents live in `.claude/agents/`. All are **read-only** — they investigate and report;
+Subagents live in `.Codex/agents/`. All are **read-only** — they investigate and report;
 the main session makes every edit, so the diff stays visible to the developer.
 
 - `terawallet-feature-architect` — design docs for non-trivial features. No code.
 - `terawallet-security-auditor` — attacker-perspective audit of a diff or named files.
 - `wallet-ledger-auditor` — money-correctness only (locks, TOCTOU, precision, refund symmetry).
-- `terawallet-changelog-writer` — short, user-facing changelog copy + Upgrade Notice for a release.
 
 Dispatch the two auditors **in parallel** on any diff touching REST/AJAX/caps/SQL or
 money paths. Release workflow: `/start-release` → `/finish-release` → `/build-dist`.

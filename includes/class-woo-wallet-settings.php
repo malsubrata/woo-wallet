@@ -407,6 +407,19 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				'equals' => 'on',
 			);
 
+			// Offer the order statuses under the unprefixed keys the rest of
+			// the plugin uses — wc_get_order_statuses() returns them prefixed
+			// (`wc-processing`), and a saved prefix matches no hook and no
+			// WC_Order::get_status(). Built in one pass so a status whose
+			// normalised slug collides with another simply overwrites it.
+			$order_status_options = array();
+			foreach ( wc_get_order_statuses() as $order_status => $order_status_label ) {
+				$normalized = WOO_Wallet_Helper::normalize_order_statuses( array( $order_status ) );
+				if ( $normalized ) {
+					$order_status_options[ $normalized[0] ] = $order_status_label;
+				}
+			}
+
 			// Per-currency ledger mode is gated by a filter through PR2 — when the
 			// flag flips on, this field appears under General Options and admins can
 			// switch the storage semantics. Surfaced as an empty array otherwise so
@@ -458,7 +471,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'group'    => 'wallet_cashback',
 							'options'  => apply_filters(
 								'woo_wallet_process_cashback_status',
-								wc_get_order_statuses()
+								$order_status_options
 							),
 							'default'  => array( 'processing', 'completed' ),
 							'size'     => 'regular-text wc-enhanced-select',
@@ -482,6 +495,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Cashback Rule', 'woo-wallet' ),
 							'desc'    => __( 'Select Cashback Rule cart or product wise', 'woo-wallet' ),
 							'type'    => 'select',
+							'default' => 'cart',
 							'group'   => 'wallet_cashback',
 							'options' => apply_filters(
 								'woo_wallet_cashback_rules',
@@ -502,6 +516,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Cashback type', 'woo-wallet' ),
 							'desc'    => __( 'Select cashback type percentage or fixed', 'woo-wallet' ),
 							'type'    => 'select',
+							'default' => 'percent',
 							'group'   => 'wallet_cashback',
 							'options' => array(
 								'percent' => __( 'Percentage', 'woo-wallet' ),

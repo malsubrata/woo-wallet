@@ -93,9 +93,65 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				} else {
 					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				}
+				$raw_balance          = (float) $this->wallet_balance;
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
+				$this->wallet_balance = $this->clamp_to_ledger( $this->wallet_balance, $raw_balance, $balance_currency, $mode );
 			}
 			return 'view' === $context ? wc_price( $this->wallet_balance, woo_wallet_wc_price_args( $this->user_id, array( 'currency' => $balance_currency ) ) ) : $this->floor_to_price_decimals( $this->wallet_balance );
+		}
+
+		/**
+		 * Cap a filtered balance at what the ledger will actually release.
+		 *
+		 * `woo_wallet_current_balance` lets third parties (credit-expiry,
+		 * redeemed-totals, marketplace plugins) recompute the advertised balance
+		 * from columns they maintain themselves. The debit gate in
+		 * `recode_transaction()` deliberately ignores that filter and uses the raw
+		 * ledger SUM (see the comment there — filtering inside the lock reopens a
+		 * TOCTOU window). So a filter that drifts *upward* creates a balance the
+		 * store advertises but can never debit: checkout applies a wallet
+		 * partial-payment fee larger than the gate allows, the debit is refused and
+		 * the order is forced to on-hold. Observed in the wild with the Pro
+		 * credit-expire module, where unallocated debit remainders are discarded
+		 * and the lot total permanently exceeds the ledger.
+		 *
+		 * Capping here keeps the two authorities reconciled for every filter, not
+		 * just the one that surfaced the bug. Filters that report *less* than the
+		 * ledger (expiry, holds, reserved funds) are untouched — under-reporting is
+		 * always safe. Stores that intentionally permit overdraft turn the gate off
+		 * via `woo_wallet_disallow_negative_transaction`; the same signal turns off
+		 * this cap, so the two can never disagree.
+		 *
+		 * @since 1.6.13
+		 * @param float  $balance          Filtered balance.
+		 * @param float  $raw_balance      Raw ledger SUM, denominated per $mode.
+		 * @param string $balance_currency Currency the filtered balance is in.
+		 * @param string $mode             Currency mode.
+		 * @return float
+		 */
+		private function clamp_to_ledger( $balance, $raw_balance, $balance_currency, $mode ) {
+			$cap = (float) $raw_balance;
+
+			// In single_base mode the raw SUM is in base while the filter may have
+			// converted its answer to the active currency (that is what the
+			// multicurrency shim does). Convert the cap the same way before comparing.
+			if ( 'per_currency' !== $mode && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				$base = $this->resolve_base_currency();
+				if ( '' !== $balance_currency && $balance_currency !== $base ) {
+					$cap = (float) Woo_Wallet_Currency_Manager::instance()->convert( $cap, $base, $balance_currency );
+				}
+			}
+
+			if ( (float) $balance <= $cap ) {
+				return (float) $balance;
+			}
+
+			// Overdraft deliberately enabled store-wide: leave the filter's answer alone.
+			if ( ! apply_filters( 'woo_wallet_disallow_negative_transaction', true, (float) $balance, $cap ) ) {
+				return (float) $balance;
+			}
+
+			return $cap;
 		}
 
 		/**
@@ -683,9 +739,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				} else {
 					// Debit refused (locked wallet, or balance spent before payment
 					// cleared). Hold the order for review rather than undercharging.
-					$fail_note = is_wallet_account_locked( $locked_order->get_customer_id() )
-						? __( 'Wallet partial payment could not be debited (wallet is locked). Held for review. ', 'woo-wallet' )
-						: __( 'Wallet partial payment could not be debited (insufficient balance). Held for review. ', 'woo-wallet' );
+					// Only claim "insufficient balance" when the balance really is short.
+					// debit() also returns false on a lock timeout, a failed insert or a
+					// guest order, and blaming the customer's balance for those sends
+					// support down the wrong path.
+					if ( is_wallet_account_locked( $locked_order->get_customer_id() ) ) {
+						$fail_note = __( 'Wallet partial payment could not be debited (wallet is locked). Held for review. ', 'woo-wallet' );
+					} elseif ( $this->get_wallet_balance( $locked_order->get_customer_id(), 'edit' ) < $partial_payment_amount ) {
+						$fail_note = __( 'Wallet partial payment could not be debited (insufficient balance). Held for review. ', 'woo-wallet' );
+					} else {
+						$fail_note = __( 'Wallet partial payment could not be debited (the wallet refused the transaction). Held for review. ', 'woo-wallet' );
+					}
 					$locked_order->update_status( 'on-hold', $fail_note );
 					do_action( 'woo_wallet_partial_payment_debit_failed', $locked_order, $partial_payment_amount );
 				}

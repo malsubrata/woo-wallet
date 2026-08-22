@@ -8,7 +8,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-wp_enqueue_script( 'selectWoo' );
 wp_enqueue_script( 'terawallet-exporter-script' );
 $exporter = new TeraWallet_CSV_Exporter();
 ?>
@@ -19,22 +18,26 @@ $exporter = new TeraWallet_CSV_Exporter();
 			<header>
 				<span class="spinner is-active"></span>
 				<h2><?php esc_html_e( 'Export transactions to a CSV file', 'woo-wallet' ); ?></h2>
-				<p><?php esc_html_e( 'This tool allows you to generate and download a CSV file containing a list of all transactions.', 'woo-wallet' ); ?></p>
+				<p><?php esc_html_e( 'Generate and download a CSV file of wallet balances or transactions. Large stores are exported in batches, so keep this page open until the download starts.', 'woo-wallet' ); ?></p>
 			</header>
 			<section>
 				<table class="form-table woocommerce-exporter-options">
 					<tbody>
 						<tr>
 							<th scope="row">
-								<label for="terawallet-exporter-type"><?php esc_html_e( 'Wallet balance only?', 'woo-wallet' ); ?></label>
+								<?php esc_html_e( 'Export type', 'woo-wallet' ); ?>
 							</th>
 							<td>
-								<input type="checkbox" <?php checked( true ); ?> name="terawallet-exporter-type" id="terawallet-exporter-type" class="terawallet-exporter-type" value="1">
+								<label for="terawallet-exporter-type">
+									<input type="checkbox" <?php checked( true ); ?> name="terawallet-exporter-type" id="terawallet-exporter-type" class="terawallet-exporter-type" value="1">
+									<?php esc_html_e( 'Export current wallet balances only', 'woo-wallet' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'Uncheck to export individual transaction rows with the filters below.', 'woo-wallet' ); ?></p>
 							</td>
 						</tr>
 						<tr class="export-transaction-settings-fields">
 							<th scope="row">
-								<label for="terawallet-exporter-columns"><?php esc_html_e( 'Which columns should be exported?', 'woo-wallet' ); ?></label>
+								<label for="terawallet-exporter-columns"><?php esc_html_e( 'Columns', 'woo-wallet' ); ?></label>
 							</th>
 							<td>
 								<select id="terawallet-exporter-columns" name="terawallet-exporter-columns" class="terawallet-exporter-columns wc-enhanced-select" style="width:100%;" multiple data-placeholder="<?php esc_attr_e( 'Export all columns', 'woo-wallet' ); ?>">
@@ -44,14 +47,16 @@ $exporter = new TeraWallet_CSV_Exporter();
 									}
 									?>
 								</select>
+								<p class="description"><?php esc_html_e( 'Leave empty to export every column.', 'woo-wallet' ); ?></p>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="terawallet-exporter-users"><?php esc_html_e( 'Which users should be exported?', 'woo-wallet' ); ?></label>
+								<label for="terawallet-exporter-users"><?php esc_html_e( 'Users', 'woo-wallet' ); ?></label>
 							</th>
 							<td>
 								<select id="terawallet-exporter-users" name="terawallet-exporter-users" class="terawallet-exporter-users" style="width:100%;" multiple data-placeholder="<?php esc_attr_e( 'Export all users', 'woo-wallet' ); ?>"></select>
+								<p class="description"><?php esc_html_e( 'Search by name or email. Leave empty to export every user.', 'woo-wallet' ); ?></p>
 							</td>
 						</tr>
 						<tr class="export-transaction-settings-fields">
@@ -59,7 +64,7 @@ $exporter = new TeraWallet_CSV_Exporter();
 								<label for="terawallet-exporter-from-date"><?php esc_html_e( 'From date', 'woo-wallet' ); ?></label>
 							</th>
 							<td>
-								<input type="date" id="terawallet-exporter-from-date" name="terawallet-exporter-from-date" style="width: 100%" class="terawallet-exporter-from-date" />
+								<input type="date" id="terawallet-exporter-from-date" name="terawallet-exporter-from-date" class="terawallet-exporter-from-date" />
 							</td>
 						</tr>
 						<tr class="export-transaction-settings-fields">
@@ -67,12 +72,12 @@ $exporter = new TeraWallet_CSV_Exporter();
 								<label for="terawallet-exporter-to-date"><?php esc_html_e( 'To date', 'woo-wallet' ); ?></label>
 							</th>
 							<td>
-								<input type="date" id="terawallet-exporter-to-date" name="terawallet-exporter-to-date" style="width: 100%" class="terawallet-exporter-to-date" />
+								<input type="date" id="terawallet-exporter-to-date" name="terawallet-exporter-to-date" class="terawallet-exporter-to-date" />
 							</td>
 						</tr>
 					</tbody>
 				</table>
-				<progress class="terawallet-exporter-progress" max="100" value="50"></progress>
+				<progress class="terawallet-exporter-progress" max="100" value="0"></progress>
 			</section>
 			<div class="tw-actions">
 				<button type="submit" class="terawallet-exporter-button button button-primary" value="<?php esc_attr_e( 'Generate CSV', 'woo-wallet' ); ?>"><?php esc_html_e( 'Generate CSV', 'woo-wallet' ); ?></button>

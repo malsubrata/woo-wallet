@@ -73,17 +73,42 @@ If they disagree, STOP and report the mismatch.
 
 ## 7. Changelog check & sync to changelog.txt
 
+### 7a. Write the user-facing changelog
+
+Dispatch the **`terawallet-changelog-writer`** agent over this release's work:
+
+> Write the changelog block and Upgrade Notice for TeraWallet v<version>.
+> Commit range: `master..release/<version>`. Release date: <today, Month D, YYYY>.
+
+Replace the accumulated development bullets in `readme.txt`'s `= v<version> ... =` entry
+with the block it returns, and replace the `== Upgrade Notice ==` entry with its notice.
+Review its output before pasting — you own the wording, it drafts it. If it reports
+things it deliberately left out and one of them is genuinely user-visible, add it in the
+same style rather than reverting to a long entry.
+
+`readme.txt` must contain **only** this one version's entry, followed by the
+`[See changelog for all versions](...)` archive link. If older entries are present,
+`/start-release` did not reset them — move them to `changelog.txt` (if not already there)
+and remove them here.
+
+### 7b. Date and sync
+
 In `readme.txt`, find the `= v<version> ... =` changelog entry:
 - It must contain real entries — if it still only has the
-  `– **Tweak:-** Development in progress.` placeholder, STOP and tell the user to write
-  the changelog before finishing.
+  `Development in progress.` placeholder, STOP and tell the user to write the changelog
+  before finishing.
 - Replace `(Unreleased)` in the header with today's date in `Month D, YYYY` format
   (e.g. `(May 20, 2026)`).
+- The Upgrade Notice body for this version must be **300 characters or fewer** — check it.
+- Check `du -b readme.txt`. WordPress.org advises staying near 10 KB; the changelog
+  section is the part that must not grow. If the changelog section alone
+  (`awk '/== Changelog ==/,/== Upgrade Notice ==/' readme.txt | wc -c`) is over ~2500
+  bytes, it was not reset or the entries are too long — fix that before continuing.
 
 Then mirror that finalized entry into `changelog.txt` (the standalone changelog archive):
 - Read the full, now-dated `= v<version> (Month D, YYYY) =` block from `readme.txt`
-  (the header line plus every `– **...** ...` bullet, up to but not including the next
-  `= v... =` header).
+  (the header line plus every `* ...` bullet, up to but not including the archive link
+  or the next `= v... =` header).
 - If `changelog.txt` already contains a `= v<version> ` block, STOP and report — it has
   already been synced; do not duplicate it.
 - Otherwise insert the copied block at the TOP of the changelog list in `changelog.txt`,

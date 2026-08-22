@@ -293,6 +293,12 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Download generated export CSV file.
 		 */
 		public function download_export_file() {
+			// Runs on admin_init, so it is reachable from every wp-admin request by
+			// any logged-in user. The nonce alone does not establish that the caller
+			// may read the whole ledger — check the capability before streaming it.
+			if ( ! current_user_can( get_wallet_user_capability() ) ) {
+				return;
+			}
 			if ( isset( $_GET['action'], $_GET['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'terawallet-transaction-csv' ) && 'download_export_csv' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 				$exporter = new TeraWallet_CSV_Exporter();
 				if ( ! empty( $_GET['filename'] ) ) {
@@ -608,7 +614,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			// Add RTL support.
 			wp_style_add_data( 'terawallet-exporter-style', 'rtl', 'replace' );
 			// register exporter scripts.
-			wp_register_script( 'terawallet-exporter-script', woo_wallet()->plugin_url() . '/build/admin/export.js', array( 'jquery' ), WOO_WALLET_PLUGIN_VERSION, true );
+			wp_register_script( 'terawallet-exporter-script', woo_wallet()->plugin_url() . '/build/admin/export.js', array( 'jquery', 'selectWoo', 'wc-enhanced-select' ), WOO_WALLET_PLUGIN_VERSION, true );
 			wp_localize_script(
 				'terawallet-exporter-script',
 				'terawallet_export_params',
@@ -696,7 +702,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				<h2><?php esc_html_e( 'Users wallet details', 'woo-wallet' ); ?></h2>
 				<?php do_action( 'woo_wallet_admin_page_header' ); ?>
 				<?php settings_errors(); ?>
-				<?php do_action( 'woo_wallet_before_balance_details_table' ); ?>
+				<div class="tw-wallet-users-actions">
+					<?php do_action( 'woo_wallet_before_balance_details_table' ); ?>
+					<p>
+						<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'terawallet-exporter' ), admin_url( 'admin.php' ) ) ); ?>" class="button">
+							<span style="vertical-align:middle;line-height:0.8;" class="dashicons dashicons-download" aria-hidden="true"></span>
+							<?php esc_html_e( 'Export', 'woo-wallet' ); ?>
+						</a>
+					</p>
+				</div>
 				<?php $this->balance_details_table->views(); ?>
 				<form id="posts-filter" method="post">
 					<?php $this->balance_details_table->search_box( __( 'Search Users', 'woo-wallet' ), 'search_id' ); ?>
@@ -1364,7 +1378,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @since 1.6.1 Rewrote to use adjust_cashback() (R4).
 		 */
 		public function recalculate_order_cashback( $order ) {
-			$cashback_statuses = apply_filters( 'wallet_cashback_order_status', woo_wallet()->settings_api->get_option( 'process_cashback_status', '_wallet_settings_credit', array( 'processing', 'completed' ) ) );
+			$cashback_statuses = WOO_Wallet_Helper::get_cashback_order_statuses();
 			if ( ! in_array( $order->get_status(), $cashback_statuses, true ) ) {
 				return;
 			}

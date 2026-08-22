@@ -47,16 +47,41 @@ Edit each of these so the version string reads `<version>`:
 
 ## 6. Add a changelog stub
 
-In `readme.txt`, find the `== Changelog ==` section and insert a new entry **directly
-above the most recent existing version entry**, matching the existing format exactly:
+WordPress.org's readme guidance is to keep **only the current release** in `readme.txt`
+and leave the full history in `changelog.txt` (a readme over 10 KB can fail to parse).
+`readme.txt` already links to the archive, so this step *resets* both sections rather
+than appending to them.
+
+**Guard first.** For every `= v<x.y.z> ... =` block currently in `readme.txt`'s changelog,
+confirm a matching `= v<x.y.z> ` block exists in `changelog.txt`. If any is missing,
+STOP and tell the user — `/finish-release` step 7 was skipped for that version and
+removing it here would lose it.
+
+Then replace the entire `== Changelog ==` section of `readme.txt` (everything from the
+`== Changelog ==` line up to, but not including, `== Upgrade Notice ==`) with exactly:
 
 ```
+== Changelog ==
+
 = v<version> (Unreleased) =
-– **Tweak:-** Development in progress.
+* Tweak - Development in progress.
+
+[See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
+
 ```
 
-(Note the en-dash `–` bullet prefix and the `**Category:-**` style used by existing
-entries — categories are `Security`, `New`, `Fix`, `Tweak`.)
+And replace the entire `== Upgrade Notice ==` section with a single stub entry:
+
+```
+== Upgrade Notice ==
+
+= <version> =
+Development in progress.
+```
+
+Bullets use the standard WordPress form `* Category - Sentence.` — categories are
+`Security`, `New`, `Fix`, `Tweak`, `Performance`. (Entries before v1.6.13 in
+`changelog.txt` use an older `– **Category:-**` style; leave those alone.)
 
 ## 7. Commit and push
 
@@ -70,5 +95,8 @@ Tell the user:
 - The previous version and the new version (from → to).
 - The branch name `release/<version>` (created locally and pushed to GitHub).
 - A reminder to do all feature development on this branch and to replace the
-  `Development in progress.` changelog placeholder with real entries before finishing.
+  `Development in progress.` changelog and upgrade-notice placeholders before finishing.
+- That older changelog entries were removed from `readme.txt` and now live only in
+  `changelog.txt`, plus the resulting `readme.txt` size (`du -b readme.txt`) — it should
+  be well under 10 KB.
 - That they should run `/finish-release` from this branch when the release is ready.
