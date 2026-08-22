@@ -358,7 +358,7 @@ if ( ! function_exists( 'get_order_partial_payment_amount' ) ) {
 	 * Get total partial payment amount from an order.
 	 *
 	 * @param Int $order_id order_id.
-	 * @return Number
+	 * @return float
 	 */
 	function get_order_partial_payment_amount( $order_id ) {
 		$via_wallet = 0;
