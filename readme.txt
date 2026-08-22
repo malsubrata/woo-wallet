@@ -140,20 +140,21 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.13 (Unreleased) =
-* Fix - Cashback is credited again on stores that had saved the settings page. No need to re-save, and the "Recalculate cashback" order action works again too.
+= v1.6.13 (August 22, 2026) =
+* Security - The wallet CSV export and download now require the wallet management capability, not just a valid request token.
+* Fix - Cashback is credited again on stores that had saved the settings page. No need to re-save; the "Recalculate cashback" order action works again too.
 * Fix - The cashback type and cashback rule settings can no longer be saved as empty.
 * Fix - Wallet partial payment is no longer refused at checkout when an add-on reports a balance higher than the wallet actually holds.
 * Fix - Transaction CSV exports are now written oldest-first, so a store importing them rebuilds the ledger in the order it happened. Re-export any file you plan to import.
 * Fix - Deleted transactions are no longer included in a CSV export or its record count.
 * Fix - The order note for a failed wallet partial payment no longer blames the customer's balance when that was not the cause.
-* Performance - Large transaction exports are considerably faster and no longer risk timing out.
 * Tweak - Refreshed the Wallet Export screen and added an Export button to the Wallet Users screen.
-* Tweak - Tested against WordPress 7.1. No changes were needed for the iframed post editor.
+* Tweak - Confirmed compatibility with WordPress 7.1.
+* Performance - Large transaction exports are considerably faster and no longer risk timing out.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.6.13 =
-Restores cashback crediting on stores that had saved the settings page, fixes wallet partial payments being refused at checkout, and corrects transaction CSV exports so they can be imported safely. Recommended for all sites.
+Fixes cashback not crediting after saving settings, wallet partial payment being wrongly refused, and CSV exports importing in the wrong order. Re-export any CSV file you plan to import; no other action needed.

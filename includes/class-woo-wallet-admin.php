@@ -293,6 +293,12 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Download generated export CSV file.
 		 */
 		public function download_export_file() {
+			// Runs on admin_init, so it is reachable from every wp-admin request by
+			// any logged-in user. The nonce alone does not establish that the caller
+			// may read the whole ledger — check the capability before streaming it.
+			if ( ! current_user_can( get_wallet_user_capability() ) ) {
+				return;
+			}
 			if ( isset( $_GET['action'], $_GET['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'terawallet-transaction-csv' ) && 'download_export_csv' === sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 				$exporter = new TeraWallet_CSV_Exporter();
 				if ( ! empty( $_GET['filename'] ) ) {

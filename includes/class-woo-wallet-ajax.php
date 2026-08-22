@@ -101,6 +101,12 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 */
 		public function terawallet_do_ajax_transaction_export() {
 			check_ajax_referer( 'terawallet-exporter-script', 'security' );
+			// A nonce proves the request came from this user's session, not that the
+			// user may read other people's ledgers — this handler dumps every
+			// transaction or every balance, so it needs the capability too.
+			if ( ! current_user_can( get_wallet_user_capability() ) ) {
+				wp_die( -1 );
+			}
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			$step = isset( $_POST['step'] ) ? absint( $_POST['step'] ) : 1;
 

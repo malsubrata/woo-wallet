@@ -1,4 +1,16 @@
 *** Changelog ***
+= v1.6.13 (August 22, 2026) =
+* Security - The wallet CSV export and download now require the wallet management capability, not just a valid request token.
+* Fix - Cashback is credited again on stores that had saved the settings page. No need to re-save; the "Recalculate cashback" order action works again too.
+* Fix - The cashback type and cashback rule settings can no longer be saved as empty.
+* Fix - Wallet partial payment is no longer refused at checkout when an add-on reports a balance higher than the wallet actually holds.
+* Fix - Transaction CSV exports are now written oldest-first, so a store importing them rebuilds the ledger in the order it happened. Re-export any file you plan to import.
+* Fix - Deleted transactions are no longer included in a CSV export or its record count.
+* Fix - The order note for a failed wallet partial payment no longer blames the customer's balance when that was not the cause.
+* Tweak - Refreshed the Wallet Export screen and added an Export button to the Wallet Users screen.
+* Tweak - Confirmed compatibility with WordPress 7.1.
+* Performance - Large transaction exports are considerably faster and no longer risk timing out.
+
 = v1.6.12 (August 16, 2026) =
 – **Fix:-** A wallet credit or debit that did not name a user explicitly was applied to user ID 0 instead of the logged-in customer. The wallet object resolved "the current user" while WordPress was still including plugin files — before the function that answers that question exists — so it silently settled on 0 and kept that value for the whole request. It is now resolved at the moment it is needed. Only third-party code using the shorthand `credit()`/`debit()` form was affected; nothing in TeraWallet itself calls it that way, so no existing balances are wrong.
 – **Tweak:-** The "Upgrade to Pro" banner is no longer an admin notice. It was attached to the `admin_notices` hook and filtered down to TeraWallet's screens from inside the callback; it is now ordinary page content, emitted by TeraWallet's own admin pages through a new `woo_wallet_admin_page_header` action. It cannot reach the wider dashboard by any route, and third-party code can attach its own output to TeraWallet pages through the same hook.
