@@ -15,29 +15,34 @@ import '../scss/reports.scss';
 ( function () {
 	'use strict';
 
-	var params = window.wooWalletReports || {};
-	var reduceMotion =
-		window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+	const params = window.wooWalletReports || {};
+	const reduceMotion =
+		window.matchMedia &&
+		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 
 	/**
 	 * Format a number as a price string using the localized WooCommerce
 	 * format params, so count-up matches the server-rendered figure exactly.
+	 * @param value
 	 */
 	function formatCurrency( value ) {
-		var p = params.price || {};
-		var decimals = typeof p.decimals === 'number' ? p.decimals : 2;
-		var fixed = Math.abs( value ).toFixed( decimals );
-		var parts = fixed.split( '.' );
-		parts[ 0 ] = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, p.thousand || ',' );
-		var num = parts.join( p.decimal || '.' );
-		var formatted = ( p.format || '%1$s%2$s' )
+		const p = params.price || {};
+		const decimals = typeof p.decimals === 'number' ? p.decimals : 2;
+		const fixed = Math.abs( value ).toFixed( decimals );
+		const parts = fixed.split( '.' );
+		parts[ 0 ] = parts[ 0 ].replace(
+			/\B(?=(\d{3})+(?!\d))/g,
+			p.thousand || ','
+		);
+		const num = parts.join( p.decimal || '.' );
+		const formatted = ( p.format || '%1$s%2$s' )
 			.replace( '%1$s', p.symbol || '' )
 			.replace( '%2$s', num );
 		return ( value < 0 ? '-' : '' ) + formatted;
 	}
 
 	function formatInt( value ) {
-		var p = params.price || {};
+		const p = params.price || {};
 		return Math.round( value )
 			.toString()
 			.replace( /\B(?=(\d{3})+(?!\d))/g, p.thousand || ',' );
@@ -49,21 +54,25 @@ import '../scss/reports.scss';
 			: formatCurrency( value );
 	}
 
-	/** Animate one element from 0 (or its current shown value) to data-raw. */
+	/**
+	 * Animate one element from 0 (or its current shown value) to data-raw.
+	 * @param el
+	 * @param to
+	 */
 	function countUp( el, to ) {
 		if ( reduceMotion ) {
 			el.textContent = formatValue( el, to );
 			return;
 		}
-		var from = 0;
-		var start = null;
-		var dur = 700;
+		const from = 0;
+		let start = null;
+		const dur = 700;
 		function tick( ts ) {
 			if ( start === null ) {
 				start = ts;
 			}
-			var t = Math.min( 1, ( ts - start ) / dur );
-			var eased = 1 - Math.pow( 1 - t, 3 );
+			const t = Math.min( 1, ( ts - start ) / dur );
+			const eased = 1 - Math.pow( 1 - t, 3 );
 			el.textContent = formatValue( el, from + ( to - from ) * eased );
 			if ( t < 1 ) {
 				window.requestAnimationFrame( tick );
@@ -73,14 +82,14 @@ import '../scss/reports.scss';
 	}
 
 	function animateAllFigures( root ) {
-		var figs = root.querySelectorAll( '[data-raw]' );
+		const figs = root.querySelectorAll( '[data-raw]' );
 		Array.prototype.forEach.call( figs, function ( el ) {
 			countUp( el, parseFloat( el.getAttribute( 'data-raw' ) ) || 0 );
 		} );
 	}
 
 	function reveal( root ) {
-		var items = root.querySelectorAll( '.twr-reveal' );
+		const items = root.querySelectorAll( '.twr-reveal' );
 		Array.prototype.forEach.call( items, function ( el, i ) {
 			window.setTimeout(
 				function () {
@@ -91,28 +100,37 @@ import '../scss/reports.scss';
 		} );
 	}
 
-	/** Link composition bar segments and legend rows by data-slug. */
+	/**
+	 * Link composition bar segments and legend rows by data-slug.
+	 * @param root
+	 */
 	function wireComposition( root ) {
-		var bar = root.querySelector( '.twr-bar' );
+		const bar = root.querySelector( '.twr-bar' );
 		if ( ! bar ) {
 			return;
 		}
-		var segs = bar.querySelectorAll( '.twr-bar__seg' );
-		var legend = root.querySelectorAll( '.twr-legend__item' );
+		const segs = bar.querySelectorAll( '.twr-bar__seg' );
+		const legend = root.querySelectorAll( '.twr-legend__item' );
 
 		function setActive( slug, on ) {
 			[].forEach.call( segs, function ( s ) {
-				s.classList.toggle( 'is-active', on && s.getAttribute( 'data-slug' ) === slug );
+				s.classList.toggle(
+					'is-active',
+					on && s.getAttribute( 'data-slug' ) === slug
+				);
 			} );
 			[].forEach.call( legend, function ( l ) {
-				l.classList.toggle( 'is-active', on && l.getAttribute( 'data-slug' ) === slug );
+				l.classList.toggle(
+					'is-active',
+					on && l.getAttribute( 'data-slug' ) === slug
+				);
 			} );
 			bar.classList.toggle( 'has-dim', on );
 		}
 
 		function bind( nodes ) {
 			[].forEach.call( nodes, function ( n ) {
-				var slug = n.getAttribute( 'data-slug' );
+				const slug = n.getAttribute( 'data-slug' );
 				n.addEventListener( 'mouseenter', function () {
 					setActive( slug, true );
 				} );
@@ -125,13 +143,16 @@ import '../scss/reports.scss';
 		bind( legend );
 	}
 
-	/** Re-pull the summary from REST and update figures + bar live. */
+	/**
+	 * Re-pull the summary from REST and update figures + bar live.
+	 * @param root
+	 */
 	function wireRefresh( root ) {
-		var btn = root.querySelector( '.twr-refresh' );
+		const btn = root.querySelector( '.twr-refresh' );
 		if ( ! btn || ! params.restUrl ) {
 			return;
 		}
-		var updated = root.querySelector( '[data-updated] time' );
+		const updated = root.querySelector( '[data-updated] time' );
 
 		btn.addEventListener( 'click', function () {
 			btn.classList.add( 'is-busy' );
@@ -141,7 +162,11 @@ import '../scss/reports.scss';
 			// the same URL is served from the browser/proxy HTTP cache otherwise,
 			// so the refresh returns stale numbers. ponytail: timestamp + no-store
 			// covers both browser disk cache and upstream proxies.
-			var url = params.restUrl + ( params.restUrl.indexOf( '?' ) === -1 ? '?' : '&' ) + 'nocache=1&_=' + Date.now();
+			const url =
+				params.restUrl +
+				( params.restUrl.indexOf( '?' ) === -1 ? '?' : '&' ) +
+				'nocache=1&_=' +
+				Date.now();
 
 			window
 				.fetch( url, {
@@ -155,7 +180,9 @@ import '../scss/reports.scss';
 				.then( function ( data ) {
 					applySummary( root, data );
 					if ( updated ) {
-						updated.textContent = params.i18n ? params.i18n.justNow : 'just now';
+						updated.textContent = params.i18n
+							? params.i18n.justNow
+							: 'just now';
 					}
 				} )
 				.catch( function () {
@@ -168,35 +195,53 @@ import '../scss/reports.scss';
 		} );
 	}
 
-	/** Push a fresh REST payload into the DOM. */
+	/**
+	 * Push a fresh REST payload into the DOM.
+	 * @param root
+	 * @param data
+	 */
 	function applySummary( root, data ) {
-		[ 'total_liability', 'positive_wallets', 'lifetime_credited', 'lifetime_debited' ].forEach(
-			function ( field ) {
-				if ( typeof data[ field ] === 'undefined' ) {
-					return;
-				}
-				var el = root.querySelector( '[data-field="' + field + '"]' );
-				if ( el ) {
-					el.setAttribute( 'data-raw', data[ field ] );
-					countUp( el, parseFloat( data[ field ] ) || 0 );
-				}
+		[
+			'total_liability',
+			'positive_wallets',
+			'lifetime_credited',
+			'lifetime_debited',
+		].forEach( function ( field ) {
+			if ( typeof data[ field ] === 'undefined' ) {
+				return;
 			}
-		);
+			const el = root.querySelector( '[data-field="' + field + '"]' );
+			if ( el ) {
+				el.setAttribute( 'data-raw', data[ field ] );
+				countUp( el, parseFloat( data[ field ] ) || 0 );
+			}
+		} );
 
 		// Update composition bar widths + legend amounts for known slugs.
 		if ( Array.isArray( data.composition ) ) {
-			var positive = data.composition.filter( function ( c ) {
+			const positive = data.composition.filter( function ( c ) {
 				return parseFloat( c.amount ) > 0;
 			} );
-			var total = positive.reduce( function ( s, c ) {
+			const total = positive.reduce( function ( s, c ) {
 				return s + parseFloat( c.amount );
 			}, 0 );
 			data.composition.forEach( function ( c ) {
-				var seg = root.querySelector( '.twr-bar__seg[data-slug="' + c.slug + '"]' );
+				const seg = root.querySelector(
+					'.twr-bar__seg[data-slug="' + c.slug + '"]'
+				);
 				if ( seg && total > 0 && parseFloat( c.amount ) > 0 ) {
-					seg.style.setProperty( '--w', ( ( parseFloat( c.amount ) / total ) * 100 ).toFixed( 2 ) + '%' );
+					seg.style.setProperty(
+						'--w',
+						( ( parseFloat( c.amount ) / total ) * 100 ).toFixed(
+							2
+						) + '%'
+					);
 				}
-				var amt = root.querySelector( '.twr-legend__item[data-slug="' + c.slug + '"] .twr-legend__amt' );
+				const amt = root.querySelector(
+					'.twr-legend__item[data-slug="' +
+						c.slug +
+						'"] .twr-legend__amt'
+				);
 				if ( amt ) {
 					amt.textContent = formatCurrency( parseFloat( c.amount ) );
 				}
@@ -204,11 +249,11 @@ import '../scss/reports.scss';
 
 			// Keep the stated denominator and the net reconciliation in step
 			// with the refreshed rows, or the card stops tying out.
-			var basis = root.querySelector( '.twr-composition__basis-value' );
+			const basis = root.querySelector( '.twr-composition__basis-value' );
 			if ( basis ) {
 				basis.textContent = formatCurrency( total );
 			}
-			var net = root.querySelector( '.twr-composition__net-value' );
+			const net = root.querySelector( '.twr-composition__net-value' );
 			if ( net ) {
 				net.textContent = formatCurrency(
 					data.composition.reduce( function ( s, c ) {
@@ -228,10 +273,11 @@ import '../scss/reports.scss';
 	 */
 	function wireProModals( root ) {
 		root.addEventListener( 'click', function ( event ) {
-			var opener = event.target.closest( '[data-twr-pro-modal]' );
+			const opener = event.target.closest( '[data-twr-pro-modal]' );
 			if ( opener ) {
-				var dialog = root.querySelector(
-					'#twr-pro-modal-' + opener.getAttribute( 'data-twr-pro-modal' )
+				const dialog = root.querySelector(
+					'#twr-pro-modal-' +
+						opener.getAttribute( 'data-twr-pro-modal' )
 				);
 				if ( dialog && typeof dialog.showModal === 'function' ) {
 					event.preventDefault();
@@ -240,7 +286,7 @@ import '../scss/reports.scss';
 				return;
 			}
 
-			var closer = event.target.closest( '[data-twr-modal-close]' );
+			const closer = event.target.closest( '[data-twr-modal-close]' );
 			if ( closer ) {
 				event.preventDefault();
 				closer.closest( 'dialog' ).close();
@@ -256,7 +302,7 @@ import '../scss/reports.scss';
 	}
 
 	function init() {
-		var root = document.querySelector( '.woo-wallet-reports' );
+		const root = document.querySelector( '.woo-wallet-reports' );
 		if ( ! root ) {
 			return;
 		}

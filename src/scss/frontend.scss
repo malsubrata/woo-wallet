@@ -1,1572 +1,1585 @@
 @font-face {
-    font-family: 'woowallet';
-    src: url('../fonts/woowallet.eot?tewfy0');
-    src: url('../fonts/woowallet.eot?tewfy0#iefix') format('embedded-opentype'),
-        url('../fonts/woowallet.ttf?tewfy0') format('truetype'),
-        url('../fonts/woowallet.woff?tewfy0') format('woff'),
-        url('../fonts/woowallet.svg?tewfy0#woowallet') format('svg');
-    font-weight: normal;
-    font-style: normal;
+	font-family: woowallet;
+	src: url(../fonts/woowallet.eot?tewfy0);
+	src:
+		url(../fonts/woowallet.eot?tewfy0#iefix) format("embedded-opentype"),
+		url(../fonts/woowallet.ttf?tewfy0) format("truetype"),
+		url(../fonts/woowallet.woff?tewfy0) format("woff"),
+		url(../fonts/woowallet.svg?tewfy0#woowallet) format("svg");
+	font-weight: 400;
+	font-style: normal;
 }
 
 [class^="woo-wallet-icon-"],
 [class*=" woo-wallet-icon-"] {
-    /* use !important to prevent issues with browser extensions that change fonts */
-    font-family: 'woowallet' !important;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
 
-    /* Better Font Rendering =========== */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	/* use !important to prevent issues with browser extensions that change fonts */
+	font-family: woowallet !important;
+	font-style: normal;
+	font-weight: 400;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 // Variables
-$wallet-primary-color: #483DE0;
+$wallet-primary-color: #483de0;
 $wallet-text-color: #333;
 $wallet-bg-color: #f4f6f8;
 $wallet-border-color: #eee;
 
-.woo-wallet-icon-wallet:before {
-    content: "\e900";
+.woo-wallet-icon-wallet::before {
+	content: "\e900";
 }
 
 /* Migrated from modern-dashboard.css */
 .woo-wallet-my-wallet-container {
-    // CSS Variables for runtime usage if needed
-    --wallet-primary-color: #{$wallet-primary-color};
-    --wallet-text-color: #{$wallet-text-color};
-    --wallet-bg-color: #{$wallet-bg-color};
-    --wallet-border-color: #{$wallet-border-color};
-
-    color: var(--wallet-text-color);
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    display: block;
-
-    // Header
-    .woo-wallet-header {
-        margin-bottom: 25px;
-        text-align: left;
-
-        h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0 0 8px;
-            color: #2c3e50;
-        }
-
-        p {
-            color: #7f8c8d;
-            margin: 0;
-            font-size: 1rem;
-        }
-    }
-
-    // Top Section Wrapper
-    .woo-wallet-top-section {
-        border-radius: 12px;
-        overflow: visible;
-        /* Changed from hidden to allow submenu overflow */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        margin-bottom: 40px;
-        background: #fff;
-    }
-
-    // Balance Card
-    .woo-wallet-balance-card {
-        background: var(--wallet-primary-color);
-        color: #fff;
-        padding: 50px 30px;
-        border-radius: 12px 12px 0 0;
-        /* Added radius directly */
-        text-align: center;
-        position: relative;
-        margin-bottom: 0;
-        width: 100%;
-        box-sizing: border-box;
-        box-shadow: none;
-
-        h3 {
-            color: rgba(255, 255, 255, 0.95);
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin: 0 0 10px;
-            text-transform: none;
-            letter-spacing: 0.5px;
-        }
-
-        .woo-wallet-price {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin: 0;
-            color: #fff;
-            line-height: 1.1;
-        }
-    }
-
-    // Dashboard stat cards
-    .woo-wallet-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 5px;
-        margin-bottom: 24px;
-    }
-
-    .woo-wallet-stat-card {
-        background: #fff;
-        border: 1px solid var(--wallet-border-color);
-        border-radius: 12px;
-        padding: 20px 22px;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-
-        &__icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: #f1f3f6;
-            color: #475467;
-
-            svg {
-                width: 20px;
-                height: 20px;
-            }
-
-            .dashicons {
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
-                line-height: 20px;
-            }
-        }
-
-        &__value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1f2d3d;
-            line-height: 1.2;
-            word-break: break-word;
-        }
-
-        &__label {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-        }
-
-        // Tone tints reuse the transaction badge palette. Use a literal child
-        // selector (not `&__icon`) so the nested `&` doesn't re-expand the full
-        // parent chain and double the container prefix.
-        &--success .woo-wallet-stat-card__icon {
-            background: #e7f6ec;
-            color: #1f7a47;
-        }
-
-        &--danger .woo-wallet-stat-card__icon {
-            background: #fdeceb;
-            color: #b42318;
-        }
-
-        &--brand .woo-wallet-stat-card__icon {
-            background: #ecebfb;
-            color: #4b3fd6;
-        }
-
-        &--neutral .woo-wallet-stat-card__icon {
-            background: #f1f3f6;
-            color: #475467;
-        }
-
-        &--info .woo-wallet-stat-card__icon {
-            background: #e8f1fb;
-            color: #1b6ec2;
-        }
-
-        &--warning .woo-wallet-stat-card__icon {
-            background: #fdf2e3;
-            color: #b25e09;
-        }
-
-        &--teal .woo-wallet-stat-card__icon {
-            background: #e3f6f4;
-            color: #0e7d77;
-        }
-
-        &--accent .woo-wallet-stat-card__icon {
-            background: #fceaf3;
-            color: #c0297a;
-        }
-    }
-
-    /* Navigation Tabs */
-    .woo-wallet-nav-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        background: #f0f0f0;
-        border-radius: 0 0 12px 12px;
-        /* Added radius directly */
-        overflow: visible;
-        /* Changed from hidden to allow dropdown */
-        margin-bottom: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .woo-wallet-nav-item-wrapper {
-        flex: 1;
-        position: relative;
-
-        /* Removed hover effect for click-based toggle */
-    }
-
-    .woo-wallet-nav-tab {
-        display: flex;
-        /* Changed to flex for icon alignment */
-        align-items: center;
-        justify-content: center;
-        padding: 20px 15px;
-        background: #f0f0f0;
-        color: #666;
-        text-decoration: none !important;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        border: none;
-        white-space: nowrap;
-        width: 100%;
-        box-sizing: border-box;
-        border-right: 1px solid rgba(0, 0, 0, 0.05);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-
-        &:hover,
-        &:focus,
-        &:active {
-            background: #e5e5e5;
-            color: #333;
-            outline: none;
-            box-shadow: none;
-        }
-
-        &.active {
-            color: var(--wallet-primary-color);
-            box-shadow: none;
-            background: #e5e5e5;
-            outline: none;
-        }
-
-        /* Icon spacing */
-        >span:first-child {
-            margin-right: 8px;
-        }
-    }
-
-    .woo-wallet-submenu-toggle {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 18px;
-        margin-left: 8px;
-        transition: transform 0.3s ease;
-
-        &.rotate {
-            transform: rotate(180deg);
-        }
-    }
-
-    .woo-wallet-nav-item-wrapper:last-child .woo-wallet-nav-tab {
-        border-right: none;
-    }
-
-    /* Submenu */
-    .woo-wallet-submenu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        min-width: 200px;
-        background: #fff;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        border-radius: 0 0 8px 8px;
-        overflow: hidden;
-        /* Removed opacity/visibility transition for slideToggle compatibility */
-
-        .woo-wallet-submenu-item {
-            display: block;
-            padding: 12px 20px;
-            color: #555;
-            text-decoration: none !important;
-            font-size: 0.95rem;
-            border-bottom: 1px solid #f5f5f5;
-            text-align: left;
-            transition: background 0.2s;
-
-            &:last-child {
-                border-bottom: none;
-            }
-
-            &:hover {
-                background: #f9f9f9;
-                color: var(--wallet-primary-color);
-            }
-        }
-    }
-
-    // Content Area
-    .woo-wallet-content-area {
-        background: #fff;
-        padding: 0;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .woo-wallet-section-title {
-        padding: 25px 30px;
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 700;
-        border-bottom: 1px solid #eee;
-        background: #fff;
-        color: #2c3e50;
-    }
-
-    .woo-wallet-form-wrapper .woo-wallet-section-title {
-        padding: 25px 0px;
-    }
-
-    // Recent transactions card
-    .woo-wallet-transactions-list {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid var(--wallet-border-color);
-        padding: 0;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-    }
-
-    // Card header: title + "Last N" meta
-    .ww-txn-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 22px 30px;
-        border-bottom: 1px solid #eef0f3;
-
-        .ww-txn-title {
-            margin: 0;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #2c3e50;
-            line-height: 1.2;
-        }
-
-        .ww-txn-meta {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #98a2b3;
-            white-space: nowrap;
-        }
-    }
-
-    // Div-based "table" — responsive grid rows
-    .ww-txn-table {
-        display: block;
-        width: 100%;
-
-        // Shared column track. Description flexes; date/type/amount are sized.
-        $ww-txn-cols: minmax(96px, 0.7fr) minmax(0, 2fr) minmax(110px, 0.9fr) minmax(96px, 0.7fr);
-
-        .ww-txn-row {
-            display: grid;
-            grid-template-columns: $ww-txn-cols;
-            align-items: center;
-            column-gap: 16px;
-            padding: 18px 30px;
-            border-bottom: 1px solid #f0f1f4;
-            transition: background-color 0.18s ease;
-        }
-
-        .ww-txn-row:last-child {
-            border-bottom: none;
-        }
-
-        .ww-txn-row:not(.ww-txn-row--head):hover {
-            background: #fafbfc;
-        }
-
-        // Header row: uppercase micro-labels
-        .ww-txn-row--head {
-            padding-top: 16px;
-            padding-bottom: 16px;
-            background: #fafbfc;
-            border-bottom: 1px solid #eef0f3;
-
-            .ww-txn-cell {
-                font-size: 0.72rem;
-                font-weight: 700;
-                letter-spacing: 0.06em;
-                text-transform: uppercase;
-                color: #98a2b3;
-            }
-        }
-
-        .ww-txn-cell {
-            min-width: 0;
-            font-size: 0.95rem;
-            color: #344054;
-        }
-
-        .ww-txn-cell--date {
-            color: #667085;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-        }
-
-        .ww-txn-cell--desc {
-            color: #2c3e50;
-            font-weight: 500;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-        }
-
-        .ww-txn-cell--type {
-            display: flex;
-        }
-
-        .ww-txn-cell--amount {
-            text-align: right;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-
-            &.credit {
-                color: #1f9d57;
-            }
-
-            &.debit {
-                color: #d0342c;
-            }
-        }
-    }
-
-    // Category pill badges
-    .ww-txn-badge {
-        display: inline-flex;
-        align-items: center;
-        max-width: 100%;
-        padding: 4px 11px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        line-height: 1.4;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        border: 1px solid transparent;
-
-        &--success {
-            color: #1f7a47;
-            background: #e7f6ec;
-            border-color: #c9ecd5;
-        }
-
-        &--danger {
-            color: #b42318;
-            background: #fdeceb;
-            border-color: #f7d3d0;
-        }
-
-        &--neutral {
-            color: #475467;
-            background: #f1f3f6;
-            border-color: #e3e7ed;
-        }
-
-        &--info {
-            color: #1b6ec2;
-            background: #e8f1fb;
-            border-color: #cfe3f7;
-        }
-
-        &--brand {
-            color: #4b3fd6;
-            background: #ecebfb;
-            border-color: #d7d4f6;
-        }
-
-        &--warning {
-            color: #b25e09;
-            background: #fdf2e3;
-            border-color: #f7e0bd;
-        }
-
-        &--accent {
-            color: #c0297a;
-            background: #fceaf3;
-            border-color: #f6cfe4;
-        }
-
-        &--teal {
-            color: #0e7d77;
-            background: #e3f6f4;
-            border-color: #c4ece9;
-        }
-    }
-
-    .ww-txn-empty {
-        margin: 0;
-        padding: 40px 30px;
-        text-align: center;
-        color: #98a2b3;
-        font-size: 0.95rem;
-    }
-
-    // Forms
-    .woo-wallet-form-wrapper {
-        padding: 40px;
-        border: 1px solid var(--wallet-border-color);
-        border-radius: 12px;
-
-        form {
-            padding-top: 14px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            font-size: 1rem;
-            background: #f9f9f9;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease;
-
-            &:focus {
-                border-color: var(--wallet-primary-color);
-                outline: none;
-                background: #fff;
-            }
-        }
-
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            line-height: 1.5;
-            height: auto;
-            padding-right: 40px;
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px 16px;
-            background-color: #f9f9f9;
-
-            &:focus {
-                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 12px center;
-                background-size: 16px 16px;
-                background-color: #fff;
-            }
-        }
-
-        input[type="submit"] {
-            background: var(--wallet-primary-color);
-            color: #fff;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            font-size: 1rem;
-
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(241, 99, 76, 0.3);
-            }
-        }
-    }
-
-    // Referral Page
-    .woo-wallet-referral-link-card {
-        background: #fff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        margin-bottom: 30px;
-        border: 1px solid var(--wallet-border-color);
-        box-sizing: border-box;
-
-        h3 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-    }
-
-    .woo-wallet-referral-input-group {
-        display: flex !important;
-        align-items: center !important;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .woo-wallet-referral-input-wrapper {
-        position: relative;
-        flex: 1;
-        display: block;
-
-        .dashicons {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #999;
-            font-family: "dashicons" !important;
-            font-size: 20px;
-            width: 20px;
-            height: 20px;
-            line-height: 20px;
-            pointer-events: none;
-        }
-
-        input[type="text"] {
-            width: 100% !important;
-            padding: 15px 15px 15px 45px !important;
-            border: 1px solid #e0e0e0 !important;
-            border-radius: 8px !important;
-            font-size: 1rem !important;
-            color: #555 !important;
-            background: #f9f9f9 !important;
-            box-sizing: border-box !important;
-            margin: 0 !important;
-            height: auto !important;
-            line-height: normal !important;
-        }
-    }
-
-    .woo-wallet-copy-btn {
-        background: var(--wallet-primary-color);
-        color: #fff;
-        border: none;
-        padding: 15px 30px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-        position: relative;
-        font-size: 1rem;
-        line-height: normal;
-
-        &:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        // Tooltip
-        &::after {
-            content: attr(data-tooltip);
-            visibility: hidden;
-            width: 140px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 100;
-            bottom: 130%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.85rem;
-            font-weight: normal;
-            pointer-events: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        &::before {
-            content: "";
-            visibility: hidden;
-            position: absolute;
-            bottom: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 6px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        &:hover::after,
-        &:hover::before {
-            visibility: visible;
-            opacity: 1;
-        }
-    }
-
-    // Referral Stats Table
-    .woo-wallet-referral-stats {
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid var(--wallet-border-color);
-        padding: 0;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-            table-layout: fixed;
-        }
-
-        th {
-            text-align: left;
-            padding: 20px 30px;
-            font-weight: 600;
-            color: #7f8c8d;
-            border-bottom: 1px solid #eee;
-            background: #f9f9f9;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            color: #2c3e50;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-    }
-
-    // Referral summary cards
-    .woo-wallet-referral-stats {
-        margin-bottom: 30px;
-
-        .woo-wallet-section-title {
-            margin: 0;
-            padding: 20px 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-        }
-    }
-
-    .woo-wallet-referral-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1px;
-        background: #eee;
-    }
-
-    .woo-wallet-referral-summary-card {
-        background: #fff;
-        padding: 24px 30px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .woo-wallet-referral-summary-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #2c3e50;
-    }
-
-    .woo-wallet-referral-summary-label {
-        font-size: 0.85rem;
-        color: #7f8c8d;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .woo-wallet-referral-summary-earned .woo-wallet-referral-summary-value {
-        color: var(--wallet-primary-color);
-    }
-
-    .woo-wallet-referral-legacy {
-        margin: 0;
-        padding: 16px 30px;
-        background: #f9f9f9;
-        border-top: 1px solid #eee;
-        font-size: 0.9rem;
-        color: #7f8c8d;
-    }
-
-    // Referral history list
-    .woo-wallet-referral-list {
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid var(--wallet-border-color);
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-
-        .woo-wallet-section-title {
-            margin: 0;
-            padding: 20px 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-        }
-
-        th {
-            text-align: left;
-            padding: 16px 30px;
-            font-weight: 600;
-            color: #7f8c8d;
-            border-bottom: 1px solid #eee;
-            background: #f9f9f9;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 16px 30px;
-            border-bottom: 1px solid #eee;
-            color: #2c3e50;
-            font-size: 0.95rem;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-    }
-
-    .woo-wallet-referral-empty {
-        padding: 30px;
-        margin: 0;
-        text-align: center;
-        color: #7f8c8d;
-    }
-
-    .woo-wallet-referral-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
-
-        &.woo-wallet-referral-badge-completed {
-            background: #e6f6ec;
-            color: #1a7f3c;
-        }
-
-        &.woo-wallet-referral-badge-pending {
-            background: #fff4e0;
-            color: #b9770e;
-        }
-
-        &.woo-wallet-referral-badge-rejected {
-            background: #fdecec;
-            color: #c0392b;
-        }
-    }
-
-    .woo-wallet-referral-pagination {
-        padding: 20px 30px;
-
-        ul {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        li {
-            margin: 0;
-        }
-
-        .page-numbers {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--wallet-border-color);
-            color: #2c3e50;
-            text-decoration: none;
-            font-size: 0.9rem;
-
-            &.current {
-                background: var(--wallet-primary-color);
-                color: #fff;
-                border-color: var(--wallet-primary-color);
-            }
-        }
-    }
-
-    // Responsive
-    @media (max-width: 768px) {
-        .woo-wallet-nav-tabs {
-            flex-direction: column;
-            border-radius: 0 0 15px 15px;
-        }
-
-        .woo-wallet-nav-item-wrapper {
-            width: 100%;
-        }
-
-        .woo-wallet-nav-tab {
-            border-right: none;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .woo-wallet-submenu {
-            position: static;
-            display: none;
-            /* Hidden by default on mobile too, could use JS to toggle */
-            box-shadow: none;
-            width: 100%;
-            opacity: 1;
-            visibility: visible;
-            transform: none;
-            background: #f9f9f9;
-        }
-
-        .woo-wallet-balance-card .woo-wallet-price {
-            font-size: 2.5rem;
-        }
-
-        .woo-wallet-referral-input-group {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .woo-wallet-copy-btn {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .woo-wallet-referral-input-wrapper input[type="text"] {
-            padding-left: 45px !important;
-        }
-
-        .woo-wallet-content-area,
-        .woo-wallet-referral-stats {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .woo-wallet-referral-stats table {
-            min-width: 600px;
-        }
-
-        // Recent transactions: collapse grid rows into stacked cards.
-        .ww-txn-head {
-            padding: 18px 18px;
-        }
-
-        .ww-txn-table {
-            padding: 8px;
-
-            // Compound selector so this beats the `.ww-txn-row { display: block }`
-            // rule below — both match the head row with equal specificity, and
-            // the block rule comes later in source, so a plain `.ww-txn-row--head`
-            // would lose the tie and the header would render as a ghost card.
-            .ww-txn-row.ww-txn-row--head {
-                display: none;
-            }
-
-            .ww-txn-row {
-                display: block;
-                padding: 14px 14px;
-                margin-bottom: 8px;
-                border: 1px solid #eef0f3;
-                border-radius: 10px;
-                background: #fff;
-            }
-
-            .ww-txn-row:last-child {
-                margin-bottom: 0;
-            }
-
-            .ww-txn-row:not(.ww-txn-row--head):hover {
-                background: #fff;
-            }
-
-            .ww-txn-cell {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 14px;
-                padding: 5px 0;
-                text-align: right;
-            }
-
-            .ww-txn-cell::before {
-                content: attr(data-label);
-                flex: 0 0 auto;
-                font-size: 0.7rem;
-                font-weight: 700;
-                letter-spacing: 0.05em;
-                text-transform: uppercase;
-                color: #98a2b3;
-            }
-
-            // Description leads the card: bigger, no label, left aligned.
-            .ww-txn-cell--desc {
-                padding-top: 0;
-                font-size: 1rem;
-                font-weight: 600;
-                text-align: left;
-
-                &::before {
-                    display: none;
-                }
-            }
-
-            .ww-txn-cell--type {
-                justify-content: space-between;
-            }
-
-            .ww-txn-cell--amount {
-                padding-bottom: 0;
-                font-size: 1.05rem;
-            }
-        }
-
-        // Tabulator responsive tweaks
-        .tabulator {
-            font-size: 0.88rem;
-            border-radius: 10px;
-
-            .tabulator-header .tabulator-col {
-                padding: 12px 14px;
-                font-size: 0.72rem;
-            }
-
-            .tabulator-row .tabulator-cell {
-                padding: 12px 14px;
-                font-size: 0.88rem;
-            }
-
-            .tabulator-row .tabulator-responsive-collapse {
-                padding: 10px 14px;
-            }
-
-            .tabulator-footer {
-                padding: 10px 6px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-
-                .tabulator-footer-contents {
-                    flex-wrap: nowrap !important;
-                    justify-content: flex-start;
-                    white-space: nowrap;
-                    min-width: min-content;
-                }
-
-                .tabulator-paginator {
-                    flex-wrap: nowrap !important;
-                    justify-content: flex-start;
-                    white-space: nowrap;
-                    width: 100%;
-
-                    label {
-                        display: none;
-                    }
-
-                    .tabulator-page {
-                        padding: 5px 9px;
-                        min-width: 30px;
-                        margin: 0 1px;
-                        flex: 0 0 auto;
-                    }
-
-                    .tabulator-page-size {
-                        padding: 5px 8px;
-                        flex: 0 0 auto;
-                    }
-                }
-            }
-        }
-
-        .woo-wallet-table-controls {
-            flex-wrap: nowrap;
-            justify-content: flex-end;
-            gap: 6px;
-            padding: 8px 10px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-
-            input[type="date"] {
-                flex: 0 0 auto;
-                min-width: 0;
-                width: auto;
-                max-width: 140px;
-                padding: 6px 8px;
-                font-size: 0.82rem;
-            }
-
-            .woo-wallet-filter-sep {
-                flex: 0 0 auto;
-            }
-
-            .wc-wallet-filter-clear {
-                flex: 0 0 auto;
-                width: 28px;
-                height: 28px;
-                font-size: 14px;
-            }
-        }
-    }
-
-    // Very narrow: drop First/Last page buttons to declutter the paginator
-    @media (max-width: 480px) {
-        .tabulator .tabulator-footer .tabulator-paginator {
-
-            .tabulator-page[data-page="first"],
-            .tabulator-page[data-page="last"] {
-                display: none;
-            }
-        }
-
-        .woo-wallet-table-controls input[type="date"] {
-            max-width: 120px;
-        }
-
-        .woo-wallet-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .woo-wallet-stat-card {
-            padding: 16px;
-
-            &__value {
-                font-size: 1.3rem;
-            }
-        }
-    }
-
-    .woo-wallet-table-controls {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        flex-wrap: wrap;
-        background: #f9fafc;
-        border-radius: 10px;
-        padding: 10px 14px;
-
-        input[type="date"] {
-            padding: 7px 12px !important;
-            border: 1px solid var(--wallet-border-color) !important;
-            border-radius: 8px !important;
-            font-size: 0.9rem !important;
-            background: #fff !important;
-            color: #2c3e50 !important;
-            outline: none !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            line-height: normal !important;
-            min-height: 0 !important;
-            height: auto !important;
-            width: auto;
-            margin: 0;
-            font-family: inherit;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-            &:hover {
-                border-color: #d0d4db !important;
-            }
-
-            &:focus {
-                border-color: var(--wallet-primary-color) !important;
-                box-shadow: 0 0 0 3px rgba(72, 61, 224, 0.12) !important;
-            }
-
-            &::-webkit-calendar-picker-indicator {
-                cursor: pointer;
-                opacity: 0.6;
-                transition: opacity 0.2s ease;
-            }
-
-            &:hover::-webkit-calendar-picker-indicator {
-                opacity: 1;
-            }
-        }
-
-        .woo-wallet-filter-sep {
-            color: #9ba3af;
-            font-weight: 600;
-        }
-
-        .wc-wallet-filter-clear {
-            display: inline-flex !important;
-            align-items: center;
-            justify-content: center;
-            width: 32px !important;
-            height: 32px !important;
-            min-height: 0 !important;
-            padding: 0 !important;
-            margin: 0;
-            line-height: 1 !important;
-            border: 1px solid var(--wallet-border-color) !important;
-            border-radius: 8px !important;
-            background: #fff !important;
-            background-image: none !important;
-            color: #7f8c8d !important;
-            font-size: 16px !important;
-            font-weight: 600 !important;
-            font-family: inherit !important;
-            text-transform: none !important;
-            letter-spacing: normal !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            cursor: pointer;
-            transition: all 0.2s ease;
-
-            &:hover {
-                background: var(--wallet-primary-color) !important;
-                border-color: var(--wallet-primary-color) !important;
-                color: #fff !important;
-                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
-            }
-        }
-    }
-
-    // Tabulator - Wallet themed skin
-    // Theme-independence reset: neutralize common theme overrides (Astra, Storefront, etc.)
-    // targeting native elements (button/select/input/a/table) inside Tabulator.
-    .tabulator {
-        button,
-        select,
-        input {
-            font-family: inherit !important;
-            line-height: normal !important;
-            text-transform: none !important;
-            letter-spacing: normal !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            min-height: 0 !important;
-            height: auto !important;
-            width: auto;
-            margin: 0;
-        }
-
-        button {
-            background-image: none !important;
-            text-decoration: none !important;
-        }
-
-        select {
-            appearance: auto !important;
-            -webkit-appearance: auto !important;
-            -moz-appearance: auto !important;
-            background-image: none !important;
-        }
-
-        a {
-            text-decoration: none !important;
-            box-shadow: none !important;
-            background: none !important;
-        }
-
-        // Collapse table used for responsive rows
-        .tabulator-responsive-collapse table,
-        .tabulator-responsive-collapse tr,
-        .tabulator-responsive-collapse td,
-        .tabulator-responsive-collapse th {
-            background: transparent !important;
-            border: 0 !important;
-            box-shadow: none !important;
-        }
-    }
-
-    .tabulator {
-        background: #fff;
-        border: 1px solid var(--wallet-border-color);
-        border-radius: 12px;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
-        overflow: visible;
-        font-size: 0.95rem;
-        color: var(--wallet-text-color);
-        font-family: inherit;
-
-        .tabulator-header {
-            background: #f9f9f9;
-            border-bottom: 1px solid var(--wallet-border-color);
-            border-radius: 12px 12px 0 0;
-            overflow: hidden;
-            color: #7f8c8d;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-
-            .tabulator-col {
-                background: transparent;
-                border-right: 0;
-                padding: 15px 20px;
-
-                .tabulator-col-content {
-                    padding: 0;
-                }
-
-                .tabulator-col-title {
-                    white-space: normal;
-                    color: #7f8c8d;
-                }
-            }
-        }
-
-        .tabulator-tableholder {
-            .tabulator-placeholder {
-                color: #7f8c8d;
-                padding: 40px 20px;
-                font-style: italic;
-            }
-        }
-
-        .tabulator-row {
-            background: #fff;
-            border-bottom: 1px solid var(--wallet-border-color);
-            min-height: 48px;
-            transition: background 0.2s ease;
-
-            &.tabulator-row-even {
-                background: #fff;
-            }
-
-            &:hover {
-                background: #fafafa !important;
-            }
-
-            &:last-child {
-                border-bottom: 0;
-            }
-
-            .tabulator-cell {
-                border-right: 0;
-                padding: 15px 20px;
-                color: #2c3e50;
-                font-size: 0.95rem;
-                vertical-align: middle;
-
-                &.tabulator-row-handle {
-                    padding: 15px 20px;
-                }
-
-                // Details column: show the full text by wrapping it onto
-                // multiple lines instead of truncating with an ellipsis. The
-                // column keeps its responsive priority (never collapses), so
-                // wrapping here is what keeps the content readable on narrow
-                // screens without breaking the layout.
-                &.woo-wallet-details-cell {
-                    white-space: normal;
-                    overflow: visible;
-                    text-overflow: clip;
-                    word-break: break-word;
-                    overflow-wrap: anywhere;
-                    line-height: 1.45;
-                }
-            }
-
-            // Responsive collapse toggle pill
-            .tabulator-responsive-collapse-toggle {
-                background: var(--wallet-primary-color) !important;
-                color: #fff !important;
-                border-radius: 50% !important;
-                width: 22px !important;
-                height: 22px !important;
-                min-height: 0 !important;
-                line-height: 22px !important;
-                text-align: center;
-                font-weight: 700 !important;
-                font-size: 14px !important;
-                padding: 0 !important;
-                margin: 0;
-                box-shadow: 0 2px 5px rgba(72, 61, 224, 0.25) !important;
-
-                svg {
-                    stroke: #fff !important;
-                    fill: none;
-                }
-            }
-
-            .tabulator-responsive-collapse {
-                border-top: 1px dashed var(--wallet-border-color);
-                padding: 12px 20px;
-                background: #fafbfc;
-
-                table {
-                    width: 100%;
-
-                    tr td {
-                        border: 0;
-                        padding: 4px 0;
-                        color: #2c3e50;
-                        font-size: 0.9rem;
-
-                        &:first-child {
-                            font-weight: 600;
-                            color: #7f8c8d;
-                            text-transform: uppercase;
-                            font-size: 0.72rem;
-                            letter-spacing: 0.3px;
-                            padding-right: 12px;
-                            white-space: nowrap;
-                            width: 35%;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Footer / pagination
-        .tabulator-footer {
-            background: #fff;
-            border-top: 1px solid var(--wallet-border-color);
-            border-radius: 0 0 12px 12px;
-            padding: 12px 20px;
-            color: var(--wallet-text-color);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-
-            .tabulator-footer-contents {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                flex-wrap: nowrap;
-                gap: 8px;
-                min-width: min-content;
-            }
-
-            .tabulator-paginator {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                flex-wrap: nowrap;
-                gap: 6px;
-                color: var(--wallet-text-color);
-                white-space: nowrap;
-
-                label {
-                    color: #7f8c8d;
-                    font-size: 0.85rem;
-                    margin-right: 4px;
-                    margin-top: 4px;
-                }
-
-                .tabulator-page-size {
-                    border: 1px solid var(--wallet-border-color) !important;
-                    border-radius: 6px !important;
-                    padding: 6px 10px !important;
-                    font-size: 0.9rem !important;
-                    color: #555 !important;
-                    background: #fff !important;
-                    outline: none !important;
-                    cursor: pointer;
-                    margin-right: 6px;
-
-                    &:focus {
-                        border-color: var(--wallet-primary-color) !important;
-                    }
-                }
-
-                .tabulator-page {
-                    background: transparent !important;
-                    border: 1px solid transparent !important;
-                    border-radius: 6px !important;
-                    padding: 6px 12px !important;
-                    margin: 0 2px;
-                    color: #555 !important;
-                    font-weight: 600 !important;
-                    font-size: 0.9rem !important;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    min-width: 34px;
-
-                    &:not(.disabled):hover {
-                        background: #f0f0f0 !important;
-                        color: #333 !important;
-                        border-color: #ddd !important;
-                    }
-
-                    &.active {
-                        background: var(--wallet-primary-color) !important;
-                        color: #fff !important;
-                        border-color: var(--wallet-primary-color) !important;
-                        box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
-                    }
-
-                    &.disabled {
-                        color: #bbb !important;
-                        cursor: not-allowed;
-                        opacity: 0.6;
-                    }
-                }
-            }
-        }
-
-        mark.credit {
-            background: none;
-            color: #27ae60;
-            font-weight: 700;
-        }
-
-        mark.debit {
-            background: none;
-            color: #c0392b;
-            font-weight: 700;
-        }
-    }
-
-    #wc-wallet-transaction-details mark.credit {
-        background: none;
-        color: #27ae60;
-        font-weight: 700;
-    }
-
-    #wc-wallet-transaction-details mark.debit {
-        background: none;
-        color: #c0392b;
-        font-weight: 700;
-    }
+	// CSS Variables for runtime usage if needed
+	--wallet-primary-color: #{$wallet-primary-color};
+	--wallet-text-color: #{$wallet-text-color};
+	--wallet-bg-color: #{$wallet-bg-color};
+	--wallet-border-color: #{$wallet-border-color};
+
+	color: var(--wallet-text-color);
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	display: block;
+
+	// Header
+	.woo-wallet-header {
+		margin-bottom: 25px;
+		text-align: left;
+
+		h2 {
+			font-size: 1.8rem;
+			font-weight: 700;
+			margin: 0 0 8px;
+			color: #2c3e50;
+		}
+
+		p {
+			color: #7f8c8d;
+			margin: 0;
+			font-size: 1rem;
+		}
+	}
+
+	// Top Section Wrapper
+	.woo-wallet-top-section {
+		border-radius: 12px;
+		overflow: visible;
+
+		/* Changed from hidden to allow submenu overflow */
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+		margin-bottom: 40px;
+		background: #fff;
+	}
+
+	// Balance Card
+	.woo-wallet-balance-card {
+		background: var(--wallet-primary-color);
+		color: #fff;
+		padding: 50px 30px;
+		border-radius: 12px 12px 0 0;
+
+		/* Added radius directly */
+		text-align: center;
+		position: relative;
+		margin-bottom: 0;
+		width: 100%;
+		box-sizing: border-box;
+		box-shadow: none;
+
+		h3 {
+			color: rgba(255, 255, 255, 0.95);
+			font-size: 1.1rem;
+			font-weight: 500;
+			margin: 0 0 10px;
+			text-transform: none;
+			letter-spacing: 0.5px;
+		}
+
+		.woo-wallet-price {
+			font-size: 3.5rem;
+			font-weight: 800;
+			margin: 0;
+			color: #fff;
+			line-height: 1.1;
+		}
+	}
+
+	// Dashboard stat cards
+	.woo-wallet-stats-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 5px;
+		margin-bottom: 24px;
+	}
+
+	.woo-wallet-stat-card {
+		background: #fff;
+		border: 1px solid var(--wallet-border-color);
+		border-radius: 12px;
+		padding: 20px 22px;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
+		&__icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: #f1f3f6;
+			color: #475467;
+
+			svg {
+				width: 20px;
+				height: 20px;
+			}
+
+			.dashicons {
+				font-size: 20px;
+				width: 20px;
+				height: 20px;
+				line-height: 20px;
+			}
+		}
+
+		&__value {
+			font-size: 1.6rem;
+			font-weight: 800;
+			color: #1f2d3d;
+			line-height: 1.2;
+			word-break: break-word;
+		}
+
+		&__label {
+			font-size: 0.85rem;
+			color: #7f8c8d;
+		}
+
+		// Tone tints reuse the transaction badge palette. Use a literal child
+		// selector (not `&__icon`) so the nested `&` doesn't re-expand the full
+		// parent chain and double the container prefix.
+		&--success .woo-wallet-stat-card__icon {
+			background: #e7f6ec;
+			color: #1f7a47;
+		}
+
+		&--danger .woo-wallet-stat-card__icon {
+			background: #fdeceb;
+			color: #b42318;
+		}
+
+		&--brand .woo-wallet-stat-card__icon {
+			background: #ecebfb;
+			color: #4b3fd6;
+		}
+
+		&--neutral .woo-wallet-stat-card__icon {
+			background: #f1f3f6;
+			color: #475467;
+		}
+
+		&--info .woo-wallet-stat-card__icon {
+			background: #e8f1fb;
+			color: #1b6ec2;
+		}
+
+		&--warning .woo-wallet-stat-card__icon {
+			background: #fdf2e3;
+			color: #b25e09;
+		}
+
+		&--teal .woo-wallet-stat-card__icon {
+			background: #e3f6f4;
+			color: #0e7d77;
+		}
+
+		&--accent .woo-wallet-stat-card__icon {
+			background: #fceaf3;
+			color: #c0297a;
+		}
+	}
+
+	/* Navigation Tabs */
+	.woo-wallet-nav-tabs {
+		display: flex;
+		flex-wrap: wrap;
+		background: #f0f0f0;
+		border-radius: 0 0 12px 12px;
+
+		/* Added radius directly */
+		overflow: visible;
+
+		/* Changed from hidden to allow dropdown */
+		margin-bottom: 0;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.woo-wallet-nav-item-wrapper {
+		flex: 1;
+		position: relative;
+
+		/* Removed hover effect for click-based toggle */
+	}
+
+	.woo-wallet-nav-tab {
+		display: flex;
+
+		/* Changed to flex for icon alignment */
+		align-items: center;
+		justify-content: center;
+		padding: 20px 15px;
+		background: #f0f0f0;
+		color: #666;
+		text-decoration: none !important;
+		font-weight: 600;
+		font-size: 1rem;
+		transition: all 0.2s ease;
+		border: none;
+		white-space: nowrap;
+		width: 100%;
+		box-sizing: border-box;
+		border-right: 1px solid rgba(0, 0, 0, 0.05);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+		&:hover,
+		&:focus,
+		&:active {
+			background: #e5e5e5;
+			color: #333;
+			outline: none;
+			box-shadow: none;
+		}
+
+		&.active {
+			color: var(--wallet-primary-color);
+			box-shadow: none;
+			background: #e5e5e5;
+			outline: none;
+		}
+
+		/* Icon spacing */
+		>span:first-child {
+			margin-right: 8px;
+		}
+	}
+
+	.woo-wallet-submenu-toggle {
+		font-size: 18px;
+		width: 18px;
+		height: 18px;
+		line-height: 18px;
+		margin-left: 8px;
+		transition: transform 0.3s ease;
+
+		&.rotate {
+			transform: rotate(180deg);
+		}
+	}
+
+	.woo-wallet-nav-item-wrapper:last-child .woo-wallet-nav-tab {
+		border-right: none;
+	}
+
+	/* Submenu */
+	.woo-wallet-submenu {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		min-width: 200px;
+		background: #fff;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+		z-index: 100;
+		border-radius: 0 0 8px 8px;
+		overflow: hidden;
+
+		/* Removed opacity/visibility transition for slideToggle compatibility */
+
+		.woo-wallet-submenu-item {
+			display: block;
+			padding: 12px 20px;
+			color: #555;
+			text-decoration: none !important;
+			font-size: 0.95rem;
+			border-bottom: 1px solid #f5f5f5;
+			text-align: left;
+			transition: background 0.2s;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			&:hover {
+				background: #f9f9f9;
+				color: var(--wallet-primary-color);
+			}
+		}
+	}
+
+	// Content Area
+	.woo-wallet-content-area {
+		background: #fff;
+		padding: 0;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.woo-wallet-section-title {
+		padding: 25px 30px;
+		margin: 0;
+		font-size: 1.2rem;
+		font-weight: 700;
+		border-bottom: 1px solid #eee;
+		background: #fff;
+		color: #2c3e50;
+	}
+
+	.woo-wallet-form-wrapper .woo-wallet-section-title {
+		padding: 25px 0;
+	}
+
+	// Recent transactions card
+	.woo-wallet-transactions-list {
+		background: #fff;
+		border-radius: 14px;
+		border: 1px solid var(--wallet-border-color);
+		padding: 0;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+	}
+
+	// Card header: title + "Last N" meta
+	.ww-txn-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 22px 30px;
+		border-bottom: 1px solid #eef0f3;
+
+		.ww-txn-title {
+			margin: 0;
+			font-size: 1.15rem;
+			font-weight: 700;
+			color: #2c3e50;
+			line-height: 1.2;
+		}
+
+		.ww-txn-meta {
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: #98a2b3;
+			white-space: nowrap;
+		}
+	}
+
+	// Div-based "table" — responsive grid rows
+	.ww-txn-table {
+		display: block;
+		width: 100%;
+
+		// Shared column track. Description flexes; date/type/amount are sized.
+		$ww-txn-cols: minmax(96px, 0.7fr) minmax(0, 2fr) minmax(110px, 0.9fr) minmax(96px, 0.7fr);
+
+		.ww-txn-row {
+			display: grid;
+			grid-template-columns: $ww-txn-cols;
+			align-items: center;
+			column-gap: 16px;
+			padding: 18px 30px;
+			border-bottom: 1px solid #f0f1f4;
+			transition: background-color 0.18s ease;
+		}
+
+		.ww-txn-row:last-child {
+			border-bottom: none;
+		}
+
+		.ww-txn-row:not(.ww-txn-row--head):hover {
+			background: #fafbfc;
+		}
+
+		// Header row: uppercase micro-labels
+		.ww-txn-row--head {
+			padding-top: 16px;
+			padding-bottom: 16px;
+			background: #fafbfc;
+			border-bottom: 1px solid #eef0f3;
+
+			.ww-txn-cell {
+				font-size: 0.72rem;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: #98a2b3;
+			}
+		}
+
+		.ww-txn-cell {
+			min-width: 0;
+			font-size: 0.95rem;
+			color: #344054;
+		}
+
+		.ww-txn-cell--date {
+			color: #667085;
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap;
+		}
+
+		.ww-txn-cell--desc {
+			color: #2c3e50;
+			font-weight: 500;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+		}
+
+		.ww-txn-cell--type {
+			display: flex;
+		}
+
+		.ww-txn-cell--amount {
+			text-align: right;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap;
+
+			&.credit {
+				color: #1f9d57;
+			}
+
+			&.debit {
+				color: #d0342c;
+			}
+		}
+	}
+
+	// Category pill badges
+	.ww-txn-badge {
+		display: inline-flex;
+		align-items: center;
+		max-width: 100%;
+		padding: 4px 11px;
+		border-radius: 999px;
+		font-size: 0.78rem;
+		font-weight: 600;
+		line-height: 1.4;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		border: 1px solid transparent;
+
+		&--success {
+			color: #1f7a47;
+			background: #e7f6ec;
+			border-color: #c9ecd5;
+		}
+
+		&--danger {
+			color: #b42318;
+			background: #fdeceb;
+			border-color: #f7d3d0;
+		}
+
+		&--neutral {
+			color: #475467;
+			background: #f1f3f6;
+			border-color: #e3e7ed;
+		}
+
+		&--info {
+			color: #1b6ec2;
+			background: #e8f1fb;
+			border-color: #cfe3f7;
+		}
+
+		&--brand {
+			color: #4b3fd6;
+			background: #ecebfb;
+			border-color: #d7d4f6;
+		}
+
+		&--warning {
+			color: #b25e09;
+			background: #fdf2e3;
+			border-color: #f7e0bd;
+		}
+
+		&--accent {
+			color: #c0297a;
+			background: #fceaf3;
+			border-color: #f6cfe4;
+		}
+
+		&--teal {
+			color: #0e7d77;
+			background: #e3f6f4;
+			border-color: #c4ece9;
+		}
+	}
+
+	.ww-txn-empty {
+		margin: 0;
+		padding: 40px 30px;
+		text-align: center;
+		color: #98a2b3;
+		font-size: 0.95rem;
+	}
+
+	// Forms
+	.woo-wallet-form-wrapper {
+		padding: 40px;
+		border: 1px solid var(--wallet-border-color);
+		border-radius: 12px;
+
+		form {
+			padding-top: 14px;
+		}
+
+		label {
+			display: block;
+			margin-bottom: 10px;
+			font-weight: 600;
+			color: #2c3e50;
+		}
+
+		input[type="text"],
+		input[type="number"],
+		textarea,
+		select {
+			width: 100%;
+			padding: 15px;
+			border: 1px solid #e0e0e0;
+			border-radius: 8px;
+			margin-bottom: 25px;
+			font-size: 1rem;
+			background: #f9f9f9;
+			box-sizing: border-box;
+			transition: border-color 0.3s ease;
+
+			&:focus {
+				border-color: var(--wallet-primary-color);
+				outline: none;
+				background: #fff;
+			}
+		}
+
+		select {
+			appearance: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			line-height: 1.5;
+			height: auto;
+			padding-right: 40px;
+			background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+			background-repeat: no-repeat;
+			background-position: right 12px center;
+			background-size: 16px 16px;
+			background-color: #f9f9f9;
+
+			&:focus {
+				background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%232c3e50' d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: right 12px center;
+				background-size: 16px 16px;
+				background-color: #fff;
+			}
+		}
+
+		input[type="submit"] {
+			background: var(--wallet-primary-color);
+			color: #fff;
+			border: none;
+			padding: 15px 40px;
+			border-radius: 8px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			font-size: 1rem;
+
+			&:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 5px 15px rgba(241, 99, 76, 0.3);
+			}
+		}
+	}
+
+	// Referral Page
+	.woo-wallet-referral-link-card {
+		background: #fff;
+		padding: 30px;
+		border-radius: 12px;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		margin-bottom: 30px;
+		border: 1px solid var(--wallet-border-color);
+		box-sizing: border-box;
+
+		h3 {
+			margin-top: 0;
+			font-size: 1.1rem;
+			color: #2c3e50;
+			margin-bottom: 20px;
+			font-weight: 600;
+		}
+	}
+
+	.woo-wallet-referral-input-group {
+		display: flex !important;
+		align-items: center !important;
+		gap: 15px;
+		width: 100%;
+	}
+
+	.woo-wallet-referral-input-wrapper {
+		position: relative;
+		flex: 1;
+		display: block;
+
+		.dashicons {
+			position: absolute;
+			left: 15px;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #999;
+			font-family: dashicons !important;
+			font-size: 20px;
+			width: 20px;
+			height: 20px;
+			line-height: 20px;
+			pointer-events: none;
+		}
+
+		input[type="text"] {
+			width: 100% !important;
+			padding: 15px 15px 15px 45px !important;
+			border: 1px solid #e0e0e0 !important;
+			border-radius: 8px !important;
+			font-size: 1rem !important;
+			color: #555 !important;
+			background: #f9f9f9 !important;
+			box-sizing: border-box !important;
+			margin: 0 !important;
+			height: auto !important;
+			line-height: normal !important;
+		}
+	}
+
+	.woo-wallet-copy-btn {
+		background: var(--wallet-primary-color);
+		color: #fff;
+		border: none;
+		padding: 15px 30px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: all 0.2s ease;
+		position: relative;
+		font-size: 1rem;
+		line-height: normal;
+
+		&:hover {
+			opacity: 0.9;
+			transform: translateY(-1px);
+		}
+
+		// Tooltip
+		&::after {
+			content: attr(data-tooltip);
+			visibility: hidden;
+			width: 140px;
+			background-color: #333;
+			color: #fff;
+			text-align: center;
+			border-radius: 6px;
+			padding: 8px;
+			position: absolute;
+			z-index: 100;
+			bottom: 130%;
+			left: 50%;
+			transform: translateX(-50%);
+			opacity: 0;
+			transition: opacity 0.3s;
+			font-size: 0.85rem;
+			font-weight: 400;
+			pointer-events: none;
+			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+		}
+
+		&::before {
+			content: "";
+			visibility: hidden;
+			position: absolute;
+			bottom: 120%;
+			left: 50%;
+			transform: translateX(-50%);
+			border-width: 6px;
+			border-style: solid;
+			border-color: #333 transparent transparent transparent;
+			opacity: 0;
+			transition: opacity 0.3s;
+		}
+
+		&:hover::after,
+		&:hover::before {
+			visibility: visible;
+			opacity: 1;
+		}
+	}
+
+	// Referral Stats Table
+	.woo-wallet-referral-stats {
+		background: #fff;
+		border-radius: 12px;
+		border: 1px solid var(--wallet-border-color);
+		padding: 0;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 0;
+			table-layout: fixed;
+		}
+
+		th {
+			text-align: left;
+			padding: 20px 30px;
+			font-weight: 600;
+			color: #7f8c8d;
+			border-bottom: 1px solid #eee;
+			background: #f9f9f9;
+			font-size: 0.95rem;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+
+		td {
+			padding: 20px 30px;
+			border-bottom: 1px solid #eee;
+			color: #2c3e50;
+			font-size: 1.1rem;
+			font-weight: 500;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+	}
+
+	// Referral summary cards
+	.woo-wallet-referral-stats {
+		margin-bottom: 30px;
+
+		.woo-wallet-section-title {
+			margin: 0;
+			padding: 20px 30px;
+			font-size: 1.1rem;
+			font-weight: 600;
+			color: #2c3e50;
+			border-bottom: 1px solid #eee;
+		}
+	}
+
+	.woo-wallet-referral-summary {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: 1px;
+		background: #eee;
+	}
+
+	.woo-wallet-referral-summary-card {
+		background: #fff;
+		padding: 24px 30px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.woo-wallet-referral-summary-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #2c3e50;
+	}
+
+	.woo-wallet-referral-summary-label {
+		font-size: 0.85rem;
+		color: #7f8c8d;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.woo-wallet-referral-summary-earned .woo-wallet-referral-summary-value {
+		color: var(--wallet-primary-color);
+	}
+
+	.woo-wallet-referral-legacy {
+		margin: 0;
+		padding: 16px 30px;
+		background: #f9f9f9;
+		border-top: 1px solid #eee;
+		font-size: 0.9rem;
+		color: #7f8c8d;
+	}
+
+	// Referral history list
+	.woo-wallet-referral-list {
+		background: #fff;
+		border-radius: 12px;
+		border: 1px solid var(--wallet-border-color);
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+
+		.woo-wallet-section-title {
+			margin: 0;
+			padding: 20px 30px;
+			font-size: 1.1rem;
+			font-weight: 600;
+			color: #2c3e50;
+			border-bottom: 1px solid #eee;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 0;
+		}
+
+		th {
+			text-align: left;
+			padding: 16px 30px;
+			font-weight: 600;
+			color: #7f8c8d;
+			border-bottom: 1px solid #eee;
+			background: #f9f9f9;
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+
+		td {
+			padding: 16px 30px;
+			border-bottom: 1px solid #eee;
+			color: #2c3e50;
+			font-size: 0.95rem;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+	}
+
+	.woo-wallet-referral-empty {
+		padding: 30px;
+		margin: 0;
+		text-align: center;
+		color: #7f8c8d;
+	}
+
+	.woo-wallet-referral-badge {
+		display: inline-block;
+		padding: 4px 12px;
+		border-radius: 999px;
+		font-size: 0.78rem;
+		font-weight: 600;
+
+		&.woo-wallet-referral-badge-completed {
+			background: #e6f6ec;
+			color: #1a7f3c;
+		}
+
+		&.woo-wallet-referral-badge-pending {
+			background: #fff4e0;
+			color: #b9770e;
+		}
+
+		&.woo-wallet-referral-badge-rejected {
+			background: #fdecec;
+			color: #c0392b;
+		}
+	}
+
+	.woo-wallet-referral-pagination {
+		padding: 20px 30px;
+
+		ul {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		li {
+			margin: 0;
+		}
+
+		.page-numbers {
+			display: inline-block;
+			padding: 8px 14px;
+			border-radius: 8px;
+			border: 1px solid var(--wallet-border-color);
+			color: #2c3e50;
+			text-decoration: none;
+			font-size: 0.9rem;
+
+			&.current {
+				background: var(--wallet-primary-color);
+				color: #fff;
+				border-color: var(--wallet-primary-color);
+			}
+		}
+	}
+
+	// Responsive
+	@media (max-width: 768px) {
+
+		.woo-wallet-nav-tabs {
+			flex-direction: column;
+			border-radius: 0 0 15px 15px;
+		}
+
+		.woo-wallet-nav-item-wrapper {
+			width: 100%;
+		}
+
+		.woo-wallet-nav-tab {
+			border-right: none;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		}
+
+		.woo-wallet-submenu {
+			position: static;
+			display: none;
+
+			/* Hidden by default on mobile too, could use JS to toggle */
+			box-shadow: none;
+			width: 100%;
+			opacity: 1;
+			visibility: visible;
+			transform: none;
+			background: #f9f9f9;
+		}
+
+		.woo-wallet-balance-card .woo-wallet-price {
+			font-size: 2.5rem;
+		}
+
+		.woo-wallet-referral-input-group {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.woo-wallet-copy-btn {
+			width: 100%;
+			margin-top: 10px;
+		}
+
+		.woo-wallet-referral-input-wrapper input[type="text"] {
+			padding-left: 45px !important;
+		}
+
+		.woo-wallet-content-area,
+		.woo-wallet-referral-stats {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.woo-wallet-referral-stats table {
+			min-width: 600px;
+		}
+
+		// Recent transactions: collapse grid rows into stacked cards.
+		.ww-txn-head {
+			padding: 18px 18px;
+		}
+
+		.ww-txn-table {
+			padding: 8px;
+
+			// Compound selector so this beats the `.ww-txn-row { display: block }`
+			// rule below — both match the head row with equal specificity, and
+			// the block rule comes later in source, so a plain `.ww-txn-row--head`
+			// would lose the tie and the header would render as a ghost card.
+			.ww-txn-row.ww-txn-row--head {
+				display: none;
+			}
+
+			.ww-txn-row {
+				display: block;
+				padding: 14px 14px;
+				margin-bottom: 8px;
+				border: 1px solid #eef0f3;
+				border-radius: 10px;
+				background: #fff;
+			}
+
+			.ww-txn-row:last-child {
+				margin-bottom: 0;
+			}
+
+			.ww-txn-row:not(.ww-txn-row--head):hover {
+				background: #fff;
+			}
+
+			.ww-txn-cell {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 14px;
+				padding: 5px 0;
+				text-align: right;
+			}
+
+			.ww-txn-cell::before {
+				content: attr(data-label);
+				flex: 0 0 auto;
+				font-size: 0.7rem;
+				font-weight: 700;
+				letter-spacing: 0.05em;
+				text-transform: uppercase;
+				color: #98a2b3;
+			}
+
+			// Description leads the card: bigger, no label, left aligned.
+			.ww-txn-cell--desc {
+				padding-top: 0;
+				font-size: 1rem;
+				font-weight: 600;
+				text-align: left;
+
+				&::before {
+					display: none;
+				}
+			}
+
+			.ww-txn-cell--type {
+				justify-content: space-between;
+			}
+
+			.ww-txn-cell--amount {
+				padding-bottom: 0;
+				font-size: 1.05rem;
+			}
+		}
+
+		// Tabulator responsive tweaks
+		.tabulator {
+			font-size: 0.88rem;
+			border-radius: 10px;
+
+			.tabulator-header .tabulator-col {
+				padding: 12px 14px;
+				font-size: 0.72rem;
+			}
+
+			.tabulator-row .tabulator-cell {
+				padding: 12px 14px;
+				font-size: 0.88rem;
+			}
+
+			.tabulator-row .tabulator-responsive-collapse {
+				padding: 10px 14px;
+			}
+
+			.tabulator-footer {
+				padding: 10px 6px;
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+
+				.tabulator-footer-contents {
+					flex-wrap: nowrap !important;
+					justify-content: flex-start;
+					white-space: nowrap;
+					min-width: min-content;
+				}
+
+				.tabulator-paginator {
+					flex-wrap: nowrap !important;
+					justify-content: flex-start;
+					white-space: nowrap;
+					width: 100%;
+
+					label {
+						display: none;
+					}
+
+					.tabulator-page {
+						padding: 5px 9px;
+						min-width: 30px;
+						margin: 0 1px;
+						flex: 0 0 auto;
+					}
+
+					.tabulator-page-size {
+						padding: 5px 8px;
+						flex: 0 0 auto;
+					}
+				}
+			}
+		}
+
+		.woo-wallet-table-controls {
+			flex-wrap: nowrap;
+			justify-content: flex-end;
+			gap: 6px;
+			padding: 8px 10px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+
+			input[type="date"] {
+				flex: 0 0 auto;
+				min-width: 0;
+				width: auto;
+				max-width: 140px;
+				padding: 6px 8px;
+				font-size: 0.82rem;
+			}
+
+			.woo-wallet-filter-sep {
+				flex: 0 0 auto;
+			}
+
+			.wc-wallet-filter-clear {
+				flex: 0 0 auto;
+				width: 28px;
+				height: 28px;
+				font-size: 14px;
+			}
+		}
+	}
+
+	// Very narrow: drop First/Last page buttons to declutter the paginator
+	@media (max-width: 480px) {
+
+		.tabulator .tabulator-footer .tabulator-paginator {
+
+			.tabulator-page[data-page="first"],
+			.tabulator-page[data-page="last"] {
+				display: none;
+			}
+		}
+
+		.woo-wallet-table-controls input[type="date"] {
+			max-width: 120px;
+		}
+
+		.woo-wallet-stats-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 12px;
+		}
+
+		.woo-wallet-stat-card {
+			padding: 16px;
+
+			&__value {
+				font-size: 1.3rem;
+			}
+		}
+	}
+
+	.woo-wallet-table-controls {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 8px;
+		flex-wrap: wrap;
+		background: #f9fafc;
+		border-radius: 10px;
+		padding: 10px 14px;
+
+		input[type="date"] {
+			padding: 7px 12px !important;
+			border: 1px solid var(--wallet-border-color) !important;
+			border-radius: 8px !important;
+			font-size: 0.9rem !important;
+			background: #fff !important;
+			color: #2c3e50 !important;
+			outline: none !important;
+			box-shadow: none !important;
+			text-shadow: none !important;
+			line-height: normal !important;
+			min-height: 0 !important;
+			height: auto !important;
+			width: auto;
+			margin: 0;
+			font-family: inherit;
+			transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+			&:hover {
+				border-color: #d0d4db !important;
+			}
+
+			&:focus {
+				border-color: var(--wallet-primary-color) !important;
+				box-shadow: 0 0 0 3px rgba(72, 61, 224, 0.12) !important;
+			}
+
+			&::-webkit-calendar-picker-indicator {
+				cursor: pointer;
+				opacity: 0.6;
+				transition: opacity 0.2s ease;
+			}
+
+			&:hover::-webkit-calendar-picker-indicator {
+				opacity: 1;
+			}
+		}
+
+		.woo-wallet-filter-sep {
+			color: #9ba3af;
+			font-weight: 600;
+		}
+
+		.wc-wallet-filter-clear {
+			display: inline-flex !important;
+			align-items: center;
+			justify-content: center;
+			width: 32px !important;
+			height: 32px !important;
+			min-height: 0 !important;
+			padding: 0 !important;
+			margin: 0;
+			line-height: 1 !important;
+			border: 1px solid var(--wallet-border-color) !important;
+			border-radius: 8px !important;
+			background: #fff !important;
+			background-image: none !important;
+			color: #7f8c8d !important;
+			font-size: 16px !important;
+			font-weight: 600 !important;
+			font-family: inherit !important;
+			text-transform: none !important;
+			letter-spacing: normal !important;
+			box-shadow: none !important;
+			text-shadow: none !important;
+			cursor: pointer;
+			transition: all 0.2s ease;
+
+			&:hover {
+				background: var(--wallet-primary-color) !important;
+				border-color: var(--wallet-primary-color) !important;
+				color: #fff !important;
+				box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
+			}
+		}
+	}
+
+	// Tabulator - Wallet themed skin
+	// Theme-independence reset: neutralize common theme overrides (Astra, Storefront, etc.)
+	// targeting native elements (button/select/input/a/table) inside Tabulator.
+	.tabulator {
+
+		button,
+		select,
+		input {
+			font-family: inherit !important;
+			line-height: normal !important;
+			text-transform: none !important;
+			letter-spacing: normal !important;
+			box-shadow: none !important;
+			text-shadow: none !important;
+			min-height: 0 !important;
+			height: auto !important;
+			width: auto;
+			margin: 0;
+		}
+
+		button {
+			background-image: none !important;
+			text-decoration: none !important;
+		}
+
+		select {
+			appearance: auto !important;
+			-webkit-appearance: auto !important;
+			-moz-appearance: auto !important;
+			background-image: none !important;
+		}
+
+		a {
+			text-decoration: none !important;
+			box-shadow: none !important;
+			background: none !important;
+		}
+
+		// Collapse table used for responsive rows
+		.tabulator-responsive-collapse table,
+		.tabulator-responsive-collapse tr,
+		.tabulator-responsive-collapse td,
+		.tabulator-responsive-collapse th {
+			background: transparent !important;
+			border: 0 !important;
+			box-shadow: none !important;
+		}
+	}
+
+	.tabulator {
+		background: #fff;
+		border: 1px solid var(--wallet-border-color);
+		border-radius: 12px;
+		box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+		overflow: visible;
+		font-size: 0.95rem;
+		color: var(--wallet-text-color);
+		font-family: inherit;
+
+		.tabulator-header {
+			background: #f9f9f9;
+			border-bottom: 1px solid var(--wallet-border-color);
+			border-radius: 12px 12px 0 0;
+			overflow: hidden;
+			color: #7f8c8d;
+			font-weight: 700;
+			text-transform: uppercase;
+			font-size: 0.8rem;
+			letter-spacing: 0.5px;
+
+			.tabulator-col {
+				background: transparent;
+				border-right: 0;
+				padding: 15px 20px;
+
+				.tabulator-col-content {
+					padding: 0;
+				}
+
+				.tabulator-col-title {
+					white-space: normal;
+					color: #7f8c8d;
+				}
+			}
+		}
+
+		.tabulator-tableholder {
+
+			.tabulator-placeholder {
+				color: #7f8c8d;
+				padding: 40px 20px;
+				font-style: italic;
+			}
+		}
+
+		.tabulator-row {
+			background: #fff;
+			border-bottom: 1px solid var(--wallet-border-color);
+			min-height: 48px;
+			transition: background 0.2s ease;
+
+			&.tabulator-row-even {
+				background: #fff;
+			}
+
+			&:hover {
+				background: #fafafa !important;
+			}
+
+			&:last-child {
+				border-bottom: 0;
+			}
+
+			.tabulator-cell {
+				border-right: 0;
+				padding: 15px 20px;
+				color: #2c3e50;
+				font-size: 0.95rem;
+				vertical-align: middle;
+
+				&.tabulator-row-handle {
+					padding: 15px 20px;
+				}
+
+				// Details column: show the full text by wrapping it onto
+				// multiple lines instead of truncating with an ellipsis. The
+				// column keeps its responsive priority (never collapses), so
+				// wrapping here is what keeps the content readable on narrow
+				// screens without breaking the layout.
+				&.woo-wallet-details-cell {
+					white-space: normal;
+					overflow: visible;
+					text-overflow: clip;
+					word-break: break-word;
+					overflow-wrap: anywhere;
+					line-height: 1.45;
+				}
+			}
+
+			// Responsive collapse toggle pill
+			.tabulator-responsive-collapse-toggle {
+				background: var(--wallet-primary-color) !important;
+				color: #fff !important;
+				border-radius: 50% !important;
+				width: 22px !important;
+				height: 22px !important;
+				min-height: 0 !important;
+				line-height: 22px !important;
+				text-align: center;
+				font-weight: 700 !important;
+				font-size: 14px !important;
+				padding: 0 !important;
+				margin: 0;
+				box-shadow: 0 2px 5px rgba(72, 61, 224, 0.25) !important;
+
+				svg {
+					stroke: #fff !important;
+					fill: none;
+				}
+			}
+
+			.tabulator-responsive-collapse {
+				border-top: 1px dashed var(--wallet-border-color);
+				padding: 12px 20px;
+				background: #fafbfc;
+
+				table {
+					width: 100%;
+
+					tr td {
+						border: 0;
+						padding: 4px 0;
+						color: #2c3e50;
+						font-size: 0.9rem;
+
+						&:first-child {
+							font-weight: 600;
+							color: #7f8c8d;
+							text-transform: uppercase;
+							font-size: 0.72rem;
+							letter-spacing: 0.3px;
+							padding-right: 12px;
+							white-space: nowrap;
+							width: 35%;
+						}
+					}
+				}
+			}
+		}
+
+		// Footer / pagination
+		.tabulator-footer {
+			background: #fff;
+			border-top: 1px solid var(--wallet-border-color);
+			border-radius: 0 0 12px 12px;
+			padding: 12px 20px;
+			color: var(--wallet-text-color);
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+
+			.tabulator-footer-contents {
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				flex-wrap: nowrap;
+				gap: 8px;
+				min-width: min-content;
+			}
+
+			.tabulator-paginator {
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				flex-wrap: nowrap;
+				gap: 6px;
+				color: var(--wallet-text-color);
+				white-space: nowrap;
+
+				label {
+					color: #7f8c8d;
+					font-size: 0.85rem;
+					margin-right: 4px;
+					margin-top: 4px;
+				}
+
+				.tabulator-page-size {
+					border: 1px solid var(--wallet-border-color) !important;
+					border-radius: 6px !important;
+					padding: 6px 10px !important;
+					font-size: 0.9rem !important;
+					color: #555 !important;
+					background: #fff !important;
+					outline: none !important;
+					cursor: pointer;
+					margin-right: 6px;
+
+					&:focus {
+						border-color: var(--wallet-primary-color) !important;
+					}
+				}
+
+				.tabulator-page {
+					background: transparent !important;
+					border: 1px solid transparent !important;
+					border-radius: 6px !important;
+					padding: 6px 12px !important;
+					margin: 0 2px;
+					color: #555 !important;
+					font-weight: 600 !important;
+					font-size: 0.9rem !important;
+					cursor: pointer;
+					transition: all 0.2s ease;
+					min-width: 34px;
+
+					&:not(.disabled):hover {
+						background: #f0f0f0 !important;
+						color: #333 !important;
+						border-color: #ddd !important;
+					}
+
+					&.active {
+						background: var(--wallet-primary-color) !important;
+						color: #fff !important;
+						border-color: var(--wallet-primary-color) !important;
+						box-shadow: 0 2px 5px rgba(72, 61, 224, 0.2) !important;
+					}
+
+					&.disabled {
+						color: #bbb !important;
+						cursor: not-allowed;
+						opacity: 0.6;
+					}
+				}
+			}
+		}
+
+		mark.credit {
+			background: none;
+			color: #27ae60;
+			font-weight: 700;
+		}
+
+		mark.debit {
+			background: none;
+			color: #c0392b;
+			font-weight: 700;
+		}
+	}
+
+	#wc-wallet-transaction-details mark.credit {
+		background: none;
+		color: #27ae60;
+		font-weight: 700;
+	}
+
+	#wc-wallet-transaction-details mark.debit {
+		background: none;
+		color: #c0392b;
+		font-weight: 700;
+	}
 }

@@ -4,7 +4,7 @@
  * Renders the block in the Gutenberg editor with a live preview and
  * inspector controls for icon selection, colors, size, and link URL.
  *
- * @package woo-wallet
+ * @package
  */
 
 import { __ } from '@wordpress/i18n';
@@ -40,8 +40,8 @@ const COLORS = [
 /**
  * Edit component.
  *
- * @param {Object} props               Block props.
- * @param {Object} props.attributes    Block attributes.
+ * @param {Object}   props               Block props.
+ * @param {Object}   props.attributes    Block attributes.
  * @param {Function} props.setAttributes Attribute setter.
  * @return {JSX.Element}
  */
@@ -60,7 +60,8 @@ export default function Edit( { attributes, setAttributes } ) {
 	} );
 
 	// Get the selected icon component.
-	const SelectedIcon = WALLET_ICONS[ walletIcon ] || WALLET_ICONS[ 'classic-wallet' ];
+	const SelectedIcon =
+		WALLET_ICONS[ walletIcon ] || WALLET_ICONS[ 'classic-wallet' ];
 
 	return (
 		<>
@@ -92,7 +93,9 @@ export default function Edit( { attributes, setAttributes } ) {
 													walletIcon: key,
 												} )
 											}
-											aria-label={ WALLET_ICON_LABELS[ key ] }
+											aria-label={
+												WALLET_ICON_LABELS[ key ]
+											}
 											aria-pressed={ walletIcon === key }
 										>
 											<IconComponent size={ 28 } />
@@ -124,8 +127,14 @@ export default function Edit( { attributes, setAttributes } ) {
 						label={ __( 'Show Balance', 'woo-wallet' ) }
 						help={
 							showBalance
-								? __( 'Balance amount is visible.', 'woo-wallet' )
-								: __( 'Only the icon will be displayed.', 'woo-wallet' )
+								? __(
+										'Balance amount is visible.',
+										'woo-wallet'
+								  )
+								: __(
+										'Only the icon will be displayed.',
+										'woo-wallet'
+								  )
 						}
 						checked={ showBalance }
 						onChange={ ( value ) =>
@@ -157,7 +166,9 @@ export default function Edit( { attributes, setAttributes } ) {
 								colors={ COLORS }
 								value={ balanceColor }
 								onChange={ ( value ) =>
-									setAttributes( { balanceColor: value || '' } )
+									setAttributes( {
+										balanceColor: value || '',
+									} )
 								}
 								clearable={ true }
 							/>

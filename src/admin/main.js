@@ -1,27 +1,26 @@
 /* global terawallet_admin_params */
 import '../scss/admin.scss';
-jQuery(function ($) {
-    $('.lock-unlock-user-wallet').on('click', function(){
-        var self = $(this);
-        var data = {
-            action : 'lock_unlock_terawallet',
-            user_id: $(this).data('user_id'),
-            type: $(this).data('type'),
-            security : terawallet_admin_params.lock_unlock_nonce
-        };
-        $.post(terawallet_admin_params.ajax_url, data, function(response){
-            if('lock' === response.data.type){
-                self.find('span').removeClass('dashicons-unlock');
-                self.find('span').addClass('dashicons-lock');
-                self.find('label').text(response.data.text);
-                self.data('type', response.data.type);
-            } else{
-                self.find('span').removeClass('dashicons-lock');
-                self.find('span').addClass('dashicons-unlock');
-                self.find('label').text(response.data.text);
-                self.data('type', response.data.type);
-            }
-        });
-    });
-    
-});
+jQuery( function ( $ ) {
+	$( '.lock-unlock-user-wallet' ).on( 'click', function () {
+		const self = $( this );
+		const data = {
+			action: 'lock_unlock_terawallet',
+			user_id: $( this ).data( 'user_id' ),
+			type: $( this ).data( 'type' ),
+			security: terawallet_admin_params.lock_unlock_nonce,
+		};
+		$.post( terawallet_admin_params.ajax_url, data, function ( response ) {
+			if ( 'lock' === response.data.type ) {
+				self.find( 'span' ).removeClass( 'dashicons-unlock' );
+				self.find( 'span' ).addClass( 'dashicons-lock' );
+				self.find( 'label' ).text( response.data.text );
+				self.data( 'type', response.data.type );
+			} else {
+				self.find( 'span' ).removeClass( 'dashicons-lock' );
+				self.find( 'span' ).addClass( 'dashicons-unlock' );
+				self.find( 'label' ).text( response.data.text );
+				self.data( 'type', response.data.type );
+			}
+		} );
+	} );
+} );

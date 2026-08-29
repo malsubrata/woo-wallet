@@ -3,7 +3,7 @@
  *
  * Entry point that registers the block using metadata from block.json.
  *
- * @package woo-wallet
+ * @package
  */
 
 import { registerBlockType } from '@wordpress/blocks';

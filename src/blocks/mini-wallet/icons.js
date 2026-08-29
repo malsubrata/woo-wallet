@@ -5,12 +5,13 @@
  * They use `currentColor` for fill/stroke so they inherit the parent's color
  * and respond to the admin's iconColor attribute.
  *
- * @package woo-wallet
+ * @package
  */
 
 /**
  * Shared <svg> wrapper for all wallet icons.
  *
+ * @param          props.children
  * @param {Object} props          Props for the SVG element.
  * @param {number} [props.size]   Pixel size for width/height.
  * @return {JSX.Element}
@@ -36,6 +37,8 @@ const Icon = ( { children, size = 24, ...props } ) => (
 
 /**
  * Classic Wallet – bifold wallet with clasp.
+ * @param root0
+ * @param root0.size
  */
 export const ClassicWallet = ( { size, ...props } ) => (
 	<Icon size={ size } { ...props }>
@@ -48,6 +51,8 @@ export const ClassicWallet = ( { size, ...props } ) => (
 
 /**
  * Cash Wallet – wallet with cash / bill peeking out the top.
+ * @param root0
+ * @param root0.size
  */
 export const CashWallet = ( { size, ...props } ) => (
 	<Icon size={ size } { ...props }>
@@ -61,12 +66,22 @@ export const CashWallet = ( { size, ...props } ) => (
 
 /**
  * Card Wallet – modern slim wallet with stacked cards.
+ * @param root0
+ * @param root0.size
  */
 export const CardWallet = ( { size, ...props } ) => (
 	<Icon size={ size } { ...props }>
 		<rect x="2" y="5" width="20" height="15" rx="2.5" ry="2.5" />
 		<path d="M2 10h20" />
-		<rect x="5" y="13.5" width="9" height="3.5" rx="0.75" ry="0.75" strokeWidth="1.25" />
+		<rect
+			x="5"
+			y="13.5"
+			width="9"
+			height="3.5"
+			rx="0.75"
+			ry="0.75"
+			strokeWidth="1.25"
+		/>
 		<path d="M16.5 15.25h2.5" strokeWidth="1.25" opacity="0.6" />
 	</Icon>
 );
