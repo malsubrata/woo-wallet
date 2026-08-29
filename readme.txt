@@ -141,11 +141,14 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.14 (Unreleased) =
-* Tweak - Development in progress.
+* Fix - The wallet balance shown on the Blocks checkout no longer breaks the payment method when the balance cannot be read as a number.
+* Fix - The settings screen reopens on the tab you left, on browsers where storage is unavailable.
+* Tweak - Redesigned the Upgrade to Pro page.
+* Tweak - Pro pricing now reads "from $79" and points to the 5-site and 25-site licences.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.6.14 =
-Development in progress.
+Fixes a wallet balance error on the Blocks checkout. Refreshed Upgrade to Pro page with multi-site licence pricing.

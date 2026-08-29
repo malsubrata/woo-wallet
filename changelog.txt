@@ -1,4 +1,10 @@
 *** Changelog ***
+= v1.6.14 (Unreleased) =
+* Fix - The wallet balance shown on the Blocks checkout no longer breaks the payment method when the balance cannot be read as a number.
+* Fix - The settings screen reopens on the tab you left, on browsers where storage is unavailable.
+* Tweak - Redesigned the Upgrade to Pro page.
+* Tweak - Pro pricing now reads "from $79" and points to the 5-site and 25-site licences.
+
 = v1.6.13 (August 22, 2026) =
 * Security - The wallet CSV export and download now require the wallet management capability, not just a valid request token.
 * Fix - Cashback is credited again on stores that had saved the settings page. No need to re-save; the "Recalculate cashback" order action works again too.
