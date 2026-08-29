@@ -31,13 +31,37 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		const UPGRADE_URL    = 'https://standalonetech.com/product/woocommerce-wallet-pro/';
 
 		/**
-		 * Displayed licence price. Hard-coded on purpose: this page must render
+		 * Lowest licence price. Hard-coded on purpose: this page must render
 		 * fully offline, so it never fetches pricing from the store.
+		 *
+		 * Only the entry price is stored, never the full tier list: this plugin
+		 * ships and then freezes on the store that installed it, so a price list
+		 * baked in today would still be on screen long after it changed. "From"
+		 * the floor stays true when the higher tiers move.
 		 */
 		const PRICE = '$79';
 		const API_KEYS_URL   = 'https://standalonetech.com/my-account/';
 		const DOCS_URL       = 'https://docs.standalonetech.com/';
 		const SUPPORT_URL    = 'https://standalonetech.com/support-forum/';
+
+		/**
+		 * Price wording shared by every promo surface, in one place.
+		 *
+		 * @return string
+		 */
+		public static function price_label() {
+			/* translators: %s: lowest licence price, e.g. $79. */
+			$label = sprintf( __( 'from %s', 'woo-wallet' ), self::PRICE );
+
+			/**
+			 * Filter the Pro price label shown across the admin.
+			 *
+			 * @since 1.6.14
+			 *
+			 * @param string $label Price label.
+			 */
+			return apply_filters( 'woo_wallet_pro_price_label', $label );
+		}
 
 		/**
 		 * Class constructor.
@@ -239,7 +263,10 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			}
 			?>
 			<section class="tw-section tw-storecase">
-				<h2 class="tw-section__title"><?php esc_html_e( 'What this is worth on your store', 'woo-wallet' ); ?></h2>
+				<div class="tw-section__head">
+					<h2 class="tw-section__title"><?php esc_html_e( 'What this is worth on your store', 'woo-wallet' ); ?></h2>
+					<span class="tw-section__meta"><?php esc_html_e( 'Your figures', 'woo-wallet' ); ?></span>
+				</div>
 				<div class="tw-storecase__figures">
 					<div class="tw-storecase__figure">
 						<span class="tw-storecase__value"><?php echo esc_html( $data->format_amount( $liability ) ); ?></span>
@@ -339,23 +366,52 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		private function render_hero() {
 			?>
 			<section class="tw-hero">
-				<div class="tw-hero__inner">
-					<h1><?php esc_html_e( 'TeraWallet Pro', 'woo-wallet' ); ?></h1>
+				<div class="tw-hero__lead">
+					<p class="tw-eyebrow"><?php esc_html_e( 'TeraWallet — Upgrade', 'woo-wallet' ); ?></p>
+					<h1><?php esc_html_e( 'Everything your wallet needs once customers actually use it.', 'woo-wallet' ); ?></h1>
 					<p class="tw-hero__subtitle">
-						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — everything your wallet needs once customers actually start using it.', 'woo-wallet' ); ?>
-					</p>
-					<p class="tw-hero__price">
-						<span class="tw-hero__amount"><?php echo esc_html( self::PRICE ); ?></span>
-						<span class="tw-hero__term"><?php esc_html_e( 'per year, one site', 'woo-wallet' ); ?></span>
+						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts.', 'woo-wallet' ); ?>
 					</p>
 					<div class="tw-hero__cta">
-						<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<a class="tw-btn tw-btn--light" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
+							<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
 						</a>
+						<p class="tw-hero__reassure">
+							<?php esc_html_e( '30-day money-back guarantee', 'woo-wallet' ); ?><br />
+							<?php esc_html_e( 'One year of updates and priority support', 'woo-wallet' ); ?>
+						</p>
 					</div>
-					<p class="tw-hero__reassure">
-						<?php esc_html_e( '30-day money-back guarantee. Includes one year of updates and priority support.', 'woo-wallet' ); ?>
+				</div>
+				<div class="tw-hero__panel">
+					<?php // Composed rather than printed through price_label(): the design sets the amount apart from its qualifiers. self::PRICE stays the one source of the number. ?>
+					<p class="tw-price">
+						<span class="tw-price__from"><?php esc_html_e( 'from', 'woo-wallet' ); ?></span>
+						<span class="tw-price__amount"><?php echo esc_html( self::PRICE ); ?></span>
+						<span class="tw-price__term"><?php esc_html_e( '/ year', 'woo-wallet' ); ?></span>
 					</p>
+					<div class="tw-hero__rule" aria-hidden="true"></div>
+					<div class="tw-hero__licence">
+						<p><?php esc_html_e( 'One licence covers one site.', 'woo-wallet' ); ?></p>
+						<p>
+							<?php
+							printf(
+								/* translators: %s: link to the pricing page, link text "pricing page". */
+								esc_html__( '5-site and 25-site licences are on the %s.', 'woo-wallet' ),
+								'<a href="' . esc_url( woo_wallet_pro_url( 'multisite-licence' ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'pricing page', 'woo-wallet' ) . '</a>'
+							);
+							?>
+						</p>
+						<p class="tw-hero__meta">
+							<?php
+							printf(
+								/* translators: %s: TeraWallet free plugin version number. */
+								esc_html__( 'Version %s · Free plugin active', 'woo-wallet' ),
+								esc_html( WOO_WALLET_PLUGIN_VERSION )
+							);
+							?>
+						</p>
+					</div>
 				</div>
 			</section>
 			<?php
@@ -375,7 +431,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			return array(
 				array(
 					'id'      => 'withdrawals',
-					'icon'    => 'dashicons-money-alt',
 					'title'   => __( 'Wallet Withdrawals', 'woo-wallet' ),
 					'outcome' => __( 'Unblocks marketplace and affiliate payouts — money can finally leave the wallet without you touching a bank portal.', 'woo-wallet' ),
 					'bullets' => array(
@@ -387,7 +442,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'credit-expiry',
-					'icon'    => 'dashicons-clock',
 					'title'   => __( 'Credit Expiry', 'woo-wallet' ),
 					'outcome' => __( 'Reclaims unspent wallet liability instead of carrying it on your books forever.', 'woo-wallet' ),
 					'bullets' => array(
@@ -399,7 +453,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'earning-actions',
-					'icon'    => 'dashicons-buddicons-activity',
 					'title'   => __( 'Spend Milestone &amp; Birthday Bonuses', 'woo-wallet' ),
 					'outcome' => __( 'Drives repeat purchases: customers earn a reason to come back before they have thought about leaving.', 'woo-wallet' ),
 					'bullets' => array(
@@ -411,7 +464,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'reports',
-					'icon'    => 'dashicons-chart-area',
 					'title'   => __( 'Breakage, Aging &amp; Payout Reports', 'woo-wallet' ),
 					'outcome' => __( 'Tells you how much of your outstanding liability is never going to be spent — the number your accountant keeps asking for.', 'woo-wallet' ),
 					'bullets' => array(
@@ -422,7 +474,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'coupons',
-					'icon'    => 'dashicons-tag',
 					'title'   => __( 'Wallet Coupons', 'woo-wallet' ),
 					'outcome' => __( 'Turns a discount campaign into stored credit that has to be spent with you.', 'woo-wallet' ),
 					'bullets' => array(
@@ -433,7 +484,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'importer',
-					'icon'    => 'dashicons-upload',
 					'title'   => __( 'Bulk CSV Importer', 'woo-wallet' ),
 					'outcome' => __( 'Migrates an existing credit programme in one upload instead of hundreds of manual adjustments.', 'woo-wallet' ),
 					'bullets' => array(
@@ -444,7 +494,6 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'id'      => 'affiliatewp',
-					'icon'    => 'dashicons-groups',
 					'title'   => __( 'AffiliateWP Payouts', 'woo-wallet' ),
 					'outcome' => __( 'Pays commission as store credit, so affiliate earnings come back to you as orders instead of leaving as cash.', 'woo-wallet' ),
 					'bullets' => array(
@@ -460,13 +509,28 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * Feature grid.
 		 */
 		private function render_features() {
+			$features = $this->pro_features();
+			$count    = count( $features );
+			$index    = 0;
 			?>
 			<section class="tw-section">
-				<h2 class="tw-section__title"><?php esc_html_e( 'What Pro adds to your store', 'woo-wallet' ); ?></h2>
+				<div class="tw-section__head">
+					<h2 class="tw-section__title"><?php esc_html_e( 'What Pro adds to your store', 'woo-wallet' ); ?></h2>
+					<span class="tw-section__meta">
+						<?php
+						printf(
+							/* translators: %s: number of Pro modules, zero-padded. */
+							esc_html( _n( '%s module', '%s modules', $count, 'woo-wallet' ) ),
+							esc_html( str_pad( (string) $count, 2, '0', STR_PAD_LEFT ) )
+						);
+						?>
+					</span>
+				</div>
 				<div class="tw-features">
-					<?php foreach ( $this->pro_features() as $feature ) : ?>
+					<?php foreach ( $features as $feature ) : ?>
+						<?php ++$index; ?>
 						<div class="tw-feature">
-							<span class="tw-feature__icon dashicons <?php echo esc_attr( $feature['icon'] ); ?>" aria-hidden="true"></span>
+							<span class="tw-feature__index" aria-hidden="true"><?php echo esc_html( str_pad( (string) $index, 2, '0', STR_PAD_LEFT ) ); ?></span>
 							<h3><?php echo wp_kses( $feature['title'], array() ); ?></h3>
 							<p class="tw-feature__outcome"><?php echo esc_html( $feature['outcome'] ); ?></p>
 							<ul class="tw-feature__list">
@@ -482,6 +546,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 									esc_html( wp_strip_all_tags( html_entity_decode( $feature['title'], ENT_QUOTES, 'UTF-8' ) ) )
 								);
 								?>
+								<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
 							</a>
 						</div>
 					<?php endforeach; ?>
@@ -497,47 +562,55 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			$groups = $this->comparison_groups();
 			?>
 			<section class="tw-section">
-				<h2 class="tw-section__title"><?php esc_html_e( 'Free vs Pro', 'woo-wallet' ); ?></h2>
-				<p class="tw-section__intro"><?php esc_html_e( 'The free plugin is a complete wallet. Pro is what you need once that wallet is holding real money.', 'woo-wallet' ); ?></p>
-				<div class="tw-compare__scroll">
-					<table class="tw-compare">
-						<thead>
-							<tr>
-								<th><?php esc_html_e( 'Feature', 'woo-wallet' ); ?></th>
-								<th class="tw-compare__cell"><?php esc_html_e( 'Free', 'woo-wallet' ); ?></th>
-								<th class="tw-compare__cell"><?php esc_html_e( 'Pro', 'woo-wallet' ); ?></th>
-							</tr>
-						</thead>
-						<?php foreach ( $groups as $group ) : ?>
-							<tbody>
-								<tr class="tw-compare__group">
-									<th colspan="3" scope="colgroup"><?php echo esc_html( $group['title'] ); ?></th>
-								</tr>
-								<?php foreach ( $group['rows'] as $row ) : ?>
-									<tr>
-										<td><?php echo esc_html( $row[0] ); ?></td>
-										<td class="tw-compare__cell"><?php echo $this->tick( $row[1] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-										<td class="tw-compare__cell"><?php echo $this->tick( $row[2] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						<?php endforeach; ?>
-					</table>
+				<div class="tw-section__head tw-section__head--stacked">
+					<h2 class="tw-section__title"><?php esc_html_e( 'Free vs Pro', 'woo-wallet' ); ?></h2>
+					<p class="tw-section__intro"><?php esc_html_e( 'The free plugin is a complete wallet. Pro is what you need once that wallet is holding real money.', 'woo-wallet' ); ?></p>
 				</div>
-				<?php // The table itself is a factual feature list, but its CTA is an upsell: never rendered for someone who already has Pro. ?>
-				<?php if ( ! woo_wallet_is_pro_active() ) : ?>
-					<p class="tw-compare__cta">
-						<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
-							<?php
-							printf(
-								/* translators: %s: licence price, e.g. $79. */
-								esc_html__( 'Get everything in the Pro column — %s per year', 'woo-wallet' ),
-								esc_html( self::PRICE )
-							);
-							?>
-						</a>
-					</p>
-				<?php endif; ?>
+				<div class="tw-compare__card">
+					<div class="tw-compare__scroll">
+						<table class="tw-compare">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Feature', 'woo-wallet' ); ?></th>
+									<th class="tw-compare__cell"><?php esc_html_e( 'Free', 'woo-wallet' ); ?></th>
+									<th class="tw-compare__cell tw-compare__cell--pro"><?php esc_html_e( 'Pro', 'woo-wallet' ); ?></th>
+								</tr>
+							</thead>
+							<?php foreach ( $groups as $group ) : ?>
+								<tbody>
+									<tr class="tw-compare__group">
+										<th colspan="3" scope="colgroup"><?php echo esc_html( $group['title'] ); ?></th>
+									</tr>
+									<?php foreach ( $group['rows'] as $row ) : ?>
+										<tr>
+											<td><?php echo esc_html( $row[0] ); ?></td>
+											<td class="tw-compare__cell"><?php echo $this->tick( $row[1] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+											<td class="tw-compare__cell"><?php echo $this->tick( $row[2] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							<?php endforeach; ?>
+						</table>
+					</div>
+					<?php // The table itself is a factual feature list, but its CTA is an upsell: never rendered for someone who already has Pro. ?>
+					<?php if ( ! woo_wallet_is_pro_active() ) : ?>
+						<div class="tw-compare__foot">
+							<span>
+								<?php
+								printf(
+									/* translators: %s: price label, e.g. "from $79". */
+									esc_html__( 'Everything in the Pro column, %s per year.', 'woo-wallet' ),
+									esc_html( self::price_label() )
+								);
+								?>
+							</span>
+							<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
+								<?php esc_html_e( 'Upgrade to Pro', 'woo-wallet' ); ?>
+								<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
+							</a>
+						</div>
+					<?php endif; ?>
+				</div>
 			</section>
 			<?php
 		}
@@ -618,42 +691,41 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		private function render_use_cases() {
 			$cases = array(
 				array(
-					'icon'  => 'dashicons-store',
 					'title' => __( 'Multi-vendor marketplace', 'woo-wallet' ),
 					'copy'  => __( 'Vendor commissions already land in the wallet on Dokan, WCFM and WC Marketplace. Withdrawals are what lets vendors actually take that money out — to PayPal, Stripe or their bank — with an approval queue and per-gateway fees you control.', 'woo-wallet' ),
-					'uses'  => __( 'Uses: Wallet Withdrawals, withdrawal reports.', 'woo-wallet' ),
+					'uses'  => __( 'Wallet Withdrawals, withdrawal reports.', 'woo-wallet' ),
 				),
 				array(
-					'icon'  => 'dashicons-awards',
 					'title' => __( 'Loyalty and repeat purchase', 'woo-wallet' ),
 					'copy'  => __( 'Free cashback rewards the order a customer has already placed. Milestone and birthday bonuses reward the next one — credit that appears when someone crosses a spend threshold, or on their birthday, with an expiry date attached so it prompts a visit rather than sitting there.', 'woo-wallet' ),
-					'uses'  => __( 'Uses: Spend milestone bonus, birthday bonus, credit expiry, wallet coupons.', 'woo-wallet' ),
+					'uses'  => __( 'Spend milestone bonus, birthday bonus, credit expiry, wallet coupons.', 'woo-wallet' ),
 				),
 				array(
-					'icon'  => 'dashicons-chart-bar',
 					'title' => __( 'Controlling wallet liability', 'woo-wallet' ),
 					'copy'  => __( 'Every credit you issue is money you owe. Expiry caps how long you carry it, per category, with reminder emails so customers are told before it lapses — and breakage and aging reports show what is about to expire and what already has.', 'woo-wallet' ),
-					'uses'  => __( 'Uses: Credit expiry, breakage, aging and expiry-trend reports.', 'woo-wallet' ),
+					'uses'  => __( 'Credit expiry, breakage, aging and expiry-trend reports.', 'woo-wallet' ),
 				),
 				array(
-					'icon'  => 'dashicons-migrate',
 					'title' => __( 'Migrating or running a campaign', 'woo-wallet' ),
 					'copy'  => __( 'Moving off another credit system, or issuing credit to a segment, means hundreds of adjustments. Import them from a CSV in one pass — with expiry and currency per row — or generate a batch of unique coupon codes that redeem into the wallet.', 'woo-wallet' ),
-					'uses'  => __( 'Uses: Bulk CSV importer, wallet coupons, coupon REST API.', 'woo-wallet' ),
+					'uses'  => __( 'Bulk CSV importer, wallet coupons, coupon REST API.', 'woo-wallet' ),
 				),
 			);
 			?>
 			<section class="tw-section">
-				<h2 class="tw-section__title"><?php esc_html_e( 'Built for every wallet use case', 'woo-wallet' ); ?></h2>
+				<div class="tw-section__head">
+					<h2 class="tw-section__title"><?php esc_html_e( 'Built for every wallet use case', 'woo-wallet' ); ?></h2>
+				</div>
 				<div class="tw-usecases">
 					<?php foreach ( $cases as $case ) : ?>
 						<div class="tw-usecase">
-							<h3>
-								<span class="dashicons <?php echo esc_attr( $case['icon'] ); ?>" aria-hidden="true"></span>
-								<?php echo esc_html( $case['title'] ); ?>
-							</h3>
+							<h3><?php echo esc_html( $case['title'] ); ?></h3>
 							<p><?php echo esc_html( $case['copy'] ); ?></p>
-							<p class="tw-usecase__uses"><?php echo esc_html( $case['uses'] ); ?></p>
+							<p class="tw-usecase__uses">
+								<span class="tw-usecase__uses-label"><?php echo esc_html_x( 'Uses', 'label before the Pro features a use case relies on', 'woo-wallet' ); ?></span>
+								<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
+								<?php echo esc_html( $case['uses'] ); ?>
+							</p>
 						</div>
 					<?php endforeach; ?>
 				</div>
@@ -671,11 +743,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			$faq = array(
 				array(
 					'q' => __( 'What does the licence cover?', 'woo-wallet' ),
-					'a' => sprintf(
-						/* translators: %s: licence price, e.g. $79. */
-						__( '%s per year covers one site, and includes every Pro feature — no per-module or per-gateway extras.', 'woo-wallet' ),
-						self::PRICE
-					),
+					'a' => __( 'One licence activates Pro on one site and includes every Pro feature — no per-module or per-gateway extras. 5-site and 25-site licences are available on the pricing page.', 'woo-wallet' ),
 				),
 				array(
 					'q' => __( 'Does Pro replace the free plugin?', 'woo-wallet' ),
@@ -691,25 +759,30 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				),
 				array(
 					'q' => __( 'What do updates and support include?', 'woo-wallet' ),
-					'a' => __( 'The licence includes one year of automatic updates and priority support, and renews automatically each year until you cancel.', 'woo-wallet' ),
+					'a' => __( 'Compatibility releases for WooCommerce and WordPress, new module features, security fixes, and direct email support from the team that maintains the plugin. The licence renews automatically each year until you cancel.', 'woo-wallet' ),
 				),
 			);
 			?>
-			<section class="tw-section">
-				<h2 class="tw-section__title"><?php esc_html_e( 'Before you buy', 'woo-wallet' ); ?></h2>
+			<section class="tw-section tw-faq-section">
+				<div class="tw-faq__rail">
+					<h2 class="tw-section__title"><?php esc_html_e( 'Before you buy', 'woo-wallet' ); ?></h2>
+					<p class="tw-faq__rail-copy"><?php esc_html_e( 'Licence, renewal and support questions, answered plainly.', 'woo-wallet' ); ?></p>
+					<a class="tw-faq__cta" href="<?php echo esc_url( woo_wallet_pro_url( 'faq' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'See full licence and purchase details', 'woo-wallet' ); ?>
+						<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
+					</a>
+				</div>
 				<div class="tw-faq">
 					<?php foreach ( $faq as $item ) : ?>
 						<details class="tw-faq__item">
-							<summary><?php echo esc_html( $item['q'] ); ?></summary>
+							<summary>
+								<?php echo esc_html( $item['q'] ); ?>
+								<span class="tw-faq__chev" aria-hidden="true">+</span>
+							</summary>
 							<p><?php echo esc_html( $item['a'] ); ?></p>
 						</details>
 					<?php endforeach; ?>
 				</div>
-				<p class="tw-faq__cta">
-					<a href="<?php echo esc_url( woo_wallet_pro_url( 'faq' ) ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'See full licence and purchase details', 'woo-wallet' ); ?>
-					</a>
-				</p>
 			</section>
 			<?php
 		}
@@ -720,20 +793,25 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		private function render_bottom_cta() {
 			?>
 			<section class="tw-bottom-cta">
-				<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
-				<p>
-					<?php
-					printf(
-						/* translators: %s: licence price, e.g. $79. */
-						esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year for one site.', 'woo-wallet' ),
-						esc_html( self::PRICE )
-					);
-					?>
-				</p>
-				<a class="tw-btn tw-btn--primary" href="<?php echo esc_url( woo_wallet_pro_url( 'footer' ) ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
-				</a>
-				<p class="tw-bottom-cta__reassure"><?php esc_html_e( '30-day money-back guarantee.', 'woo-wallet' ); ?></p>
+				<div class="tw-bottom-cta__copy">
+					<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
+					<p>
+						<?php
+						printf(
+							/* translators: %s: price label, e.g. "from $79". */
+							esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year.', 'woo-wallet' ),
+							esc_html( self::price_label() )
+						);
+						?>
+					</p>
+				</div>
+				<div class="tw-bottom-cta__act">
+					<a class="tw-btn tw-btn--light" href="<?php echo esc_url( woo_wallet_pro_url( 'footer' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
+						<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
+					</a>
+					<p class="tw-bottom-cta__reassure"><?php esc_html_e( '30-day money-back guarantee.', 'woo-wallet' ); ?></p>
+				</div>
 			</section>
 			<?php
 		}
@@ -788,9 +866,9 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 */
 		private function tick( $yes ) {
 			if ( $yes ) {
-				return '<span class="tw-tick tw-tick--yes dashicons dashicons-yes" aria-label="' . esc_attr__( 'Included', 'woo-wallet' ) . '"></span>';
+				return '<span class="tw-tick tw-tick--yes" aria-hidden="true">&#10003;</span><span class="screen-reader-text">' . esc_html__( 'Included', 'woo-wallet' ) . '</span>';
 			}
-			return '<span class="tw-tick tw-tick--no dashicons dashicons-no-alt" aria-label="' . esc_attr__( 'Not included', 'woo-wallet' ) . '"></span>';
+			return '<span class="tw-tick tw-tick--no" aria-hidden="true">&#8211;</span><span class="screen-reader-text">' . esc_html__( 'Not included', 'woo-wallet' ) . '</span>';
 		}
 
 		/**
@@ -813,132 +891,287 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		private function render_styles() {
 			?>
 			<style>
-				.woo-wallet-go-pro-wrap { margin: 20px auto 40px; }
+				/*
+				 * Design system for this screen, kept deliberately local: hairline
+				 * rules on a light ground, one dark panel at each end, mono type for
+				 * numbers and labels. No webfont is loaded — a WordPress.org plugin
+				 * must not pull assets from a third-party host, so the design's
+				 * Public Sans / IBM Plex Mono pairing is rendered with the admin's
+				 * own system stacks.
+				 */
+				.woo-wallet-go-pro-wrap {
+					--tw-ink: #2a1942;
+					--tw-accent: #623e96;
+					--tw-accent-hover: #4a237a;
+					--tw-accent-soft: #6f4fa1;
+					--tw-line: #dedce2;
+					--tw-line-soft: #f0eef2;
+					--tw-text: #1c1a1f;
+					--tw-text-soft: #4a4551;
+					--tw-muted: #6d6875;
+					--tw-surface: #fff;
+					--tw-surface-alt: #faf9fb;
+					--tw-group: #f6f4f9;
+					--tw-on-dark: #dad3e9;
+					--tw-on-dark-muted: #c1b8d4;
+					--tw-on-dark-faint: #aa9dc5;
+					--tw-eyebrow: #beaede;
+					--tw-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+					max-width: 1320px;
+					margin: 20px auto 48px;
+					color: var(--tw-text);
+				}
 				.woo-wallet-go-pro-wrap * { box-sizing: border-box; }
+				.woo-wallet-go-pro-wrap h1,
+				.woo-wallet-go-pro-wrap h2,
+				.woo-wallet-go-pro-wrap h3 { color: inherit; }
+
+				.tw-eyebrow,
+				.tw-section__meta,
+				.tw-hero__meta,
+				.tw-usecase__uses,
+				.tw-price__amount,
+				.tw-storecase__value,
+				.tw-compare thead th,
+				.tw-faq__chev {
+					font-family: var(--tw-mono);
+				}
+
+				/* ---------- Hero ---------- */
 
 				.tw-hero {
-					background: linear-gradient(135deg, #674399 0%, #4a2e73 100%);
+					display: grid;
+					grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+					background: var(--tw-ink);
 					color: #fff;
-					border-radius: 10px;
-					padding: 48px 32px;
-					margin: 0 0 24px;
-					text-align: center;
+					border-radius: 6px;
+					overflow: hidden;
+					margin: 0 0 8px;
 				}
-				.tw-hero__inner { max-width: 760px; margin: 0 auto; }
-				.tw-hero h1 { color: #fff; font-size: 32px; line-height: 1.2; margin: 0 0 12px; font-weight: 600; }
-				.tw-hero__subtitle { font-size: 16px; line-height: 1.6; opacity: .92; margin: 0 0 24px; }
-				.tw-hero__price { margin: 0 0 20px; display: flex; align-items: baseline; justify-content: center; gap: 8px; flex-wrap: wrap; }
-				.tw-hero__amount { font-size: 40px; font-weight: 700; line-height: 1; }
-				.tw-hero__term { font-size: 15px; opacity: .9; }
-				.tw-hero__cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-				.tw-hero__reassure { margin: 16px 0 0; font-size: 13px; opacity: .88; }
+				.tw-hero__lead { padding: 48px 46px 44px; }
+				.tw-eyebrow {
+					margin: 0;
+					font-size: 12px;
+					letter-spacing: .14em;
+					text-transform: uppercase;
+					color: var(--tw-eyebrow);
+				}
+				.tw-hero h1 {
+					margin: 18px 0 0;
+					padding: 0;
+					font-size: 38px;
+					line-height: 1.06;
+					font-weight: 700;
+					letter-spacing: -.025em;
+					color: #fff;
+				}
+				.tw-hero__subtitle {
+					margin: 18px 0 0;
+					max-width: 50ch;
+					font-size: 15px;
+					line-height: 1.6;
+					color: var(--tw-on-dark);
+				}
+				.tw-hero__cta {
+					display: flex;
+					align-items: center;
+					gap: 20px;
+					margin-top: 30px;
+					flex-wrap: wrap;
+				}
+				.tw-hero__reassure {
+					margin: 0;
+					font-size: 13px;
+					line-height: 1.5;
+					color: var(--tw-on-dark-muted);
+				}
+				.tw-hero__panel {
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+					padding: 48px 40px;
+					border-left: 1px solid rgba(255,255,255,.14);
+					background: rgba(0,0,0,.12);
+				}
+				.tw-price { display: flex; align-items: baseline; gap: 10px; margin: 0; flex-wrap: wrap; }
+				.tw-price__from,
+				.tw-price__term { font-size: 15px; color: var(--tw-on-dark-muted); }
+				.tw-price__amount { font-size: 48px; font-weight: 500; line-height: 1; letter-spacing: -.03em; }
+				.tw-hero__rule { height: 1px; background: rgba(255,255,255,.16); margin: 24px 0; }
+				.tw-hero__licence { display: grid; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--tw-on-dark); }
+				.tw-hero__licence p { margin: 0; }
+				.tw-hero__licence a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+				.tw-hero__licence a:hover, .tw-hero__licence a:focus { color: #fff; }
+				.tw-hero__meta {
+					padding-top: 4px;
+					font-size: 12px;
+					letter-spacing: .08em;
+					text-transform: uppercase;
+					color: var(--tw-on-dark-faint);
+				}
+
+				/* ---------- Buttons and links ---------- */
 
 				.tw-btn {
-					display: inline-block;
-					padding: 12px 28px;
-					border-radius: 6px;
-					font-weight: 600;
-					text-decoration: none;
+					display: inline-flex;
+					align-items: center;
+					gap: 10px;
+					padding: 13px 26px;
+					border: 1px solid transparent;
+					border-radius: 4px;
+					font-size: 15px;
+					font-weight: 700;
 					line-height: 1;
-					border: 2px solid transparent;
-					transition: transform .1s ease, box-shadow .15s ease;
+					text-decoration: none;
+					cursor: pointer;
 				}
-				.tw-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,.4); }
-				.tw-btn--primary { background: #fff; color: #674399; border-color: #fff; }
-				.tw-btn--primary:hover { background: #f6f2ff; color: #4a2e73; }
-				.tw-btn--ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.7); }
-				.tw-btn--ghost:hover { background: rgba(255,255,255,.12); color: #fff; }
+				.tw-btn--light { background: #fff; color: var(--tw-ink); }
+				.tw-btn--light:hover, .tw-btn--light:focus { background: #ede8f7; color: var(--tw-ink); text-decoration: none; }
+				.tw-btn--primary { background: var(--tw-accent); color: #fff; border-color: var(--tw-accent); }
+				.tw-btn--primary:hover, .tw-btn--primary:focus { background: var(--tw-accent-hover); border-color: var(--tw-accent-hover); color: #fff; }
+				.tw-btn:focus { outline: 2px solid var(--tw-accent-soft); outline-offset: 2px; box-shadow: none; }
+				.tw-btn--light:focus { outline-color: #fff; }
+				.tw-btn__arrow { font-family: var(--tw-mono); }
 
-				.tw-section { margin: 32px 0; }
-				.tw-section__title { font-size: 22px; font-weight: 600; margin: 0 0 16px; color: #1d2327; }
+				.woo-wallet-go-pro-wrap a { color: var(--tw-accent); text-decoration: none; }
+				.woo-wallet-go-pro-wrap a:hover,
+				.woo-wallet-go-pro-wrap a:focus { color: var(--tw-accent-hover); text-decoration: underline; }
 
+				/* ---------- Section framing ---------- */
+
+				.tw-section { margin: 48px 0 0; }
+				.tw-section__head {
+					display: flex;
+					align-items: baseline;
+					justify-content: space-between;
+					gap: 24px;
+					margin: 0 0 16px;
+					flex-wrap: wrap;
+				}
+				.tw-section__head--stacked { display: block; }
+				.tw-section__title { margin: 0; padding: 0; font-size: 21px; font-weight: 700; letter-spacing: -.015em; }
+				.tw-section__meta { font-size: 12px; color: var(--tw-muted); }
+				.tw-section__intro { margin: 6px 0 0; font-size: 14px; color: #5c5666; max-width: 76ch; }
+
+				/* ---------- Feature grid ---------- */
+
+				/*
+				 * Hairline grid. The rules are drawn as a 1px ring on each card
+				 * rather than by showing a coloured container through the gaps:
+				 * seven cards never fill the last row evenly, and a container
+				 * background would leave a grey block where the eighth would be.
+				 * The container's own border clips the outer rings, so edges stay
+				 * 1px rather than doubling.
+				 */
 				.tw-features {
 					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-					gap: 16px;
-				}
-				.tw-feature {
-					background: #fff;
-					border: 1px solid #e0dce8;
-					border-radius: 8px;
-					padding: 22px;
-					transition: box-shadow .15s ease, transform .15s ease;
-				}
-				.tw-feature:hover { box-shadow: 0 6px 18px rgba(103,67,153,.12); transform: translateY(-2px); }
-				.tw-feature__icon {
-					font-size: 28px; width: 28px; height: 28px;
-					color: #674399; margin-bottom: 10px;
-				}
-				.tw-feature h3 { margin: 0 0 6px; font-size: 16px; color: #1d2327; }
-				.tw-feature p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.55; }
-				.tw-feature__outcome { font-weight: 600; color: #1d2327 !important; }
-				.tw-feature__list {
-					margin: 10px 0 0; padding: 0 0 0 18px;
-					color: #50575e; font-size: 13px; line-height: 1.55;
-					list-style: disc;
-				}
-				.tw-feature__list li { margin: 0 0 4px; }
-				.tw-feature__link {
-					display: inline-block; margin-top: 12px;
-					font-size: 13px; font-weight: 600;
-					color: #674399; text-decoration: none;
-				}
-				.tw-feature__link:hover, .tw-feature__link:focus { color: #4a2e73; text-decoration: underline; }
-				.tw-feature__link::after { content: " \2192"; }
-
-				.tw-section__intro { margin: -8px 0 16px; color: #50575e; font-size: 14px; max-width: 720px; }
-
-				.tw-compare__scroll { overflow-x: auto; }
-				.tw-compare {
-					width: 100%;
-					min-width: 480px;
-					border-collapse: separate;
-					border-spacing: 0;
-					background: #fff;
-					border: 1px solid #e0dce8;
-					border-radius: 8px;
+					grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+					gap: 1px;
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-radius: 6px;
 					overflow: hidden;
 				}
-				.tw-compare th, .tw-compare td {
-					padding: 14px 18px;
-					text-align: left;
-					border-bottom: 1px solid #f0edf5;
+				.tw-feature {
+					display: flex;
+					flex-direction: column;
+					background: var(--tw-surface);
+					box-shadow: 0 0 0 1px var(--tw-line);
+					padding: 24px 24px 22px;
 				}
-				.tw-compare thead th { background: #faf8ff; color: #1d2327; font-weight: 600; }
-				.tw-compare tbody:last-child tr:last-child td { border-bottom: 0; }
+				.tw-feature__index {
+					font-family: var(--tw-mono);
+					font-size: 11px;
+					letter-spacing: .12em;
+					color: var(--tw-accent-soft);
+				}
+				.tw-feature h3 { margin: 10px 0 8px; font-size: 16.5px; font-weight: 700; }
+				.tw-feature__outcome { margin: 0 0 14px; font-size: 13.5px; line-height: 1.6; color: var(--tw-text-soft); }
+				.tw-feature__list {
+					display: grid;
+					gap: 9px;
+					margin: 0 0 18px;
+					padding: 0;
+					list-style: none;
+					font-size: 13px;
+					line-height: 1.55;
+					color: #56505e;
+				}
+				.tw-feature__list li { margin: 0; padding-left: 14px; border-left: 2px solid #e6e3ea; }
+				.tw-feature__link { margin-top: auto; font-size: 13px; font-weight: 700; }
+
+				/* ---------- Free vs Pro ---------- */
+
+				.tw-compare__card {
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-radius: 6px;
+					overflow: hidden;
+				}
+				.tw-compare__scroll { overflow-x: auto; }
+				.tw-compare { width: 100%; min-width: 520px; border-collapse: separate; border-spacing: 0; }
+				.tw-compare th, .tw-compare td { padding: 11px 22px; text-align: left; border-bottom: 1px solid var(--tw-line-soft); }
+				.tw-compare thead th {
+					padding: 14px 22px;
+					background: var(--tw-surface-alt);
+					border-bottom: 1px solid #e6e3ea;
+					font-size: 11px;
+					font-weight: 400;
+					letter-spacing: .12em;
+					text-transform: uppercase;
+					color: var(--tw-muted);
+				}
+				.tw-compare thead .tw-compare__cell--pro { color: var(--tw-accent); }
 				.tw-compare__group th {
-					background: #f6f7f7;
+					padding: 13px 22px;
+					background: var(--tw-group);
+					border-top: 1px solid #e6e3ea;
+					border-bottom: 1px solid #e6e3ea;
 					font-size: 12px;
 					font-weight: 700;
+					letter-spacing: .1em;
 					text-transform: uppercase;
-					letter-spacing: .04em;
-					color: #50575e;
-					padding: 10px 18px;
+					color: #3b3644;
 				}
-				.tw-compare__cta { margin: 14px 0 0; font-size: 14px; font-weight: 600; }
-				.tw-compare__cta a { color: #674399; text-decoration: none; }
-				.tw-compare__cta a:hover, .tw-compare__cta a:focus { color: #4a2e73; text-decoration: underline; }
-				.tw-compare__cta a::after { content: " \2192"; }
-				.tw-compare__cell { text-align: center; width: 120px; }
-				.tw-tick { font-size: 20px; width: 20px; height: 20px; }
+				.tw-compare tbody td { font-size: 13.5px; color: #2b2731; }
+				.tw-compare tbody:last-child tr:last-child td { border-bottom: 0; }
+				.tw-compare__cell { width: 120px; text-align: center; }
+				.tw-tick { font-size: 15px; line-height: 1; }
 				.tw-tick--yes { color: #1f8a45; }
-				.tw-tick--no  { color: #c1c5cc; }
+				.tw-tick--no { color: #b9b4c0; }
+				.tw-compare__foot {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					gap: 20px;
+					flex-wrap: wrap;
+					padding: 18px 22px;
+					background: var(--tw-surface-alt);
+					border-top: 1px solid var(--tw-line-soft);
+					font-size: 13.5px;
+					color: var(--tw-text-soft);
+				}
+				.tw-compare__foot a { font-size: 13px; font-weight: 700; }
+
+				/* ---------- Store case ---------- */
 
 				.tw-storecase__figures {
 					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-					gap: 16px;
+					grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+					gap: 1px;
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-radius: 6px;
+					overflow: hidden;
 					margin: 0 0 14px;
 				}
-				.tw-storecase__figure {
-					background: #faf8ff;
-					border: 1px solid #e8e1f4;
-					border-radius: 8px;
-					padding: 20px 22px;
-				}
-				.tw-storecase__value { display: block; font-size: 28px; font-weight: 700; color: #1d2327; line-height: 1.2; }
-				.tw-storecase__label { display: block; margin-top: 6px; color: #50575e; font-size: 13px; line-height: 1.5; }
-				.tw-storecase__copy { margin: 0; color: #50575e; font-size: 14px; line-height: 1.6; max-width: 760px; }
+				.tw-storecase__figure { background: var(--tw-surface); box-shadow: 0 0 0 1px var(--tw-line); padding: 22px 24px; }
+				.tw-storecase__value { display: block; font-size: 30px; font-weight: 500; line-height: 1.1; letter-spacing: -.02em; }
+				.tw-storecase__label { display: block; margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--tw-text-soft); }
+				.tw-storecase__copy { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--tw-text-soft); max-width: 80ch; }
+
+				/* ---------- Use cases ---------- */
 
 				.tw-usecases {
 					display: grid;
@@ -946,88 +1179,105 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					gap: 16px;
 				}
 				.tw-usecase {
-					background: #faf8ff;
-					border: 1px solid #e8e1f4;
-					border-radius: 8px;
-					padding: 20px 22px;
-					color: #1d2327;
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-top: 3px solid var(--tw-accent);
+					border-radius: 5px;
+					padding: 22px 22px 20px;
 				}
-				.tw-usecase h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; }
-				.tw-usecase p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.6; }
-				.tw-usecase__uses { margin-top: 10px !important; font-weight: 600; color: #1d2327 !important; }
-				.tw-usecase .dashicons { color: #674399; }
+				.tw-usecase h3 { margin: 0 0 10px; font-size: 15.5px; font-weight: 700; }
+				.tw-usecase p { margin: 0 0 14px; font-size: 13px; line-height: 1.6; color: var(--tw-text-soft); }
+				.tw-usecase__uses { margin: 0 !important; font-size: 11.5px; line-height: 1.6; color: var(--tw-muted); }
+				.tw-usecase__uses-label { text-transform: uppercase; letter-spacing: .08em; }
 
-				.tw-faq { display: grid; gap: 8px; max-width: 820px; }
-				.tw-faq__item {
-					background: #fff;
-					border: 1px solid #e0dce8;
-					border-radius: 8px;
-					padding: 14px 18px;
+				/* ---------- FAQ ---------- */
+
+				.tw-faq-section { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 40px; align-items: start; }
+				.tw-faq__rail-copy { margin: 8px 0 14px; font-size: 13.5px; line-height: 1.6; color: #5c5666; }
+				.tw-faq__cta { font-size: 13px; font-weight: 700; }
+				.tw-faq {
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-radius: 6px;
+					overflow: hidden;
 				}
+				.tw-faq__item { border-bottom: 1px solid var(--tw-line-soft); }
+				.tw-faq__item:last-child { border-bottom: 0; }
 				.tw-faq__item summary {
-					cursor: pointer;
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					gap: 16px;
+					padding: 16px 22px;
+					font-size: 14.5px;
 					font-weight: 600;
-					color: #1d2327;
-					font-size: 14px;
+					cursor: pointer;
+					list-style: none;
 				}
-				.tw-faq__item summary:focus { outline: 2px solid #674399; outline-offset: 2px; }
-				.tw-faq__item p { margin: 10px 0 0; color: #50575e; font-size: 13px; line-height: 1.6; }
-				.tw-faq__cta { margin: 14px 0 0; font-size: 13px; }
-				.tw-faq__cta a { color: #674399; text-decoration: none; font-weight: 600; }
-				.tw-faq__cta a:hover, .tw-faq__cta a:focus { color: #4a2e73; text-decoration: underline; }
+				.tw-faq__item summary::-webkit-details-marker { display: none; }
+				.tw-faq__item summary:hover { background: var(--tw-surface-alt); }
+				.tw-faq__item summary:focus-visible { outline: 2px solid var(--tw-accent); outline-offset: -2px; }
+				.tw-faq__chev { flex: 0 0 auto; color: var(--tw-accent); transition: transform .18s ease; }
+				.tw-faq__item[open] .tw-faq__chev { transform: rotate(45deg); }
+				.tw-faq__item p { margin: 0; padding: 0 22px 18px; font-size: 13.5px; line-height: 1.65; color: var(--tw-text-soft); max-width: 70ch; }
+
+				/* ---------- Bottom CTA ---------- */
 
 				.tw-bottom-cta {
-					background: #faf8ff;
-					border: 1px solid #e8e1f4;
-					border-radius: 10px;
-					padding: 36px 24px;
-					text-align: center;
-					margin: 32px 0 0;
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					gap: 32px;
+					flex-wrap: wrap;
+					margin: 44px 0 0;
+					padding: 32px 40px;
+					background: var(--tw-ink);
+					color: #fff;
+					border-radius: 6px;
 				}
-				.tw-bottom-cta h2 { margin: 0 0 8px; font-size: 22px; color: #1d2327; }
-				.tw-bottom-cta p { margin: 0 0 20px; color: #50575e; }
-				.tw-bottom-cta .tw-btn--primary {
-					background: #674399; color: #fff; border-color: #674399;
-				}
-				.tw-bottom-cta .tw-btn--primary:hover { background: #4a2e73; border-color: #4a2e73; color: #fff; }
-				.tw-bottom-cta__reassure { margin: 16px 0 0; color: #50575e; font-size: 13px; }
+				.tw-bottom-cta__copy { max-width: 62ch; }
+				.tw-bottom-cta h2 { margin: 0; padding: 0; font-size: 20px; font-weight: 700; letter-spacing: -.015em; color: #fff; }
+				.tw-bottom-cta p { margin: 8px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--tw-on-dark); }
+				.tw-bottom-cta__act { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+				.tw-bottom-cta__reassure { margin: 0 !important; font-size: 12px; color: var(--tw-on-dark-muted) !important; }
+
+				/* ---------- License states ---------- */
 
 				.tw-card {
-					background: #fff;
-					border: 1px solid #e0dce8;
-					border-radius: 8px;
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-radius: 6px;
 					padding: 22px 24px;
 					margin: 0 0 20px;
 				}
-				.tw-notice {
-					display: flex; gap: 14px; align-items: flex-start;
-				}
-				.tw-notice .dashicons { font-size: 28px; width: 28px; height: 28px; flex: 0 0 28px; margin-top: 2px; }
-				.tw-notice h2 { margin: 0 0 4px; font-size: 17px; }
-				.tw-notice p { margin: 0 0 8px; color: #50575e; }
-				.tw-notice--warning { border-left: 4px solid #dba617; }
+				.tw-notice { display: flex; gap: 14px; align-items: flex-start; }
+				.tw-notice .dashicons { font-size: 26px; width: 26px; height: 26px; flex: 0 0 26px; margin-top: 2px; }
+				.tw-notice h2 { margin: 0 0 4px; padding: 0; font-size: 17px; }
+				.tw-notice p { margin: 0 0 8px; color: var(--tw-text-soft); }
+				.tw-notice--warning { border-left: 3px solid #dba617; }
 				.tw-notice--warning .dashicons { color: #dba617; }
-				.tw-notice--success { border-left: 4px solid #1f8a45; }
+				.tw-notice--success { border-left: 3px solid #1f8a45; }
 				.tw-notice--success .dashicons { color: #1f8a45; }
 
 				.tw-inline-form { margin-top: 10px; }
 
-				.tw-license h2 { margin: 0 0 14px; font-size: 18px; color: #1d2327; }
-				.tw-license__form label { display: block; font-weight: 600; margin: 0 0 6px; color: #1d2327; }
+				.tw-license h2 { margin: 0 0 14px; padding: 0; font-size: 18px; }
+				.tw-license__form label { display: block; font-weight: 600; margin: 0 0 6px; }
 				.tw-license__form input[type="text"] {
-					width: 100%; max-width: 480px;
+					width: 100%;
+					max-width: 480px;
 					padding: 10px 12px;
 					border: 1px solid #c3c4c7;
 					border-radius: 4px;
-					font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+					font-family: var(--tw-mono);
 					font-size: 14px;
 				}
 				.tw-license__form input[type="text"]:focus {
-					outline: none; border-color: #674399; box-shadow: 0 0 0 2px rgba(103,67,153,.25);
+					outline: none;
+					border-color: var(--tw-accent);
+					box-shadow: 0 0 0 2px rgba(98,62,150,.25);
 				}
-				.tw-license__help { margin: 8px 0 18px; color: #50575e; font-size: 13px; }
-				.tw-license .tw-btn--primary { background: #674399; color: #fff; border-color: #674399; cursor: pointer; }
-				.tw-license .tw-btn--primary:hover { background: #4a2e73; border-color: #4a2e73; }
+				.tw-license__help { margin: 8px 0 18px; color: var(--tw-text-soft); font-size: 13px; }
 
 				.tw-quicklinks {
 					display: grid;
@@ -1035,42 +1285,58 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					gap: 16px;
 					margin: 20px 0;
 				}
-				.tw-quicklink {
+				.woo-wallet-go-pro-wrap a.tw-quicklink {
 					display: block;
-					background: #fff;
-					border: 1px solid #e0dce8;
-					border-radius: 8px;
+					background: var(--tw-surface);
+					border: 1px solid var(--tw-line);
+					border-top: 3px solid var(--tw-accent);
+					border-radius: 5px;
 					padding: 22px;
-					text-decoration: none;
-					color: #1d2327;
-					transition: box-shadow .15s ease, transform .15s ease;
+					color: var(--tw-text);
 				}
-				.tw-quicklink:hover {
-					box-shadow: 0 6px 18px rgba(103,67,153,.12);
-					transform: translateY(-2px);
-					color: #1d2327;
+				.woo-wallet-go-pro-wrap a.tw-quicklink:hover,
+				.woo-wallet-go-pro-wrap a.tw-quicklink:focus { color: var(--tw-text); text-decoration: none; background: var(--tw-surface-alt); }
+				.tw-quicklink .dashicons { font-size: 24px; width: 24px; height: 24px; color: var(--tw-accent); margin-bottom: 10px; }
+				.tw-quicklink h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 700; }
+				.tw-quicklink p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--tw-text-soft); }
+
+				/* ---------- Responsive ---------- */
+
+				@media (max-width: 1100px) {
+					.tw-faq-section { grid-template-columns: 1fr; gap: 20px; }
 				}
-				.tw-quicklink .dashicons { font-size: 26px; width: 26px; height: 26px; color: #674399; margin-bottom: 10px; }
-				.tw-quicklink h3 { margin: 0 0 6px; font-size: 16px; }
-				.tw-quicklink p { margin: 0; color: #50575e; font-size: 13px; line-height: 1.5; }
+
+				@media (max-width: 960px) {
+					.tw-hero { grid-template-columns: 1fr; }
+					.tw-hero__panel { border-left: 0; border-top: 1px solid rgba(255,255,255,.14); padding: 32px 34px; }
+					.tw-hero__lead { padding: 38px 34px 32px; }
+				}
 
 				@media (max-width: 782px) {
 					.woo-wallet-go-pro-wrap { margin: 12px auto 32px; }
-					.tw-hero { padding: 36px 22px; }
-					.tw-hero h1 { font-size: 26px; }
-					.tw-hero__amount { font-size: 34px; }
-					.tw-hero__cta .tw-btn { width: 100%; text-align: center; }
+					.tw-hero h1 { font-size: 28px; }
+					.tw-price__amount { font-size: 38px; }
+					.tw-hero__cta .tw-btn { width: 100%; justify-content: center; }
 					.tw-features, .tw-usecases, .tw-storecase__figures { grid-template-columns: 1fr; }
-					.tw-compare th, .tw-compare td { padding: 12px 14px; }
+					.tw-compare th, .tw-compare td { padding: 11px 14px; }
 					.tw-compare__cell { width: 72px; }
+					.tw-bottom-cta { padding: 26px 24px; }
+					.tw-bottom-cta__act, .tw-bottom-cta__act .tw-btn { width: 100%; }
+					.tw-bottom-cta__act .tw-btn { justify-content: center; }
 				}
 
 				@media (max-width: 600px) {
-					.tw-hero { padding: 28px 18px; }
-					.tw-hero h1 { font-size: 22px; }
+					.tw-hero__lead { padding: 30px 22px 26px; }
+					.tw-hero__panel { padding: 26px 22px; }
+					.tw-hero h1 { font-size: 24px; }
 					.tw-section__title { font-size: 19px; }
+					.tw-feature { padding: 20px; }
 					.tw-compare th, .tw-compare td { padding: 10px 12px; }
 					.tw-compare__cell { width: 64px; }
+				}
+
+				@media (prefers-reduced-motion: reduce) {
+					.tw-faq__chev { transition: none; }
 				}
 			</style>
 			<?php
