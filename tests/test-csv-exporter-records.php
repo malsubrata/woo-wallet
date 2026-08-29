@@ -108,8 +108,9 @@ class Test_CSV_Exporter_Records extends WP_UnitTestCase {
 		$exporter->write_to_csv();
 		$exporter->write_to_csv();
 
-		$lines = array_values( array_filter( explode( "\n", file_get_contents( $path ) ), 'strlen' ) );
-		@unlink( $path );
+		$contents = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a local test fixture, not a remote request.
+		$lines    = array_values( array_filter( explode( "\n", $contents ), 'strlen' ) );
+		@unlink( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink, Generic.PHP.NoSilencedErrors.Discouraged -- Test cleanup of a temp file.
 
 		$this->assertCount( 4, $lines, 'One header plus three rows, each written once.' );
 		$this->assertStringStartsWith( 'id,', $lines[0], 'Header written once, at the top.' );

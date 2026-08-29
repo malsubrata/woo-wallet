@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import { applyFilters } from '@wordpress/hooks';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 import { getRegistry } from '../registry';
 
@@ -132,13 +132,14 @@ export default function useSettings() {
 				pushToast(
 					'success',
 					sectionTitle
-						? /* translators: %s: settings section title */
-						  __( sectionTitle, 'woo-wallet' ) +
-								' ' +
+						? sprintf(
+								/* translators: %s: settings section title */
 								__(
-									'settings saved successfully.',
+									'%s settings saved successfully.',
 									'woo-wallet'
-								)
+								),
+								sectionTitle
+						  )
 						: __( 'Settings saved successfully.', 'woo-wallet' )
 				);
 			} catch ( err ) {

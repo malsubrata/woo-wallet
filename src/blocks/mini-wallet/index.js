@@ -7,7 +7,6 @@
  */
 
 import { registerBlockType } from '@wordpress/blocks';
-import { createElement } from '@wordpress/element';
 import metadata from './block.json';
 import Edit from './edit';
 import save from './save';

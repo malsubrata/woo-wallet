@@ -3,11 +3,6 @@ import { registerPaymentMethod } from '@woocommerce/blocks-registry';
 import { decodeEntities } from '@wordpress/html-entities';
 import { getSetting } from '@woocommerce/settings';
 
-/**
- * Internal dependencies
- */
-import './style.scss';
-
 const settings = getSetting( 'wallet_data', {} );
 
 const defaultLabel = __( 'Wallet Payment', 'woo-wallet' );
@@ -28,10 +23,10 @@ const formatedBalance = () => {
 		thousand_separator,
 		decimals,
 	} = settings;
-	// Ensure that 'amount' is a valid number
+	// Ensure that the balance is a valid number
 	const numericAmount = parseFloat( balance );
 	if ( isNaN( numericAmount ) ) {
-		return amount; // Return the original value if it's not a valid number
+		return balance; // Return the original value if it's not a valid number
 	}
 	// Format the amount to the required number of decimal places
 	const fixedAmount = numericAmount.toFixed( decimals );
@@ -52,7 +47,7 @@ const CurrentBalance = () => {
 		<span>
 			&nbsp;
 			{
-				/* translators: 1: Wallet amount */ sprintf(
+				/* translators: %s: formatted wallet balance */ sprintf(
 					__( '| Current Balance: %s', 'woo-wallet' ),
 					formatedBalance()
 				)

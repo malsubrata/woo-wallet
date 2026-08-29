@@ -12,11 +12,11 @@ jQuery( function ( $ ) {
 			const url = new URL( location.href );
 			const tab = url.searchParams.get( 'activewwtab' );
 			if ( tab ) {
-				if ( typeof localStorage !== undefined ) {
+				if ( typeof localStorage !== 'undefined' ) {
 					localStorage.setItem( 'activewwtab', '#' + tab );
 				}
 			}
-			if ( typeof localStorage !== undefined ) {
+			if ( typeof localStorage !== 'undefined' ) {
 				activewwtab = localStorage.getItem( 'activewwtab' );
 			}
 			if ( activewwtab !== '' && $( activewwtab ).length ) {
@@ -51,7 +51,7 @@ jQuery( function ( $ ) {
 				);
 				$( this ).addClass( 'nav-tab-active' ).blur();
 				const clicked_group = $( this ).attr( 'href' );
-				if ( typeof localStorage !== undefined ) {
+				if ( typeof localStorage !== 'undefined' ) {
 					localStorage.setItem(
 						'activewwtab',
 						$( this ).attr( 'href' )

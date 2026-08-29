@@ -1,7 +1,7 @@
 /* global woo_wallet_admin_order_param, woocommerce_admin_meta_boxes, accounting, woocommerce_admin */
 
 jQuery( function ( $ ) {
-	var woo_wallet_order_items = {
+	const woo_wallet_order_items = {
 		init() {
 			if ( woo_wallet_admin_order_param.is_refundable ) {
 				$( '.refund-actions .do-manual-refund' ).before(

@@ -974,6 +974,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 								$transaction_id = $this->credit(
 									$locked_order->get_customer_id(),
 									$credit_amount,
+									// translators: %s: order number.
 									sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
 									array(
 										'for'      => 'partial_payment_refund',
@@ -1077,6 +1078,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					$debit_result = $this->debit(
 						$customer_id,
 						$clawback_amount,
+						// translators: %s: order number.
 						sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
 						array(
 							'currency' => $order->get_currency( 'edit' ),
@@ -1097,6 +1099,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$debit_result = $this->debit(
 							$customer_id,
 							$clawback_amount,
+							// translators: %s: order number.
 							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
 							array(
 								'currency' => $order->get_currency( 'edit' ),
@@ -1123,6 +1126,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$debit_result = $this->debit(
 							$customer_id,
 							$debit_amount,
+							// translators: %s: order number.
 							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
 							array(
 								'currency' => $order->get_currency( 'edit' ),

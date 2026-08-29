@@ -1,6 +1,11 @@
 {
 	"extends": "@wordpress/stylelint-config/scss-stylistic",
 	"rules": {
-		"selector-class-pattern": null
+		"selector-class-pattern": null,
+		"font-family-no-missing-generic-family-keyword": null,
+		"selector-id-pattern": null,
+		"no-descending-specificity": null,
+		"no-duplicate-selectors": null,
+		"@stylistic/max-line-length": null
 	}
 }

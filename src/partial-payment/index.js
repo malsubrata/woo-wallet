@@ -2,20 +2,14 @@
  * External dependencies
  */
 import { registerPlugin } from '@wordpress/plugins';
-import {
-	ExperimentalOrderMeta,
-	ExperimentalDiscountsMeta,
-} from '@woocommerce/blocks-checkout';
+import { ExperimentalDiscountsMeta } from '@woocommerce/blocks-checkout';
 import { getSetting } from '@woocommerce/settings';
 import { __, sprintf } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
-import { useState, useRef } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import {
 	ValidatedTextInput,
-	ValidationInputError,
-	ValidatedTextInputHandle,
 	Panel,
-	Spinner,
 	Button,
 } from '@woocommerce/blocks-components';
 
@@ -55,10 +49,10 @@ const render = () => {
 			thousand_separator,
 			decimals,
 		} = settings;
-		// Ensure that 'amount' is a valid number
+		// Ensure that the balance is a valid number
 		const numericAmount = parseFloat( balance );
 		if ( isNaN( numericAmount ) ) {
-			return amount; // Return the original value if it's not a valid number
+			return balance; // Return the original value if it's not a valid number
 		}
 		// Format the amount to the required number of decimal places
 		const fixedAmount = numericAmount.toFixed( decimals );
@@ -85,7 +79,7 @@ const render = () => {
 					title={
 						<span className="wc-block-components-partial-payment-panel__button-text">
 							{
-								/* translators: 1: Wallet amount */ sprintf(
+								/* translators: %s: formatted wallet balance */ sprintf(
 									__(
 										'You have %s in your wallet to spend!',
 										'woo-wallet'

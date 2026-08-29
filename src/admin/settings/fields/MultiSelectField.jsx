@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from '@wordpress/element';
-import { createPortal } from '@wordpress/element';
+import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import Icon from '../components/Icon';
 
