@@ -35,11 +35,6 @@ $menu_items                = apply_filters(
 			'url'   => $is_rendred_from_myaccount ? esc_url( wc_get_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ), 'transfer', wc_get_page_permalink( 'myaccount' ) ) ) : add_query_arg( 'wallet_action', 'transfer' ),
 			'icon'  => 'dashicons dashicons-randomize',
 		),
-		'transactions' => array(
-			'title' => apply_filters( 'woo_wallet_account_transaction_menu_title', __( 'Transactions', 'woo-wallet' ) ),
-			'url'   => $is_rendred_from_myaccount ? esc_url( wc_get_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ), 'transactions', wc_get_page_permalink( 'myaccount' ) ) ) : add_query_arg( 'wallet_action', 'transactions' ),
-			'icon'  => 'dashicons dashicons-list-view',
-		),
 	),
 	$is_rendred_from_myaccount
 );
@@ -53,7 +48,7 @@ if ( empty( $current_action ) ) {
 // nav items are already enumerated in $menu_items, so this stays extensible.
 $ww_allowed_actions = apply_filters(
 	'woo_wallet_allowed_dashboard_actions',
-	array_values( array_unique( array_merge( array( 'dashboard', 'add', 'transfer', 'transactions' ), array_keys( (array) $menu_items ) ) ) )
+	array_values( array_unique( array_merge( array( 'dashboard', 'add', 'transfer' ), array_keys( (array) $menu_items ) ) ) )
 );
 if ( ! in_array( $current_action, $ww_allowed_actions, true ) ) {
 	$current_action = 'dashboard';

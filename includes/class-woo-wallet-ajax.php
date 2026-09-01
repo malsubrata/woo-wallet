@@ -43,7 +43,6 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			add_action( 'wp_ajax_woo-wallet-user-search', array( $this, 'woo_wallet_user_search' ) );
 			add_action( 'wp_ajax_woo_wallet_partial_payment_update_session', array( $this, 'woo_wallet_partial_payment_update_session' ) );
 			add_action( 'wp_ajax_woo_wallet_refund_partial_payment', array( $this, 'woo_wallet_refund_partial_payment' ) );
-			add_action( 'wp_ajax_draw_wallet_transaction_details_table', array( $this, 'draw_wallet_transaction_details_table' ) );
 
 			// NOTE: woocommerce_order_after_calculate_totals was removed in 1.6.1 (R4).
 			// It fired on every cart calculation in admin, rewrote the cashback row amount
@@ -439,52 +438,6 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				update_wallet_partial_payment_session();
 			}
 			wp_die();
-		}
-		/**
-		 * Send wallet transaction AJAX response.
-		 */
-		public function draw_wallet_transaction_details_table() {
-			check_ajax_referer( 'woo-wallet-transactions', 'security' );
-			$page      = isset( $_POST['page'] ) ? max( 1, absint( wp_unslash( $_POST['page'] ) ) ) : 1;
-			$size      = isset( $_POST['size'] ) ? max( 1, absint( wp_unslash( $_POST['size'] ) ) ) : 10;
-			$start     = ( $page - 1 ) * $size;
-			$date_from = isset( $_POST['date_from'] ) ? sanitize_text_field( wp_unslash( $_POST['date_from'] ) ) : '';
-			$date_to   = isset( $_POST['date_to'] ) ? sanitize_text_field( wp_unslash( $_POST['date_to'] ) ) : '';
-			$args      = array(
-				'limit' => "$start,$size",
-			);
-			if ( $date_from && $date_to ) {
-				$args['after']  = $date_from . ' 00:00:00';
-				$args['before'] = $date_to . ' 23:59:59';
-			}
-			$transactions = get_wallet_transactions( $args );
-			unset( $args['limit'] );
-			$records_filtered = count( get_wallet_transactions( $args ) );
-			$last_page        = max( 1, (int) ceil( $records_filtered / $size ) );
-
-			$response = array(
-				'last_page' => $last_page,
-				'data'      => array(),
-			);
-			if ( $transactions ) {
-				$active_currency = class_exists( 'Woo_Wallet_Currency_Manager' )
-					? Woo_Wallet_Currency_Manager::instance()->get_active_currency()
-					: strtoupper( (string) get_woocommerce_currency() );
-				foreach ( $transactions as $transaction ) {
-					$response['data'][] = apply_filters(
-						'woo_wallet_transactons_datatable_row_data',
-						array(
-							'id'      => $transaction->transaction_id,
-							'amount'  => '<mark class="' . esc_attr( $transaction->type ) . '">' . ( 'credit' === $transaction->type ? '+' : '-' ) . wc_price( apply_filters( 'woo_wallet_amount', $transaction->amount, $transaction->currency, $transaction->user_id ), woo_wallet_wc_price_args( $transaction->user_id, array( 'currency' => $active_currency ) ) ) . '</mark>',
-							'details' => wp_kses_post( $transaction->details ),
-							'date'    => wc_string_to_datetime( $transaction->date )->date_i18n( wc_date_format() ),
-							'type'    => esc_html( ucfirst( $transaction->type ) ),
-						),
-						$transaction
-					);
-				}
-			}
-			wp_send_json( $response );
 		}
 		/**
 		 * Return edit wallet template data for WCBackboneModal.

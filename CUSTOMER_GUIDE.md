@@ -8,7 +8,7 @@ Log in to your account and go to the **My Wallet** tab in your dashboard. Here y
 ## 2. Wallet Usage
 - **Add Balance (Top-up)**: Go to the "Add Amount" tab, enter the amount you want to add, and complete the payment using any available payment method at checkout.
 - **Transfer Money**: You can send balance to other users by entering their email address in the "Transfer" tab. Note: Store transfer fees may apply.
-- **View Transactions**: The "Transactions" tab shows your full history, including credits (cashback, top-ups) and debits (purchases, transfers).
+- **View Your Statement**: The "Statement" tab shows your history for any date range you choose, with an opening balance, a running balance beside every row, and the credited/debited totals for the period. You can download it as a CSV or print it.
 
 ## 3. Paying with Your Wallet
 - **Full Payment**: If your balance is enough, select **TeraWallet** as your payment method at checkout for an instant purchase.

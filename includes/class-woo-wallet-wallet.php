@@ -213,7 +213,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 *
 		 * @return string
 		 */
-		private function get_currency_mode() {
+		public function get_currency_mode() {
 			if ( ! apply_filters( 'woo_wallet_enable_per_currency_mode', false ) ) {
 				return 'single_base';
 			}
@@ -228,7 +228,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 *
 		 * @return string ISO 4217 code.
 		 */
-		private function resolve_active_currency() {
+		public function resolve_active_currency() {
 			if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
 				return Woo_Wallet_Currency_Manager::instance()->get_active_currency();
 			}

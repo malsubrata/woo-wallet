@@ -85,7 +85,9 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_action( 'woo_wallet_dashboard_content', array( $this, 'woo_wallet_dashboard_content' ) );
 			add_action( 'woo_wallet_add_content', array( $this, 'woo_wallet_add_content' ) );
 			add_action( 'woo_wallet_transfer_content', array( $this, 'woo_wallet_transfer_content' ) );
-			add_action( 'woo_wallet_transactions_content', array( $this, 'woo_wallet_transactions_content' ) );
+			add_action( 'woo_wallet_statement_content', array( $this, 'woo_wallet_statement_content' ) );
+			add_filter( 'woo_wallet_nav_menu_items', array( $this, 'woo_wallet_statement_menu_item' ), 10, 2 );
+			add_action( 'template_redirect', array( $this, 'maybe_export_statement_csv' ) );
 		}
 		/**
 		 * Remove wallet rechargeable product from the cart
@@ -161,104 +163,15 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			wp_style_add_data( 'woo-wallet-style', 'rtl', 'replace' );
 			$frontend_asset = include WOO_WALLET_ABSPATH . 'build/frontend/main.asset.php';
 			wp_register_script( 'wc-endpoint-wallet', woo_wallet()->plugin_url() . '/build/frontend/main.js', array_merge( $frontend_asset['dependencies'], array( 'jquery' ) ), $frontend_asset['version'], true );
-			$data_table_columns = apply_filters(
-				'woo_wallet_transactons_datatable_columns',
-				array(
-					array(
-						'data'      => 'date',
-						'title'     => __( 'Date', 'woo-wallet' ),
-						'orderable' => false,
-					),
-					array(
-						'data'      => 'details',
-						'title'     => __( 'Details', 'woo-wallet' ),
-						'orderable' => false,
-					),
-					array(
-						'data'      => 'amount',
-						'title'     => __( 'Amount', 'woo-wallet' ),
-						'orderable' => false,
-					),
-				)
-			);
-
-			$replacements          = array(
-				'd' => 'DD',
-				'j' => 'D',
-				'm' => 'MM',
-				'n' => 'M',
-				'Y' => 'YYYY',
-				'y' => 'YY',
-				'F' => 'MMMM',
-				'M' => 'MMM',
-				'l' => 'dddd',
-				'D' => 'ddd',
-			);
 			$wallet_localize_param = array(
-				'ajax_url'                => admin_url( 'admin-ajax.php' ),
-				'transaction_table_nonce' => wp_create_nonce( 'woo-wallet-transactions' ),
-				'search_user_nonce'       => wp_create_nonce( 'search-user' ),
-				'search_by_user_email'    => apply_filters( 'woo_wallet_user_search_exact_match', true ),
-				'js_date_format'          => strtr( wc_date_format(), $replacements ),
-				'i18n'                    => array(
-					'emptyTable'           => __( 'No transactions available', 'woo-wallet' ),
-					/* translators: menu length */
-					'lengthMenu'           => sprintf( __( 'Show %s entries', 'woo-wallet' ), '_MENU_' ),
-					/* translators: 1.start 2.end 3.total */
-					'info'                 => sprintf( __( 'Showing %1$1s to %2$2s of %3$3s entries', 'woo-wallet' ), '_START_', '_END_', '_TOTAL_' ),
-					/* translators: max length */
-					'infoFiltered'         => sprintf( __( '(filtered from %1s total entries)', 'woo-wallet' ), '_MAX_' ),
-					'infoEmpty'            => __( 'Showing 0 to 0 of 0 entries', 'woo-wallet' ),
-					'paginate'             => array(
-						'first'    => __( 'First', 'woo-wallet' ),
-						'last'     => __( 'Last', 'woo-wallet' ),
-						'next'     => __( 'Next', 'woo-wallet' ),
-						'previous' => __( 'Previous', 'woo-wallet' ),
-					),
+				'ajax_url'             => admin_url( 'admin-ajax.php' ),
+				'search_user_nonce'    => wp_create_nonce( 'search-user' ),
+				'search_by_user_email' => apply_filters( 'woo_wallet_user_search_exact_match', true ),
+				'i18n'                 => array(
 					'non_valid_email_text' => __( 'Please enter a valid email address', 'woo-wallet' ),
 					'no_resualt'           => __( 'No results found', 'woo-wallet' ),
-					'zeroRecords'          => __( 'No matching records found', 'woo-wallet' ),
 					'inputTooShort'        => __( 'Please enter 3 or more characters', 'woo-wallet' ),
 					'searching'            => __( 'Searching…', 'woo-wallet' ),
-					'processing'           => '',
-					'search'               => '',
-					'placeholder'          => __( 'yyyy-mm-dd', 'woo-wallet' ),
-					'cancel'               => __( 'Cancel', 'woo-wallet' ),
-					'apply'                => __( 'Apply', 'woo-wallet' ),
-					'customRangeLabel'     => __( 'Custom', 'woo-wallet' ),
-					'weekLabel'            => __( 'W', 'woo-wallet' ),
-					'daysOfWeek'           => array(
-						__( 'Sun', 'woo-wallet' ),
-						__( 'Mon', 'woo-wallet' ),
-						__( 'Tue', 'woo-wallet' ),
-						__( 'Wed', 'woo-wallet' ),
-						__( 'Thu', 'woo-wallet' ),
-						__( 'Fri', 'woo-wallet' ),
-						__( 'Sat', 'woo-wallet' ),
-					),
-					'monthNames'           => array(
-						__( 'January', 'woo-wallet' ),
-						__( 'February', 'woo-wallet' ),
-						__( 'March', 'woo-wallet' ),
-						__( 'April', 'woo-wallet' ),
-						__( 'May', 'woo-wallet' ),
-						__( 'June', 'woo-wallet' ),
-						__( 'July', 'woo-wallet' ),
-						__( 'August', 'woo-wallet' ),
-						__( 'September', 'woo-wallet' ),
-						__( 'October', 'woo-wallet' ),
-						__( 'November', 'woo-wallet' ),
-						__( 'December', 'woo-wallet' ),
-					),
-				),
-				'columns'                 => $data_table_columns,
-				'datepicker_ranges'       => array(
-					'today'        => __( 'Today', 'woo-wallet' ),
-					'yesterday'    => __( 'Yesterday', 'woo-wallet' ),
-					'last_7_days'  => __( 'Last 7 days', 'woo-wallet' ),
-					'last_30_days' => __( 'Last 30 days', 'woo-wallet' ),
-					'this_month'   => __( 'This month', 'woo-wallet' ),
-					'last_month'   => __( 'Last month', 'woo-wallet' ),
 				),
 			);
 			wp_localize_script( 'wc-endpoint-wallet', 'wallet_param', $wallet_localize_param );
@@ -323,10 +236,176 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		}
 
 		/**
-		 * Wallet dashboard transactions endpoint contents.
+		 * Wallet dashboard statement endpoint contents.
 		 */
-		public function woo_wallet_transactions_content() {
-			woo_wallet()->get_template( 'transactions.php' );
+		public function woo_wallet_statement_content() {
+			woo_wallet()->get_template( 'statement.php' );
+		}
+
+		/**
+		 * Add the statement tab to the wallet dashboard navigation.
+		 *
+		 * Registering through `woo_wallet_nav_menu_items` rather than adding a
+		 * WooCommerce account endpoint means no new rewrite rule and no flush on
+		 * upgrade: `wc-endpoint-wallet.php` already sub-routes on the endpoint
+		 * value, and its `woo_wallet_allowed_dashboard_actions` guard allow-lists
+		 * `array_keys( $menu_items )`, so `statement` is accepted the moment it
+		 * appears here and crafted `wallet_action` values still are not.
+		 *
+		 * @since 1.6.15
+		 * @param array $items                     Nav items.
+		 * @param bool  $is_rendred_from_myaccount Whether the wallet is rendering inside My Account.
+		 * @return array
+		 */
+		public function woo_wallet_statement_menu_item( $items, $is_rendred_from_myaccount = true ) {
+			$items['statement'] = array(
+				'title' => apply_filters( 'woo_wallet_account_statement_menu_title', __( 'Statement', 'woo-wallet' ) ),
+				'url'   => $is_rendred_from_myaccount ? esc_url( wc_get_endpoint_url( get_option( 'woocommerce_woo_wallet_endpoint', 'my-wallet' ), 'statement', wc_get_page_permalink( 'myaccount' ) ) ) : add_query_arg( 'wallet_action', 'statement' ),
+				'icon'  => 'dashicons dashicons-media-spreadsheet',
+			);
+
+			return $items;
+		}
+
+		/**
+		 * Stream the current user's statement as CSV.
+		 *
+		 * Deliberately not the admin exporter's path. That one batches into a
+		 * file under the uploads directory and is gated on `manage_woocommerce`;
+		 * this streams straight to the browser, so no statement is ever written
+		 * to disk and the export-directory filename exposure cannot apply here.
+		 * Only the escaping helpers are reused, because CSV formula-injection
+		 * defence should have exactly one implementation.
+		 *
+		 * The exported user is always `get_current_user_id()`. No user id is
+		 * read from the request under any name.
+		 *
+		 * @since 1.6.15
+		 */
+		public function maybe_export_statement_csv() {
+			if ( ! isset( $_GET['woo_wallet_statement_csv'] ) ) {
+				return;
+			}
+
+			$user_id = get_current_user_id();
+			if ( ! $user_id ) {
+				return;
+			}
+
+			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+			if ( ! wp_verify_nonce( $nonce, 'woo_wallet_statement_csv' ) ) {
+				wp_die( esc_html__( 'This download link has expired. Please reload the statement and try again.', 'woo-wallet' ), '', array( 'response' => 403 ) );
+			}
+
+			if ( is_wallet_account_locked( $user_id ) ) {
+				wp_die( esc_html__( 'Your wallet is currently locked.', 'woo-wallet' ), '', array( 'response' => 403 ) );
+			}
+
+			$from = isset( $_GET['from'] ) ? sanitize_text_field( wp_unslash( $_GET['from'] ) ) : '';
+			$to   = isset( $_GET['to'] ) ? sanitize_text_field( wp_unslash( $_GET['to'] ) ) : '';
+			// The statement page pins its resolved currency into the download
+			// link so the export cannot land in a different ledger than the one
+			// the customer was reading. Ignored outside per-currency mode.
+			$currency = isset( $_GET['currency'] ) ? sanitize_text_field( wp_unslash( $_GET['currency'] ) ) : '';
+
+			if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-statement-service.php';
+			}
+			if ( ! class_exists( 'TeraWallet_CSV_Exporter' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
+			}
+
+			// Converted the same way the on-screen statement is, so the download the
+			// customer gets is the statement they were just looking at.
+			$statement = WooWallet_Statement_Service::to_display_currency(
+				WooWallet_Statement_Service::get_statement( $user_id, $from, $to, $currency )
+			);
+			$escaper   = new TeraWallet_CSV_Exporter();
+
+			$filename = sprintf( 'wallet-statement-%s-to-%s.csv', $statement['from'], $statement['to'] );
+
+			wc_nocache_headers();
+			header( 'Content-Type: text/csv; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename=' . $filename );
+
+			$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fopen
+
+			fputcsv(
+				$out,
+				array(
+					__( 'Date', 'woo-wallet' ),
+					__( 'Type', 'woo-wallet' ),
+					__( 'Details', 'woo-wallet' ),
+					__( 'Currency', 'woo-wallet' ),
+					__( 'Credit', 'woo-wallet' ),
+					__( 'Debit', 'woo-wallet' ),
+					__( 'Balance', 'woo-wallet' ),
+				)
+			);
+
+			fputcsv(
+				$out,
+				array(
+					$statement['from'],
+					'',
+					$escaper->format_data( __( 'Opening balance', 'woo-wallet' ) ),
+					$escaper->format_data( $statement['currency'] ),
+					'',
+					'',
+					$statement['opening'],
+				)
+			);
+
+			// The on-screen page size does not apply to the CSV: page through the
+			// full period so a range too wide to render on one page still
+			// exports whole.
+			$range = WooWallet_Statement_Service::resolve_range( $from, $to );
+			$scope  = array(
+				'scoped'   => 'per_currency' === woo_wallet()->wallet->get_currency_mode(),
+				'currency' => $statement['currency'],
+			);
+			$chunk   = 500;
+			$offset  = 0;
+			$balance = (float) $statement['opening'];
+
+			do {
+				$rows = WooWallet_Statement_Service::get_rows( $user_id, $range, $scope, $chunk, $offset );
+				foreach ( $rows as $row ) {
+					$amount   = $scope['scoped']
+						? (float) $row->amount
+						: (float) apply_filters( 'woo_wallet_amount', (float) $row->amount, (string) $row->currency, $user_id );
+					$balance += 'credit' === $row->type ? $amount : -$amount;
+					fputcsv(
+						$out,
+						array(
+							$row->date,
+							$escaper->format_data( woo_wallet_get_transaction_type_label( $row->category ) ),
+							$escaper->format_data( wp_strip_all_tags( (string) $row->details ) ),
+							$escaper->format_data( $scope['scoped'] ? strtoupper( (string) $row->currency ) : $statement['currency'] ),
+							'credit' === $row->type ? $amount : '',
+							'debit' === $row->type ? $amount : '',
+							$balance,
+						)
+					);
+				}
+				$offset += $chunk;
+			} while ( count( $rows ) === $chunk );
+
+			fputcsv(
+				$out,
+				array(
+					$statement['to'],
+					'',
+					$escaper->format_data( __( 'Closing balance', 'woo-wallet' ) ),
+					$escaper->format_data( $statement['currency'] ),
+					$statement['totals']['credited'],
+					$statement['totals']['debited'],
+					$statement['closing'],
+				)
+			);
+
+			fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			exit;
 		}
 
 		/**
