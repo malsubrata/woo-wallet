@@ -733,7 +733,7 @@ if ( ! function_exists( 'get_wallet_transactions' ) ) {
 				$transaction_ids = array_map( 'absint', wp_list_pluck( $query_resualts, 'transaction_id' ) );
 				$placeholders    = implode( ', ', array_fill( 0, count( $transaction_ids ), '%d' ) );
 				$all_meta        = $wpdb->get_results( // @codingStandardsIgnoreLine
-					$wpdb->prepare( "SELECT transaction_id, meta_key, meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id IN ({$placeholders})", ...$transaction_ids ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$wpdb->prepare( "SELECT transaction_id, meta_key, meta_value FROM {$wpdb->base_prefix}woo_wallet_transaction_meta WHERE transaction_id IN ({$placeholders})", ...$transaction_ids ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Placeholders are built from a counted array of ints just above.
 					OBJECT
 				);
 				$meta_by_txn_id  = array();

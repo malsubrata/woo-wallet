@@ -99,6 +99,15 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}woo_wallet_referrals" );
 
 if ( class_exists( 'WC_Install' ) ) {
 	WC_Install::install();
+
+	// WC_Install::install() adds the customer and shop_manager roles. On a first
+	// run against an empty database WP_Roles was already built from the
+	// pre-install option, so the roles it holds are stale and a user created with
+	// role 'shop_manager' resolves to no capabilities at all. Rebuild it. On a
+	// re-run the roles are already in the database and this changes nothing --
+	// which is why the suite only failed on a fresh database, i.e. in CI.
+	$GLOBALS['wp_roles'] = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+	wp_roles();
 }
 if ( class_exists( 'Woo_Wallet_Install' ) ) {
 	Woo_Wallet_Install::install();

@@ -8,14 +8,14 @@
  */
 
 /* ponytail: render-blocking CSS @import, admin-only page so it's fine; move to wp_enqueue_style if FOUT matters. */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url(https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap);
 
 .woo-wallet-reports {
 	--twr-accent: #5b5bd6;
 	--twr-accent-soft: #8487e0;
 	--twr-ink: #181b27;
 	--twr-text: #1c1f2a;
-	--twr-surface: #ffffff;
+	--twr-surface: #fff;
 	--twr-panel: #f0f1f4;
 	--twr-border: #e7e8ec;
 	--twr-muted: #6b7180;
@@ -28,7 +28,7 @@
 	border-radius: 18px;
 	background: #f5f6f8;
 	color: var(--twr-text);
-	font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+	font-family: Manrope, system-ui, -apple-system, sans-serif;
 	font-variant-numeric: tabular-nums;
 	-webkit-font-smoothing: antialiased;
 
@@ -62,7 +62,7 @@
 	border-radius: 11px;
 	background: var(--twr-accent);
 	color: #fff;
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-weight: 700;
 	font-size: 20px;
 	line-height: 1;
@@ -72,7 +72,7 @@
 .twr-title {
 	margin: 0;
 	padding: 0;
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-size: 18px;
 	font-weight: 600;
 	letter-spacing: -0.01em;
@@ -110,7 +110,7 @@
 }
 
 .twr-updated time {
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-size: 13px;
 	color: #4a4f5c;
 }
@@ -127,7 +127,7 @@
 	border-radius: 10px;
 	background: #fff;
 	color: var(--twr-accent);
-	font-family: 'Manrope', sans-serif;
+	font-family: Manrope, sans-serif;
 	font-size: 13px;
 	font-weight: 600;
 	line-height: 1;
@@ -148,11 +148,12 @@
 }
 
 .twr-refresh.button {
+
 	&::before {
 		content: "";
 		width: 13px;
 		height: 13px;
-		border: 1.6px solid currentColor;
+		border: 1.6px solid currentcolor;
 		border-top-color: transparent;
 		border-radius: 50%;
 	}
@@ -163,6 +164,7 @@
 }
 
 @keyframes twr-spin {
+
 	to {
 		transform: rotate(360deg);
 	}
@@ -288,7 +290,7 @@
 .twr-headline__value {
 	display: block;
 	margin: 18px 0 0;
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-size: clamp(52px, 8vw, 88px);
 	font-weight: 600;
 	line-height: 1;
@@ -443,7 +445,7 @@
 }
 
 .twr-legend__amt {
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	color: var(--twr-text);
 
 	&.is-negative {
@@ -489,7 +491,7 @@
 .twr-card__value {
 	display: block;
 	margin-top: 16px;
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-size: 34px;
 	font-weight: 600;
 	line-height: 1;
@@ -506,6 +508,7 @@
 }
 
 /* ── Pro locked slots ─────────────────────────────────────────────────── */
+
 /* The card is a <button>: it opens the slot's explainer dialog. Reset the UA
    button styling so it still reads as a dashboard card. */
 .twr-pro__card {
@@ -552,7 +555,7 @@
 
 .twr-pro__sample-value {
 	display: block;
-	font-family: 'Space Grotesk', sans-serif;
+	font-family: "Space Grotesk", sans-serif;
 	font-size: 28px;
 	font-weight: 600;
 	line-height: 1;
@@ -576,6 +579,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	.twr-pro__card,
 	.twr-pro__sample {
 		transition: none;
@@ -758,6 +762,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	.woo-wallet-reports * {
 		transition: none !important;
 		animation: none !important;
@@ -771,6 +776,7 @@
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media screen and (max-width: 960px) {
+
 	.twr-cards,
 	.twr-pro {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -778,6 +784,7 @@
 }
 
 @media screen and (max-width: 600px) {
+
 	.woo-wallet-reports {
 		margin-right: 10px;
 		padding: 18px 16px 40px;
@@ -838,7 +845,7 @@
 	color: var(--twr-muted);
 
 	strong {
-		font-family: 'Space Grotesk', sans-serif;
+		font-family: "Space Grotesk", sans-serif;
 		font-size: 18px;
 		font-weight: 600;
 		color: var(--twr-ink);

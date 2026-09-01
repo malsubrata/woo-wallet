@@ -47,7 +47,7 @@
 		justify-content: center;
 		flex-shrink: 0;
 		line-height: 1;
-		color: currentColor;
+		color: currentcolor;
 
 		svg {
 			display: block;
@@ -61,7 +61,7 @@
 		font-weight: 600;
 		font-size: inherit;
 		line-height: 1;
-		color: currentColor;
+		color: currentcolor;
 		font-variant-numeric: tabular-nums;
 
 		// WooCommerce price wrapper reset.
@@ -85,7 +85,9 @@
 
 // ── Responsive ────────────────────────────────────────────────────────────
 @media (max-width: 480px) {
+
 	.wc-block-mini-wallet {
+
 		&__link {
 			padding: 4px 6px;
 			gap: 4px;

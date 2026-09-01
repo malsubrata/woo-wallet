@@ -231,12 +231,12 @@ class TeraWallet_CSV_Exporter {
 
 		$htaccess = trailingslashit( $export_dir ) . '.htaccess';
 		if ( ! file_exists( $htaccess ) ) {
-			@file_put_contents( $htaccess, "deny from all\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+			@file_put_contents( $htaccess, "deny from all\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 
 		$index = trailingslashit( $export_dir ) . 'index.html';
 		if ( ! file_exists( $index ) ) {
-			@file_put_contents( $index, '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+			@file_put_contents( $index, '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 
 		return $export_dir;
@@ -253,8 +253,8 @@ class TeraWallet_CSV_Exporter {
 		if ( @file_exists( $this->get_file_path() ) ) { // phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
 			$file = @file_get_contents( $this->get_file_path() ); // phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
 		} else {
-			@file_put_contents( $this->get_file_path(), '' ); // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow.file_ops_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents
-			@chmod( $this->get_file_path(), 0664 ); // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow.chmod_chmod, WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+			@file_put_contents( $this->get_file_path(), '' ); // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow.file_ops_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			@chmod( $this->get_file_path(), 0664 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod, WordPress.VIP.FileSystemWritesDisallow.chmod_chmod, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 		return $file;
 	}
@@ -292,8 +292,8 @@ class TeraWallet_CSV_Exporter {
 	public function write_csv_header() {
 		// Step 1 starts the file: truncate so a leftover file from an earlier
 		// export under the same name cannot be appended to.
-		@file_put_contents( $this->get_file_path(), $this->export_column_headers() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
-		@chmod( $this->get_file_path(), 0664 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_chmod, Generic.PHP.NoSilencedErrors.Discouraged
+		@file_put_contents( $this->get_file_path(), $this->export_column_headers() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+		@chmod( $this->get_file_path(), 0664 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod, Generic.PHP.NoSilencedErrors.Discouraged
 	}
 	/**
 	 * Get records count to export
@@ -424,7 +424,7 @@ class TeraWallet_CSV_Exporter {
 		if ( '' !== $rows ) {
 			// One append per step. Rewriting the whole file per row made a large
 			// export quadratic in its own size.
-			@file_put_contents( $this->get_file_path(), $rows, FILE_APPEND ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+			@file_put_contents( $this->get_file_path(), $rows, FILE_APPEND ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 		$this->set_step( $this->get_step() + 1 );
 	}
@@ -498,7 +498,7 @@ class TeraWallet_CSV_Exporter {
 	public function export() {
 		$this->send_headers();
 		$this->send_content( $this->get_file() );
-		@unlink( $this->get_file_path() ); // phpcs:ignore WordPress.VIP.FileSystemWritesDisallow.file_ops_unlink, Generic.PHP.NoSilencedErrors.Discouraged
+		@unlink( $this->get_file_path() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink, WordPress.VIP.FileSystemWritesDisallow.file_ops_unlink, Generic.PHP.NoSilencedErrors.Discouraged
 		die();
 	}
 

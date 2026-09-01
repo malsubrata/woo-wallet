@@ -1,4 +1,15 @@
 *** Changelog ***
+= v1.6.14 (September 1, 2026) =
+* New - New Statement tab replaces Transactions: pick a date range, see opening and closing balance with a running balance per row, and download or print it as CSV.
+* Fix - Statement and wallet amounts now convert correctly on multi-currency stores; the closing balance again matches the wallet balance shown elsewhere.
+* Fix - The wallet balance on Blocks checkout no longer breaks the payment method when it can't be read as a number.
+* Fix - The settings screen reopens on the tab you left, on browsers where storage is unavailable.
+* Tweak - The Transactions tab is gone; old /my-wallet/transactions/ links now open the wallet dashboard. Add-ons overriding templates/wc-endpoint-wallet.php should refresh their copy.
+* Tweak - Developers: the `woo_wallet_transactons_datatable_columns` and `woo_wallet_transactons_datatable_row_data` filters are removed; use `woo_wallet_statement_columns`, `woo_wallet_statement_row_cells` and `woo_wallet_statement_row_columns` instead.
+* Tweak - Developers: new `woo_wallet_statement_adjustments` and `woo_wallet_statement_opening_adjustment` filters let an add-on place a non-ledger balance movement on the statement as a dated line.
+* Tweak - Redesigned the Upgrade to Pro page; pricing now reads "from $79" and links to the 5-site and 25-site licences.
+* Performance - The wallet's frontend script is 445 KB smaller now that the old transaction table's charting library no longer loads on any store page.
+
 = v1.6.13 (August 22, 2026) =
 * Security - The wallet CSV export and download now require the wallet management capability, not just a valid request token.
 * Fix - Cashback is credited again on stores that had saved the settings page. No need to re-save; the "Recalculate cashback" order action works again too.

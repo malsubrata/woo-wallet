@@ -1,7 +1,7 @@
 {
   "name": "woo-wallet",
   "title": "TeraWallet - WooCommerce Wallet",
-  "version": "1.6.13",
+  "version": "1.6.14",
   "description": "A powerful, extendable WooCommerce wallet system which support payment, partial payment, cashback reward program as well as refund for your WooCommerce store.",
   "repository": {
     "type": "git",
@@ -40,14 +40,13 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.5",
-    "tabulator-tables": "^6.4.0"
+    "@tailwindcss/postcss": "^4.1.5"
   },
   "scripts": {
     "build": "wp-scripts build",
     "start": "wp-scripts start",
     "lint:js": "wp-scripts lint-js src/",
-    "lint:css": "wp-scripts lint-style src/",
+    "lint:css": "wp-scripts lint-style \"src/**/*.{css,scss}\"",
     "make-pot": "wp i18n make-pot . languages/woo-wallet.pot --exclude=dist,build"
   }
 }

@@ -215,9 +215,7 @@ export default function App() {
 						minWidth: 0,
 					} }
 				>
-					<div
-						style={ { marginBottom: isCompact ? 16 : 24 } }
-					>
+					<div style={ { marginBottom: isCompact ? 16 : 24 } }>
 						<h2
 							style={ {
 								fontSize: isCompact ? 17 : 20,

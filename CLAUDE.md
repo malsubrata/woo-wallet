@@ -135,6 +135,36 @@ The admin settings page is a React app at `src/admin/settings/` (entry `index.js
 - `WOO_WALLET_PLUGIN_VERSION` lives in **both** `woo-wallet.php` (header + `define`) and is referenced by `Woo_Wallet_Install`. Bump together.
 - The version string lives in **four** places and they must always agree: `woo-wallet.php` header `Version:`, `woo-wallet.php` `WOO_WALLET_PLUGIN_VERSION`, `readme.txt` `Stable tag:`, `package.json` `version`. `/start-release` bumps all four; `/finish-release` verifies them.
 
+## UI work
+
+Before writing or reshaping **any** customer- or admin-facing UI — a template, a
+React settings field, SCSS, an email — load the `frontend-design` skill first and
+design against it. That applies to redesigns and to small additions, not just new
+screens.
+
+Every UI change must be responsive. Non-negotiable:
+
+- No horizontal page overflow at **375px**. Check 375 / 768 / 1180 before calling
+  it done.
+- Wide content (tables, code, diagrams) scrolls inside its own
+  `overflow-x: auto` container — the page body never scrolls sideways.
+- Below ~720px, data tables either stack or scroll in their own box. A table that
+  forces the page wide is a bug.
+- Never let colour alone carry meaning. A credit and a debit must differ by sign
+  or label as well as by red/green, especially where a stacked layout has dropped
+  the column headers that used to say which was which.
+- Text meets 4.5:1 contrast (3:1 for large text). Measure the muted greys against
+  their actual background, not against white.
+- Visible keyboard focus; honour `prefers-reduced-motion`.
+
+Frontend templates render inside **unknown themes**. Themes routinely set
+`display: block` on labels and `width: 100%` on inputs, which silently collapses
+inline filter rows into full-width stacks — size such controls explicitly.
+Don't load a webfont from a template; inherit the theme's faces.
+
+Verify by looking, not by reasoning: render the template, screenshot it at a
+desktop and a mobile width, and fix what you see.
+
 ## Agents and commands
 
 Subagents live in `.claude/agents/`. All are **read-only** — they investigate and report;

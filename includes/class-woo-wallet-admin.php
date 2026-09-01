@@ -1600,8 +1600,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 				<div class="tw-promo__act">
 					<p class="tw-promo__price">
-						<span class="tw-promo__amount"><?php echo esc_html( Woo_Wallet_Go_Pro_Page::PRICE ); ?></span>
-						<span class="tw-promo__term"><?php esc_html_e( 'per year, one site', 'woo-wallet' ); ?></span>
+						<span class="tw-promo__amount"><?php echo esc_html( Woo_Wallet_Go_Pro_Page::price_label() ); ?></span>
+						<span class="tw-promo__term"><?php esc_html_e( 'per year', 'woo-wallet' ); ?></span>
 					</p>
 					<a class="tw-promo__btn" href="<?php echo esc_url( $pro_url ); ?>">
 						<?php esc_html_e( 'See what Pro adds', 'woo-wallet' ); ?>

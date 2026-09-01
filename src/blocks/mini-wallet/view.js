@@ -5,7 +5,7 @@
  * enhancements. This script is automatically enqueued by WordPress via
  * the "viewScript" field in block.json.
  *
- * @package woo-wallet
+ * @package
  */
 
 ( function () {
@@ -15,14 +15,10 @@
 	 * Initialize all wallet balance block instances on the page.
 	 */
 	function init() {
-		const blocks = document.querySelectorAll(
-			'.wc-block-mini-wallet'
-		);
+		const blocks = document.querySelectorAll( '.wc-block-mini-wallet' );
 
 		blocks.forEach( function ( block ) {
-			const link = block.querySelector(
-				'.wc-block-mini-wallet__link'
-			);
+			const link = block.querySelector( '.wc-block-mini-wallet__link' );
 			if ( ! link ) {
 				return;
 			}

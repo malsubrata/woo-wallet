@@ -67,14 +67,12 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_YayCurrency' ) ) {
 		 *
 		 * YayCurrency only hooks `woocommerce_currency` when
 		 * `YayCurrencyHelper::is_reload_permitted()` is true — that's the
-		 * storefront and a small whitelist of AJAX actions. The wallet's
-		 * own AJAX action `draw_wallet_transaction_details_table` is not
-		 * on that whitelist, so the inherited filter-based default
+		 * storefront and a small whitelist of AJAX actions, and nothing
+		 * else. Off that whitelist the inherited filter-based default
 		 * (`apply_filters('woocommerce_currency', $base)`) silently
-		 * returns base in that context. Result: every per-row conversion
-		 * in the dashboard transaction list ran INR -> INR (identity)
-		 * and rendered the canonical-base value with the active EUR
-		 * symbol — i.e. unconverted.
+		 * returns base. Result: every per-row conversion ran INR -> INR
+		 * (identity) and rendered the canonical-base value with the
+		 * active EUR symbol — i.e. unconverted.
 		 *
 		 * `YayCurrencyHelper::detect_current_currency()` reads the
 		 * `yay_currency_widget` cookie directly, so it works in every

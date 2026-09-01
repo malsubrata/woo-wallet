@@ -8,6 +8,8 @@
  * tabs (`window.wooWallet.settings.registerField`) which bypass the PHP REST
  * sanitisation layer entirely. Both are therefore rendered as plain text nodes
  * so no caller — trusted or otherwise — can inject markup or scripts.
+ * @param root0
+ * @param root0.field
  */
 export default function SectionHeading( { field } ) {
 	return (
