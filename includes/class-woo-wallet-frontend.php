@@ -373,7 +373,7 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				foreach ( $rows as $row ) {
 					$amount   = $scope['scoped']
 						? (float) $row->amount
-						: (float) apply_filters( 'woo_wallet_amount', (float) $row->amount, (string) $row->currency, $user_id );
+						: WooWallet_Statement_Service::convert_row_amount( $row, $user_id );
 					$balance += 'credit' === $row->type ? $amount : -$amount;
 					fputcsv(
 						$out,

@@ -165,14 +165,37 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 			}
 
 			foreach ( $statement['rows'] as $row ) {
-				// A row carries the currency it was recorded in; legacy rows
-				// predating the single-currency ledger may differ from base.
-				$row_currency = '' !== (string) $row->currency ? (string) $row->currency : $base;
-				$row->amount  = $convert( $row->amount, $row_currency );
+				$row->amount  = self::convert_row_amount( $row, $user_id, $base );
 				$row->balance = $convert( $row->balance, $base );
 			}
 
 			return $statement;
+		}
+
+		/**
+		 * Convert one row's amount into the active currency.
+		 *
+		 * The single place that knows a row's amount is denominated in the
+		 * currency the row was recorded in -- and that legacy rows predating
+		 * the single-currency ledger carry an empty `currency`, which must
+		 * fall back to base. `Woo_Wallet_Currency_Manager::convert()`
+		 * short-circuits on an empty `$from` and returns the amount
+		 * unconverted, so a caller that skips this fallback silently prints
+		 * base-currency figures under the active currency's label.
+		 *
+		 * Both the on-screen statement and the CSV export go through here so
+		 * the download cannot drift from the page it was downloaded from.
+		 *
+		 * @param object $row     Statement row.
+		 * @param int    $user_id User ID.
+		 * @param string $base    Optional base currency, to save a lookup in a loop.
+		 * @return float
+		 */
+		public static function convert_row_amount( $row, $user_id, $base = '' ) {
+			$base         = '' !== $base ? $base : self::base_currency();
+			$row_currency = '' !== (string) $row->currency ? (string) $row->currency : $base;
+
+			return (float) apply_filters( 'woo_wallet_amount', (float) $row->amount, $row_currency, (int) $user_id );
 		}
 
 		/**
@@ -344,7 +367,7 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 		private static function get_totals( $source ) {
 			global $wpdb;
 
-			$row = $wpdb->get_row( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE 0 END) AS credited, SUM(CASE WHEN t.type = 'debit' THEN t.amount ELSE 0 END) AS debited FROM {$source}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$row = $wpdb->get_row( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE 0 END) AS credited, SUM(CASE WHEN t.type = 'debit' THEN t.amount ELSE 0 END) AS debited FROM {$source}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 			$credited = $row ? (float) $row->credited : 0.0;
 			$debited  = $row ? (float) $row->debited : 0.0;
@@ -366,7 +389,7 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 		private static function get_row_count( $source ) {
 			global $wpdb;
 
-			return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$source}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$source}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
 
 		/**
@@ -594,7 +617,7 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 				$limit_sql = $wpdb->prepare( ' LIMIT %d OFFSET %d', (int) $limit, max( 0, (int) $offset ) );
 			}
 
-			$rows = $wpdb->get_results( "SELECT * FROM {$source} ORDER BY t.date ASC, t.transaction_id ASC" . $limit_sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$rows = $wpdb->get_results( "SELECT * FROM {$source} ORDER BY t.date ASC, t.transaction_id ASC" . $limit_sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
 
 			return is_array( $rows ) ? $rows : array();
 		}
@@ -623,7 +646,7 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 
 			$inner = $wpdb->prepare( "SELECT t.type, t.amount FROM {$source} ORDER BY t.date ASC, t.transaction_id ASC LIMIT %d", $offset ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
-			$net = $wpdb->get_var( "SELECT SUM(CASE WHEN x.type = 'credit' THEN x.amount ELSE -x.amount END) FROM ( {$inner} ) AS x" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$net = $wpdb->get_var( "SELECT SUM(CASE WHEN x.type = 'credit' THEN x.amount ELSE -x.amount END) FROM ( {$inner} ) AS x" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 			return (float) $net;
 		}

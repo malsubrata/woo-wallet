@@ -1,19 +1,14 @@
 *** Changelog ***
-= v1.7.0 (Unreleased) =
-* Feature - New Statement tab: pick any date range and see the opening balance, every transaction with a running balance beside it, the credited and debited totals, and the closing balance. Download it as CSV or print it.
-* Remove - The Transactions tab has been removed. The Statement shows the same history plus the balances, and it is paginated, so nothing is lost. Old /my-wallet/transactions/ links now open the wallet dashboard.
-* Fix - Statement amounts now convert with the storefront currency. With a multi-currency plugin active the statement showed base-currency figures under the switched currency's symbol, so switching appeared to change only the symbol. The opening, closing, period totals, every row and the running balance all follow the switcher now, and the closing balance again matches the wallet balance shown elsewhere.
-* Tweak - The statement CSV is denominated in the currency the customer is viewing, and names it in a Currency column.
-* Performance - The wallet's frontend script is 445 KB smaller — the transaction table's charting library is no longer loaded on any store page.
-* Developer - Removed the `woo_wallet_transactons_datatable_columns` and `woo_wallet_transactons_datatable_row_data` filters along with the table. Use `woo_wallet_statement_columns` (column list), `woo_wallet_statement_row_cells` (per-row cell markup) and `woo_wallet_statement_row_columns` (extra SELECT columns) instead.
-* Developer - New `woo_wallet_statement_adjustments` and `woo_wallet_statement_opening_adjustment` filters let an add-on put a balance movement that is not a ledger row — expired credit, for instance — onto the statement as a dated line, counted in the period totals and the running balance.
-* Developer - Add-ons overriding `templates/wc-endpoint-wallet.php` must refresh their copy: one that still lists a Transactions item now links to a tab that no longer exists.
-
-= v1.6.14 (Unreleased) =
-* Fix - The wallet balance shown on the Blocks checkout no longer breaks the payment method when the balance cannot be read as a number.
+= v1.6.14 (September 1, 2026) =
+* New - New Statement tab replaces Transactions: pick a date range, see opening and closing balance with a running balance per row, and download or print it as CSV.
+* Fix - Statement and wallet amounts now convert correctly on multi-currency stores; the closing balance again matches the wallet balance shown elsewhere.
+* Fix - The wallet balance on Blocks checkout no longer breaks the payment method when it can't be read as a number.
 * Fix - The settings screen reopens on the tab you left, on browsers where storage is unavailable.
-* Tweak - Redesigned the Upgrade to Pro page.
-* Tweak - Pro pricing now reads "from $79" and points to the 5-site and 25-site licences.
+* Tweak - The Transactions tab is gone; old /my-wallet/transactions/ links now open the wallet dashboard. Add-ons overriding templates/wc-endpoint-wallet.php should refresh their copy.
+* Tweak - Developers: the `woo_wallet_transactons_datatable_columns` and `woo_wallet_transactons_datatable_row_data` filters are removed; use `woo_wallet_statement_columns`, `woo_wallet_statement_row_cells` and `woo_wallet_statement_row_columns` instead.
+* Tweak - Developers: new `woo_wallet_statement_adjustments` and `woo_wallet_statement_opening_adjustment` filters let an add-on place a non-ledger balance movement on the statement as a dated line.
+* Tweak - Redesigned the Upgrade to Pro page; pricing now reads "from $79" and links to the 5-site and 25-site licences.
+* Performance - The wallet's frontend script is 445 KB smaller now that the old transaction table's charting library no longer loads on any store page.
 
 = v1.6.13 (August 22, 2026) =
 * Security - The wallet CSV export and download now require the wallet management capability, not just a valid request token.

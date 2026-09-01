@@ -853,4 +853,54 @@ class Test_Statement_Service extends WP_UnitTestCase {
 		$this->assertEquals( 1.00, $page_one[0]->amount );
 		$this->assertEquals( 3.00, $page_two[0]->amount );
 	}
+
+	/**
+	 * A legacy row recorded before the ledger stamped a currency must convert
+	 * identically on screen and in the CSV export. The export used to run its
+	 * own conversion without the base-currency fallback, and
+	 * `Woo_Wallet_Currency_Manager::convert()` short-circuits on an empty
+	 * `$from` -- so the CSV printed base-currency figures under the active
+	 * currency's label while the page beside it showed converted ones.
+	 */
+	public function test_legacy_currency_rows_convert_the_same_on_screen_and_in_csv() {
+		global $wpdb;
+
+		$id = $this->record( 'credit', 500.00, '2025-01-05 09:00:00' );
+		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->base_prefix}woo_wallet_transactions SET currency = '' WHERE transaction_id = %d", $id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		add_filter( 'woo_wallet_amount', array( $this, 'convert_to_eur' ), 10, 3 );
+
+		$statement = WooWallet_Statement_Service::to_display_currency(
+			WooWallet_Statement_Service::get_statement( $this->user_id, '2025-01-01', '2025-01-31' )
+		);
+
+		$range      = WooWallet_Statement_Service::resolve_range( '2025-01-01', '2025-01-31' );
+		$scope      = array(
+			'scoped'   => false,
+			'currency' => get_woocommerce_currency(),
+		);
+		$rows       = WooWallet_Statement_Service::get_rows( $this->user_id, $range, $scope );
+		$csv_amount = WooWallet_Statement_Service::convert_row_amount( $rows[0], $this->user_id );
+
+		remove_filter( 'woo_wallet_amount', array( $this, 'convert_to_eur' ), 10 );
+
+		$this->assertEquals( 450.00, $statement['rows'][0]->amount );
+		$this->assertEquals( $statement['rows'][0]->amount, $csv_amount );
+	}
+
+	/**
+	 * Filter callback mirroring `Woo_Wallet_Currency_Manager::convert()`: an
+	 * empty source currency short-circuits and returns the amount unconverted.
+	 *
+	 * @param float  $amount Amount.
+	 * @param string $from   Source currency.
+	 * @return float
+	 */
+	public function convert_to_eur( $amount, $from = '' ) {
+		if ( '' === (string) $from ) {
+			return (float) $amount;
+		}
+
+		return (float) $amount * 0.9;
+	}
 }
