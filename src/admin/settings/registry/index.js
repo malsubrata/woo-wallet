@@ -426,7 +426,7 @@ export function getRegistry() {
 					detail: { registry: singleton },
 				} )
 			);
-		} catch ( e ) {
+		} catch {
 			/* IE/old envs — ignore */
 		}
 	}
