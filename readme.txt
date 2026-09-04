@@ -141,11 +141,13 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.15 (Unreleased) =
-* Tweak - Development in progress.
+* Fix - The partial payment notice at checkout understated what the other payment method would charge, on stores that tax wallet top-ups.
+* Fix - The wallet is no longer offered as full payment for an order the balance cannot cover, which took the balance and then failed the checkout.
+* Fix - Settings fields hidden behind their own toggle now appear, including the partial payment Tax treatment setting.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.6.15 =
-Development in progress.
+Fixes two partial payment faults on stores that tax top-ups: an understated checkout figure, and the wallet offered as full payment for an order it cannot cover. Also restores settings fields hidden behind their own toggle, including Tax treatment.
