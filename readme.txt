@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.6.14
+Stable tag: 1.6.15
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -140,20 +140,12 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.14 (September 1, 2026) =
-* New - New Statement tab replaces Transactions: pick a date range, see opening and closing balance with a running balance per row, and download or print it as CSV.
-* Fix - Statement and wallet amounts now convert correctly on multi-currency stores; the closing balance again matches the wallet balance shown elsewhere.
-* Fix - The wallet balance on Blocks checkout no longer breaks the payment method when it can't be read as a number.
-* Fix - The settings screen reopens on the tab you left, on browsers where storage is unavailable.
-* Tweak - The Transactions tab is gone; old /my-wallet/transactions/ links now open the wallet dashboard. Add-ons overriding templates/wc-endpoint-wallet.php should refresh their copy.
-* Tweak - Developers: the `woo_wallet_transactons_datatable_columns` and `woo_wallet_transactons_datatable_row_data` filters are removed; use `woo_wallet_statement_columns`, `woo_wallet_statement_row_cells` and `woo_wallet_statement_row_columns` instead.
-* Tweak - Developers: new `woo_wallet_statement_adjustments` and `woo_wallet_statement_opening_adjustment` filters let an add-on place a non-ledger balance movement on the statement as a dated line.
-* Tweak - Redesigned the Upgrade to Pro page; pricing now reads "from $79" and links to the 5-site and 25-site licences.
-* Performance - The wallet's frontend script is 445 KB smaller now that the old transaction table's charting library no longer loads on any store page.
+= v1.6.15 (Unreleased) =
+* Tweak - Development in progress.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.6.14 =
-New Statement tab replaces Transactions with running balances; multi-currency amounts now display correctly. If your add-on overrides templates/wc-endpoint-wallet.php or uses the old transaction table filters, update it before upgrading.
+= 1.6.15 =
+Development in progress.
