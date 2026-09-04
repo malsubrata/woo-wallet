@@ -45,6 +45,7 @@
   "scripts": {
     "build": "wp-scripts build",
     "start": "wp-scripts start",
+    "test:js": "wp-scripts test-unit-js",
     "lint:js": "wp-scripts lint-js src/",
     "lint:css": "wp-scripts lint-style \"src/**/*.{css,scss}\"",
     "make-pot": "wp i18n make-pot . languages/woo-wallet.pot --exclude=dist,build"

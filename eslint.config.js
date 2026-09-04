@@ -67,4 +67,14 @@ module.exports = [
 			'react-hooks/rules-of-hooks': 'warn',
 		},
 	},
+
+	{
+		// Jest globals for the unit tests run by `npm run test:js`.
+		files: [ '**/test/**/*.js', '**/*.test.js' ],
+		languageOptions: {
+			globals: {
+				...globals.jest,
+			},
+		},
+	},
 ];

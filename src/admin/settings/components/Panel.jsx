@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getFieldTypes } from '../registry/fieldTypes';
+import { isCheckedValue, isVisible, withFieldDefaults } from '../utils';
 import CheckboxField from '../fields/CheckboxField';
 import Icon from './Icon';
 
@@ -36,25 +37,6 @@ function SaveButton( { onClick, saving, saved } ) {
 				: __( 'Save Changes', 'woo-wallet' ) }
 		</button>
 	);
-}
-
-function evaluateCondition( cond, values ) {
-	const { field: depField, equals } = cond;
-	const val = values[ depField ];
-	if ( Array.isArray( equals ) ) {
-		return equals.includes( val );
-	}
-	return String( val ) === String( equals );
-}
-
-function isVisible( field, sectionValues ) {
-	if ( ! field.show_if ) {
-		return true;
-	}
-	const conds = Array.isArray( field.show_if )
-		? field.show_if
-		: [ field.show_if ];
-	return conds.every( ( c ) => evaluateCondition( c, sectionValues ) );
 }
 
 function StackedField( { field, value, onChange } ) {
@@ -241,12 +223,7 @@ function GroupCard( { group, values, onChange } ) {
 	const masterValue = master
 		? values[ master.name ] ?? master.default ?? ''
 		: 'on';
-	const masterChecked =
-		masterValue === 'on' ||
-		masterValue === true ||
-		masterValue === 1 ||
-		masterValue === '1' ||
-		masterValue === 'yes';
+	const masterChecked = isCheckedValue( masterValue );
 	const hasVisibleChildren =
 		masterChecked && group.children.some( ( f ) => isVisible( f, values ) );
 
@@ -329,12 +306,7 @@ function ActionGroupCard( { group, values, onChange } ) {
 	const masterValue = master
 		? values[ master.name ] ?? master.default ?? ''
 		: 'on';
-	const isEnabled =
-		masterValue === 'on' ||
-		masterValue === true ||
-		masterValue === 1 ||
-		masterValue === '1' ||
-		masterValue === 'yes';
+	const isEnabled = isCheckedValue( masterValue );
 
 	const headBg = open ? 'var(--ww-accent-bg)' : 'transparent';
 
@@ -854,7 +826,7 @@ export default function Panel( {
 	appendChildren = null,
 } ) {
 	const fields = schema.fields?.[ sectionId ] || [];
-	const sectionValues = values[ sectionId ] || {};
+	const sectionValues = withFieldDefaults( fields, values[ sectionId ] );
 	const { groups, gatewayGroups, actionGroups, loose } =
 		partitionFields( fields );
 	const visibleLoose = loose.filter( ( f ) => isVisible( f, sectionValues ) );
