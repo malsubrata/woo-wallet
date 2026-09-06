@@ -25,7 +25,8 @@ npm run make-pot    # regenerate languages/woo-wallet.pot (requires WP-CLI)
 ```
 
 There **is** a PHP integration test suite (PHPUnit + the WordPress test
-framework), run locally and in CI (`.github/workflows/ci.yml`).
+framework), run locally and in CI (`.github/workflows/ci.yml`). Codex is no longer supported
+on this repo — `.claude/` is the only agent configuration.
 
 ```bash
 composer install                  # install dev dependencies (PHPUnit, wp-phpunit)
@@ -36,7 +37,8 @@ composer test                     # run the suite
 Tests live in `tests/` (`tests/bootstrap.php` boots real WP + WooCommerce
 against a dedicated test database; cases are `tests/test-*.php`). Each test
 runs inside a rolled-back DB transaction, so the live site database is never
-mutated. **96 tests across 16 files** currently cover the ledger core
+mutated. The suite (**23 test files** as of v1.6.15 — run `composer test` for the live
+count rather than trusting this line) covers the ledger core
 (credit/debit/balance, transfer, precision), idempotency, partial-payment
 debit timing / locked wallet / refunds / fee-tax blocking, the referral
 service, transaction categories, reports data and legacy currency
@@ -167,13 +169,43 @@ desktop and a mobile width, and fix what you see.
 
 ## Agents and commands
 
-Subagents live in `.claude/agents/`. All are **read-only** — they investigate and report;
-the main session makes every edit, so the diff stays visible to the developer.
+Subagents live in `.claude/agents/`. Dispatch them by the **exact `name:` in their
+frontmatter** — the filename and the name always match.
 
-- `terawallet-feature-architect` — design docs for non-trivial features. No code.
-- `terawallet-security-auditor` — attacker-perspective audit of a diff or named files.
-- `wallet-ledger-auditor` — money-correctness only (locks, TOCTOU, precision, refund symmetry).
-- `terawallet-changelog-writer` — short, user-facing changelog copy + Upgrade Notice for a release.
+**Review agents — all strictly read-only.** They investigate and report; the main session
+makes every edit, so the diff stays visible to the developer.
 
-Dispatch the two auditors **in parallel** on any diff touching REST/AJAX/caps/SQL or
-money paths. Release workflow: `/start-release` → `/finish-release` → `/build-dist`.
+- `security-auditor` — attacker-perspective audit: caps, nonces, IDOR, SQLi, XSS, REST/AJAX
+  authorization, privilege escalation.
+- `wallet-ledger-auditor` — money correctness only, invariants L1–L12 (locks, TOCTOU,
+  precision, currency, reversal symmetry, idempotency, migration safety).
+- `wc-platform-reviewer` — WooCommerce platform (HPOS, order CRUD, status transitions,
+  Action Scheduler, Blocks, gateway/refund/coupon/tax) and existing installations (existing
+  rows and settings, hook/REST/template back-compat, upgrade vs fresh install, feature on/off).
+
+**Non-review agents.**
+
+- `terawallet-feature-architect` — design docs for non-trivial features. Read-only, no code.
+- `terawallet-changelog-writer` — user-facing changelog copy + Upgrade Notice. Read-only.
+- `wallet-qa-engineer` — **the one agent that writes files.** It authors adversarial PHPUnit
+  tests into `tests/` and has its own live-environment safety gate. It is not a reviewer;
+  invoke it deliberately, after a review has named the coverage gap.
+
+**Reviewing a change.** Run `/review` — it resolves the diff, routes to only the auditors
+the changed files actually need, dispatches them in parallel, dedupes the findings and
+prints a gate verdict. It never edits, commits or merges. Use it on a feature branch while
+the change is still small; `/finish-release` runs the same auditors again at the release
+gate, but finding a blocking ledger defect there costs a release.
+
+Routing, if you are dispatching by hand instead: REST/AJAX/caps/SQL → `security-auditor`;
+money paths → `wallet-ledger-auditor`; order lifecycle, Blocks, migrations, settings keys,
+templates, or any changed public hook signature or REST response shape →
+`wc-platform-reviewer`. Always dispatch in parallel.
+
+Release workflow: `/start-release` → `/finish-release` → `/build-dist`.
+
+Deterministic checks live in CI (`.github/workflows/ci.yml`), not in the review prompts:
+version agreement across all four locations, no direct writes to `woo_wallet_transactions`
+outside the wallet class, `uninstall.php` dropping every table `install` creates, required
+plugin headers, and the PHP floor agreeing across three files. Don't re-implement those as
+review instructions — extend the `invariants` job instead.
