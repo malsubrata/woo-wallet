@@ -370,7 +370,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					<p class="tw-eyebrow"><?php esc_html_e( 'TeraWallet — Upgrade', 'woo-wallet' ); ?></p>
 					<h1><?php esc_html_e( 'Everything your wallet needs once customers actually use it.', 'woo-wallet' ); ?></h1>
 					<p class="tw-hero__subtitle">
-						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts.', 'woo-wallet' ); ?>
+						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts.', 'woo-wallet' ); ?>
 					</p>
 					<div class="tw-hero__cta">
 						<a class="tw-btn tw-btn--light" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
@@ -460,6 +460,18 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						__( 'Birthday bonus: credit the wallet once a year, automatically.', 'woo-wallet' ),
 						__( 'Adds a birthdate field to My Account and to the WordPress user profile screen.', 'woo-wallet' ),
 						__( 'Both appear alongside the free earning actions in Settings — nothing new to learn.', 'woo-wallet' ),
+					),
+				),
+				array(
+					'id'      => 'boost',
+					'title'   => __( 'Top-Up Bonus Campaigns (Wallet Boost)', 'woo-wallet' ),
+					'outcome' => __( 'Pulls forward prepaid revenue: customers top up more, and the extra credit can only be spent with you.', 'woo-wallet' ),
+					'bullets' => array(
+						__( 'Percentage or fixed bonus on qualifying top-ups, with a minimum purchase, a maximum bonus cap, a schedule and a per-customer limit.', 'woo-wallet' ),
+						__( 'The bonus is spendable straight away but never withdrawable or transferable, and carries its own expiry separate from the top-up.', 'woo-wallet' ),
+						__( 'Campaign terms freeze when the order starts; one campaign runs at a time and overlapping dates are refused at save.', 'woo-wallet' ),
+						__( 'Bonus is measured against the wallet credit actually received, not the order total; full refunds claw back the unspent bonus.', 'woo-wallet' ),
+						__( 'A Wallet Boost dashboard tab tracks credit granted, outstanding, spent, expired and clawed back.', 'woo-wallet' ),
 					),
 				),
 				array(
@@ -649,6 +661,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						array( __( 'Referral rewards', 'woo-wallet' ), true, true ),
 						array( __( 'Spend milestone bonus', 'woo-wallet' ), false, true ),
 						array( __( 'Birthday bonus, with a birthdate field on My Account', 'woo-wallet' ), false, true ),
+						array( __( 'Top-up bonus campaigns (Wallet Boost), scheduled with caps and per-customer limits', 'woo-wallet' ), false, true ),
 					),
 				),
 				array(
@@ -667,7 +680,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						array( __( 'Credit expiry with FIFO redemption', 'woo-wallet' ), false, true ),
 						array( __( 'Per-category expiry periods and pre-expiry reminder emails', 'woo-wallet' ), false, true ),
 						array( __( 'Breakage, aging and expiry-trend reports', 'woo-wallet' ), false, true ),
-						array( __( 'Withdrawal and coupon reports', 'woo-wallet' ), false, true ),
+						array( __( 'Withdrawal, coupon and Wallet Boost campaign reports', 'woo-wallet' ), false, true ),
 						array( __( 'Bulk CSV import of balances', 'woo-wallet' ), false, true ),
 						array( __( 'Wallet coupons and bulk coupon generation', 'woo-wallet' ), false, true ),
 					),
@@ -799,7 +812,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<?php
 						printf(
 							/* translators: %s: price label, e.g. "from $79". */
-							esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year.', 'woo-wallet' ),
+							esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year.', 'woo-wallet' ),
 							esc_html( self::price_label() )
 						);
 						?>
