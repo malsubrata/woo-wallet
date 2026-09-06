@@ -5,6 +5,7 @@
  * @package StandaleneTech
  */
 
+use Automattic\Jetpack\Constants;
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -284,7 +285,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Admin init
 		 */
 		public function admin_init() {
-			if ( version_compare( WC_VERSION, '3.4', '<' ) ) {
+			if ( version_compare( Constants::get_constant( 'WC_VERSION' ), '3.4', '<' ) ) {
 				add_filter( 'woocommerce_account_settings', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
 			}
 			$this->download_export_file();
