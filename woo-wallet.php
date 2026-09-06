@@ -37,6 +37,16 @@ if ( ! defined( 'WOO_WALLET_PLUGIN_VERSION' ) ) {
 	define( 'WOO_WALLET_PLUGIN_VERSION', '1.6.15' );
 }
 
+// Declare HPOS (custom order tables) compatibility.
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', WOO_WALLET_PLUGIN_FILE, true );
+		}
+	}
+);
+
 // include dependencies file.
 if ( ! class_exists( 'Woo_Wallet_Dependencies' ) ) {
 	include_once __DIR__ . '/includes/class-woo-wallet-dependencies.php';

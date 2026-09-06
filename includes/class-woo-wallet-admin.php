@@ -1099,7 +1099,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @param type $order_id order_id.
 		 */
 		public function add_wallet_payment_amount( $order_id ) {
-			$order                 = wc_get_order( $order_id );
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
 			$total_cashback_amount = get_total_order_cashback_amount( $order_id );
 			if ( $total_cashback_amount ) {
 				?>
@@ -1337,6 +1340,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 			$order_id = wc_get_order_id_by_order_item_id( $item_id );
 			$order    = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
 			if ( $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
 				echo '<small class="refunded">' . esc_html__( 'Refunded', 'woo-wallet' ) . '</small>';
 			} else {
