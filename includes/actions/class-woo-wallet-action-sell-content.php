@@ -470,6 +470,9 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 			$user_id = get_current_user_id();
 			// Verify nonce bound to post ID, user ID and amount.
 			if ( wp_verify_nonce( wp_unslash( $_POST['tw_buy_content_nonce'] ), 'tw_buy_content_nonce_' . $post->ID . '_' . $user_id . '_' . $amount ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				if ( $this->has_paid( $amount ) ) {
+					return;
+				}
 				$transient              = md5( 'tw-sell-content' . $post->ID . $user_id . $amount );
 				$tw_sell_content_amount = floatval( $amount );
 				$title                  = get_the_title();
