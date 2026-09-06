@@ -1,4 +1,15 @@
 *** Changelog ***
+= v1.6.15 (Unreleased) =
+* Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
+* Security - The Adjust Balance screen now escapes the customer's display name and email address before showing them.
+* Fix - TeraWallet now declares compatibility with High-Performance Order Storage, so it no longer shows as incompatible on the WooCommerce Features screen.
+* Fix - Checkout no longer fails with a fatal error when the wallet gateway is handed an order that no longer exists; it reports a payment failure instead.
+* Fix - The partial payment notice at checkout understated what the other payment method would charge, on stores that tax wallet top-ups.
+* Fix - The wallet is no longer offered as full payment for an order the balance cannot cover, which took the balance and then failed the checkout.
+* Fix - Settings fields hidden behind their own toggle now appear, including the partial payment Tax treatment setting.
+* Fix - The Amount label on the Adjust Balance screen shows the store currency symbol again.
+* Tweak - The Upgrade to Pro page now covers top-up bonus campaigns (Wallet Boost).
+
 = v1.6.14 (September 1, 2026) =
 * New - New Statement tab replaces Transactions: pick a date range, see opening and closing balance with a running balance per row, and download or print it as CSV.
 * Fix - Statement and wallet amounts now convert correctly on multi-currency stores; the closing balance again matches the wallet balance shown elsewhere.

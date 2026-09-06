@@ -141,13 +141,19 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 == Changelog ==
 
 = v1.6.15 (Unreleased) =
+* Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
+* Security - The Adjust Balance screen now escapes the customer's display name and email address before showing them.
+* Fix - TeraWallet now declares compatibility with High-Performance Order Storage, so it no longer shows as incompatible on the WooCommerce Features screen.
+* Fix - Checkout no longer fails with a fatal error when the wallet gateway is handed an order that no longer exists; it reports a payment failure instead.
 * Fix - The partial payment notice at checkout understated what the other payment method would charge, on stores that tax wallet top-ups.
 * Fix - The wallet is no longer offered as full payment for an order the balance cannot cover, which took the balance and then failed the checkout.
 * Fix - Settings fields hidden behind their own toggle now appear, including the partial payment Tax treatment setting.
+* Fix - The Amount label on the Adjust Balance screen shows the store currency symbol again.
+* Tweak - The Upgrade to Pro page now covers top-up bonus campaigns (Wallet Boost).
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.6.15 =
-Fixes two partial payment faults on stores that tax top-ups: an understated checkout figure, and the wallet offered as full payment for an order it cannot cover. Also restores settings fields hidden behind their own toggle, including Tax treatment.
+Declares High-Performance Order Storage compatibility, and stops a replayed content purchase charging the wallet twice. Also fixes two partial payment faults on stores that tax top-ups, and restores settings fields hidden behind their own toggle.
