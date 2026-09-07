@@ -18,7 +18,7 @@ composer.json
 composer.lock
 phpunit.xml.dist
 phpcs.xml.dist
-.eslintrc.js
+eslint.config.js
 .stylelintrc.json
 .phpunit.result.cache
 wp-tests-config.php
