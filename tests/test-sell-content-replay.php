@@ -227,6 +227,60 @@ class Test_Sell_Content_Replay extends WP_UnitTestCase {
 	}
 
 	/**
+	 * If the author's profit-share credit blows up after the buyer's debit has
+	 * already committed, the buyer must still be marked paid — otherwise the
+	 * retry they will inevitably make charges them a second time, which is the
+	 * exact bug the replay guard exists to prevent.
+	 */
+	public function test_paid_marker_survives_a_failing_profit_share_credit() {
+		$opening = $this->balance();
+
+		// Stand in for a third-party listener that throws on the author's credit.
+		$exploder = function ( $transaction_id, $user_id, $amount, $type ) {
+			if ( 'credit' === $type && (int) $user_id === $this->author_id ) {
+				throw new Exception( 'Third-party listener exploded' );
+			}
+		};
+		add_action( 'woo_wallet_transaction_recorded', $exploder, 10, 4 );
+
+		try {
+			$this->submit_purchase();
+		} catch ( Exception $e ) {
+			// The throw is the scenario, not a test failure.
+			unset( $e );
+		}
+
+		remove_action( 'woo_wallet_transaction_recorded', $exploder, 10 );
+
+		$after_first = $this->balance();
+		$this->assertEquals( $opening - $this->price, $after_first, 'The buyer should have been debited once.' );
+		$this->assertTrue(
+			(bool) get_transient( $this->purchase_key() ),
+			'The purchase must be marked paid as soon as the buyer is charged, even though the profit-share credit failed.'
+		);
+
+		// The retry the buyer would make must not charge them again.
+		$this->submit_purchase();
+		$this->assertEquals( $after_first, $this->balance(), 'A retry after a failed profit-share credit must not debit the buyer again.' );
+	}
+
+	/**
+	 * A request that cannot take the lock should tell the buyer, not fail silently.
+	 */
+	public function test_lock_contention_surfaces_a_notice() {
+		if ( ! function_exists( 'wc_get_notices' ) ) {
+			$this->markTestSkipped( 'Notices unavailable.' );
+		}
+		wc_clear_notices();
+
+		$this->other_connection()->get_var( 'SELECT GET_LOCK("' . $this->lock_name() . '", 5)' );
+		$this->submit_purchase();
+
+		$this->assertNotEmpty( wc_get_notices( 'error' ), 'Lock contention should surface an error notice to the buyer.' );
+		wc_clear_notices();
+	}
+
+	/**
 	 * The lock must be released once the purchase finishes, or the buyer could
 	 * never purchase anything else in the same request cycle.
 	 */

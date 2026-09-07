@@ -489,6 +489,8 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 				$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $post->ID );
 				$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 				if ( '1' !== (string) $got_lock ) {
+					// Contention, not an attack. Say so rather than looking like a dead button.
+					wc_add_notice( __( 'Your purchase could not be processed right now. Please try again.', 'woo-wallet' ), 'error' );
 					return;
 				}
 
@@ -506,14 +508,22 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 					$transaction_id         = woo_wallet()->wallet->debit( $user_id, $tw_sell_content_amount, $purchase_description );
 					$expiration             = intval( $this->settings['expiration'] );
 					if ( $transaction_id ) {
-						if ( $profit_share ) {
-							$profit = $tw_sell_content_amount * $profit_share / 100;
-							woo_wallet()->wallet->credit( $post_author, $profit, $sell_description );
-						}
+						/*
+						 * Mark paid on the buyer's debit, before the author's profit share.
+						 * The marker records that THIS BUYER has been charged, so it has to
+						 * land as soon as the charge is durable: if the profit-share credit
+						 * throws — a third-party listener on woo_wallet_transaction_recorded,
+						 * a DB error, a locked author account — the buyer's debit has already
+						 * committed, and a retry must not charge them a second time.
+						 */
 						if ( $expiration ) {
 							set_transient( $transient, true, $expiration * DAY_IN_SECONDS );
 						} else {
 							set_transient( $transient, true );
+						}
+						if ( $profit_share ) {
+							$profit = $tw_sell_content_amount * $profit_share / 100;
+							woo_wallet()->wallet->credit( $post_author, $profit, $sell_description );
 						}
 					}
 				} finally {

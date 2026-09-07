@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-07T02:22:42+00:00\n"
+"POT-Creation-Date: 2026-09-07T02:28:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -429,7 +429,11 @@ msgstr ""
 msgid "Price"
 msgstr ""
 
-#: includes/actions/class-woo-wallet-action-sell-content.php:523
+#: includes/actions/class-woo-wallet-action-sell-content.php:493
+msgid "Your purchase could not be processed right now. Please try again."
+msgstr ""
+
+#: includes/actions/class-woo-wallet-action-sell-content.php:533
 #: includes/class-woo-wallet-frontend.php:487
 #: includes/class-woo-wallet-frontend.php:506
 msgid "Cheatin&#8217; huh?"
