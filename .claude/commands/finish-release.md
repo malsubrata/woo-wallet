@@ -24,30 +24,55 @@ fails. The review gate is the entire point of this command.
 
 ## 3. Code review
 
-Review the full diff against the conventions in `CLAUDE.md`. Flag any of:
-- Ledger writes that bypass `Woo_Wallet_Wallet::credit/debit/transfer` (direct writes to
-  `woo_wallet_transactions` are not allowed).
-- Direct `$wpdb` queries without `$wpdb->prepare()`.
-- Use of a text domain other than `woo-wallet`.
-- New `terawallet/v1` REST controllers not registered in BOTH
-  `WooWallet_API::rest_api_includes()` and `register_rest_routes()`.
-- A DB schema change without a matching migration registered in the `$db_updates` array
-  in `class-woo-wallet-install.php` plus its callback in
-  `includes/helper/woo-wallet-update-functions.php`.
-- General WordPress/WooCommerce coding-standard issues, missing escaping/sanitization.
+Review the full diff yourself against the conventions in `CLAUDE.md`, focusing on what
+neither CI nor the agents cover:
 
-## 4. Security & ledger review
+- New `terawallet/v1` REST controllers registered in BOTH
+  `WooWallet_API::rest_api_includes()` and `TeraWallet_REST_Route_Registry::register_all()` —
+  partial registration means a route loads but is unprotected.
+- New webpack entries placed in the correct config (`wcBuildConfig` for Blocks-aware code,
+  `vanillaAssetsConfig` for plain admin/frontend JS).
+- Anything in the diff that contradicts `CLAUDE.md` — if the code has drifted from the
+  documented architecture, either the code or the doc is wrong. Say which.
+- Dead code, debug output, or commented-out blocks that should not ship.
 
-Dispatch the **`security-auditor`** agent (via the Agent tool) with the full diff and ask
-it to audit the release branch changes for security vulnerabilities.
+**Do NOT hand-check what CI already enforces deterministically** — direct writes to
+`woo_wallet_transactions`, version agreement across the four locations, `uninstall.php`
+table coverage, required plugin headers, the PHP floor, text-domain correctness,
+`$wpdb->prepare()` usage, and escaping/sanitization sniffs all run in
+`.github/workflows/ci.yml` and `phpcs.xml.dist`. If one of those is wrong, CI says so in
+step 5. Re-reading the diff for them by hand is slower and less reliable.
 
-If the diff touches money-moving code — `includes/class-woo-wallet-wallet.php`, anything
-in `includes/services/`, `includes/helper/woo-wallet-update-functions.php`, or REST
-controllers that mutate balances — ALSO dispatch the **`wallet-ledger-auditor`** agent on
-the diff. Dispatch both **in parallel**; they have separate remits and do not need each
-other's output.
+Schema changes are covered by `wallet-ledger-auditor` (L11) and `wc-platform-reviewer` (R-6)
+in the next step — don't duplicate them here.
 
-Both agents are read-only. Collect every finding; do not let them apply fixes.
+## 4. Security, ledger & platform review
+
+Dispatch the read-only auditors **in parallel, in a single message**, with the full diff.
+They have separate remits and do not need each other's output. Route by what the diff
+actually touches — this is the same routing table `/review` uses:
+
+- **`security-auditor`** — always, on any release diff that touches PHP. REST/AJAX,
+  capabilities, nonces, SQL, IDOR, privilege escalation.
+- **`wallet-ledger-auditor`** — if the diff touches money-moving code:
+  `includes/class-woo-wallet-wallet.php`, anything in `includes/services/`,
+  `includes/helper/woo-wallet-update-functions.php`, `includes/class-woo-wallet-install.php`,
+  `class-woo-wallet-cashback.php`, `includes/actions/`, or any REST controller that mutates
+  a balance.
+- **`wc-platform-reviewer`** — if the diff touches the WooCommerce surface or anything an
+  existing store already depends on: order or gateway hooks, `woocommerce_order_status_*`,
+  `class-woo-wallet-payment-method.php`, `*-blocks.php`, `src/payment-method/`,
+  `src/partial-payment/`, Action Scheduler, the `$db_updates` array, option keys,
+  `templates/`, `includes/marketplace/`, `includes/multicurrency/`, or any changed public
+  hook signature or REST response shape.
+
+A release diff of any size usually triggers all three. That is expected at the release gate.
+
+All three are read-only. Collect every finding; do not let them apply fixes. Then merge the
+reports: deduplicate findings two agents raised from different angles (note the agreement —
+it is signal), resolve any disagreement by reading the code yourself, and **open the cited
+`file:line` for every CRITICAL and HIGH before treating it as blocking.** A cited line that
+does not support the claim gets downgraded or dropped, and you say that you dropped it.
 
 ## 5. Build, lint & translations
 
@@ -119,9 +144,10 @@ Then mirror that finalized entry into `changelog.txt` (the standalone changelog 
 
 ## 8. Decision gate
 
-- If the code review or security agents found **blocking** issues, or `npm run build`
-  failed, or any STOP condition above was hit → **STOP**. Present a clear, organized
-  report of every finding. Do NOT merge.
+- If the code review or any of the three auditors found **blocking** issues (CRITICAL or
+  HIGH that survived your `file:line` verification), or `composer test` failed, or
+  `npm run build` failed, or any STOP condition above was hit → **STOP**. Present a clear,
+  organized report of every finding. Do NOT merge.
 - Otherwise, present a concise summary (what changed, agent results, build status) and
   continue.
 

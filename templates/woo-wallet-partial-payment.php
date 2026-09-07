@@ -11,7 +11,7 @@
  * the readme will list any important changes.
  *
  * @author  Subrata Mal
- * @version     1.1.4
+ * @version     1.1.5
  * @package StandaleneTech
  */
 
@@ -22,7 +22,14 @@ $parial_payment_amount = apply_filters( 'woo_wallet_partial_payment_amount', wc(
 if ( $parial_payment_amount <= 0 ) {
 	return;
 }
-$rest_amount = get_woowallet_cart_total() - $parial_payment_amount;
+// When the wallet fee is already on the cart, the amount the other gateway charges
+// IS the order total — read it rather than re-deriving it, so the promise in this
+// message cannot drift from what the customer is actually billed. The fallback
+// covers the opt-in tooltip, where no fee has been applied yet.
+$cart_fees   = wc()->cart->get_fees();
+$rest_amount = isset( $cart_fees['_via_wallet_partial_payment'] )
+	? (float) wc()->cart->get_total( 'edit' )
+	: get_woowallet_cart_total() - $parial_payment_amount;
 if ( 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) {
 	?>
 	<tr class="wallet-pay-partial">

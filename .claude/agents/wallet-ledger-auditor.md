@@ -75,7 +75,11 @@ than the documented soft-delete (`deleted` flag). Balance history is not editabl
 **L8 — Reversal symmetry.** Refunds, cancellations and cashback clawbacks reverse exactly
 what was taken — not more, not less, and not twice. Check partial refunds specifically, and
 check the case where the order was paid partly by wallet and partly by gateway. Verify a
-double-fire of the same order hook cannot double-reverse.
+double-fire of the same order hook cannot double-reverse. **Never assume an order status
+transition happens once** — an order can reach the same status again through a manual admin
+change, a gateway callback racing cron, or `woocommerce_order_status_changed` firing
+alongside the status-specific hook. If the guard against that is a mechanism rather than an
+amount question, hand it to `wc-platform-reviewer` (WC-3) and audit the arithmetic here.
 
 **L9 — Idempotency.** A replayed request, a retried webhook, or a hook firing twice for the
 same order produces one ledger row, not two. Verify the guard is the *stored* marker
@@ -88,7 +92,11 @@ stale balance indefinitely.
 **L11 — Migration safety.** A schema change registers both a `$db_updates` key and its
 callback, is idempotent if re-run, does not lock the transactions table for an unbounded time
 on a large store, and cannot corrupt or reinterpret existing rows. A migration that changes the
-meaning of an existing column without backfilling is a critical finding.
+meaning of an existing column without backfilling is a critical finding. **Never assume
+existing rows conform to the newest code** — rows written by an older version may hold a
+different currency, precision, category or null where the new code expects a value. Trace
+what the new arithmetic does with the oldest row shape still in the wild, not just with rows
+this version writes.
 
 **L12 — Test coverage.** Money-path changes must have a corresponding test in `tests/`. Name
 the specific test that covers the change, or state that none does. Do **not** run the suite and

@@ -293,14 +293,40 @@ if ( ! function_exists( 'woo_wallet_get_partial_payment_max_amount' ) ) {
 
 if ( ! function_exists( 'get_woowallet_cart_total' ) ) {
 	/**
-	 * Get WooCommerce cart total.
+	 * Get WooCommerce cart total, as if the wallet had not been applied.
+	 *
+	 * Every caller wants the same quantity: the gross the customer would owe with no
+	 * wallet contribution. The tax term must therefore exclude the wallet fee's own
+	 * (negative) tax exactly as the fee term excludes its base — `get_taxes_total()`
+	 * merges `get_fee_taxes()` (WC_Cart::get_taxes), which silently re-admits it and
+	 * leaves this helper short by the fee tax once totals have been calculated.
+	 *
+	 * Building the tax term from the item/shipping/non-wallet-fee arrays instead of
+	 * subtracting the fee tax back out keeps the result identical whether this runs
+	 * inside `woocommerce_cart_calculate_fees` (fee not yet costed) or after
+	 * `calculate_totals()` — and never touches `$fee->tax`, which does not exist on
+	 * an uncosted fee (WC_Cart_Fees::$default_fee_props has no `tax` key).
 	 *
 	 * @return float
 	 */
 	function get_woowallet_cart_total() {
 		$cart_total = 0;
 		if ( ! is_admin() && is_array( wc()->cart->cart_contents ) && count( wc()->cart->cart_contents ) > 0 ) {
-			$cart_total = wc()->cart->get_subtotal( 'edit' ) + wc()->cart->get_taxes_total() + wc()->cart->get_shipping_total( 'edit' ) - wc()->cart->get_discount_total() + get_woowallet_coupon_cashback_amount() + get_woo_wallet_cart_fee_total();
+			$fee_tax_total = 0;
+			foreach ( wc()->cart->get_fees() as $fee_key => $fee ) {
+				if ( '_via_wallet_partial_payment' === $fee_key || ! isset( $fee->tax ) ) {
+					continue;
+				}
+				$fee_tax_total += (float) $fee->tax;
+			}
+			// Round the summed tax the same way get_taxes_total() does, so this stays
+			// penny-identical to the totals WooCommerce displays.
+			$tax_total = wc_format_decimal(
+				array_sum( wc()->cart->get_cart_contents_taxes() ) + array_sum( wc()->cart->get_shipping_taxes() ) + $fee_tax_total,
+				wc_get_price_decimals()
+			);
+
+			$cart_total = wc()->cart->get_subtotal( 'edit' ) + $tax_total + wc()->cart->get_shipping_total( 'edit' ) - wc()->cart->get_discount_total() + get_woowallet_coupon_cashback_amount() + get_woo_wallet_cart_fee_total();
 		}
 		return apply_filters( 'woowallet_cart_total', $cart_total );
 	}

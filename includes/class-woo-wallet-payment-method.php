@@ -126,10 +126,14 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 */
 		public function process_payment( $order_id ) {
 			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . __( 'Invalid order.', 'woo-wallet' ), 'error' );
+				return array( 'result' => 'failure' );
+			}
 			if ( ( $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) && apply_filters( 'woo_wallet_disallow_negative_transaction', ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) <= 0 || $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ), $order->get_total( 'edit' ), woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
 				/* translators: 1: wallet amount */
 				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
-				return;
+				return array( 'result' => 'failure' );
 			}
 
 			// Reduce stock levels.
@@ -155,6 +159,9 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 */
 		public function woocommerce_pre_payment_complete( $order_id ) {
 			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
 			if ( 'wallet' === $order->get_payment_method( 'edit' ) && ! $order->get_transaction_id( 'edit' ) && $order->has_status( apply_filters( 'woocommerce_valid_order_statuses_for_payment_complete', array( 'on-hold', 'pending', 'failed', 'cancelled' ), $order ) ) ) {
 				$wallet_response = woo_wallet()->wallet->debit(
 					$order->get_customer_id( 'edit' ),
@@ -185,7 +192,10 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 		 * @throws Exception WP_Error Exceptions.
 		 */
 		public function process_refund( $order_id, $amount = null, $reason = '' ) {
-			$order          = wc_get_order( $order_id );
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return new WP_Error( 'woo_wallet_invalid_order', __( 'Invalid order', 'woo-wallet' ) );
+			}
 			$refund_reason  = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
 			$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
 			if ( ! $transaction_id ) {

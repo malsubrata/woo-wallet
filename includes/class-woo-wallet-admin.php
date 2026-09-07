@@ -5,6 +5,7 @@
  * @package StandaleneTech
  */
 
+use Automattic\Jetpack\Constants;
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -284,7 +285,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * Admin init
 		 */
 		public function admin_init() {
-			if ( version_compare( WC_VERSION, '3.4', '<' ) ) {
+			if ( version_compare( Constants::get_constant( 'WC_VERSION' ), '3.4', '<' ) ) {
 				add_filter( 'woocommerce_account_settings', array( $this, 'add_woocommerce_account_endpoint_settings' ) );
 			}
 			$this->download_export_file();
@@ -746,7 +747,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			?>
 			<div class="wrap">
 				<?php settings_errors(); ?>
-				<h2><?php /* translators: user display name and email */ printf( __( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), $user->display_name, $user->user_email ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> <a style="text-decoration: none;" href="<?php echo add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
+				<h2><?php /* translators: user display name and email */ printf( esc_html__( 'Adjust Balance: %1$s (%2$s)', 'woo-wallet' ), esc_html( $user->display_name ), esc_html( $user->user_email ) ); ?> <a style="text-decoration: none;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'woo-wallet-users' ), admin_url( 'admin.php' ) ) ); ?>"><span class="dashicons dashicons-editor-break" style="vertical-align: middle;"></span></a></h2>
 				<p>
 					<?php
 					esc_html_e( 'Current wallet balance: ', 'woo-wallet' );
@@ -757,7 +758,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					<table class="form-table">
 						<tbody>
 							<tr>
-								<th scope="row"><label for="balance_amount"><?php esc_html_e( 'Amount', 'woo-wallet' ) . ' ( ' . get_woocommerce_currency_symbol( $currency ) . ' )'; ?></label></th>
+								<th scope="row"><label for="balance_amount"><?php echo esc_html__( 'Amount', 'woo-wallet' ) . ' ( ' . wp_kses_post( get_woocommerce_currency_symbol( $currency ) ) . ' )'; ?></label></th>
 								<td>
 									<input type="number" step="any" name="balance_amount" class="regular-text" />
 									<p class="description"><?php esc_html_e( 'Enter Amount', 'woo-wallet' ); ?></p>
@@ -1099,7 +1100,10 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 * @param type $order_id order_id.
 		 */
 		public function add_wallet_payment_amount( $order_id ) {
-			$order                 = wc_get_order( $order_id );
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
 			$total_cashback_amount = get_total_order_cashback_amount( $order_id );
 			if ( $total_cashback_amount ) {
 				?>
@@ -1337,6 +1341,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 			$order_id = wc_get_order_id_by_order_item_id( $item_id );
 			$order    = wc_get_order( $order_id );
+			if ( ! $order ) {
+				return;
+			}
 			if ( $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
 				echo '<small class="refunded">' . esc_html__( 'Refunded', 'woo-wallet' ) . '</small>';
 			} else {

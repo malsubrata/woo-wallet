@@ -681,6 +681,9 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			if ( ! $order instanceof WC_Order ) {
 				$order = wc_get_order( $order );
 			}
+			if ( ! $order ) {
+				return;
+			}
 			$cashback_amount = woo_wallet()->cashback->calculate_cashback();
 			if ( $cashback_amount && ! is_wallet_rechargeable_order( wc_get_order( $order->get_id() ) ) && is_user_logged_in() ) {
 				WOO_Wallet_Helper::update_order_meta_data( $order->get_id(), '_wallet_cashback', $cashback_amount );

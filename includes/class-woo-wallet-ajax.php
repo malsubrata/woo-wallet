@@ -306,7 +306,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$refund                 = false;
 			$response               = array();
 			try {
-				$order      = wc_get_order( $order_id );
+				$order = wc_get_order( $order_id );
+				if ( ! $order ) {
+					throw new Exception( __( 'Invalid order', 'woo-wallet' ) );
+				}
 				$max_refund = wc_format_decimal( $order->get_total() - $order->get_total_refunded(), wc_get_price_decimals() );
 
 				if ( ( ! $refund_amount && ( wc_format_decimal( 0, wc_get_price_decimals() ) !== $refund_amount ) ) || $max_refund < $refund_amount || 0 > $refund_amount ) {

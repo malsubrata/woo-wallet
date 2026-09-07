@@ -1,10 +1,7 @@
+import { isCheckedValue } from '../utils';
+
 export default function CheckboxField( { value, onChange, field } ) {
-	const checked =
-		value === 'on' ||
-		value === true ||
-		value === 1 ||
-		value === '1' ||
-		value === 'yes';
+	const checked = isCheckedValue( value );
 	return (
 		<div
 			style={ {

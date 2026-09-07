@@ -461,7 +461,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	 * @return void
 	 */
 	public function handle_purchase_content() {
-		global $post;
+		global $post, $wpdb;
 		if ( isset( $_POST['tw_buy_content_nonce'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if ( ! is_user_logged_in() ) {
 				return;
@@ -470,26 +470,64 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 			$user_id = get_current_user_id();
 			// Verify nonce bound to post ID, user ID and amount.
 			if ( wp_verify_nonce( wp_unslash( $_POST['tw_buy_content_nonce'] ), 'tw_buy_content_nonce_' . $post->ID . '_' . $user_id . '_' . $amount ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$transient              = md5( 'tw-sell-content' . $post->ID . $user_id . $amount );
-				$tw_sell_content_amount = floatval( $amount );
-				$title                  = get_the_title();
-				$post_link              = get_permalink();
-				$post_author            = (int) $post->post_author;
-				$profit_share           = $this->settings['profit_share'];
-				$purchase_description   = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['purchase_description'] );
-				$sell_description       = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['sell_description'] );
-				$transaction_id         = woo_wallet()->wallet->debit( $user_id, $tw_sell_content_amount, $purchase_description );
-				$expiration             = intval( $this->settings['expiration'] );
-				if ( $transaction_id ) {
-					if ( $profit_share ) {
-						$profit = $tw_sell_content_amount * $profit_share / 100;
-						woo_wallet()->wallet->credit( $post_author, $profit, $sell_description );
+				$transient = md5( 'tw-sell-content' . $post->ID . $user_id . $amount );
+
+				/*
+				 * A WordPress nonce is CSRF protection, not replay protection — it stays
+				 * valid for its whole tick window and verifies any number of times. The
+				 * paid marker alone is therefore not enough: it is only written after the
+				 * debit succeeds, so two requests racing (a double-click, a retried POST,
+				 * a deliberately replayed one) both read "not paid" and both debit.
+				 *
+				 * Serialize the check-debit-mark sequence on a per-purchase lock, the same
+				 * way debit_partial_payment_for_order() serializes per order, and re-read
+				 * the marker inside the lock so the loser of the race sees the winner's
+				 * write. debit()'s own per-user lock cannot do this — it keeps the balance
+				 * arithmetic correct but has no idea the two calls are one purchase.
+				 */
+				$lock_name    = 'woo_wallet_sell_content_' . $transient;
+				$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $post->ID );
+				$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				if ( '1' !== (string) $got_lock ) {
+					// Contention, not an attack. Say so rather than looking like a dead button.
+					wc_add_notice( __( 'Your purchase could not be processed right now. Please try again.', 'woo-wallet' ), 'error' );
+					return;
+				}
+
+				try {
+					if ( $this->has_paid( $amount ) ) {
+						return;
 					}
-					if ( $expiration ) {
-						set_transient( $transient, true, $expiration * DAY_IN_SECONDS );
-					} else {
-						set_transient( $transient, true );
+					$tw_sell_content_amount = floatval( $amount );
+					$title                  = get_the_title();
+					$post_link              = get_permalink();
+					$post_author            = (int) $post->post_author;
+					$profit_share           = $this->settings['profit_share'];
+					$purchase_description   = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['purchase_description'] );
+					$sell_description       = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['sell_description'] );
+					$transaction_id         = woo_wallet()->wallet->debit( $user_id, $tw_sell_content_amount, $purchase_description );
+					$expiration             = intval( $this->settings['expiration'] );
+					if ( $transaction_id ) {
+						/*
+						 * Mark paid on the buyer's debit, before the author's profit share.
+						 * The marker records that THIS BUYER has been charged, so it has to
+						 * land as soon as the charge is durable: if the profit-share credit
+						 * throws — a third-party listener on woo_wallet_transaction_recorded,
+						 * a DB error, a locked author account — the buyer's debit has already
+						 * committed, and a retry must not charge them a second time.
+						 */
+						if ( $expiration ) {
+							set_transient( $transient, true, $expiration * DAY_IN_SECONDS );
+						} else {
+							set_transient( $transient, true );
+						}
+						if ( $profit_share ) {
+							$profit = $tw_sell_content_amount * $profit_share / 100;
+							woo_wallet()->wallet->credit( $post_author, $profit, $sell_description );
+						}
 					}
+				} finally {
+					$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 				}
 			} else {
 				wc_add_notice( __( 'Cheatin&#8217; huh?', 'woo-wallet' ), 'error' );
