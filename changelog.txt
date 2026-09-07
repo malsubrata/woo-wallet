@@ -1,5 +1,5 @@
 *** Changelog ***
-= v1.6.15 (Unreleased) =
+= v1.6.15 (September 7, 2026) =
 * Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
 * Security - The Adjust Balance screen now escapes the customer's display name and email address before showing them.
 * Fix - TeraWallet now declares compatibility with High-Performance Order Storage, so it no longer shows as incompatible on the WooCommerce Features screen.
