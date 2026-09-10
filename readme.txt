@@ -82,7 +82,7 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
 
 * PHP 7.4 or greater is required (PHP 8.0 or greater is recommended)
 * MySQL 5.6 or greater, OR MariaDB version 10.1 or greater, is required
-* WordPress 6.0 or greater is required
+* WordPress 6.4 or greater is required
 * WooCommerce 7.2 or greater is required
 
 = Automatic installation =
