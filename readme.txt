@@ -87,13 +87,11 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
 
 = Automatic installation =
 
-Automatic installation is the easiest option as WordPress handles the file transfers itself and you don't need to leave your web browser. To do an automatic install of WooCommerce Wallet Payment, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
-
-In the search field type "Wallet for WooCommerce" and click Search Plugins. Once you've found the plugin you can view details about it such as the point release, rating and description. Most importantly of course, you can install it by simply clicking "Install Now".
+In your WordPress dashboard go to **Plugins > Add New**, search for "Wallet for WooCommerce" and click **Install Now**.
 
 = Manual installation =
 
-The manual installation method involves downloading our plugin and uploading it to your webserver via your favourite FTP application. The WordPress codex contains [instructions on how to do this here](https://codex.wordpress.org/Managing_Plugins#Manual_Plugin_Installation).
+Upload the plugin folder to `/wp-content/plugins/` via FTP, then activate it from the Plugins menu.
 
 = Updating =
 
@@ -125,65 +123,13 @@ You can ask for help in the [WordPress Plugin Forum](https://wordpress.org/suppo
 = Where is the REST API documentation? =
 You can find the documentation for our [Wallet REST API here](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
 
-= Does this plugin send any data to an external service? =
-
-Only if you choose to. TeraWallet shows a one-time, dismissible notice asking
-whether you would like to join our mailing list. The checkbox is not ticked by
-default. If you decline or dismiss the notice, nothing is ever sent.
-
-If you opt in, we receive two things: the email address you enter, and your site
-URL. That is all. Your store data, customer data, orders and wallet balances
-never leave your server.
-
-You can unsubscribe at any time from the link in any email we send you. See our
-privacy policy for full details:
-https://standalonetech.com/privacy-policy/#plugin-mailing-list
-
-= Does the free plugin work if I do not opt in? =
-
-Yes, completely. The mailing list is optional and no feature is tied to it.
-
 == External services ==
 
-This plugin connects to an external service operated by StandaloneTech
-(https://standalonetech.com) in one situation only: when a site administrator
-voluntarily opts in to the StandaloneTech plugin mailing list.
+TeraWallet shows a dismissible admin notice inviting the administrator to join the StandaloneTech mailing list (release, security and compatibility news, tips, and occasional product news).
 
-What the service is used for
-----------------------------
-The plugin shows a dismissible admin notice inviting the site administrator to
-join the StandaloneTech mailing list, which is used to send TeraWallet release
-announcements, security and compatibility notices, usage tips, and occasional
-news about other StandaloneTech products.
+Nothing is sent unless the administrator ticks the consent box (unticked by default) and submits the form. Only then, once, the plugin sends the entered email address and the site URL to https://standalonetech.com. No store, customer, order or wallet data is ever sent. Unsubscribe from any email.
 
-What data is sent, and when
----------------------------
-No data is sent unless the administrator ticks the opt-in checkbox and submits
-the form. The checkbox is not selected by default, and the plugin behaves
-identically whether the administrator accepts or declines.
-
-If, and only if, the administrator opts in, the plugin sends the following to
-https://standalonetech.com:
-
-* the email address entered in the opt-in form
-* the URL of the site the plugin is installed on
-
-Nothing else is transmitted. The plugin does not send store data, customer data,
-order data, wallet balances, transaction records or any other site content to
-any external service, at any time.
-
-This transmission happens once, at the moment the administrator submits the
-opt-in form. There is no recurring, scheduled or background transmission.
-
-Service provider and terms
---------------------------
-Service:         StandaloneTech mailing list - https://standalonetech.com
-Terms of Service: https://standalonetech.com/terms-and-conditions/
-Privacy Policy:   https://standalonetech.com/privacy-policy/#plugin-mailing-list
-
-Subscribers can unsubscribe at any time using the unsubscribe link in any email
-they receive, or by emailing support@standalonetech.com. Unsubscribing has no
-effect on the plugin.
+[Terms of Service](https://standalonetech.com/terms-and-conditions/) · [Privacy Policy](https://standalonetech.com/privacy-policy/#plugin-mailing-list)
 
 == Screenshots ==
 
