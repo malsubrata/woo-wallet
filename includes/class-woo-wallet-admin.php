@@ -1618,22 +1618,22 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			</aside>
 			<style>
 				.tw-promo {
-					--tw-promo-ink: #16191d;
-					--tw-promo-inset: #1e2329;
-					--tw-promo-line: rgba(255, 255, 255, 0.10);
-					--tw-promo-text: #f0f0f1;
-					--tw-promo-muted: #a7aaad;
-					--tw-promo-accent: #b183e0;
-					--tw-promo-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+					--tw-promo-ink: #1c2230;
+					--tw-promo-inset: #171d29;
+					--tw-promo-line: #2e3648;
+					--tw-promo-text: #e9eaf0;
+					--tw-promo-muted: #98a0b3;
+					--tw-promo-accent: #a78bfa;
 
 					display: grid;
 					grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr) minmax(0, 0.5fr);
 					gap: 0;
 					margin: 16px 0 24px;
 					border: 1px solid var(--tw-promo-line);
-					border-radius: 6px;
+					border-radius: 8px;
 					background: var(--tw-promo-ink);
 					color: var(--tw-promo-text);
+					box-shadow: 0 1px 2px rgba(16, 20, 32, 0.12);
 					box-sizing: border-box;
 					overflow: hidden;
 				}
@@ -1651,10 +1651,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 
 				.tw-promo__eyebrow {
 					margin: 0 0 18px;
-					font-family: var(--tw-promo-mono);
 					font-size: 11px;
-					font-weight: 600;
-					letter-spacing: 0.14em;
+					font-weight: 700;
+					letter-spacing: 0.10em;
 					text-transform: uppercase;
 					color: var(--tw-promo-accent);
 				}
@@ -1671,7 +1670,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				}
 				.tw-promo__figure {
 					display: block;
-					font-family: var(--tw-promo-mono);
 					font-size: 34px;
 					font-weight: 600;
 					line-height: 1.1;
@@ -1683,7 +1681,6 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				.tw-promo__caption {
 					display: block;
 					margin-top: 7px;
-					font-family: var(--tw-promo-mono);
 					font-size: 11px;
 					letter-spacing: 0.05em;
 					text-transform: uppercase;
@@ -1763,11 +1760,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					flex-wrap: wrap;
 				}
 				.tw-promo__amount {
-					font-family: var(--tw-promo-mono);
 					font-size: 26px;
 					font-weight: 600;
 					letter-spacing: -0.02em;
 					font-variant-numeric: tabular-nums;
+					font-feature-settings: "tnum" 1;
 					color: var(--tw-promo-text);
 				}
 				.tw-promo__term {
@@ -1778,16 +1775,16 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					display: inline-block;
 					padding: 9px 18px;
 					border-radius: 3px;
-					background: #7f54b3;
+					background: #6d47e8;
 					color: #fff !important;
 					font-size: 13px;
 					font-weight: 600;
 					text-decoration: none;
 					transition: background 0.15s ease;
 				}
-				.tw-promo__btn:hover { background: #6b449b; color: #fff !important; }
+				.tw-promo__btn:hover { background: #5c37d6; color: #fff !important; }
 				.tw-promo__btn:focus {
-					background: #6b449b;
+					background: #5c37d6;
 					color: #fff !important;
 					outline: 2px solid var(--tw-promo-accent);
 					outline-offset: 2px;

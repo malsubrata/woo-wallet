@@ -39,6 +39,11 @@ if ( defined( 'WALLET_REMOVE_ALL_DATA' ) && true === WALLET_REMOVE_ALL_DATA ) {
 	$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_wallet\_%';" );
 	$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_woo_wallet\_%';" );
 
+	// Email opt-in flags. They carry no leading underscore, so the LIKE
+	// patterns above do not reach them.
+	delete_option( 'woo_wallet_optin_done' );
+	delete_option( 'woo_wallet_optin_dismissed' );
+
 	// Clear any cached data that has been removed.
 	wp_cache_flush();
 }
