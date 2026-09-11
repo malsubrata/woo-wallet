@@ -133,7 +133,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				$exporter->set_end_date( sanitize_text_field( wp_unslash( $_POST['end_date'] ) ) );
 			}
 
-			if ( ! empty( $_POST['filename'] ) ) {
+			// The first step mints the filename server-side with a random token instead
+			// of trusting the client-supplied name (previously a JS Date.now() timestamp,
+			// guessable within the export window on hosts where .htaccess is ignored).
+			// Later steps reuse the name the server handed back in the step-1 response.
+			if ( 1 === $step ) {
+				$exporter->set_filename( 'terawallet-export-' . wp_generate_password( 20, false ) );
+			} elseif ( ! empty( $_POST['filename'] ) ) {
 				$exporter->set_filename( sanitize_text_field( wp_unslash( $_POST['filename'] ) ) );
 			}
 			$exporter->write_to_csv();
@@ -148,6 +154,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'step'       => 'done',
 						'percentage' => 100,
 						'url'        => add_query_arg( $query_args, admin_url( 'admin.php?page=terawallet-exporter' ) ),
+						'filename'   => $exporter->get_filename(),
 					)
 				);
 			} else {
@@ -156,6 +163,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'step'       => ++$step,
 						'percentage' => $exporter->get_percent_complete(),
 						'columns'    => '',
+						'filename'   => $exporter->get_filename(),
 					)
 				);
 			}

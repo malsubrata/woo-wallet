@@ -30,22 +30,6 @@ import '../scss/export.scss';
 	teraWalletExportForm.prototype.onSubmit = function ( event ) {
 		event.preventDefault();
 
-		const currentDate = new Date(),
-			day = currentDate.getDate(),
-			month = currentDate.getMonth() + 1,
-			year = currentDate.getFullYear(),
-			timestamp = currentDate.getTime(),
-			filename =
-				'terawallet-transaction-export-' +
-				day +
-				'-' +
-				month +
-				'-' +
-				year +
-				'-' +
-				timestamp +
-				'.csv';
-
 		event.data.teraWalletExportForm.$form.addClass(
 			'terawallet-exporter__exporting'
 		);
@@ -55,11 +39,14 @@ import '../scss/export.scss';
 		event.data.teraWalletExportForm.$form
 			.find( '.terawallet-exporter-button' )
 			.prop( 'disabled', true );
+		// The server mints the export filename on step 1 (a random token, not a
+		// guessable client timestamp) and hands it back for us to reuse on every
+		// later step — so no filename is generated here.
 		event.data.teraWalletExportForm.processStep(
 			1,
 			$( this ).serialize(),
 			'',
-			filename
+			''
 		);
 	};
 
@@ -132,7 +119,7 @@ import '../scss/export.scss';
 							parseInt( response.data.step, 10 ),
 							data,
 							response.data.columns,
-							filename
+							response.data.filename
 						);
 					}
 				}

@@ -231,7 +231,11 @@ class TeraWallet_CSV_Exporter {
 
 		$htaccess = trailingslashit( $export_dir ) . '.htaccess';
 		if ( ! file_exists( $htaccess ) ) {
-			@file_put_contents( $htaccess, "deny from all\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
+			// "deny from all" covers Apache 2.2 and 2.4-with-mod_access_compat; the
+			// IfModule block covers 2.4 installs without that compat module. Neither
+			// directive does anything on nginx, hence the random filename above.
+			$rules = "deny from all\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n";
+			@file_put_contents( $htaccess, $rules ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, Generic.PHP.NoSilencedErrors.Discouraged
 		}
 
 		$index = trailingslashit( $export_dir ) . 'index.html';
