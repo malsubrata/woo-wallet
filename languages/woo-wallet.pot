@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.6.15\n"
+"Project-Id-Version: TeraWallet 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-07T02:28:34+00:00\n"
+"POT-Creation-Date: 2026-09-11T06:36:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -563,6 +563,68 @@ msgstr ""
 
 #: includes/admin/class-woo-wallet-balance-details.php:692
 msgid "Loading..."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:134
+msgid "TeraWallet setup guide"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:135
+msgid "Store credit is easy to switch on and easy to get wrong."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:136
+msgid "The setup guide walks through top-ups, cashback and partial payments, followed by occasional notes on running wallet credit well."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:140
+msgid "Email address"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:148
+msgid "you@yourstore.com"
+msgstr ""
+
+#. translators: 1: opening privacy policy link, 2: closing link, 3: opening terms link, 4: closing link.
+#: includes/admin/class-woo-wallet-optin-notice.php:158
+#, php-format
+msgid "I agree to receive occasional emails about TeraWallet. See the %1$sprivacy policy%2$s and %3$sterms%4$s."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:176
+#: includes/admin/class-woo-wallet-optin-notice.php:517
+msgid "Could not reach the server just now. Please try again."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:177
+msgid "Send me the guide"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:184
+msgid "Dismiss"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:185
+#: includes/class-woo-wallet-admin.php:1455
+#: includes/class-woo-wallet-admin.php:1488
+msgid "Dismiss this notice"
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:477
+#: includes/admin/class-woo-wallet-optin-notice.php:534
+msgid "You are not allowed to do that."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:483
+msgid "Please tick the consent box first."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:488
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: includes/admin/class-woo-wallet-optin-notice.php:522
+msgid "Thanks — the guide is on its way shortly."
 msgstr ""
 
 #: includes/admin/class-woo-wallet-pro-gates.php:118
@@ -1726,11 +1788,6 @@ msgstr ""
 msgid "<strong>TeraWallet 1.6.1:</strong> Cashback can now be clawed back when an order is refunded. This is <strong>off by default</strong> — %1$senable it in Settings → Wallet Credit → Refund Clawback%2$s if you want it."
 msgstr ""
 
-#: includes/class-woo-wallet-admin.php:1455
-#: includes/class-woo-wallet-admin.php:1488
-msgid "Dismiss this notice"
-msgstr ""
-
 #. translators: 1: settings page link open, 2: settings page link close
 #: includes/class-woo-wallet-admin.php:1480
 #, php-format
@@ -2017,7 +2074,7 @@ msgstr ""
 
 #: includes/class-woo-wallet-go-pro-page.php:339
 #: includes/class-woo-wallet-settings.php:43
-#: includes/class-woo-wallet.php:307
+#: includes/class-woo-wallet.php:308
 msgid "Settings"
 msgstr ""
 
@@ -3219,7 +3276,7 @@ msgstr ""
 msgid "Title:"
 msgstr ""
 
-#: includes/class-woo-wallet.php:307
+#: includes/class-woo-wallet.php:308
 msgid "View Wallet settings"
 msgstr ""
 

@@ -127,7 +127,7 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 TeraWallet shows a dismissible admin notice inviting the administrator to join the StandaloneTech mailing list (release, security and compatibility news, tips, and occasional product news).
 
-Nothing is sent unless the administrator ticks the consent box (unticked by default) and submits the form. Only then, once, the plugin sends the entered email address and the site URL to https://standalonetech.com. No store, customer, order or wallet data is ever sent. Unsubscribe from any email.
+Nothing is sent unless the administrator ticks the consent box (unticked by default) and submits the form. Only then, once, the plugin sends the entered email address, the site URL, the TeraWallet version and the time consent was given to https://standalonetech.com. No store, customer, order or wallet data is ever sent. Unsubscribe from any email.
 
 [Terms of Service](https://standalonetech.com/terms-and-conditions/) · [Privacy Policy](https://standalonetech.com/privacy-policy/#plugin-mailing-list)
 
@@ -146,13 +146,13 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.0 (Unreleased) =
-* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join our mailing list. Nothing is sent unless you tick the consent box and submit it; see the new External services section in the readme.
-* Tweak - Refreshed the colours and type of the Upgrade to Pro banner for better readability.
+= v1.7.0 (September 11, 2026) =
+* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
+* Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.7.0 =
-Adds an optional, opt-in mailing list notice on TeraWallet's admin screens. Nothing leaves your site unless you tick the consent box and submit. Also refreshes the Upgrade to Pro banner.
+Adds an optional, opt-in mailing list notice on admin screens (nothing sent unless you consent) and refreshes the Upgrade to Pro banner.

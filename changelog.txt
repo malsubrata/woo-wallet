@@ -1,7 +1,7 @@
 *** Changelog ***
-= v1.7.0 (Unreleased) =
-* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join our mailing list. Nothing is sent unless you tick the consent box and submit it; see the new External services section in the readme.
-* Tweak - Refreshed the colours and type of the Upgrade to Pro banner for better readability.
+= v1.7.0 (September 11, 2026) =
+* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
+* Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
 
 = v1.6.15 (September 7, 2026) =
 * Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
