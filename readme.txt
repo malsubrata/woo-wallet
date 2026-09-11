@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.6.15
+Stable tag: 1.7.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -82,18 +82,16 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
 
 * PHP 7.4 or greater is required (PHP 8.0 or greater is recommended)
 * MySQL 5.6 or greater, OR MariaDB version 10.1 or greater, is required
-* WordPress 6.0 or greater is required
+* WordPress 6.4 or greater is required
 * WooCommerce 7.2 or greater is required
 
 = Automatic installation =
 
-Automatic installation is the easiest option as WordPress handles the file transfers itself and you don't need to leave your web browser. To do an automatic install of WooCommerce Wallet Payment, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
-
-In the search field type "Wallet for WooCommerce" and click Search Plugins. Once you've found the plugin you can view details about it such as the point release, rating and description. Most importantly of course, you can install it by simply clicking "Install Now".
+In your WordPress dashboard go to **Plugins > Add New**, search for "Wallet for WooCommerce" and click **Install Now**.
 
 = Manual installation =
 
-The manual installation method involves downloading our plugin and uploading it to your webserver via your favourite FTP application. The WordPress codex contains [instructions on how to do this here](https://codex.wordpress.org/Managing_Plugins#Manual_Plugin_Installation).
+Upload the plugin folder to `/wp-content/plugins/` via FTP, then activate it from the Plugins menu.
 
 = Updating =
 
@@ -125,6 +123,14 @@ You can ask for help in the [WordPress Plugin Forum](https://wordpress.org/suppo
 = Where is the REST API documentation? =
 You can find the documentation for our [Wallet REST API here](https://github.com/malsubrata/woo-wallet/wiki/API-V3).
 
+== External services ==
+
+TeraWallet shows a dismissible admin notice inviting the administrator to join the StandaloneTech mailing list (release, security and compatibility news, tips, and occasional product news).
+
+Nothing is sent unless the administrator ticks the consent box (unticked by default) and submits the form. Only then, once, the plugin sends the entered email address, the site URL, the TeraWallet version and the time consent was given to https://standalonetech.com. No store, customer, order or wallet data is ever sent. Unsubscribe from any email.
+
+[Terms of Service](https://standalonetech.com/terms-and-conditions/) · [Privacy Policy](https://standalonetech.com/privacy-policy/#plugin-mailing-list)
+
 == Screenshots ==
 
 1. User wallet dashboard page.
@@ -140,20 +146,13 @@ You can find the documentation for our [Wallet REST API here](https://github.com
 
 == Changelog ==
 
-= v1.6.15 (September 7, 2026) =
-* Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
-* Security - The Adjust Balance screen now escapes the customer's display name and email address before showing them.
-* Fix - TeraWallet now declares compatibility with High-Performance Order Storage, so it no longer shows as incompatible on the WooCommerce Features screen.
-* Fix - Checkout no longer fails with a fatal error when the wallet gateway is handed an order that no longer exists; it reports a payment failure instead.
-* Fix - The partial payment notice at checkout understated what the other payment method would charge, on stores that tax wallet top-ups.
-* Fix - The wallet is no longer offered as full payment for an order the balance cannot cover, which took the balance and then failed the checkout.
-* Fix - Settings fields hidden behind their own toggle now appear, including the partial payment Tax treatment setting.
-* Fix - The Amount label on the Adjust Balance screen shows the store currency symbol again.
-* Tweak - The Upgrade to Pro page now covers top-up bonus campaigns (Wallet Boost).
+= v1.7.0 (September 11, 2026) =
+* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
+* Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.6.15 =
-Declares High-Performance Order Storage compatibility, and stops a replayed content purchase charging the wallet twice. Also fixes two partial payment faults on stores that tax top-ups, and restores settings fields hidden behind their own toggle.
+= 1.7.0 =
+Adds an optional, opt-in mailing list notice on admin screens (nothing sent unless you consent) and refreshes the Upgrade to Pro banner.

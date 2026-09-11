@@ -1,4 +1,8 @@
 *** Changelog ***
+= v1.7.0 (September 11, 2026) =
+* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
+* Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
+
 = v1.6.15 (September 7, 2026) =
 * Security - A repeated or replayed "buy this content" request no longer charges the wallet more than once for the same one-time purchase.
 * Security - The Adjust Balance screen now escapes the customer's display name and email address before showing them.
