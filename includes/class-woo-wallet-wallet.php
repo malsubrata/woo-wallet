@@ -27,9 +27,50 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		public $meta_key = '_current_woo_wallet_balance';
 
 		/**
+		 * Per-request memo of the raw ledger SUM, keyed by user id then by
+		 * mode/currency scope.
+		 *
+		 * Deliberately request-scoped (a static array, discarded at the end of
+		 * the request) rather than `wp_cache_*`: on a site with a persistent
+		 * object cache a balance that outlives the request would survive every
+		 * write path that forgets to invalidate it — including third-party and
+		 * direct-SQL writers — and a wallet that advertises a stale balance is
+		 * a money bug, not a performance one.
+		 *
+		 * Only the raw SUM is memoized. The `woo_wallet_current_balance` filter
+		 * and `clamp_to_ledger()` still run on every call, so third parties that
+		 * recompute the advertised balance keep their say. The debit gates in
+		 * `recode_transaction()` / `transfer()` issue their own SUM inside the
+		 * lock and never read this memo — that is what keeps them TOCTOU-free.
+		 *
+		 * @since 1.7.1
+		 * @var array
+		 */
+		private static $balance_sum_cache = array();
+
+		/**
 		 * Class constructor.
 		 */
 		public function __construct() {
+		}
+
+		/**
+		 * Drop the memoized ledger SUM for a user (or for everyone).
+		 *
+		 * Called from `clear_woo_wallet_cache()`, which every ledger write path
+		 * already invokes after it commits, so this needs no separate plumbing.
+		 *
+		 * @since 1.7.1
+		 * @param int $user_id User id, or 0 to flush every user.
+		 * @return void
+		 */
+		public static function flush_balance_cache( $user_id = 0 ) {
+			$user_id = absint( $user_id );
+			if ( $user_id ) {
+				unset( self::$balance_sum_cache[ $user_id ] );
+				return;
+			}
+			self::$balance_sum_cache = array();
 		}
 
 		/**
@@ -88,11 +129,22 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$balance_currency = '' !== $currency ? strtoupper( (string) $currency ) : $this->resolve_active_currency();
 
 			if ( $this->user_id ) {
-				if ( 'per_currency' === $mode ) {
-					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0 AND t.currency=%s", $this->user_id, $balance_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// In single_base mode every row is stored in base, so the SUM does not
+				// vary by currency and one memo entry serves every caller. In
+				// per_currency mode the SUM is scoped, so the currency joins the key.
+				$cache_key = 'per_currency' === $mode ? 'per_currency|' . $balance_currency : 'single_base';
+
+				if ( isset( self::$balance_sum_cache[ $this->user_id ][ $cache_key ] ) ) {
+					$this->wallet_balance = self::$balance_sum_cache[ $this->user_id ][ $cache_key ];
 				} else {
-					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					if ( 'per_currency' === $mode ) {
+						$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0 AND t.currency=%s", $this->user_id, $balance_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					} else {
+						$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					}
+					self::$balance_sum_cache[ $this->user_id ][ $cache_key ] = $this->wallet_balance;
 				}
+
 				$raw_balance          = (float) $this->wallet_balance;
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 				$this->wallet_balance = $this->clamp_to_ledger( $this->wallet_balance, $raw_balance, $balance_currency, $mode );

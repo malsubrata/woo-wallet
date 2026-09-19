@@ -1459,6 +1459,10 @@ if ( ! function_exists( 'clear_woo_wallet_cache' ) ) {
 	/**
 	 * Clear WooCommerce Wallet user transient
 	 *
+	 * Also drops the per-request memo of the user's ledger SUM held by
+	 * `Woo_Wallet_Wallet`, so a balance read after a write in the same request
+	 * reflects the write.
+	 *
 	 * @param int $user_id user_id.
 	 */
 	function clear_woo_wallet_cache( $user_id = '' ) {
@@ -1467,6 +1471,10 @@ if ( ! function_exists( 'clear_woo_wallet_cache' ) ) {
 		}
 
 		delete_transient( "woo_wallet_transaction_resualts_{$user_id}" );
+
+		if ( class_exists( 'Woo_Wallet_Wallet' ) ) {
+			Woo_Wallet_Wallet::flush_balance_cache( $user_id );
+		}
 	}
 }
 
