@@ -253,6 +253,12 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 		 * Convert a numeric setting (min/max top-up, min transfer) from base
 		 * to active currency for frontend display.
 		 *
+		 * Rounded to wc_get_price_decimals(): these values land directly in
+		 * `min`/`max` attributes on `step="0.01"` number inputs (topup/transfer
+		 * templates, wallet widget). An unrounded float there (e.g.
+		 * 99.999797582626) makes Chrome compute an off-grid step sequence and
+		 * reject otherwise-valid amounts like 100.00.
+		 *
 		 * @param mixed $option_value Setting value as stored.
 		 * @return mixed Converted value, or the original if non-numeric / admin context.
 		 */
@@ -261,7 +267,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				return $option_value;
 			}
 			$manager = Woo_Wallet_Currency_Manager::instance();
-			return $manager->convert( (float) $option_value, $manager->get_base_currency(), $manager->get_active_currency() );
+			return round( $manager->convert( (float) $option_value, $manager->get_base_currency(), $manager->get_active_currency() ), wc_get_price_decimals() );
 		}
 
 		/**

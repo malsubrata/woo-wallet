@@ -147,7 +147,7 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 == Changelog ==
 
 = v1.7.1 (Unreleased) =
-* Tweak - Development in progress.
+* Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 

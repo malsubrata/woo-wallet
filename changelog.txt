@@ -1,4 +1,7 @@
 *** Changelog ***
+= v1.7.1 (Unreleased) =
+* Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00.
+
 = v1.7.0 (September 11, 2026) =
 * New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
 * Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
