@@ -598,7 +598,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'order_id'       => $order_id,
 						'payment_method' => $order->get_payment_method( 'edit' ),
 						'default_price'  => wc_price( 0 ),
-						'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ), $order ),
+						'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ) && current_user_can( 'manage_woocommerce' ), $order ),
 						'i18n'           => array(
 							'refund'     => __( 'Refund', 'woo-wallet' ),
 							'via_wallet' => __( 'to customer wallet', 'woo-wallet' ),
@@ -1346,7 +1346,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 			if ( $order->get_meta( '_woo_wallet_partial_payment_refunded' ) ) {
 				echo '<small class="refunded">' . esc_html__( 'Refunded', 'woo-wallet' ) . '</small>';
-			} else {
+			} elseif ( current_user_can( 'manage_woocommerce' ) ) {
 				echo '<button type="button" class="button refund-partial-payment">' . esc_html__( 'Refund', 'woo-wallet' ) . '</button>';
 			}
 		}

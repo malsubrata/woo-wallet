@@ -231,11 +231,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		public function woo_wallet_refund_partial_payment() {
 			global $wpdb;
 
-			if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			check_ajax_referer( 'order-item', 'security' );
+			// Money-moving: manage_woocommerce, not edit_shop_orders (Dokan vendors hold that for every order).
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
 				wp_die( -1 );
 			}
 			$response = array( 'success' => false );
-			$order_id = absint( filter_input( INPUT_POST, 'order_id' ) );
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 			if ( ! $order_id ) {
 				wp_send_json( $response );
 			}
@@ -303,11 +305,12 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * @throws Exception To return errors.
 		 */
 		public function woo_wallet_order_refund() {
-			ob_start();
 			check_ajax_referer( 'order-item', 'security' );
-			if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			// Money-moving: manage_woocommerce, not edit_shop_orders (Dokan vendors hold that for every order).
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
 				wp_die( -1 );
 			}
+			ob_start();
 			$order_id               = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 			$refund_amount          = isset( $_POST['refund_amount'] ) ? wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['refund_amount'] ) ), wc_get_price_decimals() ) : 0;
 			$refunded_amount        = isset( $_POST['refunded_amount'] ) ? wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['refunded_amount'] ) ), wc_get_price_decimals() ) : 0;
