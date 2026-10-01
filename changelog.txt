@@ -1,6 +1,6 @@
 *** Changelog ***
 = v1.7.1 (Unreleased) =
-* Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00.
+* Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00. Maximums round down and minimums round up, so a converted limit never loosens.
 * Security - The "Refund" button on an order's "Via wallet" line now requires a valid security token, so it can no longer be triggered from another site. Custom code calling the `woo_wallet_refund_partial_payment` AJAX action must now send the `order-item` nonce as `security`.
 * Security - Refunding to the customer wallet from the order screen now requires the "Manage WooCommerce" capability, so marketplace vendors can no longer trigger wallet refunds on orders they don't own.
 * Fix - On multi-currency stores, the "Via wallet" Refund button now returns the exact amount taken from the wallet instead of re-converting at the current exchange rate.
