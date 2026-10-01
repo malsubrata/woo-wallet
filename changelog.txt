@@ -1,6 +1,8 @@
 *** Changelog ***
 = v1.7.1 (Unreleased) =
 * Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00.
+* Fix - On multi-currency stores, the "Via wallet" Refund button now returns the exact amount taken from the wallet instead of re-converting at the current exchange rate.
+* Fix - Splitting a refund across several partial refunds no longer returns a cent more or less to the wallet than was originally paid from it.
 
 = v1.7.0 (September 11, 2026) =
 * New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.

@@ -148,6 +148,8 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 = v1.7.1 (Unreleased) =
 * Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00.
+* Fix - On multi-currency stores, the "Via wallet" Refund button now returns the exact amount taken from the wallet instead of re-converting at the current exchange rate.
+* Fix - Splitting a refund across several partial refunds no longer returns a cent more or less to the wallet than was originally paid from it.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 

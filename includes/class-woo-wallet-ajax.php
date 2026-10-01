@@ -263,6 +263,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					wp_send_json( $response );
 				}
 
+				$reversal = woo_wallet()->wallet->prepare_partial_payment_reversal( $order, $refund_gross, $partial_payment_amount );
+
 				// Claim before credit — first click wins.
 				$order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
 				$order->update_meta_data( '_woo_wallet_partial_refunded_total', $already_refunded + $refund_gross );
@@ -271,9 +273,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 
 				$transaction_id = woo_wallet()->wallet->credit(
 					$order->get_customer_id(),
-					$refund_gross,
+					$reversal['amount'],
 					__( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number(),
-					array( 'currency' => $order->get_currency( 'edit' ) )
+					array(
+						'for'      => 'partial_payment_refund',
+						'currency' => $reversal['currency'],
+						'order_id' => $order->get_order_number(),
+					)
 				);
 				if ( $transaction_id ) {
 					$response['success'] = true;
