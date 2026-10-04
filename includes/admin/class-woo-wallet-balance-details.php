@@ -489,7 +489,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $credit_ids ) {
 					foreach ( $credit_ids as $id ) {
-						woo_wallet()->wallet->credit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
+						woo_wallet()->wallet->credit( $id, $amount, $description, array( 'category' => 'adjustment', 'currency' => $this->resolve_base_currency() ) );
 					}
 				}
 				header( 'Refresh: 0' );
@@ -501,7 +501,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $debit_ids ) {
 					foreach ( $debit_ids as $id ) {
-						woo_wallet()->wallet->debit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
+						woo_wallet()->wallet->debit( $id, $amount, $description, array( 'category' => 'adjustment', 'currency' => $this->resolve_base_currency() ) );
 					}
 				}
 				header( 'Refresh: 0' );

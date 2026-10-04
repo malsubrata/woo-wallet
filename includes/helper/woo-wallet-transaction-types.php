@@ -92,6 +92,11 @@ function woo_wallet_get_transaction_types() {
 			'description'      => __( 'Marketplace commission paid into a vendor wallet.', 'woo-wallet' ),
 			'default_template' => '',
 		),
+		'engagement_reward'      => array(
+			'label'            => __( 'Engagement reward', 'woo-wallet' ),
+			'description'      => __( 'Rewards for daily visits, registration and product reviews.', 'woo-wallet' ),
+			'default_template' => '',
+		),
 		'other'                  => array(
 			'label'            => __( 'Other', 'woo-wallet' ),
 			'description'      => __( 'Anything not matching a known category.', 'woo-wallet' ),

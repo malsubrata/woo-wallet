@@ -474,7 +474,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				wp_send_json_success(
 					array(
 						'user_id'         => $user_id,
-						'current_balance' => woo_wallet()->wallet->get_wallet_balance( $user_id ),
+						// Base currency, like the Users list column: the modal's amount field is base too.
+						'current_balance' => woo_wallet()->wallet->get_wallet_balance( $user_id, 'view', Woo_Wallet_Currency_Manager::instance()->get_base_currency() ),
 					)
 				);
 			}

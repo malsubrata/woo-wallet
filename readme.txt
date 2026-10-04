@@ -45,7 +45,7 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
     *   **Peer-to-Peer Transfers:** Securely send wallet balance to other registered users via email.
 *   🎁 **Engagement Rewards:** Credit users for specific actions:
     *   New user registration bonus.
-    *   Daily login rewards.
+    *   Daily visit rewards (once per calendar day, with optional first-purchase requirement and monthly cap).
     *   Product review rewards.
 *   🛠 **Admin Control Center:**
     *   View all user balances and transaction history.
@@ -115,7 +115,12 @@ Yes! If enabled in settings, customers can use their wallet balance to pay for a
 Cashback is triggered by order status changes. You can configure which status (e.g., 'Completed' or 'Processing') triggers the reward in the plugin settings.
 
 = Why is the wallet not visible at checkout? =
-Ensure the Wallet gateway is enabled in **WooCommerce > Settings > Payments**. Also, check if "Hide if empty" is enabled in TeraWallet settings if the user has a zero balance.
+The Wallet payment option only appears when all of these are true:
+* The Wallet gateway is enabled in **WooCommerce > Settings > Payments**.
+* The customer is logged in.
+* Their wallet balance covers the full order total. If the balance is lower, use Partial Payment instead.
+* Partial payment is not being applied to this cart. If "Auto deduct wallet balance" is on and the balance is lower than the total, the wallet is used as a partial payment instead.
+* The customer's wallet is not locked by an admin.
 
 = Where can I get support? =
 You can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or email us at support@standalonetech.com.
@@ -147,6 +152,14 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 == Changelog ==
 
 = v1.7.1 (Unreleased) =
+* Fix - On multi-currency stores, TeraWallet settings now always show your store's base currency next to amount fields, instead of the currency last chosen on the storefront.
+* Fix - On multi-currency stores, adding or removing wallet balance from a customer's page now records exactly the amount you type, in your store's base currency, instead of converting it from the currency you last browsed in.
+* Fix - On multi-currency stores, the Edit Balance popup now shows the customer's current balance in your store's base currency, and bulk Credit/Debit on the Users screen records the amount you enter in that currency, instead of using the currency last chosen on the storefront.
+* Fix - Daily visit rewards could be paid more than once in a day when a customer opened several pages at the same time. Each customer now gets one reward per calendar day, in your store's timezone.
+* New - Daily visit rewards: an optional "Only reward customers with at least one paid order" setting, and a reward cap per customer (per calendar month or lifetime).
+* New - Customers see a short "You earned ... for visiting today" message after a daily visit reward, and the My Wallet page tells them about the reward.
+* New - Daily visit, registration and product review rewards now appear as "Engagement reward" in transactions and the dashboard breakdown. Older transactions keep their current category.
+* Tweak - The daily visit Amount is now empty by default on new installs, so nothing is paid until you set it. Existing amounts are unchanged.
 * Fix - On multi-currency stores, the minimum/maximum top-up and minimum transfer amounts no longer contain long floating-point tails, which could make the browser reject valid entries like 100.00. Maximums round down and minimums round up, so a converted limit never loosens.
 * Security - The "Refund" button on an order's "Via wallet" line now requires a valid security token, so it can no longer be triggered from another site. Custom code calling the `woo_wallet_refund_partial_payment` AJAX action must now send the `order-item` nonce as `security`.
 * Security - Refunding to the customer wallet from the order screen now requires the "Manage WooCommerce" capability, so marketplace vendors can no longer trigger wallet refunds on orders they don't own.

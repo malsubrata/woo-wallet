@@ -877,6 +877,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						'message' => __( 'Please enter amount', 'woo-wallet' ),
 					);
 				} else {
+					// The form labels the amount in the user's wallet currency (base unless
+					// an add-on says otherwise); don't let the ledger read it as the admin's
+					// storefront currency.
+					$entry_currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
+					$entry_currency = '' !== (string) $entry_currency ? $entry_currency : Woo_Wallet_Currency_Manager::instance()->get_base_currency();
 					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
 					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit' );
 					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
@@ -886,7 +891,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 							'message' => sprintf( __( '%s has insufficient balance for debit.', 'woo-wallet' ), $user->user_login ),
 						);
 					} elseif ( 'debit' === $payment_type ) {
-						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description );
+						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description, array( 'currency' => $entry_currency ) );
 						if ( $transaction_id ) {
 							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
@@ -912,7 +917,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 							);
 						}
 					} elseif ( 'credit' === $payment_type ) {
-						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description );
+						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description, array( 'currency' => $entry_currency ) );
 						if ( $transaction_id ) {
 							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
