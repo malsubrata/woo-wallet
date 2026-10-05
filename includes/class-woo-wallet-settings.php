@@ -564,8 +564,8 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						),
 						array(
 							'name'    => 'allow_min_cashback',
-							'label'   => __( 'Allow Minimum cashback', 'woo-wallet' ),
-							'desc'    => __( 'If checked minimum cashback amount will be applied on product category cashback calculation.', 'woo-wallet' ),
+							'label'   => __( 'Use lowest category cashback', 'woo-wallet' ),
+							'desc'    => __( 'When a product is in more than one category: on uses the lowest category cashback, off uses the highest.', 'woo-wallet' ),
 							'type'    => 'checkbox',
 							'group'   => 'wallet_cashback',
 							'default' => 'on',
@@ -717,6 +717,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 
 			if ( 'checkbox' === $type ) {
 				$result['bool_format'] = 'yes_no';
+				// WC_Settings_API checkboxes carry their explanation in `label`
+				// (the `title` becomes the React label). Show it as the helper text
+				// unless a description already fills that slot or it repeats the title.
+				if ( '' === $result['desc'] && ! empty( $field['label'] ) && $field['label'] !== $result['label'] ) {
+					$result['desc'] = $field['label'];
+				}
 			}
 
 			if ( isset( $field['options'] ) ) {

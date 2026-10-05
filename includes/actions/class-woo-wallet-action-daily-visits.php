@@ -66,7 +66,7 @@ class Action_Daily_Visits extends WooWalletAction {
 			'cap_amount'   => array(
 				'title'       => __( 'Reward cap', 'woo-wallet' ),
 				'type'        => 'price',
-				'description' => __( 'Maximum daily-visit rewards per customer. Leave empty for no cap.', 'woo-wallet' ),
+				'description' => __( 'Maximum total amount a customer can earn from daily visits. Leave empty for no cap.', 'woo-wallet' ),
 				'default'     => '',
 				'desc_tip'    => true,
 				'half'        => true,

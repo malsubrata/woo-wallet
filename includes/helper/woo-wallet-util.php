@@ -1802,17 +1802,29 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 			);
 		}
 
-		$pre_balance      = 0.0;
-		$balancing_txn_id = 0;
-		$caught           = null;
+		$pre_balance       = 0.0;
+		$balancing_txn_id  = 0;
+		$balancing_entries = array(); // [ transaction id, signed net, currency ].
+		$caught            = null;
 
 		try {
 			$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 
-			// Raw ledger SUM — same source-of-truth pattern as recode_transaction() and transfer().
-			// Intentionally NOT through apply_filters('woo_wallet_current_balance'); see the comment
-			// at class-woo-wallet-wallet.php:1107 for the TOCTOU reasoning.
-			$pre_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// Raw ledger SUM per currency — same source-of-truth pattern as recode_transaction()
+			// and transfer(). Intentionally NOT through apply_filters('woo_wallet_current_balance');
+			// see the comment at class-woo-wallet-wallet.php:1107 for the TOCTOU reasoning.
+			// Grouped by currency so "keep" carries each currency's balance over in that
+			// currency: adding INR and GBP amounts into one number (and stamping it with
+			// a single currency) is what turned ₹3,642 into £3,642.
+			$net_rows = $wpdb->get_results( $wpdb->prepare( "SELECT currency, COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) AS net FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 GROUP BY currency", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$base_currency = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance()->get_base_currency() : strtoupper( (string) get_option( 'woocommerce_currency', 'USD' ) );
+			$net_by_currency = array();
+			foreach ( (array) $net_rows as $net_row ) {
+				// Legacy rows with no currency are base-currency rows.
+				$row_currency                     = '' !== (string) $net_row->currency ? strtoupper( (string) $net_row->currency ) : $base_currency;
+				$net_by_currency[ $row_currency ] = ( $net_by_currency[ $row_currency ] ?? 0.0 ) + (float) $net_row->net;
+			}
+			$pre_balance = (float) array_sum( $net_by_currency );
 
 			if ( 'soft' === $delete_mode ) {
 				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -1830,34 +1842,47 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 				delete_user_wallet_transactions( $user_id, true );
 			}
 
+			$nonzero_nets = array_filter(
+				$net_by_currency,
+				function ( $net ) {
+					return abs( $net ) > 0.00001;
+				}
+			);
 			$should_insert_balancing = 'keep' === $balance_handling
-				&& abs( $pre_balance ) > 0.00001
+				&& ! empty( $nonzero_nets )
 				&& apply_filters( 'woo_wallet_credit_user_after_delete_log', true );
 
+			$cached_balance = 0.0;
 			if ( $should_insert_balancing ) {
-				$is_credit = $pre_balance > 0;
-				$row_args  = array(
-					'blog_id'           => get_current_blog_id(),
-					'user_id'           => $user_id,
-					'type'              => $is_credit ? 'credit' : 'debit',
-					'amount'            => abs( $pre_balance ),
-					'original_amount'   => abs( $pre_balance ),
-					'original_currency' => get_woocommerce_currency(),
-					'original_rate'     => 1.0,
-					'mode'              => 0,
-					'currency'          => get_woocommerce_currency(),
-					'details'           => __( 'Balance carried over after deleting transaction logs', 'woo-wallet' ),
-					'date'              => current_time( 'mysql' ),
-					'created_by'        => get_current_user_id(),
-				);
-				if ( $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_args, array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-					$balancing_txn_id = (int) $wpdb->insert_id;
-					update_user_meta( $user_id, '_current_woo_wallet_balance', $is_credit ? abs( $pre_balance ) : -abs( $pre_balance ) );
+				foreach ( $nonzero_nets as $net_currency => $net ) {
+					$row_args = array(
+						'blog_id'           => get_current_blog_id(),
+						'user_id'           => $user_id,
+						'type'              => $net > 0 ? 'credit' : 'debit',
+						'amount'            => abs( $net ),
+						'original_amount'   => abs( $net ),
+						'original_currency' => $net_currency,
+						'original_rate'     => 1.0,
+						'mode'              => 0,
+						'currency'          => $net_currency,
+						'details'           => __( 'Balance carried over after deleting transaction logs', 'woo-wallet' ),
+						'date'              => current_time( 'mysql' ),
+						'created_by'        => get_current_user_id(),
+					);
+					// Inserted here, inside this lock + DB transaction, rather than via
+					// Woo_Wallet_Wallet::credit(): credit() opens its own START TRANSACTION,
+					// which would implicitly COMMIT the half-done purge above.
+					if ( ! $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_args, array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+						// All or nothing: never commit a purge that lost part of the balance.
+						throw new Exception( __( 'Could not carry the wallet balance over. Nothing was deleted.', 'woo-wallet' ) );
+					}
+					$balancing_entries[] = array( (int) $wpdb->insert_id, $net, $net_currency );
+					$cached_balance     += $net;
 				}
-			} else {
-				// Wipe, or keep-but-zero, or filter said don't credit — cached meta must reflect the new ledger.
-				update_user_meta( $user_id, '_current_woo_wallet_balance', 0 );
+				$balancing_txn_id = $balancing_entries[0][0];
 			}
+			// Same raw-SUM value recode_transaction() caches; 0 after a wipe.
+			update_user_meta( $user_id, '_current_woo_wallet_balance', $cached_balance );
 
 			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		} catch ( Exception $e ) {
@@ -1873,10 +1898,10 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 
 		clear_woo_wallet_cache( $user_id );
 
-		if ( $balancing_txn_id ) {
-			// Fired outside the lock so third-party listeners can call back into the
-			// ledger without contending on a lock we no longer hold.
-			do_action( 'woo_wallet_transaction_recorded', $balancing_txn_id, $user_id, abs( $pre_balance ), $pre_balance > 0 ? 'credit' : 'debit' );
+		// Fired outside the lock so third-party listeners can call back into the
+		// ledger without contending on a lock we no longer hold.
+		foreach ( $balancing_entries as list( $entry_id, $entry_net ) ) {
+			do_action( 'woo_wallet_transaction_recorded', $entry_id, $user_id, abs( $entry_net ), $entry_net > 0 ? 'credit' : 'debit' );
 		}
 
 		/**
@@ -1895,6 +1920,8 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 		return array(
 			'pre_balance'      => $pre_balance,
 			'balancing_txn_id' => $balancing_txn_id,
+			// One carry-over row per currency the wallet held (since 1.7.1).
+			'balancing_txn_ids' => wp_list_pluck( $balancing_entries, 0 ),
 			'mode'             => $delete_mode,
 			'handling'         => $balance_handling,
 		);

@@ -7,6 +7,8 @@ import { getRegistry } from '../registry';
 let toastCounter = 0;
 
 const TOAST_DURATION = 3500;
+// Errors explain what to fix, so they stay up long enough to read.
+const ERROR_TOAST_DURATION = 8000;
 
 export default function useSettings() {
 	const [ schema, setSchema ] = useState( null );
@@ -36,14 +38,13 @@ export default function useSettings() {
 
 	const pushToast = useCallback( ( type, message ) => {
 		const id = ++toastCounter;
-		setToasts( ( prev ) => [
-			...prev,
-			{ id, type, message, duration: TOAST_DURATION },
-		] );
+		const duration =
+			'error' === type ? ERROR_TOAST_DURATION : TOAST_DURATION;
+		setToasts( ( prev ) => [ ...prev, { id, type, message, duration } ] );
 		timers.current[ id ] = setTimeout( () => {
 			dismissToast( id );
 			delete timers.current[ id ];
-		}, TOAST_DURATION );
+		}, duration );
 	}, [] );
 
 	// Exposed so clicking a toast dismisses it immediately.

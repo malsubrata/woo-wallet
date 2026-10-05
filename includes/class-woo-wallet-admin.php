@@ -183,7 +183,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					<th><label for="contact"><?php esc_html_e( 'Current wallet balance', 'woo-wallet' ); ?></label></th>
 
 					<td>
-						<?php echo woo_wallet()->wallet->get_wallet_balance( $user->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php echo woo_wallet()->wallet->get_wallet_balance( $user->ID, 'view', Woo_Wallet_Currency_Manager::instance()->get_base_currency() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</td>
 
 				</tr>
@@ -325,11 +325,11 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( "load-$woo_wallet_users_hook", array( $this, 'handle_wallet_balance_adjustment' ) );
 			add_action( "load-$woo_wallet_users_hook", array( $this, 'add_woo_wallet_details' ) );
 
-			$woo_wallet_menu_page_hook_view = add_submenu_page( 'null', __( 'Woo Wallet', 'woo-wallet' ), __( 'Woo Wallet', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
+			$woo_wallet_menu_page_hook_view = add_submenu_page( 'null', __( 'Wallet Transactions', 'woo-wallet' ), __( 'Wallet Transactions', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-transactions', array( $this, 'transaction_details_page' ) );
 			add_action( "load-$woo_wallet_menu_page_hook_view", array( $this, 'add_woo_wallet_transaction_details_option' ) );
 			// Actions submenu removed — actions are now part of the unified Settings page (React app).
 
-			add_submenu_page( 'null', '', '', get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
+			add_submenu_page( 'null', __( 'Export Wallet Data', 'woo-wallet' ), __( 'Export Wallet Data', 'woo-wallet' ), get_wallet_user_capability(), 'terawallet-exporter', array( $this, 'terawallet_exporter_page' ) );
 
 			if ( $this->is_referral_action_enabled() ) {
 				add_submenu_page( 'woo-wallet', __( 'Referral Report', 'woo-wallet' ), __( 'Referral Report', 'woo-wallet' ), get_wallet_user_capability(), 'woo-wallet-referral-report', array( $this, 'referral_report_page' ) );
@@ -597,7 +597,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					$order_localizer = array(
 						'order_id'       => $order_id,
 						'payment_method' => $order->get_payment_method( 'edit' ),
-						'default_price'  => wc_price( 0 ),
+						'default_price'  => wc_price( 0, array( 'currency' => $order->get_currency() ) ),
 						'is_refundable'  => apply_filters( 'woo_wallet_is_order_refundable', ( ! is_wallet_rechargeable_order( $order ) && 'wallet' !== $order->get_payment_method( 'edit' ) ) && $order->get_customer_id( 'edit' ) && current_user_can( 'manage_woocommerce' ), $order ),
 						'i18n'           => array(
 							'refund'     => __( 'Refund', 'woo-wallet' ),
@@ -883,7 +883,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					$entry_currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
 					$entry_currency = '' !== (string) $entry_currency ? $entry_currency : Woo_Wallet_Currency_Manager::instance()->get_base_currency();
 					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
-					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit' );
+					// Compare in the currency the debit is written in, not the storefront one.
+					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit', $entry_currency );
 					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
 						$response = array(
 							'type'    => 'error',
@@ -891,7 +892,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 							'message' => sprintf( __( '%s has insufficient balance for debit.', 'woo-wallet' ), $user->user_login ),
 						);
 					} elseif ( 'debit' === $payment_type ) {
-						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description, array( 'currency' => $entry_currency ) );
+						$transaction_id = woo_wallet()->wallet->debit( $user_id, $amount, $description, array( 'currency' => $entry_currency, 'category' => 'adjustment' ) );
 						if ( $transaction_id ) {
 							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
@@ -917,7 +918,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 							);
 						}
 					} elseif ( 'credit' === $payment_type ) {
-						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description, array( 'currency' => $entry_currency ) );
+						$transaction_id = woo_wallet()->wallet->credit( $user_id, $amount, $description, array( 'currency' => $entry_currency, 'category' => 'adjustment' ) );
 						if ( $transaction_id ) {
 							do_action( 'woo_wallet_admin_adjust_balance', $transaction_id );
 							$response = array(
@@ -1116,7 +1117,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					<td class="label"><?php esc_html_e( 'Cashback', 'woo-wallet' ); ?>:</td>
 					<td width="1%"></td>
 					<td class="via-wallet">
-						<?php echo wc_price( $total_cashback_amount, woo_wallet_wc_price_args( $order->get_customer_id() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php echo wc_price( $total_cashback_amount, woo_wallet_wc_price_args( $order->get_customer_id(), array( 'currency' => $order->get_currency() ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</td>
 				</tr>
 				<?php
@@ -1320,7 +1321,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 		 */
 		public function manage_users_custom_column( $value, $column_name, $user_id ) {
 			if ( 'current_wallet_balance' === $column_name ) {
-				return sprintf( '<a href="%s" title="%s">%s</a>', admin_url( 'admin.php?page=woo-wallet-transactions&user_id=' . $user_id ), __( 'View details', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user_id ) );
+				return sprintf( '<a href="%s" title="%s">%s</a>', admin_url( 'admin.php?page=woo-wallet-transactions&user_id=' . $user_id ), __( 'View details', 'woo-wallet' ), woo_wallet()->wallet->get_wallet_balance( $user_id, 'view', Woo_Wallet_Currency_Manager::instance()->get_base_currency() ) );
 			}
 			return $value;
 		}

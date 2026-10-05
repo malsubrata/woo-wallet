@@ -24,7 +24,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</button>
 				</header>
 				<article>
-					<p><?php esc_html_e( 'You are about to delete transaction records for the selected users. Choose how the records and the resulting balance should be handled.', 'woo-wallet' ); ?></p>
+					<p>
+						<?php esc_html_e( 'This deletes the wallet transaction history of the selected users.', 'woo-wallet' ); ?>
+						<strong class="woo-wallet-delete-log-count"></strong>
+					</p>
 					<table class="form-table">
 						<tbody>
 							<tr>
@@ -32,13 +35,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<td>
 									<label style="display:block;margin-bottom:6px;">
 										<input type="radio" name="woo_wallet_delete_mode" value="soft" checked />
-										<strong><?php esc_html_e( 'Soft delete', 'woo-wallet' ); ?></strong>
-										<em>&mdash; <?php esc_html_e( 'recoverable, rows are flagged deleted=1 but kept in the database', 'woo-wallet' ); ?></em>
+										<strong><?php esc_html_e( 'Hide transactions', 'woo-wallet' ); ?></strong>
+										&mdash; <?php esc_html_e( 'removed from wallet history and reports. The records stay in your database, but they cannot be restored from the dashboard.', 'woo-wallet' ); ?>
 									</label>
 									<label style="display:block;">
 										<input type="radio" name="woo_wallet_delete_mode" value="hard" />
-										<strong><?php esc_html_e( 'Hard delete', 'woo-wallet' ); ?></strong>
-										<em>&mdash; <?php esc_html_e( 'permanent, rows and their meta are removed from the database', 'woo-wallet' ); ?></em>
+										<strong><?php esc_html_e( 'Delete permanently', 'woo-wallet' ); ?></strong>
+										&mdash; <?php esc_html_e( 'erased from your database. This cannot be undone.', 'woo-wallet' ); ?>
 									</label>
 								</td>
 							</tr>
@@ -48,13 +51,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<label style="display:block;margin-bottom:6px;">
 										<input type="radio" name="woo_wallet_balance_handling" value="keep" checked />
 										<strong><?php esc_html_e( 'Keep current balance', 'woo-wallet' ); ?></strong>
-										<em>&mdash; <?php esc_html_e( 'insert a single balancing entry so the user\'s balance is unchanged after the delete', 'woo-wallet' ); ?></em>
+										&mdash; <?php esc_html_e( 'each customer keeps the balance they have now. One entry is added to their history to carry it over.', 'woo-wallet' ); ?>
 									</label>
 									<label style="display:block;">
 										<input type="radio" name="woo_wallet_balance_handling" value="wipe" />
 										<strong><?php esc_html_e( 'Wipe balance to zero', 'woo-wallet' ); ?></strong>
-										<em>&mdash; <?php esc_html_e( 'no balancing entry; the user\'s balance becomes 0', 'woo-wallet' ); ?></em>
+										&mdash; <?php esc_html_e( 'each customer\'s balance becomes 0.', 'woo-wallet' ); ?>
 									</label>
+									<div class="notice notice-error inline woo-wallet-delete-log-wipe-warning" role="alert" hidden style="margin:10px 0 0;">
+										<p><strong><?php esc_html_e( 'Customers will lose their wallet balance.', 'woo-wallet' ); ?></strong> <?php esc_html_e( 'Everything the selected users have in their wallets will be gone and they will not be able to spend it.', 'woo-wallet' ); ?></p>
+									</div>
 								</td>
 							</tr>
 						</tbody>
@@ -62,7 +68,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</article>
 				<footer>
 					<div class="inner">
-						<button type="button" class="button button-primary" id="woo-wallet-confirm-delete-log"><?php esc_html_e( 'Delete', 'woo-wallet' ); ?></button>
+						<button type="button" class="button button-primary woo-wallet-button-destructive" id="woo-wallet-confirm-delete-log"><?php esc_html_e( 'Delete logs', 'woo-wallet' ); ?></button>
 					</div>
 				</footer>
 			</section>

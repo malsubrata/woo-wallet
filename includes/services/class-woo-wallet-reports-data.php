@@ -44,49 +44,104 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 		}
 
 		/**
-		 * Store base currency code.
+		 * Store base currency code, as the currency manager sees it (a switcher
+		 * can filter get_woocommerce_currency() to the visitor's currency).
 		 *
 		 * @return string
 		 */
 		public function base_currency() {
-			return function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD';
+			if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				return Woo_Wallet_Currency_Manager::instance()->get_base_currency();
+			}
+			$base = get_option( 'woocommerce_currency' );
+			return is_string( $base ) && '' !== $base ? strtoupper( $base ) : 'USD';
 		}
 
 		/**
-		 * Total outstanding liability: SUM(credit) - SUM(debit) over live rows.
+		 * Convert an amount stored in $currency to the base currency. An empty
+		 * currency is treated as base (legacy rows).
 		 *
-		 * ponytail: sums raw `amount` across currencies; correct for the common
-		 * single-currency store. Multi-currency normalisation lives in Pro.
+		 * @param float  $amount   Amount.
+		 * @param string $currency Row currency ('' = base).
+		 * @return float
+		 */
+		protected function to_base( $amount, $currency ) {
+			$base = $this->base_currency();
+			$from = '' !== (string) $currency ? strtoupper( (string) $currency ) : $base;
+			if ( $from === $base || ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				return (float) $amount;
+			}
+			return (float) Woo_Wallet_Currency_Manager::instance()->convert( $amount, $from, $base );
+		}
+
+		/**
+		 * Base currency plus the current rate of every currency in the ledger.
+		 * Part of the summary cache key: switchers auto-update rates without a
+		 * ledger write, and the cached totals must not outlive the rate they
+		 * were converted at.
+		 *
+		 * @return string
+		 */
+		protected function rates_fingerprint() {
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$currencies = $wpdb->get_col( "SELECT DISTINCT currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE deleted = 0" );
+			$rates      = array( 'base' => $this->base_currency() );
+			foreach ( (array) $currencies as $currency ) {
+				$rates[ (string) $currency ] = $this->to_base( 1, $currency );
+			}
+			return (string) wp_json_encode( $rates );
+		}
+
+		/**
+		 * Total outstanding liability: SUM(credit) - SUM(debit) over live rows,
+		 * each currency group converted to the base currency.
 		 *
 		 * @return float
 		 */
 		public function total_liability() {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			return (float) $wpdb->get_var(
-				"SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0)
+			$rows  = $wpdb->get_results(
+				"SELECT currency, SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) AS net
 				 FROM {$wpdb->base_prefix}woo_wallet_transactions
-				 WHERE deleted = 0"
+				 WHERE deleted = 0
+				 GROUP BY currency"
 			);
+			$total = 0.0;
+			foreach ( (array) $rows as $row ) {
+				$total += $this->to_base( $row->net, $row->currency );
+			}
+			return $total;
 		}
 
 		/**
-		 * Count of users whose net balance is strictly positive.
+		 * Count of users whose net balance, converted to base, is strictly positive.
 		 *
 		 * @return int
 		 */
 		public function positive_wallets_count() {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			return (int) $wpdb->get_var(
-				"SELECT COUNT(*) FROM (
-					SELECT user_id
-					FROM {$wpdb->base_prefix}woo_wallet_transactions
-					WHERE deleted = 0
-					GROUP BY user_id
-					HAVING SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) > 0
-				) AS positive_wallets"
+			$rows  = $wpdb->get_results(
+				"SELECT user_id, currency, SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) AS net
+				 FROM {$wpdb->base_prefix}woo_wallet_transactions
+				 WHERE deleted = 0
+				 GROUP BY user_id, currency"
 			);
+			$users = array();
+			foreach ( (array) $rows as $row ) {
+				$uid           = (int) $row->user_id;
+				$users[ $uid ] = ( $users[ $uid ] ?? 0.0 ) + $this->to_base( $row->net, $row->currency );
+			}
+			$count = 0;
+			foreach ( $users as $net ) {
+				// Round away conversion dust so a zeroed wallet isn't counted.
+				if ( round( $net, 6 ) > 0 ) {
+					++$count;
+				}
+			}
+			return $count;
 		}
 
 		/**
@@ -108,7 +163,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 		}
 
 		/**
-		 * SUM(amount) for one transaction type over live rows.
+		 * SUM(amount) for one transaction type over live rows, in base currency.
 		 *
 		 * @param string $type 'credit' or 'debit'.
 		 * @return float
@@ -117,19 +172,26 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 			global $wpdb;
 			$type = ( 'debit' === $type ) ? 'debit' : 'credit';
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			return (float) $wpdb->get_var(
+			$rows  = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT COALESCE(SUM(amount), 0)
+					"SELECT currency, SUM(amount) AS total
 					 FROM {$wpdb->base_prefix}woo_wallet_transactions
-					 WHERE deleted = 0 AND type = %s",
+					 WHERE deleted = 0 AND type = %s
+					 GROUP BY currency",
 					$type
 				)
 			);
+			$total = 0.0;
+			foreach ( (array) $rows as $row ) {
+				$total += $this->to_base( $row->total, $row->currency );
+			}
+			return $total;
 		}
 
 		/**
-		 * Net liability contribution grouped by the `category` column. The rows
-		 * sum to total_liability(). Slugs are mapped to friendly labels.
+		 * Net liability contribution grouped by the `category` column, in base
+		 * currency. The rows sum to total_liability(). Slugs are mapped to
+		 * friendly labels.
 		 *
 		 * @return array<int,array{slug:string,label:string,amount:float}>
 		 */
@@ -137,21 +199,26 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$rows = $wpdb->get_results(
-				"SELECT category, SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) AS net
+				"SELECT category, currency, SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) AS net
 				 FROM {$wpdb->base_prefix}woo_wallet_transactions
 				 WHERE deleted = 0
-				 GROUP BY category
-				 ORDER BY net DESC"
+				 GROUP BY category, currency"
 			);
+
+			$nets = array();
+			foreach ( (array) $rows as $row ) {
+				$slug          = $row->category ? $row->category : 'other';
+				$nets[ $slug ] = ( $nets[ $slug ] ?? 0.0 ) + $this->to_base( $row->net, $row->currency );
+			}
+			arsort( $nets );
 
 			$labels = $this->category_labels();
 			$out    = array();
-			foreach ( (array) $rows as $row ) {
-				$slug  = $row->category ? $row->category : 'other';
+			foreach ( $nets as $slug => $net ) {
 				$out[] = array(
 					'slug'   => $slug,
 					'label'  => isset( $labels[ $slug ] ) ? $labels[ $slug ] : ucwords( str_replace( '_', ' ', $slug ) ),
-					'amount' => (float) $row->net,
+					'amount' => (float) $net,
 				);
 			}
 			return $out;
@@ -171,7 +238,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports_Data' ) ) {
 			// activity misses the stale transient and recomputes. Old keys age out
 			// via TTL.
 			$version   = (int) get_option( 'woo_wallet_reports_cache_version', 0 );
-			$cache_key = 'woo_wallet_reports_summary_' . $version . '_' . md5( wp_json_encode( $args ) );
+			$cache_key = 'woo_wallet_reports_summary_' . $version . '_' . md5( wp_json_encode( $args ) . $this->rates_fingerprint() );
 			$cached    = get_transient( $cache_key );
 			if ( false !== $cached && is_array( $cached ) && ! isset( $args['nocache'] ) ) {
 				return $cached;

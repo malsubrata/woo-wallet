@@ -579,7 +579,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					<p class="tw-section__intro"><?php esc_html_e( 'The free plugin is a complete wallet. Pro is what you need once that wallet is holding real money.', 'woo-wallet' ); ?></p>
 				</div>
 				<div class="tw-compare__card">
-					<div class="tw-compare__scroll">
+					<div class="tw-compare__scroll" tabindex="0" role="region" aria-label="<?php esc_attr_e( 'Free and Pro feature comparison', 'woo-wallet' ); ?>">
 						<table class="tw-compare">
 							<thead>
 								<tr>
@@ -1122,7 +1122,11 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					border-radius: 6px;
 					overflow: hidden;
 				}
-				.tw-compare__scroll { overflow-x: auto; }
+				/* position: relative makes this the containing block of the cells'
+				 * absolutely-positioned screen-reader text; without it those spans
+				 * escape the scroll box and widen the whole page on phones. */
+				.tw-compare__scroll { overflow-x: auto; position: relative; }
+				.tw-compare__scroll:focus-visible { outline: 2px solid var(--tw-accent-soft); outline-offset: -2px; }
 				.tw-compare { width: 100%; min-width: 520px; border-collapse: separate; border-spacing: 0; }
 				.tw-compare th, .tw-compare td { padding: 11px 22px; text-align: left; border-bottom: 1px solid var(--tw-line-soft); }
 				.tw-compare thead th {
@@ -1344,8 +1348,13 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					.tw-hero h1 { font-size: 24px; }
 					.tw-section__title { font-size: 19px; }
 					.tw-feature { padding: 20px; }
-					.tw-compare th, .tw-compare td { padding: 10px 12px; }
-					.tw-compare__cell { width: 64px; }
+					/* Fit all three columns on a phone: feature names wrap instead of
+					 * the table scrolling the Free/Pro ticks off-screen. */
+					.tw-compare { min-width: 0; }
+					.tw-compare th, .tw-compare td,
+					.tw-compare thead th, .tw-compare__group th { padding: 10px 12px; }
+					.tw-compare tbody td:first-child { overflow-wrap: anywhere; }
+					.tw-compare__cell { width: 56px; }
 				}
 
 				@media (prefers-reduced-motion: reduce) {

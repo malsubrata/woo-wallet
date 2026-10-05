@@ -519,7 +519,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 						__( 'Exports alongside your existing wallet CSV.', 'woo-wallet' ),
 					),
 					'sample'   => array( 18, 24, 21, 32, 38, 35, 44, 52 ),
-					'sample_v' => '12.4%',
+					'sample_v' => '—%',
 				),
 				'aging'      => array(
 					'benefit'  => __( 'Know how long credit has been sitting in customer wallets.', 'woo-wallet' ),
@@ -530,7 +530,7 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 						__( 'Pairs with Credit Expiry to target reminders.', 'woo-wallet' ),
 					),
 					'sample'   => array( 60, 44, 38, 27, 22, 16, 13, 9 ),
-					'sample_v' => '94 days',
+					'sample_v' => __( '— days', 'woo-wallet' ),
 				),
 				'trend'      => array(
 					'benefit'  => __( 'Project how much liability expires, and when.', 'woo-wallet' ),
@@ -541,7 +541,8 @@ if ( ! class_exists( 'Woo_Wallet_Reports' ) ) {
 						__( 'Feeds the reminder emails sent before credit lapses.', 'woo-wallet' ),
 					),
 					'sample'   => array( 12, 19, 16, 28, 24, 37, 33, 46 ),
-					'sample_v' => '₹ — /mo',
+					/* translators: %s: store base currency symbol. */
+					'sample_v' => sprintf( __( '%s — /mo', 'woo-wallet' ), WOO_Wallet_Helper::get_base_currency_symbol() ),
 				),
 				'withdrawal' => array(
 					'benefit'  => __( 'Let customers cash out, and track every payout.', 'woo-wallet' ),
