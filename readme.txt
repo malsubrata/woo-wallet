@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -151,27 +151,12 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.1 (October 5, 2026) =
-* Security - The order "Via wallet" Refund button requires a security token; custom code calling `woo_wallet_refund_partial_payment` must send the `order-item` nonce as `security`.
-* Security - Wallet refunds from the order screen require the "Manage WooCommerce" capability, so marketplace vendors cannot refund orders they don't own.
-* New - Daily visit rewards: optional "paid order required" setting, a per-customer reward cap, and a "You earned ... for visiting today" message.
-* New - Daily visit, registration and product review rewards appear as "Engagement reward" in transactions and the dashboard. Older transactions keep their category.
-* Fix - Wallet Dashboard totals and category breakdown are converted to your base currency on multi-currency stores and update when exchange rates change.
-* Fix - On multi-currency stores, settings, Edit Balance, bulk Credit/Debit, user profile and the Users "Wallet Balance" column use your base currency.
-* Fix - On multi-currency stores, order cashback and the wallet refund button use the order currency, and refunds return the exact amount paid from the wallet.
-* Fix - Single Edit Balance changes are recorded as "Adjustment", and over-balance debits show a clear insufficient-balance error.
-* Fix - Settings reject negative amounts, a minimum above the maximum, and percentage charges above 100 with a clear error.
-* Fix - Delete logs "Keep current balance" keeps each currency's balance in its own currency, all-or-nothing; the dialog is clearer and shows affected users.
-* Fix - Daily visit rewards are paid once per calendar day in your store's timezone, including on the day you update.
-* Fix - Converted minimum/maximum top-up and minimum transfer limits no longer have long decimal tails that browsers reject.
-* Fix - Splitting a refund across several partial refunds no longer returns a cent more or less than was paid from the wallet.
-* Tweak - The daily visit Amount is empty by default on new installs. Existing amounts are unchanged.
-* Tweak - "Allow Minimum cashback" is now "Use lowest category cashback"; clearer reward cap help; settings errors wrap and stay visible longer.
-* Tweak - Locked Pro report cards show neutral placeholders, the Upgrade comparison table fits phones, and the Transactions and Export pages have proper tab titles.
+= v1.7.2 (Unreleased) =
+* Tweak - Development in progress.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.7.1 =
-Wallet Dashboard totals on multi-currency stores are now converted to your base currency, so the number may be lower than before — no balances changed. Security: refund AJAX needs a nonce.
+= 1.7.2 =
+Development in progress.
