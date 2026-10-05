@@ -185,4 +185,30 @@ class Test_Purge_Keep_Balance extends WP_UnitTestCase {
 		$this->assertSame( array( 'GBP' => 50.0, 'INR' => 900.0 ), $this->nets( $u ) );
 		$this->assertSame( 2, $this->live_rows( $u ), 'The original rows must still be live.' );
 	}
+
+	/**
+	 * If the delete itself fails, no carry-over is added (old rows + carry-over
+	 * would double the balance) and the purge reports an error.
+	 */
+	public function test_failed_delete_adds_no_carry_over() {
+		global $wpdb;
+		$u = self::factory()->user->create();
+		$this->row( $u, 'credit', 100, 'GBP' );
+
+		$break = function ( $query ) use ( $wpdb ) {
+			if ( 0 === strpos( ltrim( $query ), "UPDATE `{$wpdb->base_prefix}woo_wallet_transactions` SET `deleted`" ) ) {
+				return 'UPDATE woo_wallet_missing_table_for_test SET x = 1';
+			}
+			return $query;
+		};
+		add_filter( 'query', $break );
+		$suppress = $wpdb->suppress_errors( true );
+		$result   = woo_wallet_purge_user_transactions( $u, 'soft', 'keep' );
+		$wpdb->suppress_errors( $suppress );
+		remove_filter( 'query', $break );
+
+		$this->assertWPError( $result );
+		$this->assertSame( array( 'GBP' => 100.0 ), $this->nets( $u ) );
+		$this->assertSame( 1, $this->live_rows( $u ) );
+	}
 }

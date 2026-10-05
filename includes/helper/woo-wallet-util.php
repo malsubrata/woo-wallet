@@ -1842,6 +1842,14 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 				delete_user_wallet_transactions( $user_id, true );
 			}
 
+			// A failed delete must not be followed by a carry-over: the old rows plus
+			// the carry-over would double the balance. Verify instead of trusting
+			// return values (delete_user_wallet_transactions() returns nothing).
+			$still_live = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			if ( $still_live > 0 ) {
+				throw new Exception( __( 'Could not delete the transaction logs. Nothing was changed.', 'woo-wallet' ) );
+			}
+
 			$nonzero_nets = array_filter(
 				$net_by_currency,
 				function ( $net ) {
@@ -1885,7 +1893,7 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 			update_user_meta( $user_id, '_current_woo_wallet_balance', $cached_balance );
 
 			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-		} catch ( Exception $e ) {
+		} catch ( Throwable $e ) {
 			$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$caught = $e;
 		} finally {

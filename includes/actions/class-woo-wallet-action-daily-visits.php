@@ -230,6 +230,12 @@ class Action_Daily_Visits extends WooWalletAction {
 		if ( get_user_meta( $user_id, '_woo_wallet_daily_visit_last', true ) === $today ) {
 			return; // Cheap exit for the common case; re-checked under the lock.
 		}
+		// Up to 1.7.0 the once-a-day guard was this 24h transient. Honour it so a
+		// customer rewarded just before the upgrade isn't rewarded again the same
+		// day; it is no longer written and expires on its own.
+		if ( get_transient( 'woo_wallet_site_visit_' . $user_id ) ) {
+			return;
+		}
 
 		global $wpdb;
 		$lock = 'woo_wallet_daily_visit_' . $user_id;

@@ -123,6 +123,20 @@ class Test_Daily_Visit_Reward extends WP_UnitTestCase {
 		$this->assertSame( wp_date( 'Y-m-d' ), get_user_meta( $this->user_id, '_woo_wallet_daily_visit_last', true ) );
 	}
 
+	/**
+	 * Upgrade day: a customer rewarded under <= 1.7.0 (24h transient, no new
+	 * marker yet) must not be rewarded again until that transient expires.
+	 */
+	public function test_legacy_transient_blocks_second_reward_on_upgrade_day() {
+		set_transient( 'woo_wallet_site_visit_' . $this->user_id, true, DAY_IN_SECONDS );
+		$this->action->woo_wallet_site_visit_credit();
+		$this->assertSame( 0, $this->row_count() );
+
+		delete_transient( 'woo_wallet_site_visit_' . $this->user_id );
+		$this->action->woo_wallet_site_visit_credit();
+		$this->assertSame( 1, $this->row_count() );
+	}
+
 	public function test_next_day_credits_again() {
 		$this->action->woo_wallet_site_visit_credit();
 		$this->set_last_visit( '-1 day' );
