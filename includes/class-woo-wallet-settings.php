@@ -227,7 +227,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Minimum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no minimum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+						'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -238,7 +238,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'label'   => __( 'Maximum Topup Amount', 'woo-wallet' ),
 						'desc'    => __( 'Leave blank for no maximum', 'woo-wallet' ),
 						'type'    => 'number',
-						'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+						'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 						'step'    => '0.01',
 						'group'   => 'wallet_topup',
 						'show_if' => $topup_show_if,
@@ -360,7 +360,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Minimum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer less than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+					'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -371,7 +371,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'label'   => __( 'Maximum Transfer Amount', 'woo-wallet' ),
 					'desc'    => __( 'Users cannot transfer more than this amount', 'woo-wallet' ),
 					'type'    => 'number',
-					'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+					'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 					'step'    => '0.01',
 					'group'   => 'wallet_transfer',
 					'show_if' => $transfer_show_if,
@@ -541,7 +541,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Minimum Cart Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter applicable minimum cart amount for cashback', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+							'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => array(
@@ -557,15 +557,15 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 							'label'   => __( 'Maximum Cashback Amount', 'woo-wallet' ),
 							'desc'    => __( 'Enter maximum cashback amount', 'woo-wallet' ),
 							'type'    => 'number',
-							'prefix'  => html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+							'prefix'  => WOO_Wallet_Helper::get_base_currency_symbol( true ),
 							'group'   => 'wallet_cashback',
 							'step'    => '0.01',
 							'show_if' => $cashbak_show_if,
 						),
 						array(
 							'name'    => 'allow_min_cashback',
-							'label'   => __( 'Allow Minimum cashback', 'woo-wallet' ),
-							'desc'    => __( 'If checked minimum cashback amount will be applied on product category cashback calculation.', 'woo-wallet' ),
+							'label'   => __( 'Use lowest category cashback', 'woo-wallet' ),
+							'desc'    => __( 'When a product is in more than one category: on uses the lowest category cashback, off uses the highest.', 'woo-wallet' ),
 							'type'    => 'checkbox',
 							'group'   => 'wallet_cashback',
 							'default' => 'on',
@@ -636,7 +636,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 				return $fields;
 			}
 
-			$currency_symbol = html_entity_decode( get_woocommerce_currency_symbol( get_option( 'woocommerce_currency' ) ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			$currency_symbol = WOO_Wallet_Helper::get_base_currency_symbol( true );
 
 			foreach ( WOO_Wallet_Actions::instance()->actions as $action ) {
 				if ( empty( $action->form_fields ) ) {
@@ -717,6 +717,12 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 
 			if ( 'checkbox' === $type ) {
 				$result['bool_format'] = 'yes_no';
+				// WC_Settings_API checkboxes carry their explanation in `label`
+				// (the `title` becomes the React label). Show it as the helper text
+				// unless a description already fills that slot or it repeats the title.
+				if ( '' === $result['desc'] && ! empty( $field['label'] ) && $field['label'] !== $result['label'] ) {
+					$result['desc'] = $field['label'];
+				}
 			}
 
 			if ( isset( $field['options'] ) ) {

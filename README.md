@@ -11,7 +11,7 @@ TeraWallet is the leading wallet system for WooCommerce, providing a seamless di
 - **Flexible Top-ups**: Customers can add funds via any WooCommerce gateway.
 - **Partial Payments**: Use wallet balance combined with other payment methods.
 - **Cashback Engine**: Rewards based on Cart, Product, or Category rules.
-- **Incentivized Actions**: Earn balance for Signups, Reviews, Referrals, and Daily Visits.
+- **Incentivized Actions**: Earn balance for Signups, Reviews, Referrals, and Daily Visits (once per calendar day, with an optional first-purchase requirement and cap).
 - **Peer-to-Peer Transfers**: Users can send balance to other registered customers.
 - **Marketplace Ready**: Full compatibility with Dokan, WCFM, and WCMarketplace.
 

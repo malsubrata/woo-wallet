@@ -32,6 +32,7 @@ jQuery( function ( $ ) {
 				const data = {
 					action: 'woo_wallet_refund_partial_payment',
 					order_id: woocommerce_admin_meta_boxes.post_id,
+					security: woocommerce_admin_meta_boxes.order_item_nonce,
 				};
 				$.post(
 					woocommerce_admin_meta_boxes.ajax_url,
@@ -41,9 +42,11 @@ jQuery( function ( $ ) {
 							woo_wallet_order_items.reload_items();
 							// Redirect to same page for show the refunded status
 							window.location.href = window.location.href;
+						} else {
+							woo_wallet_order_items.unblock();
 						}
 					}
-				);
+				).fail( woo_wallet_order_items.unblock ); // e.g. expired nonce (403).
 			}
 		},
 		do_wallet_refund() {

@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -45,7 +45,7 @@ Beyond core wallet functionality, TeraWallet features a robust **Cashback Reward
     *   **Peer-to-Peer Transfers:** Securely send wallet balance to other registered users via email.
 *   🎁 **Engagement Rewards:** Credit users for specific actions:
     *   New user registration bonus.
-    *   Daily login rewards.
+    *   Daily visit rewards (once per calendar day, with optional first-purchase requirement and monthly cap).
     *   Product review rewards.
 *   🛠 **Admin Control Center:**
     *   View all user balances and transaction history.
@@ -115,7 +115,12 @@ Yes! If enabled in settings, customers can use their wallet balance to pay for a
 Cashback is triggered by order status changes. You can configure which status (e.g., 'Completed' or 'Processing') triggers the reward in the plugin settings.
 
 = Why is the wallet not visible at checkout? =
-Ensure the Wallet gateway is enabled in **WooCommerce > Settings > Payments**. Also, check if "Hide if empty" is enabled in TeraWallet settings if the user has a zero balance.
+The Wallet payment option only appears when all of these are true:
+* The Wallet gateway is enabled in **WooCommerce > Settings > Payments**.
+* The customer is logged in.
+* Their wallet balance covers the full order total. If the balance is lower, use Partial Payment instead.
+* Partial payment is not being applied to this cart. If "Auto deduct wallet balance" is on and the balance is lower than the total, the wallet is used as a partial payment instead.
+* The customer's wallet is not locked by an admin.
 
 = Where can I get support? =
 You can ask for help in the [WordPress Plugin Forum](https://wordpress.org/support/plugin/woo-wallet) or email us at support@standalonetech.com.
@@ -146,13 +151,27 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.0 (September 11, 2026) =
-* New - An optional, dismissible notice on TeraWallet's admin screens invites you to join the mailing list; nothing is sent unless you tick consent and submit.
-* Tweak - Refreshed the colours and type on the Upgrade to Pro banner for better readability.
+= v1.7.1 (October 5, 2026) =
+* Security - The order "Via wallet" Refund button requires a security token; custom code calling `woo_wallet_refund_partial_payment` must send the `order-item` nonce as `security`.
+* Security - Wallet refunds from the order screen require the "Manage WooCommerce" capability, so marketplace vendors cannot refund orders they don't own.
+* New - Daily visit rewards: optional "paid order required" setting, a per-customer reward cap, and a "You earned ... for visiting today" message.
+* New - Daily visit, registration and product review rewards appear as "Engagement reward" in transactions and the dashboard. Older transactions keep their category.
+* Fix - Wallet Dashboard totals and category breakdown are converted to your base currency on multi-currency stores and update when exchange rates change.
+* Fix - On multi-currency stores, settings, Edit Balance, bulk Credit/Debit, user profile and the Users "Wallet Balance" column use your base currency.
+* Fix - On multi-currency stores, order cashback and the wallet refund button use the order currency, and refunds return the exact amount paid from the wallet.
+* Fix - Single Edit Balance changes are recorded as "Adjustment", and over-balance debits show a clear insufficient-balance error.
+* Fix - Settings reject negative amounts, a minimum above the maximum, and percentage charges above 100 with a clear error.
+* Fix - Delete logs "Keep current balance" keeps each currency's balance in its own currency, all-or-nothing; the dialog is clearer and shows affected users.
+* Fix - Daily visit rewards are paid once per calendar day in your store's timezone, including on the day you update.
+* Fix - Converted minimum/maximum top-up and minimum transfer limits no longer have long decimal tails that browsers reject.
+* Fix - Splitting a refund across several partial refunds no longer returns a cent more or less than was paid from the wallet.
+* Tweak - The daily visit Amount is empty by default on new installs. Existing amounts are unchanged.
+* Tweak - "Allow Minimum cashback" is now "Use lowest category cashback"; clearer reward cap help; settings errors wrap and stay visible longer.
+* Tweak - Locked Pro report cards show neutral placeholders, the Upgrade comparison table fits phones, and the Transactions and Export pages have proper tab titles.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.7.0 =
-Adds an optional, opt-in mailing list notice on admin screens (nothing sent unless you consent) and refreshes the Upgrade to Pro banner.
+= 1.7.1 =
+Wallet Dashboard totals on multi-currency stores are now converted to your base currency, so the number may be lower than before — no balances changed. Security: refund AJAX needs a nonce.

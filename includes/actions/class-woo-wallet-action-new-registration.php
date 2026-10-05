@@ -88,7 +88,10 @@ class Action_New_Registration extends WooWalletAction {
 				$user_id,
 				$amount,
 				sanitize_textarea_field( $this->settings['description'] ),
-				array( 'currency' => $this->get_base_currency() )
+				array(
+					'currency' => $this->get_base_currency(),
+					'category' => 'engagement_reward',
+				)
 			);
 			if ( $transaction_id ) {
 				// Record that the credit has been applied.

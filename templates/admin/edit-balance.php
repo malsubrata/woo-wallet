@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<table class="form-table">
 							<tbody>
 								<tr>
-									<th scope="row"><label for="balance_amount"><?php /* translators: 1: WooCommerce currency symbol. */ echo esc_html( sprintf( __( 'Amount (%s)', 'woo-wallet' ), get_woocommerce_currency_symbol() ) ); ?></label></th>
+									<th scope="row"><label for="balance_amount"><?php /* translators: 1: WooCommerce currency symbol. */ echo esc_html( sprintf( __( 'Amount (%s)', 'woo-wallet' ), WOO_Wallet_Helper::get_base_currency_symbol( true ) ) ); ?></label></th>
 									<td>
 										<input type="number" step="any" name="balance_amount" class="regular-text" placeholder="<?php esc_html_e( 'Enter amount', 'woo-wallet' ); ?>" required />
 									</td>

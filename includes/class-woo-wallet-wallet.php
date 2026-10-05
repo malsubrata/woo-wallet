@@ -27,9 +27,50 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		public $meta_key = '_current_woo_wallet_balance';
 
 		/**
+		 * Per-request memo of the raw ledger SUM, keyed by user id then by
+		 * mode/currency scope.
+		 *
+		 * Deliberately request-scoped (a static array, discarded at the end of
+		 * the request) rather than `wp_cache_*`: on a site with a persistent
+		 * object cache a balance that outlives the request would survive every
+		 * write path that forgets to invalidate it — including third-party and
+		 * direct-SQL writers — and a wallet that advertises a stale balance is
+		 * a money bug, not a performance one.
+		 *
+		 * Only the raw SUM is memoized. The `woo_wallet_current_balance` filter
+		 * and `clamp_to_ledger()` still run on every call, so third parties that
+		 * recompute the advertised balance keep their say. The debit gates in
+		 * `recode_transaction()` / `transfer()` issue their own SUM inside the
+		 * lock and never read this memo — that is what keeps them TOCTOU-free.
+		 *
+		 * @since 1.7.1
+		 * @var array
+		 */
+		private static $balance_sum_cache = array();
+
+		/**
 		 * Class constructor.
 		 */
 		public function __construct() {
+		}
+
+		/**
+		 * Drop the memoized ledger SUM for a user (or for everyone).
+		 *
+		 * Called from `clear_woo_wallet_cache()`, which every ledger write path
+		 * already invokes after it commits, so this needs no separate plumbing.
+		 *
+		 * @since 1.7.1
+		 * @param int $user_id User id, or 0 to flush every user.
+		 * @return void
+		 */
+		public static function flush_balance_cache( $user_id = 0 ) {
+			$user_id = absint( $user_id );
+			if ( $user_id ) {
+				unset( self::$balance_sum_cache[ $user_id ] );
+				return;
+			}
+			self::$balance_sum_cache = array();
 		}
 
 		/**
@@ -88,11 +129,22 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$balance_currency = '' !== $currency ? strtoupper( (string) $currency ) : $this->resolve_active_currency();
 
 			if ( $this->user_id ) {
-				if ( 'per_currency' === $mode ) {
-					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0 AND t.currency=%s", $this->user_id, $balance_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// In single_base mode every row is stored in base, so the SUM does not
+				// vary by currency and one memo entry serves every caller. In
+				// per_currency mode the SUM is scoped, so the currency joins the key.
+				$cache_key = 'per_currency' === $mode ? 'per_currency|' . $balance_currency : 'single_base';
+
+				if ( isset( self::$balance_sum_cache[ $this->user_id ][ $cache_key ] ) ) {
+					$this->wallet_balance = self::$balance_sum_cache[ $this->user_id ][ $cache_key ];
 				} else {
-					$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					if ( 'per_currency' === $mode ) {
+						$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0 AND t.currency=%s", $this->user_id, $balance_currency ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					} else {
+						$this->wallet_balance = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(CASE WHEN t.type = 'credit' THEN t.amount ELSE -t.amount END) as balance FROM {$wpdb->base_prefix}woo_wallet_transactions AS t WHERE t.user_id=%d AND t.deleted=0", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					}
+					self::$balance_sum_cache[ $this->user_id ][ $cache_key ] = $this->wallet_balance;
 				}
+
 				$raw_balance          = (float) $this->wallet_balance;
 				$this->wallet_balance = (float) apply_filters( 'woo_wallet_current_balance', $this->wallet_balance, $this->user_id, $balance_currency );
 				$this->wallet_balance = $this->clamp_to_ledger( $this->wallet_balance, $raw_balance, $balance_currency, $mode );
@@ -781,6 +833,59 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Amount and currency to credit when reversing part of a wallet partial payment.
+		 *
+		 * FX-stable: reverses the stored base amount actually debited, pro rata, rather
+		 * than re-converting the order-currency amount at today's rate. Cumulative: each
+		 * credit is clamped to the base not yet returned, and the refund that completes
+		 * the order-currency total returns the exact base remainder, so independently
+		 * rounded splits can never sum to more (or less) than the debit. Falls back to
+		 * the order currency for orders placed before the base meta existed.
+		 *
+		 * Shared by the proportional refund, cancellation and fee-row refund button.
+		 * Call it inside the per-order refund lock BEFORE claiming (it reads the
+		 * pre-claim `_woo_wallet_partial_refunded_total`); it stages the new
+		 * `_woo_wallet_partial_refunded_base_total` on `$order`, which the caller's
+		 * claim `save()` persists.
+		 *
+		 * @param WC_Order $order                  order (locked, pre-claim).
+		 * @param float    $refund_gross           order-currency amount being returned now.
+		 * @param float    $partial_payment_amount order-currency wallet amount originally paid.
+		 * @return array{amount: float, currency: string}
+		 * @since 1.7.1
+		 */
+		public function prepare_partial_payment_reversal( $order, float $refund_gross, float $partial_payment_amount ): array {
+			$base_amount   = (float) $order->get_meta( '_partial_payment_base_amount' );
+			$base_currency = (string) $order->get_meta( '_partial_payment_base_currency' );
+			if ( $base_amount <= 0 || ! $base_currency || $partial_payment_amount <= 0 ) {
+				return array(
+					'amount'   => $refund_gross,
+					'currency' => $order->get_currency( 'edit' ),
+				);
+			}
+
+			$decimals       = wc_get_price_decimals();
+			$order_refunded = (float) $order->get_meta( '_woo_wallet_partial_refunded_total' );
+			$stored         = $order->get_meta( '_woo_wallet_partial_refunded_base_total' );
+			// Orders partially refunded before 1.7.1 have no base counter: derive it pro rata.
+			$base_refunded  = '' !== $stored
+				? (float) $stored
+				: round( $base_amount * min( 1.0, $order_refunded / $partial_payment_amount ), $decimals );
+			$base_remaining = max( 0.0, round( $base_amount - $base_refunded, $decimals ) );
+			$is_final       = $order_refunded + $refund_gross + 0.001 >= $partial_payment_amount;
+
+			$amount = $is_final
+				? $base_remaining
+				: min( round( $base_amount * ( $refund_gross / $partial_payment_amount ), $decimals ), $base_remaining );
+
+			$order->update_meta_data( '_woo_wallet_partial_refunded_base_total', $base_refunded + $amount );
+			return array(
+				'amount'   => $amount,
+				'currency' => $base_currency,
+			);
+		}
+
+		/**
 		 * Refund the wallet-paid portion proportionally on a partial WooCommerce refund.
 		 *
 		 * Hooks `woocommerce_order_refunded`. Opt-out via the
@@ -851,17 +956,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					return;
 				}
 
-				// FX-stable reversal: credit the stored base amount proportionally rather
-				// than re-converting today. Falls back to order currency for legacy orders.
-				$base_amount   = (float) $locked_order->get_meta( '_partial_payment_base_amount' );
-				$base_currency = $locked_order->get_meta( '_partial_payment_base_currency' );
-				if ( $base_amount > 0 && $base_currency ) {
-					$credit_amount   = round( $base_amount * ( $refund_now / $via_wallet ), wc_get_price_decimals() );
-					$credit_currency = $base_currency;
-				} else {
-					$credit_amount   = $refund_now;
-					$credit_currency = $locked_order->get_currency( 'edit' );
-				}
+				$reversal = $this->prepare_partial_payment_reversal( $locked_order, $refund_now, $via_wallet );
 
 				// Claim before credit so a concurrent cancel/refund cannot double-pay.
 				$processed[] = (string) $refund_id;
@@ -875,12 +970,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				$transaction_id = $this->credit(
 					$locked_order->get_customer_id(),
-					$credit_amount,
+					$reversal['amount'],
 					/* translators: order number */
 					sprintf( __( 'Partial refund for order #%s credited to wallet', 'woo-wallet' ), $locked_order->get_order_number() ),
 					array(
 						'for'      => 'partial_payment_refund',
-						'currency' => $credit_currency,
+						'currency' => $reversal['currency'],
 						'order_id' => $locked_order->get_order_number(),
 					)
 				);
@@ -952,6 +1047,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							// Refund only the portion not already returned by earlier partial refunds.
 							$already_refunded = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
 							$refund_gross     = max( 0.0, $partial_payment_amount - $already_refunded );
+							$reversal         = $refund_gross > 0 ? $this->prepare_partial_payment_reversal( $locked_order, $refund_gross, (float) $partial_payment_amount ) : null;
 
 							// Claim before credit — first holder wins permanently.
 							$locked_order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
@@ -959,26 +1055,16 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							$locked_order->delete_meta_data( '_partial_pay_through_wallet_compleate' );
 							$locked_order->save();
 
-							if ( $refund_gross > 0 ) {
-								// FX-stable: reverse the stored base amount proportionally when present.
-								$base_amount   = (float) $locked_order->get_meta( '_partial_payment_base_amount' );
-								$base_currency = $locked_order->get_meta( '_partial_payment_base_currency' );
-								if ( $base_amount > 0 && $base_currency && $partial_payment_amount > 0 ) {
-									$credit_amount   = round( $base_amount * ( $refund_gross / $partial_payment_amount ), wc_get_price_decimals() );
-									$credit_currency = $base_currency;
-								} else {
-									$credit_amount   = $refund_gross;
-									$credit_currency = $locked_order->get_currency( 'edit' );
-								}
+							if ( $reversal ) {
 								/* translators: Order number */
 								$transaction_id = $this->credit(
 									$locked_order->get_customer_id(),
-									$credit_amount,
+									$reversal['amount'],
 									// translators: %s: order number.
 									sprintf( __( 'Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!', 'woo-wallet' ), $locked_order->get_order_number() ),
 									array(
 										'for'      => 'partial_payment_refund',
-										'currency' => $credit_currency,
+										'currency' => $reversal['currency'],
 										'order_id' => $order->get_order_number(),
 									)
 								);

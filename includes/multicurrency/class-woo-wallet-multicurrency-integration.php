@@ -253,6 +253,16 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 		 * Convert a numeric setting (min/max top-up, min transfer) from base
 		 * to active currency for frontend display.
 		 *
+		 * Rounded to wc_get_price_decimals(): these values land directly in
+		 * `min`/`max` attributes on `step="0.01"` number inputs (topup/transfer
+		 * templates, wallet widget). An unrounded float there (e.g.
+		 * 99.999797582626) makes Chrome compute an off-grid step sequence and
+		 * reject otherwise-valid amounts like 100.00.
+		 *
+		 * Rounds in the safe direction: maximums down (a displayed cap never exceeds the
+		 * configured one), minimums up. A non-zero limit never rounds to 0, which the
+		 * validators read as "no limit".
+		 *
 		 * @param mixed $option_value Setting value as stored.
 		 * @return mixed Converted value, or the original if non-numeric / admin context.
 		 */
@@ -260,8 +270,14 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 			if ( is_admin() || ! is_numeric( $option_value ) ) {
 				return $option_value;
 			}
-			$manager = Woo_Wallet_Currency_Manager::instance();
-			return $manager->convert( (float) $option_value, $manager->get_base_currency(), $manager->get_active_currency() );
+			$manager   = Woo_Wallet_Currency_Manager::instance();
+			$converted = $manager->convert( (float) $option_value, $manager->get_base_currency(), $manager->get_active_currency() );
+			$unit      = 10 ** wc_get_price_decimals();
+			// Snap float noise (30.000000000000004) before ceil/floor so exact values stay exact.
+			$scaled  = round( $converted * $unit, 6 );
+			$is_max  = false !== strpos( current_filter(), '_max_' );
+			$rounded = ( $is_max ? floor( $scaled ) : ceil( $scaled ) ) / $unit;
+			return ( $rounded <= 0 && $converted > 0 ) ? 1 / $unit : $rounded;
 		}
 
 		/**

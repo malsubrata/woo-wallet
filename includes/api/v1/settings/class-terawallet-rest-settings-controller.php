@@ -191,7 +191,8 @@ class TeraWallet_REST_Settings_V1_Controller extends TeraWallet_REST_Settings_Co
 		$tax_classes = wc_tax_enabled() ? wc_get_product_tax_class_options() : array();
 
 		return array(
-			'currencySymbol'  => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+			'currencySymbol'  => WOO_Wallet_Helper::get_base_currency_symbol(),
+			'baseCurrency'    => Woo_Wallet_Currency_Manager::instance()->get_base_currency(),
 			'gateways'        => $gateways,
 			'allowedGateways' => $allowed,
 			'orderStatuses'   => $order_statuses,

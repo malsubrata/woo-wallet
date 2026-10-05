@@ -133,7 +133,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				$exporter->set_end_date( sanitize_text_field( wp_unslash( $_POST['end_date'] ) ) );
 			}
 
-			if ( ! empty( $_POST['filename'] ) ) {
+			// The first step mints the filename server-side with a random token instead
+			// of trusting the client-supplied name (previously a JS Date.now() timestamp,
+			// guessable within the export window on hosts where .htaccess is ignored).
+			// Later steps reuse the name the server handed back in the step-1 response.
+			if ( 1 === $step ) {
+				$exporter->set_filename( 'terawallet-export-' . wp_generate_password( 20, false ) );
+			} elseif ( ! empty( $_POST['filename'] ) ) {
 				$exporter->set_filename( sanitize_text_field( wp_unslash( $_POST['filename'] ) ) );
 			}
 			$exporter->write_to_csv();
@@ -148,6 +154,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'step'       => 'done',
 						'percentage' => 100,
 						'url'        => add_query_arg( $query_args, admin_url( 'admin.php?page=terawallet-exporter' ) ),
+						'filename'   => $exporter->get_filename(),
 					)
 				);
 			} else {
@@ -156,6 +163,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 						'step'       => ++$step,
 						'percentage' => $exporter->get_percent_complete(),
 						'columns'    => '',
+						'filename'   => $exporter->get_filename(),
 					)
 				);
 			}
@@ -223,11 +231,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		public function woo_wallet_refund_partial_payment() {
 			global $wpdb;
 
-			if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			check_ajax_referer( 'order-item', 'security' );
+			// Money-moving: manage_woocommerce, not edit_shop_orders (Dokan vendors hold that for every order).
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
 				wp_die( -1 );
 			}
 			$response = array( 'success' => false );
-			$order_id = absint( filter_input( INPUT_POST, 'order_id' ) );
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 			if ( ! $order_id ) {
 				wp_send_json( $response );
 			}
@@ -255,6 +265,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					wp_send_json( $response );
 				}
 
+				$reversal = woo_wallet()->wallet->prepare_partial_payment_reversal( $order, $refund_gross, $partial_payment_amount );
+
 				// Claim before credit — first click wins.
 				$order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
 				$order->update_meta_data( '_woo_wallet_partial_refunded_total', $already_refunded + $refund_gross );
@@ -263,9 +275,13 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 
 				$transaction_id = woo_wallet()->wallet->credit(
 					$order->get_customer_id(),
-					$refund_gross,
+					$reversal['amount'],
 					__( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number(),
-					array( 'currency' => $order->get_currency( 'edit' ) )
+					array(
+						'for'      => 'partial_payment_refund',
+						'currency' => $reversal['currency'],
+						'order_id' => $order->get_order_number(),
+					)
 				);
 				if ( $transaction_id ) {
 					$response['success'] = true;
@@ -289,11 +305,12 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 		 * @throws Exception To return errors.
 		 */
 		public function woo_wallet_order_refund() {
-			ob_start();
 			check_ajax_referer( 'order-item', 'security' );
-			if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			// Money-moving: manage_woocommerce, not edit_shop_orders (Dokan vendors hold that for every order).
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
 				wp_die( -1 );
 			}
+			ob_start();
 			$order_id               = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 			$refund_amount          = isset( $_POST['refund_amount'] ) ? wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['refund_amount'] ) ), wc_get_price_decimals() ) : 0;
 			$refunded_amount        = isset( $_POST['refunded_amount'] ) ? wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['refunded_amount'] ) ), wc_get_price_decimals() ) : 0;
@@ -457,7 +474,8 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				wp_send_json_success(
 					array(
 						'user_id'         => $user_id,
-						'current_balance' => woo_wallet()->wallet->get_wallet_balance( $user_id ),
+						// Base currency, like the Users list column: the modal's amount field is base too.
+						'current_balance' => woo_wallet()->wallet->get_wallet_balance( $user_id, 'view', Woo_Wallet_Currency_Manager::instance()->get_base_currency() ),
 					)
 				);
 			}

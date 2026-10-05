@@ -191,7 +191,7 @@ makes every edit, so the diff stays visible to the developer.
   tests into `tests/` and has its own live-environment safety gate. It is not a reviewer;
   invoke it deliberately, after a review has named the coverage gap.
 
-**Reviewing a change.** Run `/review` — it resolves the diff, routes to only the auditors
+**Reviewing a change.** Run `/review-plugin` — it resolves the diff, routes to only the auditors
 the changed files actually need, dispatches them in parallel, dedupes the findings and
 prints a gate verdict. It never edits, commits or merges. Use it on a feature branch while
 the change is still small; `/finish-release` runs the same auditors again at the release

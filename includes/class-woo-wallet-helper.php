@@ -13,6 +13,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WOO_Wallet_Helper {
 	/**
+	 * Store base currency symbol (optionally with the ISO code) for admin amount fields.
+	 *
+	 * Reads the symbol table directly instead of get_woocommerce_currency_symbol(),
+	 * whose filter multi-currency switchers hijack to return the active currency.
+	 *
+	 * @param bool $with_code Append the ISO code, e.g. "₹ INR".
+	 * @return string Plain text (no HTML entities).
+	 */
+	public static function get_base_currency_symbol( bool $with_code = false ): string {
+		if ( class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+			$code = Woo_Wallet_Currency_Manager::instance()->get_base_currency();
+		} else {
+			$code = strtoupper( (string) get_option( 'woocommerce_currency' ) );
+		}
+		$code    = '' !== $code ? $code : 'USD';
+		$symbols = get_woocommerce_currency_symbols();
+		$symbol  = html_entity_decode( $symbols[ $code ] ?? $code, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		return ( $with_code && $symbol !== $code ) ? $symbol . ' ' . $code : $symbol;
+	}
+
+	/**
 	 * Save order meta data.
 	 *
 	 * @param WC_Order|int $order order.

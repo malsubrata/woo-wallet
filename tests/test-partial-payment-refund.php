@@ -166,6 +166,72 @@ class Test_Partial_Payment_Refund extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Cancellation reverses the stored base amount, not the order-currency gross.
+	 */
+	public function test_cancel_uses_stored_base_amount() {
+		woo_wallet()->wallet->credit( $this->user_id, 200, 'seed' );
+		$order = $this->make_order( 100, 0, 100 );
+		$this->debit_order( $order ); // balance 100.
+		$order = wc_get_order( $order->get_id() );
+		// Simulate a cross-currency debit whose base value was 80 (not 100).
+		$order->update_meta_data( '_partial_payment_base_amount', 80 );
+		$order->update_meta_data( '_partial_payment_base_currency', get_woocommerce_currency() );
+		$order->save();
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEquals( 180.0, $this->balance() );
+	}
+
+	/**
+	 * Independently rounded split refunds sum to exactly the base debited.
+	 *
+	 * 10.01 base over three equal thirds rounds to 3.34 each (10.02) without the
+	 * cumulative clamp; the final refund must return the exact remainder 3.33.
+	 */
+	public function test_split_refunds_sum_to_exact_base() {
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'seed' );
+		$order = $this->make_order( 30, 0, 30 );
+		$this->debit_order( $order ); // balance 70.
+		$order = wc_get_order( $order->get_id() );
+		$order->update_meta_data( '_partial_payment_base_amount', 10.01 );
+		$order->update_meta_data( '_partial_payment_base_currency', get_woocommerce_currency() );
+		$order->save();
+
+		foreach ( array( 10, 10, 10 ) as $amount ) {
+			$refund = wc_create_refund(
+				array(
+					'order_id' => $order->get_id(),
+					'amount'   => $amount,
+				)
+			);
+			woo_wallet()->wallet->process_partial_payment_refund( $order->get_id(), $refund->get_id() );
+		}
+
+		$this->assertEqualsWithDelta( 80.01, $this->balance(), 0.0001 );
+		$this->assertEqualsWithDelta( 10.01, (float) wc_get_order( $order->get_id() )->get_meta( '_woo_wallet_partial_refunded_base_total' ), 0.0001 );
+	}
+
+	/**
+	 * A pre-1.7.1 partial refund (no base counter) is not returned again on cancel.
+	 */
+	public function test_cancel_after_legacy_partial_refund_returns_base_remainder() {
+		woo_wallet()->wallet->credit( $this->user_id, 200, 'seed' );
+		$order = $this->make_order( 100, 0, 100 );
+		$this->debit_order( $order ); // balance 100.
+		$order = wc_get_order( $order->get_id() );
+		$order->update_meta_data( '_partial_payment_base_amount', 80 );
+		$order->update_meta_data( '_partial_payment_base_currency', get_woocommerce_currency() );
+		$order->update_meta_data( '_woo_wallet_partial_refunded_total', 25 ); // refunded under 1.7.0.
+		$order->delete_meta_data( '_woo_wallet_partial_refunded_base_total' );
+		$order->save();
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEquals( 160.0, $this->balance() ); // 100 + 80 * 75/100.
+	}
+
+	/**
 	 * Spam-cancel / double cancel credits the wallet debit only once.
 	 */
 	public function test_cancel_is_idempotent() {

@@ -22,6 +22,7 @@ function ToastItem( { toast, onDismiss } ) {
 
 	return (
 		<div
+			role={ isSuccess ? 'status' : 'alert' }
 			style={ {
 				display: 'flex',
 				alignItems: 'center',
@@ -34,14 +35,16 @@ function ToastItem( { toast, onDismiss } ) {
 				fontSize: 13,
 				fontWeight: 500,
 				minWidth: 280,
-				maxWidth: 420,
+				// Long messages (e.g. settings validation errors) wrap inside the
+				// toast; never wider than the viewport minus a 16px gutter.
+				maxWidth: 'min(420px, calc(100vw - 32px))',
+				boxSizing: 'border-box',
 				cursor: 'pointer',
 				opacity: visible ? 1 : 0,
 				transform: visible ? 'translateY(0)' : 'translateY(24px)',
 				transition:
 					'opacity 0.32s ease, transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
 				userSelect: 'none',
-				whiteSpace: 'nowrap',
 			} }
 			onClick={ onDismiss }
 		>
@@ -81,8 +84,11 @@ export default function ToastStack( { toasts, onDismiss } ) {
 			style={ {
 				position: 'fixed',
 				bottom: 32,
-				left: '50%',
-				transform: 'translateX(-50%)',
+				// Full-width rail (clicks pass through) so a toast can use the
+				// whole viewport on phones instead of half of it.
+				left: 0,
+				right: 0,
+				padding: '0 16px',
 				zIndex: 99999,
 				display: 'flex',
 				flexDirection: 'column',

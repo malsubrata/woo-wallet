@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<label for="woo-wallet-bulk-amount">
 								<?php
 								/* translators: %s: WooCommerce currency symbol */
-								echo esc_html( sprintf( __( 'Amount (%s)', 'woo-wallet' ), get_woocommerce_currency_symbol() ) );
+								echo esc_html( sprintf( __( 'Amount (%s)', 'woo-wallet' ), WOO_Wallet_Helper::get_base_currency_symbol( true ) ) );
 								?>
 							</label>
 							<input type="number" step="0.01" min="0" id="woo-wallet-bulk-amount" name="woo_wallet_bulk_amount" required />

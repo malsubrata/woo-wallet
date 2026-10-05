@@ -145,6 +145,13 @@ class TeraWallet_REST_Settings_Section_Controller extends TeraWallet_REST_Settin
 			}
 		}
 
+		if ( '_wallet_settings_general' === $section_id ) {
+			$invalid = $this->validate_general_amounts( $sanitized, $field_map );
+			if ( is_wp_error( $invalid ) ) {
+				return $invalid;
+			}
+		}
+
 		update_option( $section_id, $sanitized );
 
 		if ( $is_actions_section ) {
@@ -163,6 +170,87 @@ class TeraWallet_REST_Settings_Section_Controller extends TeraWallet_REST_Settin
 				'section_id' => $section_id,
 				'values'     => $response_values,
 			)
+		);
+	}
+
+	/**
+	 * Reject General-section amounts that are impossible at runtime: negative
+	 * amounts, min above max, and percentage charges above 100. Groups that
+	 * are switched off are skipped — their fields are hidden, so an old value
+	 * there must not block saving the rest of the page.
+	 *
+	 * @param array $values    Sanitized section values.
+	 * @param array $field_map Field definitions keyed by name (for labels).
+	 * @return true|WP_Error
+	 */
+	private function validate_general_amounts( array $values, array $field_map ) {
+		$on     = function ( $key ) use ( $values ) {
+			return isset( $values[ $key ] ) && 'on' === $values[ $key ];
+		};
+		$amount = function ( $key ) use ( $values ) {
+			return isset( $values[ $key ] ) && '' !== $values[ $key ] && is_numeric( $values[ $key ] ) ? (float) $values[ $key ] : null;
+		};
+		$label  = function ( $key ) use ( $field_map ) {
+			$text = wp_strip_all_tags( $field_map[ $key ]['label'] ?? $key );
+			// Gateway charge fields are labelled with the bare gateway title.
+			/* translators: %s: payment gateway title. */
+			return 0 === strpos( $key, 'charge_amount_' ) ? sprintf( __( 'Gateway charge for %s', 'woo-wallet' ), $text ) : $text;
+		};
+
+		$limits  = array(); // [ min key, max key ].
+		$charges = array(); // [ charge key, charge-type key ].
+		if ( $on( 'is_enable_wallet_topup' ) ) {
+			$limits[] = array( 'min_topup_amount', 'max_topup_amount' );
+			if ( $on( 'is_enable_gateway_charge' ) ) {
+				foreach ( array_keys( $values ) as $key ) {
+					if ( 0 === strpos( $key, 'charge_amount_' ) ) {
+						$charges[] = array( $key, 'gateway_charge_type' );
+					}
+				}
+			}
+		}
+		if ( $on( 'is_enable_wallet_transfer' ) ) {
+			$limits[]  = array( 'min_transfer_amount', 'max_transfer_amount' );
+			$charges[] = array( 'transfer_charge_amount', 'transfer_charge_type' );
+		}
+
+		$errors = array();
+		foreach ( $limits as list( $min_key, $max_key ) ) {
+			$min = $amount( $min_key );
+			$max = $amount( $max_key );
+			foreach ( array( $min_key => $min, $max_key => $max ) as $key => $value ) {
+				if ( null !== $value && $value < 0 ) {
+					/* translators: %s: field label. */
+					$errors[] = sprintf( __( '%s cannot be negative.', 'woo-wallet' ), $label( $key ) );
+				}
+			}
+			// A blank or zero maximum means "no limit" at runtime.
+			if ( null !== $min && null !== $max && $max > 0 && $min > $max ) {
+				/* translators: 1: minimum field label, 2: maximum field label. */
+				$errors[] = sprintf( __( '%1$s cannot be more than %2$s.', 'woo-wallet' ), $label( $min_key ), $label( $max_key ) );
+			}
+		}
+		foreach ( $charges as list( $charge_key, $type_key ) ) {
+			$charge = $amount( $charge_key );
+			if ( null === $charge ) {
+				continue;
+			}
+			if ( $charge < 0 ) {
+				/* translators: %s: field label. */
+				$errors[] = sprintf( __( '%s cannot be negative.', 'woo-wallet' ), $label( $charge_key ) );
+			} elseif ( $charge > 100 && 'percent' === ( $values[ $type_key ] ?? 'percent' ) ) {
+				/* translators: %s: field label. */
+				$errors[] = sprintf( __( '%s cannot be more than 100 when the charge type is a percentage.', 'woo-wallet' ), $label( $charge_key ) );
+			}
+		}
+
+		if ( empty( $errors ) ) {
+			return true;
+		}
+		return new WP_Error(
+			'woo_wallet_invalid_settings',
+			__( 'Settings not saved.', 'woo-wallet' ) . ' ' . implode( ' ', $errors ),
+			array( 'status' => 400 )
 		);
 	}
 

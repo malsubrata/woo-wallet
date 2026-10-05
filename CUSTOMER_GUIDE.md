@@ -18,7 +18,7 @@ Log in to your account and go to the **My Wallet** tab in your dashboard. Here y
 You can earn extra wallet balance by:
 - Creating a new account.
 - Writing helpful reviews on products you've purchased.
-- Visiting the site daily.
+- Visiting the site once a day (you'll see a short message when you're rewarded).
 - Referring friends who make a purchase.
 - Earning cashback on specific orders or items.
 

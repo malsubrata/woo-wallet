@@ -28,7 +28,7 @@
 - **Incentivized Actions**: Reward customers for:
     - New Account Registration.
     - Product Reviews.
-    - Daily Visits.
+    - Daily Visits (once per calendar day in the store timezone; optional first-purchase requirement and reward cap; leave Amount empty to reward nothing).
     - Referrals.
 
 ## 4. Wallet Core Logic (Technical)

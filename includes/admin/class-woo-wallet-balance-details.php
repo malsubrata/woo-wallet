@@ -489,7 +489,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $credit_ids ) {
 					foreach ( $credit_ids as $id ) {
-						woo_wallet()->wallet->credit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
+						woo_wallet()->wallet->credit( $id, $amount, $description, array( 'category' => 'adjustment', 'currency' => $this->resolve_base_currency() ) );
 					}
 				}
 				header( 'Refresh: 0' );
@@ -501,7 +501,7 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 				$description = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
 				if ( $amount && $debit_ids ) {
 					foreach ( $debit_ids as $id ) {
-						woo_wallet()->wallet->debit( $id, $amount, $description, array( 'category' => 'adjustment' ) );
+						woo_wallet()->wallet->debit( $id, $amount, $description, array( 'category' => 'adjustment', 'currency' => $this->resolve_base_currency() ) );
 					}
 				}
 				header( 'Refresh: 0' );
@@ -570,6 +570,24 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 		wp_enqueue_script( 'wc-backbone-modal' );
 		?>
 		<style>
+			/* Destructive confirm in the Delete logs modal (WP core's delete red). */
+			.wc-backbone-modal .button.woo-wallet-button-destructive {
+				background: #b32d2e;
+				border-color: #b32d2e;
+				color: #fff;
+			}
+			.wc-backbone-modal .button.woo-wallet-button-destructive:hover {
+				background: #8a2424;
+				border-color: #8a2424;
+				color: #fff;
+			}
+			.wc-backbone-modal .button.woo-wallet-button-destructive:focus {
+				background: #8a2424;
+				border-color: #8a2424;
+				color: #fff;
+				box-shadow: 0 0 0 1px #fff, 0 0 0 3px #b32d2e;
+				outline: 2px solid transparent;
+			}
 			/*
 				* WP core hides .bulkactions and .tablenav .actions below 783px
 				* (common.css). The Wallet > Users screen has no per-row inline
@@ -629,8 +647,18 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 						if ($(this).data('wooWalletDeleteConfirmed')) {
 							return true;
 						}
+						var selected = $listForm.find('input[name="users[]"]:checked').length;
+						if (!selected) {
+							return true; // Let WP's native "no items selected" handling run.
+						}
 						e.preventDefault();
 						$(this).WCBackboneModal({ template: 'woo-wallet-modal-delete-log' });
+						$('.woo-wallet-delete-log-count').text(
+							(1 === selected
+								? '<?php echo esc_js( __( 'This will affect 1 user.', 'woo-wallet' ) ); ?>'
+								: '<?php /* translators: %d: number of selected users (always 2 or more). */ echo esc_js( __( 'This will affect %d users.', 'woo-wallet' ) ); ?>'
+							).replace('%d', selected)
+						);
 						return false;
 					}
 					if ('credit' === action || 'debit' === action) {
@@ -657,6 +685,10 @@ class Woo_Wallet_Balance_Details extends WP_List_Table {
 						return false;
 					}
 					return true;
+				});
+				// Warn, in words, when the admin picks the option that zeroes balances.
+				$(document).on('change', '.woo-wallet-delete-log input[name="woo_wallet_balance_handling"]', function () {
+					$(this).closest('.wc-backbone-modal').find('.woo-wallet-delete-log-wipe-warning').prop('hidden', 'wipe' !== $(this).val());
 				});
 				$(document).on('click', '#woo-wallet-confirm-delete-log', function (e) {
 					e.preventDefault();

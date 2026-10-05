@@ -50,7 +50,7 @@ in the next step — don't duplicate them here.
 
 Dispatch the read-only auditors **in parallel, in a single message**, with the full diff.
 They have separate remits and do not need each other's output. Route by what the diff
-actually touches — this is the same routing table `/review` uses:
+actually touches — this is the same routing table `/review-plugin` uses:
 
 - **`security-auditor`** — always, on any release diff that touches PHP. REST/AJAX,
   capabilities, nonces, SQL, IDOR, privilege escalation.
