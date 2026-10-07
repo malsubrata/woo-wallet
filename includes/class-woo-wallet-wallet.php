@@ -444,20 +444,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( ! $order || $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
 					return;
 				}
-				// Credit the top-up value the store actually keeps, never the pre-discount
-				// line subtotal. Top-ups go through the normal cart, so an ordinary store
-				// coupon lowers what is collected while leaving the subtotal intact —
-				// crediting the subtotal minted free wallet credit (CVE-2026-16538). The
-				// recharge line's own total is the post-discount, pre-tax figure: the order
-				// total would wrongly include tax and shipping, which are collected but not
-				// kept, and any other line item is merchandise the customer also receives.
-				$collected = 0.0;
-				foreach ( $order->get_items() as $line_item ) {
-					if ( $wallet_product->get_id() !== $line_item->get_product_id() ) {
-						continue;
-					}
-					$collected += (float) $line_item->get_total();
-				}
+				// Credit the amount the customer typed. Coupons are refused on top-ups
+				// unless the store opts in (allow_coupons_on_topup) — the guard against
+				// coupon-minted credit (CVE-2026-16538) — and an opted-in store accepts
+				// the discount as free credit. Orders from before 1.7.2 keep their
+				// original post-discount, pre-tax rule; see the helper.
+				$collected       = WOO_Wallet_Helper::get_topup_credit_amount( $order, $wallet_product->get_id() );
 				$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $collected, $order_id );
 				if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_gateway_charge', '_wallet_settings_general', 'off' ) ) {
 					$charge_amount = woo_wallet()->settings_api->get_option( 'charge_amount_' . $order->get_payment_method(), '_wallet_settings_general', 0 );

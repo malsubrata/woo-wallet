@@ -46,6 +46,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_filter( 'woocommerce_is_purchasable', array( $this, 'make_woo_wallet_recharge_product_purchasable' ), 10, 2 );
 			add_action( 'wp_loaded', array( $this, 'woo_wallet_frontend_loaded' ), 20 );
 			add_action( 'woocommerce_before_calculate_totals', array( $this, 'woo_wallet_set_recharge_product_price' ) );
+			add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'mark_topup_order_line_item' ), 10, 3 );
+			add_filter( 'woocommerce_coupon_is_valid', array( $this, 'restrict_coupon_on_topup' ), 10, 3 );
 			add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'restrict_other_from_add_to_cart' ), 20 );
 			add_action( 'wp_enqueue_scripts', array( &$this, 'woo_wallet_styles' ), 20 );
 			add_filter( 'woocommerce_available_payment_gateways', array( $this, 'woocommerce_available_payment_gateways' ), 30 );
@@ -612,9 +614,55 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			}
 			foreach ( $cart->cart_contents as $key => $value ) {
 				if ( isset( $value['recharge_amount'] ) && $value['recharge_amount'] && $product->get_id() == $value['product_id'] ) {
-					$value['data']->set_price( $value['recharge_amount'] );
+					$price = (float) $value['recharge_amount'];
+					if ( ! wc_prices_include_tax() ) {
+						// The typed amount is tax-inclusive. Prices here are entered
+						// excluding tax, so back the tax out — the customer then pays
+						// exactly the typed amount.
+						$price = WOO_Wallet_Helper::get_topup_net_price( $price, $value['data'], WC_Tax::get_rates( $value['data']->get_tax_class(), WC()->customer ) );
+					}
+					$value['data']->set_price( $price );
 				}
 			}
+		}
+
+		/**
+		 * Mark a checkout top-up line so it credits the typed amount. Fires for
+		 * classic and block (Store API) checkout alike.
+		 *
+		 * @param WC_Order_Item_Product $item          Order line item.
+		 * @param string                $cart_item_key Cart item key.
+		 * @param array                 $values        Cart item data.
+		 */
+		public function mark_topup_order_line_item( $item, $cart_item_key, $values ) {
+			if ( ! empty( $values['recharge_amount'] ) ) {
+				$item->add_meta_data( WOO_Wallet_Helper::TOPUP_GROSS_META, 'yes', true );
+			}
+		}
+
+		/**
+		 * Refuse coupons on a wallet top-up unless the store allows them.
+		 *
+		 * @param bool         $valid     Whether the coupon is valid so far.
+		 * @param WC_Coupon    $coupon    Coupon.
+		 * @param WC_Discounts $discounts Discounts object holding the cart/order items.
+		 * @return bool
+		 * @throws Exception Shown to the customer as the coupon error.
+		 */
+		public function restrict_coupon_on_topup( $valid, $coupon, $discounts ) {
+			if ( ! $valid || 'on' === woo_wallet()->settings_api->get_option( 'allow_coupons_on_topup', '_wallet_settings_general', 'off' ) ) {
+				return $valid;
+			}
+			$product = get_wallet_rechargeable_product();
+			if ( ! $product ) {
+				return $valid;
+			}
+			foreach ( $discounts->get_items() as $item ) {
+				if ( isset( $item->product ) && $item->product instanceof WC_Product && $product->get_id() === $item->product->get_id() ) {
+					throw new Exception( esc_html__( 'Coupons cannot be used on a wallet top-up.', 'woo-wallet' ) );
+				}
+			}
+			return $valid;
 		}
 
 		/**

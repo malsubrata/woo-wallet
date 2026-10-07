@@ -99,12 +99,18 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				$order->set_currency( $currency );
 			}
 
+			// Order line totals are always stored excluding tax and tax is added on
+			// top, so back the tax out of the typed (tax-inclusive) amount — the
+			// customer then pays exactly what they typed. The order carries no
+			// address, so WooCommerce taxes it at the store base location.
+			$net_amount = WOO_Wallet_Helper::get_topup_net_price( $rechargeable_amount, $product, WC_Tax::get_base_tax_rates( $product->get_tax_class() ) );
+
 			$item_id = $order->add_product(
 				$product,
 				1,
 				array(
-					'subtotal' => $rechargeable_amount,
-					'total'    => $rechargeable_amount,
+					'subtotal' => $net_amount,
+					'total'    => $net_amount,
 				)
 			);
 			if ( ! $item_id ) {
@@ -112,6 +118,7 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				return self::fail( 'rest_order_add_product_failed', __( 'Could not attach top-up amount to the order.', 'woo-wallet' ), 500 );
 			}
 			wc_update_order_item_meta( $item_id, 'recharge_amount', $rechargeable_amount );
+			wc_update_order_item_meta( $item_id, WOO_Wallet_Helper::TOPUP_GROSS_META, 'yes' );
 
 			// Copy billing details from the customer's profile so payment gateways
 			// have the identity fields they require.
