@@ -98,6 +98,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'woo_wallet_admin_page_header', array( $this, 'show_promotions' ) );
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
 			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
+			add_action( 'admin_notices', array( $this, 'show_topup_product_notice' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
 			// Redirect old ?page=woo-wallet-actions bookmarks to the unified settings page.
 			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
@@ -1513,6 +1514,19 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			wp_send_json_success();
+		}
+		/**
+		 * Warn admins on the top-up product's edit screen. Shown here rather than
+		 * in the product description, which customers see at checkout.
+		 *
+		 * @since 1.7.2
+		 */
+		public function show_topup_product_notice() {
+			$screen = get_current_screen();
+			if ( ! $screen || 'product' !== $screen->id || empty( $_GET['post'] ) || absint( $_GET['post'] ) !== (int) get_option( '_woo_wallet_recharge_product' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				return;
+			}
+			echo '<div class="notice notice-warning"><p>' . esc_html__( 'TeraWallet uses this product for wallet top-ups. Please do not delete or edit it.', 'woo-wallet' ) . '</p></div>';
 		}
 		/**
 		 * Render any errors stashed by the Delete Logs bulk action on the

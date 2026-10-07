@@ -437,3 +437,23 @@ function woo_wallet_update_172_referral_paid_order_default() {
 		}
 	}
 }
+
+/**
+ * 1.7.2: remove the admin-only "do not delete" text from the top-up product's
+ * description — block cart/checkout showed it to customers. Only the original
+ * auto-generated text is cleared; a description the store wrote is kept.
+ *
+ * @return void
+ */
+function woo_wallet_update_172_clear_topup_product_description() {
+	$product_id = (int) get_option( '_woo_wallet_recharge_product' );
+	$post       = $product_id ? get_post( $product_id ) : null;
+	if ( $post && 'Auto generated product for wallet recharge please do not delete or update.' === trim( $post->post_content ) ) {
+		wp_update_post(
+			array(
+				'ID'           => $product_id,
+				'post_content' => '',
+			)
+		);
+	}
+}
