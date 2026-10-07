@@ -82,6 +82,18 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Format an amount for an order note in the ORDER's currency — not the
+	 * currency of whoever triggers the note (admin cookie, cron, webhook).
+	 *
+	 * @param float    $amount Amount in the order currency.
+	 * @param WC_Order $order  Order.
+	 * @return string
+	 */
+	public static function order_note_price( $amount, $order ): string {
+		return wc_price( $amount, woo_wallet_wc_price_args( $order->get_customer_id(), array( 'currency' => $order->get_currency() ) ) );
+	}
+
+	/**
 	 * Save order meta data.
 	 *
 	 * @param WC_Order|int $order order.

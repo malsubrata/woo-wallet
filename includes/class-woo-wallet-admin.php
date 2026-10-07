@@ -1412,7 +1412,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$transaction_id = woo_wallet()->wallet->adjust_cashback( $order, $delta, 'manual_recalculate' );
 			if ( $transaction_id ) {
 				/* translators: 1: formatted amount (positive or negative) */
-				$order->add_order_note( sprintf( __( 'Cashback adjusted by %s via manual recalculation.', 'woo-wallet' ), wc_price( $delta, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
+				$order->add_order_note( sprintf( __( 'Cashback adjusted by %s via manual recalculation.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $delta, $order ) ) );
 			}
 		}
 

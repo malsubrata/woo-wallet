@@ -770,7 +770,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				if ( $transaction_id ) {
 					/* translators: wallet amount */
-					$locked_order->add_order_note( sprintf( __( '%s paid through wallet', 'woo-wallet' ), wc_price( $partial_payment_amount, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+					$locked_order->add_order_note( sprintf( __( '%s paid through wallet', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $partial_payment_amount, $locked_order ) ) );
 					WOO_Wallet_Helper::update_order_meta_data( $locked_order, '_partial_pay_through_wallet_compleate', $transaction_id );
 					// Capture the base-currency amount actually debited so refunds reverse
 					// the exact value without re-converting at a later (drifted) FX rate.
@@ -974,7 +974,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				if ( $transaction_id ) {
 					/* translators: wallet amount */
-					$locked_order->add_order_note( sprintf( __( '%s of the wallet payment refunded to the customer wallet (partial refund).', 'woo-wallet' ), wc_price( $refund_now, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+					$locked_order->add_order_note( sprintf( __( '%s of the wallet payment refunded to the customer wallet (partial refund).', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $refund_now, $locked_order ) ) );
 					$locked_order->save();
 					do_action( 'woo_wallet_partial_payment_refunded', $order_id, $transaction_id, $refund_now );
 				} else {
@@ -1062,7 +1062,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 								);
 								if ( $transaction_id ) {
 									/* translators: wallet amount */
-									$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), wc_price( $refund_gross, woo_wallet_wc_price_args( $locked_order->get_customer_id() ) ) ) );
+									$locked_order->add_order_note( sprintf( __( 'Wallet amount %s has been credited to customer upon cancellation', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $refund_gross, $locked_order ) ) );
 								} else {
 									$locked_order->add_order_note( __( 'Wallet cancellation refund was claimed but the credit failed. Manual review required.', 'woo-wallet' ) );
 								}
@@ -1142,6 +1142,21 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			$moved = false;
 
+			// Note text: "partly reversed" whenever less than the order's whole
+			// cashback is taken back (e.g. a prorated partial refund).
+			$total_cashback = (float) get_total_order_cashback_amount( $order->get_id() );
+			$reversed_note  = function ( $amount ) use ( $order, $total_cashback, $reason ) {
+				if ( $total_cashback - $amount > 0.001 ) {
+					/* translators: 1: amount taken back, 2: order's total cashback */
+					return sprintf( __( 'Cashback partly reversed: %1$s of %2$s.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ), WOO_Wallet_Helper::order_note_price( $total_cashback, $order ) );
+				}
+				return 'refunded' === $reason
+					/* translators: %s: amount taken back */
+					? sprintf( __( 'Cashback %s fully reversed upon refund.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) )
+					/* translators: %s: amount taken back */
+					: sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) );
+			};
+
 			try {
 				// Raw SUM — the only race-free source of truth (see recode_transaction comment at line 661).
 				$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -1167,8 +1182,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
 
 					if ( $debit_result ) {
-						/* translators: 1: formatted amount */
-						$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation (wallet driven negative by setting).', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+						$order->add_order_note(
+							'cancelled' === $reason
+								/* translators: 1: formatted amount */
+								? sprintf( __( 'Cashback %s fully reversed upon cancellation (wallet driven negative by setting).', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $clawback_amount, $order ) )
+								: $reversed_note( $clawback_amount )
+						);
 						$moved = true;
 					}
 				} elseif ( 'full_or_skip' === $strategy ) {
@@ -1186,13 +1205,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							)
 						);
 						if ( $debit_result ) {
-							/* translators: 1: formatted amount */
-							$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+							$order->add_order_note( $reversed_note( $clawback_amount ) );
 							$moved = true;
 						}
 					} else {
 						/* translators: 1: formatted cashback total, 2: formatted available balance */
-						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id ) ) ) );
+						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $clawback_amount, $order ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id, array( 'currency' => get_option( 'woocommerce_currency' ) ) ) ) ) ); // The wallet balance is kept in base currency.
 					}
 				} else {
 					// 'partial' (default): debit whatever is available.
@@ -1221,10 +1239,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					if ( $unreversed > 0.001 ) {
 						WOO_Wallet_Helper::update_order_meta_data( $order, '_cashback_unreversed_amount', $unreversed );
 						/* translators: 1: formatted debit amount, 2: formatted unreversed amount */
-						$order->add_order_note( sprintf( __( 'Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback.', 'woo-wallet' ), wc_price( $moved ? $debit_amount : 0, woo_wallet_wc_price_args( $customer_id ) ), wc_price( $unreversed, woo_wallet_wc_price_args( $customer_id ) ) ) );
+						$order->add_order_note( sprintf( __( 'Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $moved ? $debit_amount : 0, $order ), WOO_Wallet_Helper::order_note_price( $unreversed, $order ) ) );
 					} elseif ( $moved ) {
-						/* translators: 1: formatted amount */
-						$order->add_order_note( sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), wc_price( $clawback_amount, woo_wallet_wc_price_args( $customer_id ) ) ) );
+						$order->add_order_note( $reversed_note( $clawback_amount ) );
 					}
 				}
 			} finally {
