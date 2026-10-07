@@ -203,6 +203,7 @@ templates, or any changed public hook signature or REST response shape →
 `wc-platform-reviewer`. Always dispatch in parallel.
 
 Release workflow: `/start-release` → `/finish-release` → `/build-dist`.
+Per-release working notes live in `spec/<version>/` (git- and dist-ignored). At the start of a session on a release branch, read `spec/<version>/progress.md` first if it exists.
 
 Deterministic checks live in CI (`.github/workflows/ci.yml`), not in the review prompts:
 version agreement across all four locations, no direct writes to `woo_wallet_transactions`

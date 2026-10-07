@@ -31,6 +31,7 @@ wp-tests-config.php
 /.agents/
 /docs/
 /.playwright-mcp/
+/spec/
 .gitignore
 .distignore
 skills-lock.json
