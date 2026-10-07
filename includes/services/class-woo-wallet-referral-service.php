@@ -57,6 +57,9 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 
 			$currency        = self::base_currency();
 			$referred_user_id = get_current_user_id();
+			if ( ! $referred_user_id ) {
+				return self::fail( 'anonymous_visit', __( 'Visit referrals require a logged-in visitor.', 'woo-wallet' ) );
+			}
 
 			// Serialise concurrent visits per referrer so the period-limit
 			// COUNT + insert + credit cannot race. The cookie dedup in the
@@ -74,7 +77,7 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				// DB-level dedup: at most one completed visit credit per
 				// (referrer, referred user) inside the period window. Survives
 				// cookie clearing / private browsing.
-				if ( $referred_user_id && self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ) ) ) {
+				if ( self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ) ) ) {
 					return self::fail( 'already_credited', __( 'A visit referral for this user was already credited in this period.', 'woo-wallet' ) );
 				}
 

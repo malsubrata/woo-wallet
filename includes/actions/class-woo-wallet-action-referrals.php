@@ -67,7 +67,7 @@ class Action_Referrals extends WooWalletAction {
 				array(
 					'title' => __( 'Reward for referred visits', 'woo-wallet' ),
 					'type'  => 'title',
-					'desc'  => __( 'Credit the referrer when someone who used their link visits your store.', 'woo-wallet' ),
+					'desc'  => __( 'Credit the referrer when someone who used their link visits your store.', 'woo-wallet' ) . ' ' . __( 'Paid only when the referred visitor is logged in.', 'woo-wallet' ),
 					'id'    => 'referring_visitors',
 				),
 				'referring_visitors_amount'         => array(
@@ -304,6 +304,9 @@ class Action_Referrals extends WooWalletAction {
 	 * @return void
 	 */
 	public function init_referral_visit() {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
 		$referral_user = $this->get_referral_user();
 		if ( ! $referral_user ) {
 			return;

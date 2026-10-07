@@ -140,11 +140,63 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 		);
 
 		$_COOKIE['woo_wallet_referral'] = (string) $referrer;
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
 
 		$action = new Action_Referrals();
 		$action->init_referral_visit();
 
 		$this->assertRowInBaseCurrency( $this->latest_transaction( $referrer ), 5.0 );
+	}
+
+	/**
+	 * Enable visit rewards with no period limit and point the referral cookie
+	 * at a fresh referrer.
+	 *
+	 * @return int Referrer user id.
+	 */
+	private function set_up_visit_referral() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$this->set_action_settings(
+			array(
+				'referrals__enabled'                           => 'yes',
+				'referrals__referal_link'                      => 'id',
+				'referrals__referring_visitors_amount'         => '0.5',
+				'referrals__referring_visitors_limit_duration' => '0',
+				'referrals__referring_visitors_description'    => 'Visitor referral',
+			)
+		);
+		$_COOKIE['woo_wallet_referral'] = (string) $referrer;
+		return $referrer;
+	}
+
+	/**
+	 * Logged-out requests carrying a referral cookie never credit the referrer.
+	 */
+	public function test_anonymous_visits_credit_nothing() {
+		$referrer = $this->set_up_visit_referral();
+		wp_set_current_user( 0 );
+
+		$action = new Action_Referrals();
+		for ( $i = 0; $i < 5; $i++ ) {
+			$action->init_referral_visit();
+		}
+
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * A logged-in referred visitor credits the referrer once; a repeat visit in
+	 * the same period credits nothing, even without the dedup cookie.
+	 */
+	public function test_logged_in_visit_credits_once_per_period() {
+		$referrer = $this->set_up_visit_referral();
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+
+		$action = new Action_Referrals();
+		$action->init_referral_visit();
+		$action->init_referral_visit();
+
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
 	}
 
 	/**
