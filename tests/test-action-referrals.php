@@ -620,6 +620,42 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 	}
 
 	/**
+	 * F6: a $0 order does not release a deferred referral payout; the first
+	 * order with a real total does, once.
+	 */
+	public function test_zero_total_order_does_not_release_deferred_referral() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$referred = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$this->set_action_settings(
+			array(
+				'referrals__enabled'                     => 'yes',
+				'referrals__referal_link'                => 'id',
+				'referrals__referring_signups_amount'    => '10',
+				'referrals__referral_order_amount'       => 0,
+				'referrals__referral_require_paid_order' => 'yes',
+			)
+		);
+		$_COOKIE['woo_wallet_referral'] = (string) $referrer;
+		$action                         = new Action_Referrals();
+		$action->woo_wallet_referring_signup( $referred );
+
+		$free = wc_create_order( array( 'customer_id' => $referred ) );
+		$free->set_total( 0 );
+		$free->set_status( 'completed' );
+		$free->save();
+		$action->woo_wallet_credit_referring_signup( $free->get_id() );
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+
+		$paid = wc_create_order( array( 'customer_id' => $referred ) );
+		$paid->set_total( 25 );
+		$paid->set_status( 'completed' );
+		$paid->save();
+		$action->woo_wallet_credit_referring_signup( $paid->get_id() );
+		$action->woo_wallet_credit_referring_signup( $paid->get_id() );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
+	}
+
+	/**
 	 * F6: the 1.7.2 migration keeps existing referral stores paying at
 	 * sign-up, and leaves stores without referral settings on the new default.
 	 */

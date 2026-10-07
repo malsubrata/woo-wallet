@@ -424,7 +424,8 @@ class Action_Referrals extends WooWalletAction {
 			return;
 		}
 		$minimum_spent = isset( $this->settings['referral_order_amount'] ) ? $this->settings['referral_order_amount'] : 0;
-		if ( $order->is_paid() && wc_get_customer_total_spent( $customer_id ) >= $minimum_spent ) {
+		// A $0 order (free product, 100% coupon) is not a paid order.
+		if ( $order->is_paid() && (float) $order->get_total() > 0 && wc_get_customer_total_spent( $customer_id ) >= $minimum_spent ) {
 			$this->credit_referring_signup( $customer_id, $order_id );
 		}
 	}
