@@ -133,6 +133,7 @@ class Test_Referral_Service extends WP_UnitTestCase {
 	 */
 	public function test_record_visit_writes_completed_row() {
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
 		$action   = $this->make_action(
 			array(
 				'referrals__referring_visitors_amount' => '5',
@@ -168,6 +169,7 @@ class Test_Referral_Service extends WP_UnitTestCase {
 		global $wpdb;
 		$suppress = $wpdb->suppress_errors( true );
 		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
 		$action   = $this->make_action(
 			array(
 				'referrals__referring_visitors_amount' => '5',
@@ -189,6 +191,36 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			'No wallet credit may happen when the referral row was not written.'
 		);
 		$wpdb->suppress_errors( $suppress );
+	}
+
+	/**
+	 * record_visit() refuses an anonymous visitor: no referral row, no credit.
+	 */
+	public function test_record_visit_refuses_anonymous_visitor() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount' => '5',
+				'referrals__referring_visitors_limit_duration' => '0',
+				'referrals__referring_visitors_description' => 'Visit',
+			)
+		);
+		wp_set_current_user( 0 );
+
+		$result = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+
+		$this->assertFalse( $result['is_valid'] );
+		$this->assertSame( 'anonymous_visit', $result['code'] );
+		$this->assertSame(
+			0,
+			get_wallet_referrals_count(
+				array(
+					'referrer_id' => $referrer,
+					'type'        => 'visit',
+				)
+			)
+		);
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
 	}
 
 	/**
@@ -274,7 +306,9 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			)
 		);
 
-		$first  = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		$first = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
 		$second = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
 
 		$this->assertTrue( $first['is_valid'] );
@@ -329,9 +363,11 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			)
 		);
 
-		WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
-		WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
-		WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		// Three distinct logged-in visitors: one visit reward each.
+		for ( $i = 0; $i < 3; $i++ ) {
+			wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+			WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		}
 
 		$this->assertSame(
 			3,

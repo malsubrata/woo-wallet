@@ -45,7 +45,7 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 		 * @param int    $from_user_id Sender (must equal current user from caller's perspective).
 		 * @param int    $to_user_id   Recipient.
 		 * @param float  $amount       Transfer amount (gross, before charge).
-		 * @param string $note         Optional credit-side note. Empty → default sender-email note.
+		 * @param string $note         Optional note, shown to both sides after the other party's name.
 		 * @param string $currency     Optional ISO 4217 code. In per_currency mode this scopes
 		 *                             both the balance check and the resulting ledger rows. In
 		 *                             single_base mode it is forwarded to recode_transaction()
@@ -107,10 +107,21 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 
 			$current_user_obj = get_userdata( $from_user_id );
 
-			/* translators: %s: sender email */
-			$credit_note = '' !== $note ? $note : sprintf( __( 'Wallet funds received from %s', 'woo-wallet' ), $current_user_obj->user_email );
-			/* translators: %s: recipient email */
-			$debit_note  = sprintf( __( 'Wallet funds transfer to %s', 'woo-wallet' ), $whom->user_email );
+			// Both sides see who the money came from / went to, and the note.
+			// Names only — never a username or a full email address.
+			$sender_name    = WOO_Wallet_Helper::get_transfer_party_name( $current_user_obj );
+			$recipient_name = WOO_Wallet_Helper::get_transfer_party_name( $whom );
+			if ( '' !== $note ) {
+				/* translators: 1: sender name, 2: transfer note */
+				$credit_note = sprintf( __( 'From %1$s: %2$s', 'woo-wallet' ), $sender_name, $note );
+				/* translators: 1: recipient name, 2: transfer note */
+				$debit_note = sprintf( __( 'To %1$s: %2$s', 'woo-wallet' ), $recipient_name, $note );
+			} else {
+				/* translators: %s: sender name */
+				$credit_note = sprintf( __( 'Wallet funds received from %s', 'woo-wallet' ), $sender_name );
+				/* translators: %s: recipient name */
+				$debit_note = sprintf( __( 'Wallet funds transfer to %s', 'woo-wallet' ), $recipient_name );
+			}
 			$credit_note = apply_filters( 'woo_wallet_transfer_credit_transaction_note', $credit_note, $whom, $amount );
 			$debit_note  = apply_filters( 'woo_wallet_transfer_debit_transaction_note', $debit_note, $whom, $amount );
 

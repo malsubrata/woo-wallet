@@ -2499,11 +2499,15 @@ if ( ! function_exists( 'woo_wallet_get_dashboard_stat_cards' ) ) {
 		$balance = woo_wallet_get_balance_by_currency( $user_id );
 		$base    = isset( $balance['base_currency'] ) ? $balance['base_currency'] : '';
 
+		// Totals are summed in base; show them like the balance card — converted
+		// to and formatted in the visitor's active currency.
+		$active     = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance()->get_active_currency() : strtoupper( (string) get_woocommerce_currency() );
 		$price_args = function_exists( 'woo_wallet_wc_price_args' )
-			? woo_wallet_wc_price_args( $user_id, array( 'currency' => $base ) )
-			: array( 'currency' => $base );
+			? woo_wallet_wc_price_args( $user_id, array( 'currency' => $active ) )
+			: array( 'currency' => $active );
 
-		$fmt = function ( $amount ) use ( $price_args ) {
+		$fmt = function ( $amount ) use ( $price_args, $base, $user_id ) {
+			$amount = (float) apply_filters( 'woo_wallet_amount', $amount, $base, $user_id );
 			return function_exists( 'wc_price' ) ? wc_price( $amount, $price_args ) : (string) $amount;
 		};
 

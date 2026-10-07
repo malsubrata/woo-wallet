@@ -148,4 +148,30 @@ class Test_Dashboard_Stats extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '<script', $dirty );
 		$this->assertStringContainsString( '<path', $dirty );
 	}
+
+	/**
+	 * F7: money cards are converted and formatted like the balance — in the
+	 * visitor's active currency, not the base currency.
+	 */
+	public function test_cards_use_active_currency() {
+		update_option( 'woocommerce_currency', 'GBP' );
+		woo_wallet()->wallet->credit( $this->user_id, 112.50, 'Top-up', array( 'category' => 'topup', 'currency' => 'GBP' ) );
+
+		$active = function () {
+			return 'INR';
+		};
+		$rate   = function ( $amount, $from ) {
+			return 'GBP' === $from ? $amount * 100 : $amount;
+		};
+		add_filter( 'woocommerce_currency', $active );
+		add_filter( 'woo_wallet_amount', $rate, 10, 2 );
+		$cards = woo_wallet_get_dashboard_stat_cards( $this->user_id );
+		remove_filter( 'woocommerce_currency', $active );
+		remove_filter( 'woo_wallet_amount', $rate, 10 );
+
+		$topup = html_entity_decode( wp_strip_all_tags( $cards['topup']['value'] ), ENT_QUOTES, 'UTF-8' );
+		$this->assertStringContainsString( '₹', $topup );
+		$this->assertStringContainsString( '11,250.00', $topup );
+		$this->assertStringNotContainsString( '£', $topup );
+	}
 }

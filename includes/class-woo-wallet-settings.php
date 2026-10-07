@@ -215,7 +215,7 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 
 			foreach ( $this->get_wc_tax_options() as $tax_field ) {
 				$tax_field['group']   = 'wallet_topup';
-				$tax_field['show_if'] = $topup_show_if;
+				$tax_field['show_if'] = isset( $tax_field['show_if'] ) ? array( $topup_show_if, $tax_field['show_if'] ) : $topup_show_if;
 				$topup_fields[]       = $tax_field;
 			}
 
@@ -255,6 +255,15 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 						'multiple' => true,
 						'group'    => 'wallet_topup',
 						'show_if'  => $topup_show_if,
+					),
+					array(
+						'name'    => 'allow_coupons_on_topup',
+						'label'   => __( 'Allow coupons on wallet top-up', 'woo-wallet' ),
+						'desc'    => __( 'Off: store coupons are refused when the cart holds a wallet top-up. On: coupons work on top-ups, but the customer is still credited the full amount they entered, so the discount becomes free wallet credit.', 'woo-wallet' ),
+						'type'    => 'checkbox',
+						'default' => 'off',
+						'group'   => 'wallet_topup',
+						'show_if' => $topup_show_if,
 					),
 					array(
 						'name'    => 'is_enable_gateway_charge',
@@ -728,6 +737,9 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			if ( isset( $field['options'] ) ) {
 				$result['options'] = $field['options'];
 			}
+			if ( isset( $field['html'] ) ) {
+				$result['html'] = $field['html'];
+			}
 			if ( isset( $field['placeholder'] ) ) {
 				$result['placeholder'] = $field['placeholder'];
 			}
@@ -910,6 +922,16 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					'desc'    => __( 'Choose a tax class for rechargeable product.', 'woo-wallet' ),
 					'size'    => 'regular-text wc-enhanced-select',
 					'half'    => true,
+				);
+				$tax_options[] = array(
+					'name'    => 'topup_taxable_notice',
+					'label'   => '',
+					'type'    => 'html',
+					'html'    => '<strong>' . esc_html__( 'Top-ups are taxed.', 'woo-wallet' ) . '</strong> ' . esc_html__( 'The amount a customer enters already includes tax: they pay exactly that amount and their wallet is credited that amount, but part of the payment is recorded as tax on the top-up order. Products later bought with wallet balance are taxed again at checkout. Set the status to "None" if your store should not charge tax when money is added to a wallet.', 'woo-wallet' ),
+					'show_if' => array(
+						'field'  => '_tax_status',
+						'equals' => 'taxable',
+					),
 				);
 			}
 			return $tax_options;

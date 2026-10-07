@@ -98,6 +98,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'woo_wallet_admin_page_header', array( $this, 'show_promotions' ) );
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
 			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
+			add_action( 'admin_notices', array( $this, 'show_topup_product_notice' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
 			// Redirect old ?page=woo-wallet-actions bookmarks to the unified settings page.
 			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
@@ -248,16 +249,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					if ( ! $order ) {
 						continue;
 					}
-					// Mirrors the credited figure in Woo_Wallet_Wallet::wallet_credit_purchase():
-					// the recharge line's post-discount, pre-tax total, so the report matches
-					// the ledger.
-					$collected = 0.0;
-					foreach ( $order->get_items() as $line_item ) {
-						if ( $wallet_prod_id !== $line_item->get_product_id() ) {
-							continue;
-						}
-						$collected += (float) $line_item->get_total();
-					}
+					// Same figure Woo_Wallet_Wallet::wallet_credit_purchase() credits, so
+					// the report matches the ledger.
+					$collected       = WOO_Wallet_Helper::get_topup_credit_amount( $order, $wallet_prod_id );
 					$recharge_amount = apply_filters( 'woo_wallet_credit_purchase_amount', $collected, $order_id );
 					$charge_amount   = $order->get_meta( '_wc_wallet_purchase_gateway_charge' );
 					if ( $charge_amount ) {
@@ -1419,7 +1413,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			$transaction_id = woo_wallet()->wallet->adjust_cashback( $order, $delta, 'manual_recalculate' );
 			if ( $transaction_id ) {
 				/* translators: 1: formatted amount (positive or negative) */
-				$order->add_order_note( sprintf( __( 'Cashback adjusted by %s via manual recalculation.', 'woo-wallet' ), wc_price( $delta, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
+				$order->add_order_note( sprintf( __( 'Cashback adjusted by %s via manual recalculation.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $delta, $order ) ) );
 			}
 		}
 
@@ -1520,6 +1514,19 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			wp_send_json_success();
+		}
+		/**
+		 * Warn admins on the top-up product's edit screen. Shown here rather than
+		 * in the product description, which customers see at checkout.
+		 *
+		 * @since 1.7.2
+		 */
+		public function show_topup_product_notice() {
+			$screen = get_current_screen();
+			if ( ! $screen || 'product' !== $screen->id || empty( $_GET['post'] ) || absint( $_GET['post'] ) !== (int) get_option( '_woo_wallet_recharge_product' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				return;
+			}
+			echo '<div class="notice notice-warning"><p>' . esc_html__( 'TeraWallet uses this product for wallet top-ups. Please do not delete or edit it.', 'woo-wallet' ) . '</p></div>';
 		}
 		/**
 		 * Render any errors stashed by the Delete Logs bulk action on the

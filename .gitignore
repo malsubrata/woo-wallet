@@ -20,6 +20,8 @@ skills-lock.json
 # Generated agent/tool output — not project knowledge
 docs/superpowers/
 docs/QA_SETTINGS_EXTENSION.md
+# Per-release working notes (local only)
+/spec/
 
 # PHP / Composer / tests
 /vendor/

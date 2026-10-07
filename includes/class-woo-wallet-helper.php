@@ -13,6 +13,54 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WOO_Wallet_Helper {
 	/**
+	 * Order line-item meta on a top-up line created from 1.7.2 on. Such a line
+	 * credits the amount the customer typed (pre-discount, tax-inclusive); a
+	 * line without it predates 1.7.2 and keeps its original credit rule.
+	 */
+	const TOPUP_GROSS_META = '_woo_wallet_topup_gross';
+
+	/**
+	 * Net (pre-tax) price for a top-up whose typed amount is tax-inclusive, so
+	 * the customer pays exactly the typed amount once tax is added back.
+	 *
+	 * @param float      $gross   Typed, tax-inclusive amount.
+	 * @param WC_Product $product Top-up product.
+	 * @param array      $rates   Tax rates that will apply (WC_Tax::get_rates() shape).
+	 * @return float
+	 */
+	public static function get_topup_net_price( float $gross, WC_Product $product, array $rates ): float {
+		if ( ! wc_tax_enabled() || ! $product->is_taxable() || empty( $rates ) ) {
+			return $gross;
+		}
+		return $gross - array_sum( WC_Tax::calc_tax( $gross, $rates, true ) );
+	}
+
+	/**
+	 * Wallet value a top-up order credits, before any gateway charge.
+	 *
+	 * From 1.7.2 a top-up line credits its pre-discount, tax-inclusive amount —
+	 * the figure the customer typed. Older lines (no TOPUP_GROSS_META) keep the
+	 * pre-1.7.2 rule — post-discount, pre-tax — so orders still pending at
+	 * upgrade credit exactly what they would have.
+	 *
+	 * @param WC_Order $order      Top-up order.
+	 * @param int      $product_id Top-up product id.
+	 * @return float
+	 */
+	public static function get_topup_credit_amount( WC_Order $order, int $product_id ): float {
+		$amount = 0.0;
+		foreach ( $order->get_items() as $item ) {
+			if ( $product_id !== $item->get_product_id() ) {
+				continue;
+			}
+			$amount += $item->get_meta( self::TOPUP_GROSS_META )
+				? (float) $item->get_subtotal() + (float) $item->get_subtotal_tax()
+				: (float) $item->get_total();
+		}
+		return $amount;
+	}
+
+	/**
 	 * Store base currency symbol (optionally with the ISO code) for admin amount fields.
 	 *
 	 * Reads the symbol table directly instead of get_woocommerce_currency_symbol(),
@@ -31,6 +79,38 @@ class WOO_Wallet_Helper {
 		$symbols = get_woocommerce_currency_symbols();
 		$symbol  = html_entity_decode( $symbols[ $code ] ?? $code, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 		return ( $with_code && $symbol !== $code ) ? $symbol . ' ' . $code : $symbol;
+	}
+
+	/**
+	 * Name shown for the other party on a wallet transfer row: first + last
+	 * name, else a display name that is not the username, else a masked email
+	 * (j***@example.com). Never the username or the full email.
+	 *
+	 * @param WP_User $user User.
+	 * @return string
+	 */
+	public static function get_transfer_party_name( WP_User $user ): string {
+		$name = trim( $user->first_name . ' ' . $user->last_name );
+		if ( '' === $name && '' !== $user->display_name && $user->display_name !== $user->user_login && $user->display_name !== $user->user_email ) {
+			$name = $user->display_name;
+		}
+		if ( '' === $name ) {
+			$parts = explode( '@', (string) $user->user_email, 2 );
+			$name  = substr( $parts[0], 0, 1 ) . '***' . ( isset( $parts[1] ) ? '@' . $parts[1] : '' );
+		}
+		return $name;
+	}
+
+	/**
+	 * Format an amount for an order note in the ORDER's currency — not the
+	 * currency of whoever triggers the note (admin cookie, cron, webhook).
+	 *
+	 * @param float    $amount Amount in the order currency.
+	 * @param WC_Order $order  Order.
+	 * @return string
+	 */
+	public static function order_note_price( $amount, $order ): string {
+		return wc_price( $amount, woo_wallet_wc_price_args( $order->get_customer_id(), array( 'currency' => $order->get_currency() ) ) );
 	}
 
 	/**

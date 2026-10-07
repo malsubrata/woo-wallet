@@ -55,6 +55,10 @@ class Woo_Wallet_Install {
 		'1.6.4'  => array(
 			'woo_wallet_update_164_flag_legacy_currency_normalize',
 		),
+		'1.7.2'  => array(
+			'woo_wallet_update_172_referral_paid_order_default',
+			'woo_wallet_update_172_clear_topup_product_description',
+		),
 	);
 	/**
 	 * Plugin install
@@ -196,7 +200,9 @@ class Woo_Wallet_Install {
 			'post_status'  => 'private',
 			'post_type'    => 'product',
 			'post_excerpt' => '',
-			'post_content' => stripslashes( html_entity_decode( 'Auto generated product for wallet recharge please do not delete or update.', ENT_QUOTES, 'UTF-8' ) ),
+			// Left empty: block cart/checkout shows the description to customers.
+			// Admins see the "do not delete" warning as a notice on the edit screen.
+			'post_content' => '',
 			'post_author'  => get_current_user_id(),
 		);
 		$product_id   = wp_insert_post( $product_args );

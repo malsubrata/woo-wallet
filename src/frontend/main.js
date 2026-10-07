@@ -2,7 +2,9 @@
 import '../scss/frontend.scss';
 
 jQuery( function ( $ ) {
+	let lastTerm = '';
 	$( '.woo-wallet-select2' ).selectWoo( {
+		width: '100%',
 		language: {
 			inputTooShort() {
 				if ( wallet_param.search_by_user_email ) {
@@ -11,10 +13,23 @@ jQuery( function ( $ ) {
 				return wallet_param.i18n.inputTooShort;
 			},
 			noResults() {
-				if ( wallet_param.search_by_user_email ) {
-					return wallet_param.i18n.non_valid_email_text;
+				const i18n = wallet_param.i18n;
+				if ( ! wallet_param.search_by_user_email ) {
+					return i18n.no_result || i18n.no_resualt;
 				}
-				return wallet_param.i18n.no_resualt;
+				const term = lastTerm.trim().toLowerCase();
+				if ( ! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( term ) ) {
+					return i18n.non_valid_email_text;
+				}
+				if (
+					term ===
+					String(
+						wallet_param.current_user_email || ''
+					).toLowerCase()
+				) {
+					return i18n.self_transfer;
+				}
+				return i18n.no_customer_email;
 			},
 			searching() {
 				return wallet_param.i18n.searching;
@@ -27,6 +42,7 @@ jQuery( function ( $ ) {
 			type: 'POST',
 			delay: 250,
 			data( term ) {
+				lastTerm = term.term || '';
 				return {
 					action: 'woo-wallet-user-search',
 					security: wallet_param.search_user_nonce,

@@ -46,6 +46,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_filter( 'woocommerce_is_purchasable', array( $this, 'make_woo_wallet_recharge_product_purchasable' ), 10, 2 );
 			add_action( 'wp_loaded', array( $this, 'woo_wallet_frontend_loaded' ), 20 );
 			add_action( 'woocommerce_before_calculate_totals', array( $this, 'woo_wallet_set_recharge_product_price' ) );
+			add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'mark_topup_order_line_item' ), 10, 3 );
+			add_filter( 'woocommerce_coupon_is_valid', array( $this, 'restrict_coupon_on_topup' ), 10, 3 );
 			add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'restrict_other_from_add_to_cart' ), 20 );
 			add_action( 'wp_enqueue_scripts', array( &$this, 'woo_wallet_styles' ), 20 );
 			add_filter( 'woocommerce_available_payment_gateways', array( $this, 'woocommerce_available_payment_gateways' ), 30 );
@@ -167,9 +169,14 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				'ajax_url'             => admin_url( 'admin-ajax.php' ),
 				'search_user_nonce'    => wp_create_nonce( 'search-user' ),
 				'search_by_user_email' => apply_filters( 'woo_wallet_user_search_exact_match', true ),
+				'current_user_email'   => is_user_logged_in() ? wp_get_current_user()->user_email : '',
 				'i18n'                 => array(
 					'non_valid_email_text' => __( 'Please enter a valid email address', 'woo-wallet' ),
+					'no_result'            => __( 'No results found', 'woo-wallet' ),
+					// Misspelt key kept for scripts that still read it.
 					'no_resualt'           => __( 'No results found', 'woo-wallet' ),
+					'no_customer_email'    => __( 'No customer found with this email.', 'woo-wallet' ),
+					'self_transfer'        => __( "You can't send money to yourself.", 'woo-wallet' ),
 					'inputTooShort'        => __( 'Please enter 3 or more characters', 'woo-wallet' ),
 					'searching'            => __( 'Searching…', 'woo-wallet' ),
 				),
@@ -182,7 +189,31 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				wp_enqueue_script( 'selectWoo' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 			}
-			$add_to_cart_variation = "jQuery(function ($) { $(document).on('show_variation', function (event, variation, purchasable) { if(variation.cashback_amount) { $('.on-woo-wallet-cashback').show(); $('.on-woo-wallet-cashback').html(variation.cashback_html); } else { $('.on-woo-wallet-cashback').hide(); } }) });";
+			// Update only the cashback text of the product this variation form
+			// belongs to (not related/upsell products), and restore the
+			// product-level text when the selection is cleared.
+			$add_to_cart_variation = <<<'JS'
+jQuery(function ($) {
+	function cashbackFor(form) {
+		var $box = $(form).closest('.summary');
+		if (!$box.length) { $box = $(form).closest('.product'); }
+		return $box.find('.on-woo-wallet-cashback').not($box.find('.products .on-woo-wallet-cashback'));
+	}
+	$(document).on('show_variation', '.variations_form', function (event, variation) {
+		cashbackFor(this).each(function () {
+			var $el = $(this);
+			if (!$el.data('wwOriginal')) { $el.data('wwOriginal', { html: $el.html(), hidden: 'none' === $el.css('display') }); }
+			if (variation.cashback_amount) { $el.html(variation.cashback_html).show(); } else { $el.hide(); }
+		});
+	});
+	$(document).on('reset_data hide_variation', '.variations_form', function () {
+		cashbackFor(this).each(function () {
+			var original = $(this).data('wwOriginal');
+			if (original) { $(this).html(original.html).toggle(!original.hidden); }
+		});
+	});
+});
+JS;
 			wp_add_inline_script( 'wc-add-to-cart-variation', $add_to_cart_variation );
 		}
 
@@ -612,9 +643,55 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			}
 			foreach ( $cart->cart_contents as $key => $value ) {
 				if ( isset( $value['recharge_amount'] ) && $value['recharge_amount'] && $product->get_id() == $value['product_id'] ) {
-					$value['data']->set_price( $value['recharge_amount'] );
+					$price = (float) $value['recharge_amount'];
+					if ( ! wc_prices_include_tax() ) {
+						// The typed amount is tax-inclusive. Prices here are entered
+						// excluding tax, so back the tax out — the customer then pays
+						// exactly the typed amount.
+						$price = WOO_Wallet_Helper::get_topup_net_price( $price, $value['data'], WC_Tax::get_rates( $value['data']->get_tax_class(), WC()->customer ) );
+					}
+					$value['data']->set_price( $price );
 				}
 			}
+		}
+
+		/**
+		 * Mark a checkout top-up line so it credits the typed amount. Fires for
+		 * classic and block (Store API) checkout alike.
+		 *
+		 * @param WC_Order_Item_Product $item          Order line item.
+		 * @param string                $cart_item_key Cart item key.
+		 * @param array                 $values        Cart item data.
+		 */
+		public function mark_topup_order_line_item( $item, $cart_item_key, $values ) {
+			if ( ! empty( $values['recharge_amount'] ) ) {
+				$item->add_meta_data( WOO_Wallet_Helper::TOPUP_GROSS_META, 'yes', true );
+			}
+		}
+
+		/**
+		 * Refuse coupons on a wallet top-up unless the store allows them.
+		 *
+		 * @param bool         $valid     Whether the coupon is valid so far.
+		 * @param WC_Coupon    $coupon    Coupon.
+		 * @param WC_Discounts $discounts Discounts object holding the cart/order items.
+		 * @return bool
+		 * @throws Exception Shown to the customer as the coupon error.
+		 */
+		public function restrict_coupon_on_topup( $valid, $coupon, $discounts ) {
+			if ( ! $valid || 'on' === woo_wallet()->settings_api->get_option( 'allow_coupons_on_topup', '_wallet_settings_general', 'off' ) ) {
+				return $valid;
+			}
+			$product = get_wallet_rechargeable_product();
+			if ( ! $product ) {
+				return $valid;
+			}
+			foreach ( $discounts->get_items() as $item ) {
+				if ( isset( $item->product ) && $item->product instanceof WC_Product && $product->get_id() === $item->product->get_id() ) {
+					throw new Exception( esc_html__( 'Coupons cannot be used on a wallet top-up.', 'woo-wallet' ) );
+				}
+			}
+			return $valid;
 		}
 
 		/**

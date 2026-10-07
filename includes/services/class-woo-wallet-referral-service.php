@@ -34,6 +34,11 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 	class WooWallet_Referral_Service {
 
 		/**
+		 * Signed cookie listing the accounts that have been logged in on this browser.
+		 */
+		const BROWSER_COOKIE = 'woo_wallet_referral_browser';
+
+		/**
 		 * Record a credited visitor referral.
 		 *
 		 * The 24h per-referrer dedup cookie is checked and set by the action
@@ -57,6 +62,10 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 
 			$currency        = self::base_currency();
 			$referred_user_id = get_current_user_id();
+			if ( ! $referred_user_id ) {
+				return self::fail( 'anonymous_visit', __( 'Visit referrals require a logged-in visitor.', 'woo-wallet' ) );
+			}
+			$self_referral = self::is_self_referral( $referrer_id, $referred_user_id );
 
 			// Serialise concurrent visits per referrer so the period-limit
 			// COUNT + insert + credit cannot race. The cookie dedup in the
@@ -74,8 +83,28 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				// DB-level dedup: at most one completed visit credit per
 				// (referrer, referred user) inside the period window. Survives
 				// cookie clearing / private browsing.
-				if ( $referred_user_id && self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ) ) ) {
+				if ( self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ) ) ) {
 					return self::fail( 'already_credited', __( 'A visit referral for this user was already credited in this period.', 'woo-wallet' ) );
+				}
+
+				// Same browser or IP as the referrer: keep one rejected row per
+				// period as the audit note, never credit.
+				if ( $self_referral ) {
+					if ( ! self::has_visit_in_period( $referrer_id, $referred_user_id, self::period_seconds( $action->settings['referring_visitors_limit_duration'] ), 'rejected' ) ) {
+						self::insert_row(
+							array(
+								'referrer_id'      => $referrer_id,
+								'referred_user_id' => $referred_user_id,
+								'type'             => 'visit',
+								'referral_code'    => (string) $code,
+								'status'           => 'rejected',
+								'amount'           => $amount,
+								'currency'         => $currency,
+								'reject_reason'    => 'self_referral',
+							)
+						);
+					}
+					return self::fail( 'self_referral', __( 'The referrer and the referred visitor share a browser or IP address.', 'woo-wallet' ) );
 				}
 
 				// Write the referral row BEFORE crediting: a referral credit must
@@ -167,13 +196,17 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 					return self::fail( 'already_recorded', __( 'A sign-up referral is already recorded for this user.', 'woo-wallet' ) );
 				}
 
-				$referral_id = self::insert_row(
+				$self_referral = self::is_self_referral( (int) $referrer->ID, $referred_user_id );
+				$referral_id   = self::insert_row(
 					array(
 						'referrer_id'      => (int) $referrer->ID,
 						'referred_user_id' => $referred_user_id,
 						'type'             => 'signup',
 						'referral_code'    => (string) $code,
-						'status'           => 'pending',
+						// A self-referral keeps its attribution row as the audit
+						// note, but rejected so it can never be credited.
+						'status'           => $self_referral ? 'rejected' : 'pending',
+						'reject_reason'    => $self_referral ? 'self_referral' : null,
 						// Store the configured amount so a pending row shows a
 						// meaningful preview; the final value is re-resolved (and
 						// filtered) when the row is credited.
@@ -183,6 +216,9 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				);
 				if ( ! $referral_id ) {
 					return self::fail( 'record_failed', __( 'Could not record the referral.', 'woo-wallet' ) );
+				}
+				if ( $self_referral ) {
+					return self::fail( 'self_referral', __( 'The referrer and the new customer share a browser or IP address.', 'woo-wallet' ) );
 				}
 
 				return array(
@@ -598,22 +634,140 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 		 *
 		 * @param int $referrer_id     Referrer.
 		 * @param int $referred_user_id Referred user (must be > 0).
-		 * @param int $period_seconds  Window length in seconds; 0 → fall back to DAY_IN_SECONDS.
+		 * @param int    $period_seconds  Window length in seconds; 0 → fall back to DAY_IN_SECONDS.
+		 * @param string $status          Row status to look for.
 		 * @return bool
 		 */
-		private static function has_visit_in_period( $referrer_id, $referred_user_id, $period_seconds ) {
+		private static function has_visit_in_period( $referrer_id, $referred_user_id, $period_seconds, $status = 'completed' ) {
 			global $wpdb;
 			$table  = $wpdb->base_prefix . 'woo_wallet_referrals';
 			$window = $period_seconds > 0 ? (int) $period_seconds : DAY_IN_SECONDS;
 			$count  = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND referred_user_id = %d AND type = 'visit' AND status = 'completed' AND date_created >= ( NOW() - INTERVAL %d SECOND )", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is built from $wpdb->base_prefix.
+					"SELECT COUNT(*) FROM {$table} WHERE referrer_id = %d AND referred_user_id = %d AND type = 'visit' AND status = %s AND date_created >= ( NOW() - INTERVAL %d SECOND )", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is built from $wpdb->base_prefix.
 					(int) $referrer_id,
 					(int) $referred_user_id,
+					$status,
 					$window
 				)
 			);
 			return $count > 0;
+		}
+
+		/**
+		 * Remember that a user is logged in on this browser and from this IP.
+		 *
+		 * Adds the user to the signed browser cookie and stores a hash of their
+		 * IP (never the raw address) so a later sign-up or visit from the same
+		 * browser or IP can be recognised as a self-referral.
+		 *
+		 * @param int $user_id Logged-in user.
+		 * @return void
+		 */
+		public static function remember_browser_user( $user_id ) {
+			$user_id = (int) $user_id;
+			if ( ! $user_id ) {
+				return;
+			}
+			$ids = self::get_browser_user_ids();
+			if ( ! in_array( $user_id, $ids, true ) ) {
+				// ponytail: last 10 accounts per browser — enough for a household or a farm attempt.
+				$ids   = array_slice( array_merge( $ids, array( $user_id ) ), -10 );
+				$value = implode( '.', $ids ) . '|' . wp_hash( implode( '.', $ids ) );
+				// Visible to the rest of this request too (e.g. a sign-up right after login).
+				$_COOKIE[ self::BROWSER_COOKIE ] = $value;
+				if ( ! headers_sent() ) {
+					wc_setcookie( self::BROWSER_COOKIE, $value, time() + YEAR_IN_SECONDS );
+				}
+			}
+			$ip_hash = self::get_request_ip_hash();
+			if ( $ip_hash && get_user_meta( $user_id, '_woo_wallet_referral_ip_hash', true ) !== $ip_hash ) {
+				update_user_meta( $user_id, '_woo_wallet_referral_ip_hash', $ip_hash );
+			}
+		}
+
+		/**
+		 * Snapshot this request's browser + IP fingerprint onto a new user, so a
+		 * sign-up processed in a later request is still checked against the
+		 * browser it was made from.
+		 *
+		 * @param int $user_id Newly-registered user.
+		 * @return void
+		 */
+		public static function capture_signup_fingerprint( $user_id ) {
+			update_user_meta(
+				(int) $user_id,
+				'_woo_wallet_referral_signup_fingerprint',
+				array(
+					'browser' => self::get_browser_user_ids(),
+					'ip'      => self::get_request_ip_hash(),
+				)
+			);
+		}
+
+		/**
+		 * Whether a referral is the referrer referring themselves: the referred
+		 * user's browser was used by the referrer, or both share an IP.
+		 *
+		 * Checks the current request and the fingerprint captured at sign-up.
+		 *
+		 * @param int $referrer_id      Referrer.
+		 * @param int $referred_user_id Referred user.
+		 * @return bool
+		 */
+		public static function is_self_referral( $referrer_id, $referred_user_id ) {
+			$referrer_id = (int) $referrer_id;
+			$browser     = self::get_browser_user_ids();
+			$ips         = array( self::get_request_ip_hash() );
+			$stored      = get_user_meta( (int) $referred_user_id, '_woo_wallet_referral_signup_fingerprint', true );
+			if ( is_array( $stored ) ) {
+				$browser = array_merge( $browser, isset( $stored['browser'] ) ? (array) $stored['browser'] : array() );
+				$ips[]   = isset( $stored['ip'] ) ? (string) $stored['ip'] : '';
+			}
+			if ( in_array( $referrer_id, array_map( 'intval', $browser ), true ) ) {
+				return true;
+			}
+			/**
+			 * Filters whether a shared IP address blocks a referral reward.
+			 * Return false where many customers share one IP (offices, mobile networks).
+			 *
+			 * @since 1.7.2
+			 *
+			 * @param bool $check_ip         Whether to compare IP addresses.
+			 * @param int  $referrer_id      Referrer.
+			 * @param int  $referred_user_id Referred user.
+			 */
+			if ( ! apply_filters( 'woo_wallet_referral_check_ip', true, $referrer_id, (int) $referred_user_id ) ) {
+				return false;
+			}
+			$referrer_ip = (string) get_user_meta( $referrer_id, '_woo_wallet_referral_ip_hash', true );
+			return '' !== $referrer_ip && in_array( $referrer_ip, array_filter( $ips ), true );
+		}
+
+		/**
+		 * User ids recorded in this browser's signed cookie.
+		 *
+		 * @return int[]
+		 */
+		private static function get_browser_user_ids() {
+			if ( empty( $_COOKIE[ self::BROWSER_COOKIE ] ) ) {
+				return array();
+			}
+			$parts = explode( '|', sanitize_text_field( wp_unslash( $_COOKIE[ self::BROWSER_COOKIE ] ) ), 2 );
+			if ( 2 !== count( $parts ) || ! hash_equals( wp_hash( $parts[0] ), $parts[1] ) ) {
+				return array();
+			}
+			return array_values( array_filter( array_map( 'intval', explode( '.', $parts[0] ) ) ) );
+		}
+
+		/**
+		 * Salted hash of the request IP, or '' when unknown.
+		 *
+		 * @return string
+		 */
+		private static function get_request_ip_hash() {
+			$ip = class_exists( 'WC_Geolocation' ) ? WC_Geolocation::get_ip_address() : ( isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+			return $ip ? wp_hash( 'woo_wallet_referral_ip|' . $ip ) : '';
 		}
 
 		/**

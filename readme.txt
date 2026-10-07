@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -151,27 +151,23 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.1 (October 5, 2026) =
-* Security - The order "Via wallet" Refund button requires a security token; custom code calling `woo_wallet_refund_partial_payment` must send the `order-item` nonce as `security`.
-* Security - Wallet refunds from the order screen require the "Manage WooCommerce" capability, so marketplace vendors cannot refund orders they don't own.
-* New - Daily visit rewards: optional "paid order required" setting, a per-customer reward cap, and a "You earned ... for visiting today" message.
-* New - Daily visit, registration and product review rewards appear as "Engagement reward" in transactions and the dashboard. Older transactions keep their category.
-* Fix - Wallet Dashboard totals and category breakdown are converted to your base currency on multi-currency stores and update when exchange rates change.
-* Fix - On multi-currency stores, settings, Edit Balance, bulk Credit/Debit, user profile and the Users "Wallet Balance" column use your base currency.
-* Fix - On multi-currency stores, order cashback and the wallet refund button use the order currency, and refunds return the exact amount paid from the wallet.
-* Fix - Single Edit Balance changes are recorded as "Adjustment", and over-balance debits show a clear insufficient-balance error.
-* Fix - Settings reject negative amounts, a minimum above the maximum, and percentage charges above 100 with a clear error.
-* Fix - Delete logs "Keep current balance" keeps each currency's balance in its own currency, all-or-nothing; the dialog is clearer and shows affected users.
-* Fix - Daily visit rewards are paid once per calendar day in your store's timezone, including on the day you update.
-* Fix - Converted minimum/maximum top-up and minimum transfer limits no longer have long decimal tails that browsers reject.
-* Fix - Splitting a refund across several partial refunds no longer returns a cent more or less than was paid from the wallet.
-* Tweak - The daily visit Amount is empty by default on new installs. Existing amounts are unchanged.
-* Tweak - "Allow Minimum cashback" is now "Use lowest category cashback"; clearer reward cap help; settings errors wrap and stay visible longer.
-* Tweak - Locked Pro report cards show neutral placeholders, the Upgrade comparison table fits phones, and the Transactions and Export pages have proper tab titles.
+= v1.7.2 (October 7, 2026) =
+* Security - Visit referral rewards are no longer credited for logged-out visitors, closing an issue where a visitor could credit any user's wallet repeatedly. Props to Andrew Nichols for responsible disclosure.
+* Security - Referral rewards are not paid when the referrer and the new customer use the same browser or IP address. Developers can turn off the IP check with the `woo_wallet_referral_check_ip` filter.
+* New - "Pay after first paid order" referral setting: on for new installs, off for existing stores so they keep paying at sign-up. A notice warns when Minimum Spend is 0.
+* New - "Allow coupons on wallet top-up" setting, off by default: store coupons are refused on top-ups unless you turn it on.
+* Fix - Wallet top-ups credit exactly the amount the customer entered, and the customer pays exactly that amount, including on stores that enter prices excluding tax. Top-up orders placed before the update credit as before.
+* Fix - Product review and sell-content rewards are credited in your base currency, whatever currency the admin approving them is browsing in.
+* Fix - Wallet order notes show the order's currency, and a cashback reversal on a partial refund says "partly reversed: £X of £Y".
+* Fix - The My Wallet summary cards show amounts in the customer's selected currency, like the balance.
+* Fix - Choosing a product variation updates only that product's cashback text, and "Clear" restores it.
+* Fix - The top-up product's "do not delete" note no longer appears at checkout; admins see it as a notice on the product edit screen.
+* Fix - Wallet transfer: the recipient box fits phone screens, an unknown email or your own email gets a clear message, and both sides see the other person's name and the note.
+* Tweak - A settings notice explains what it means when the top-up product is taxable.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.7.1 =
-Wallet Dashboard totals on multi-currency stores are now converted to your base currency, so the number may be lower than before — no balances changed. Security: refund AJAX needs a nonce.
+= 1.7.2 =
+Security release: visit referral rewards now need a logged-in visitor, self-referrals are blocked and top-ups refuse coupons by default. After updating, review Settings > Actions > Referrals and the top-up coupon setting.

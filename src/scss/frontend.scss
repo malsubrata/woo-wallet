@@ -601,6 +601,43 @@ $wallet-border-color: #eee;
 			}
 		}
 
+		// Recipient picker (selectWoo): same box as the inputs, full width.
+		.select2-container {
+			width: 100% !important;
+			max-width: 100%;
+			margin-bottom: 25px;
+
+			.select2-selection--single {
+				display: flex;
+				align-items: center;
+				height: auto;
+				min-height: 44px; // Touch-target size; themes resize the inputs, so no exact match.
+				padding: 0 40px 0 15px;
+				border: 1px solid #e0e0e0;
+				border-radius: 8px;
+				background: #f9f9f9;
+				box-sizing: border-box;
+				font-size: 1rem;
+
+				.select2-selection__rendered {
+					padding: 0;
+					line-height: 1.5;
+				}
+
+				.select2-selection__arrow {
+					top: 0;
+					right: 12px;
+					height: 100%;
+				}
+			}
+
+			&.select2-container--focus .select2-selection--single,
+			&.select2-container--open .select2-selection--single {
+				border-color: var(--wallet-primary-color);
+				background: #fff;
+			}
+		}
+
 		input[type="submit"] {
 			background: var(--wallet-primary-color);
 			color: #fff;

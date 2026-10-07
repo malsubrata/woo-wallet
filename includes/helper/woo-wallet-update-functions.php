@@ -416,3 +416,44 @@ function woo_wallet_update_163_db_schema() {
 function woo_wallet_update_164_flag_legacy_currency_normalize() {
 	update_option( 'woo_wallet_pending_legacy_currency_normalize', 1, false );
 }
+
+/**
+ * 1.7.2: keep "Pay after first paid order" OFF on stores that already use
+ * referrals, so their referrers keep being paid at sign-up as before. New
+ * installs (no saved referral settings) get the field default, ON.
+ *
+ * @return void
+ */
+function woo_wallet_update_172_referral_paid_order_default() {
+	$merged = get_option( '_wallet_settings_actions', array() );
+	if ( ! is_array( $merged ) || array_key_exists( 'referrals__referral_require_paid_order', $merged ) ) {
+		return;
+	}
+	foreach ( array_keys( $merged ) as $key ) {
+		if ( 0 === strpos( (string) $key, 'referrals__' ) ) {
+			$merged['referrals__referral_require_paid_order'] = 'no';
+			update_option( '_wallet_settings_actions', $merged );
+			return;
+		}
+	}
+}
+
+/**
+ * 1.7.2: remove the admin-only "do not delete" text from the top-up product's
+ * description — block cart/checkout showed it to customers. Only the original
+ * auto-generated text is cleared; a description the store wrote is kept.
+ *
+ * @return void
+ */
+function woo_wallet_update_172_clear_topup_product_description() {
+	$product_id = (int) get_option( '_woo_wallet_recharge_product' );
+	$post       = $product_id ? get_post( $product_id ) : null;
+	if ( $post && 'Auto generated product for wallet recharge please do not delete or update.' === trim( $post->post_content ) ) {
+		wp_update_post(
+			array(
+				'ID'           => $product_id,
+				'post_content' => '',
+			)
+		);
+	}
+}

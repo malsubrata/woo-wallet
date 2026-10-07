@@ -286,7 +286,7 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				if ( $transaction_id ) {
 					$response['success'] = true;
 					/* translators: wallet amount */
-					$order->add_order_note( sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), wc_price( $refund_gross, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ) );
+					$order->add_order_note( sprintf( __( '%s refunded to customer wallet', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $refund_gross, $order ) ) );
 					WOO_Wallet_Helper::update_order_meta_data( $order, '_partial_payment_refund_id', $transaction_id );
 					do_action( 'woo_wallet_partial_order_refunded', $order_id, $transaction_id );
 				} else {
