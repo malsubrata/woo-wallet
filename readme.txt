@@ -151,7 +151,7 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.2 (Unreleased) =
+= v1.7.2 (October 7, 2026) =
 * Security - Visit referral rewards are no longer credited for logged-out visitors, closing an issue where a visitor could credit any user's wallet repeatedly. Props to Andrew Nichols for responsible disclosure.
 * Security - Referral rewards are not paid when the referrer and the new customer use the same browser or IP address. Developers can turn off the IP check with the `woo_wallet_referral_check_ip` filter.
 * New - "Pay after first paid order" referral setting: on for new installs, off for existing stores so they keep paying at sign-up. A notice warns when Minimum Spend is 0.
