@@ -416,3 +416,24 @@ function woo_wallet_update_163_db_schema() {
 function woo_wallet_update_164_flag_legacy_currency_normalize() {
 	update_option( 'woo_wallet_pending_legacy_currency_normalize', 1, false );
 }
+
+/**
+ * 1.7.2: keep "Pay after first paid order" OFF on stores that already use
+ * referrals, so their referrers keep being paid at sign-up as before. New
+ * installs (no saved referral settings) get the field default, ON.
+ *
+ * @return void
+ */
+function woo_wallet_update_172_referral_paid_order_default() {
+	$merged = get_option( '_wallet_settings_actions', array() );
+	if ( ! is_array( $merged ) || array_key_exists( 'referrals__referral_require_paid_order', $merged ) ) {
+		return;
+	}
+	foreach ( array_keys( $merged ) as $key ) {
+		if ( 0 === strpos( (string) $key, 'referrals__' ) ) {
+			$merged['referrals__referral_require_paid_order'] = 'no';
+			update_option( '_wallet_settings_actions', $merged );
+			return;
+		}
+	}
+}

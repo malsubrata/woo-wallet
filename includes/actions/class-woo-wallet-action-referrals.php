@@ -122,6 +122,12 @@ class Action_Referrals extends WooWalletAction {
 					'default'     => '10',
 					'desc_tip'    => true,
 				),
+				'referral_require_paid_order'       => array(
+					'title'   => __( 'Pay after first paid order', 'woo-wallet' ),
+					'type'    => 'checkbox',
+					'label'   => __( "Credit the referrer only after the referred customer's first paid order, not at sign-up.", 'woo-wallet' ),
+					'default' => 'yes',
+				),
 				'referral_order_amount'             => array(
 					'title'             => __( 'Minimum Spend', 'woo-wallet' ),
 					'type'              => 'number',
@@ -129,6 +135,15 @@ class Action_Referrals extends WooWalletAction {
 					'default'           => 0,
 					'desc_tip'          => true,
 					'custom_attributes' => array( 'min' => 0 ),
+				),
+				'referral_min_spend_notice'         => array(
+					'title'   => '',
+					'type'    => 'html',
+					'html'    => '<strong>' . esc_html__( 'Minimum spend is 0.', 'woo-wallet' ) . '</strong> ' . esc_html__( 'A referred customer does not have to spend anything before the referrer is rewarded, which makes fake sign-ups easy to cash in. Set a minimum spend, or keep "Pay after first paid order" turned on.', 'woo-wallet' ),
+					'show_if' => array(
+						'field'  => 'referral_order_amount',
+						'equals' => array( '0', '', '0.0', '0.00' ),
+					),
 				),
 				'referring_signups_limit_duration'  => array(
 					'title'       => __( 'Limit period', 'woo-wallet' ),
@@ -174,7 +189,9 @@ class Action_Referrals extends WooWalletAction {
 			add_filter( 'woo_wallet_nav_menu_items', array( $this, 'add_referral_nav_menu' ), 10, 2 );
 			add_action( 'woo_wallet_referrals_content', array( $this, 'woo_wallet_referrals_content' ) );
 			$this->init_referrals();
+			add_action( 'wp', array( $this, 'remember_browser_user' ), 104 );
 			add_action( 'wp', array( $this, 'init_referral_visit' ), 105 );
+			add_action( 'wp_login', array( $this, 'remember_browser_user_on_login' ), 10, 2 );
 			add_action( 'woocommerce_order_status_changed', array( $this, 'woo_wallet_credit_referring_signup' ), 100 );
 		}
 	}
@@ -295,6 +312,30 @@ class Action_Referrals extends WooWalletAction {
 		return apply_filters( 'woo_wallet_referral_user', $user, $this );
 	}
 	/**
+	 * Mark this browser as used by the logged-in customer (self-referral check).
+	 *
+	 * @return void
+	 */
+	public function remember_browser_user() {
+		if ( is_user_logged_in() ) {
+			$this->load_referral_service();
+			WooWallet_Referral_Service::remember_browser_user( get_current_user_id() );
+		}
+	}
+	/**
+	 * Mark this browser as used by a customer who just logged in.
+	 *
+	 * @param string       $user_login Username.
+	 * @param WP_User|null $user       Logged-in user.
+	 * @return void
+	 */
+	public function remember_browser_user_on_login( $user_login, $user = null ) {
+		if ( $user instanceof WP_User ) {
+			$this->load_referral_service();
+			WooWallet_Referral_Service::remember_browser_user( $user->ID );
+		}
+	}
+	/**
 	 * Init referral visitor.
 	 *
 	 * Resolves the referrer and enforces the 24h per-referrer dedup cookie, then
@@ -344,7 +385,8 @@ class Action_Referrals extends WooWalletAction {
 			return;
 		}
 		$minimum_spent = isset( $this->settings['referral_order_amount'] ) ? $this->settings['referral_order_amount'] : 0;
-		if ( ! $minimum_spent ) {
+		// Otherwise the order-status hook credits it once a paid order clears the minimum.
+		if ( ! $minimum_spent && 'yes' !== $this->settings['referral_require_paid_order'] ) {
 			$this->credit_referring_signup( $user_id );
 		}
 	}

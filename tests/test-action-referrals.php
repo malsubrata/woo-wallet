@@ -43,7 +43,9 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 	 */
 	public function tear_down() {
 		remove_filter( 'woocommerce_currency', array( $this, 'force_active_currency' ) );
-		unset( $_COOKIE['woo_wallet_referral'] );
+		unset( $_COOKIE['woo_wallet_referral'], $_COOKIE[ WooWallet_Referral_Service::BROWSER_COOKIE ] );
+		remove_all_filters( 'woo_wallet_referral_check_ip' );
+		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 		parent::tear_down();
 		wp_cache_delete( 'alloptions', 'options' );
 		if ( class_exists( 'WOO_Wallet_Actions' ) ) {
@@ -213,6 +215,7 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 				'referrals__referring_signups_amount'      => '8',
 				'referrals__referring_signups_description' => 'Signup referral',
 				'referrals__referral_order_amount'         => 0,
+				'referrals__referral_require_paid_order' => 'no',
 			)
 		);
 
@@ -239,6 +242,7 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 				'referrals__referring_signups_amount'      => '9',
 				'referrals__referring_signups_description' => 'Signup referral',
 				'referrals__referral_order_amount'         => 0,
+				'referrals__referral_require_paid_order' => 'no',
 			)
 		);
 
@@ -278,6 +282,7 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 				'referrals__referring_signups_amount'         => '4',
 				'referrals__referring_signups_description'    => 'Signup referral',
 				'referrals__referral_order_amount'            => 0,
+				'referrals__referral_require_paid_order' => 'no',
 				'referrals__referring_signups_limit_duration' => 'day',
 				'referrals__referring_signups_limit'          => '1',
 			)
@@ -320,6 +325,7 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 				'referrals__referring_signups_amount'      => '6',
 				'referrals__referring_signups_description' => 'Signup referral',
 				'referrals__referral_order_amount'         => 0,
+				'referrals__referral_require_paid_order' => 'no',
 			)
 		);
 
@@ -449,6 +455,7 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 				'referrals__referring_signups_amount'      => '7',
 				'referrals__referring_signups_description' => 'Signup referral',
 				'referrals__referral_order_amount'         => 0,
+				'referrals__referral_require_paid_order' => 'no',
 			)
 		);
 		// Rebuild the action registry so it reflects the settings above.
@@ -466,5 +473,163 @@ class Test_Action_Referrals extends WP_UnitTestCase {
 		$this->assertRowInBaseCurrency( $this->latest_transaction( $referrer ), 7.0 );
 		// The pending marker is cleared so it is not processed again.
 		$this->assertEmpty( get_user_meta( $customer, '_woo_wallet_signup_pending', true ) );
+	}
+
+	/**
+	 * Settings for an immediately-paid sign-up referral plus visit rewards.
+	 *
+	 * @return int Referrer user id.
+	 */
+	private function set_up_self_referral() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$this->set_action_settings(
+			array(
+				'referrals__enabled'                           => 'yes',
+				'referrals__referal_link'                      => 'id',
+				'referrals__referring_visitors_amount'         => '0.5',
+				'referrals__referring_visitors_limit_duration' => '0',
+				'referrals__referring_signups_amount'          => '10',
+				'referrals__referral_order_amount'             => 0,
+				'referrals__referral_require_paid_order'       => 'no',
+			)
+		);
+		WOO_Wallet_Actions::instance()->init();
+		$_COOKIE['woo_wallet_referral'] = (string) $referrer;
+		return $referrer;
+	}
+
+	/**
+	 * Fetch the referral rows for a referrer.
+	 *
+	 * @param int $referrer Referrer id.
+	 * @return array
+	 */
+	private function referral_rows( $referrer ) {
+		global $wpdb;
+		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->base_prefix}woo_wallet_referrals WHERE referrer_id = %d", $referrer ) );
+	}
+
+	/**
+	 * F6: a sign-up from a browser the referrer was logged in on is not paid,
+	 * and leaves a rejected row saying why.
+	 */
+	public function test_signup_from_referrer_browser_is_rejected() {
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+		$referrer               = $this->set_up_self_referral();
+		WooWallet_Referral_Service::remember_browser_user( $referrer );
+
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.2';
+		$customer               = self::factory()->user->create( array( 'role' => 'customer' ) );
+		( new Action_Referrals() )->woo_wallet_referring_signup( $customer );
+
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+		$rows = $this->referral_rows( $referrer );
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'rejected', $rows[0]->status );
+		$this->assertSame( 'self_referral', $rows[0]->reject_reason );
+	}
+
+	/**
+	 * F6: a sign-up from the referrer's IP is not paid, unless the IP check is
+	 * filtered off.
+	 */
+	public function test_signup_from_referrer_ip_is_rejected_unless_filtered() {
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.9';
+		$referrer               = $this->set_up_self_referral();
+		WooWallet_Referral_Service::remember_browser_user( $referrer );
+		unset( $_COOKIE[ WooWallet_Referral_Service::BROWSER_COOKIE ] ); // Other browser, same IP.
+
+		$action = new Action_Referrals();
+		$action->woo_wallet_referring_signup( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+
+		add_filter( 'woo_wallet_referral_check_ip', '__return_false' );
+		$action->woo_wallet_referring_signup( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * F6: the browser check uses the fingerprint captured at registration, so
+	 * a sign-up processed later from another browser is still caught.
+	 */
+	public function test_signup_fingerprint_captured_at_registration() {
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+		$referrer               = $this->set_up_self_referral();
+		WooWallet_Referral_Service::remember_browser_user( $referrer );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		WooWallet_Referral_Service::capture_signup_fingerprint( $customer );
+
+		unset( $_COOKIE[ WooWallet_Referral_Service::BROWSER_COOKIE ] );
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.2';
+		( new Action_Referrals() )->woo_wallet_referring_signup( $customer );
+
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * F6: a forged browser cookie is ignored.
+	 */
+	public function test_forged_browser_cookie_is_ignored() {
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.2';
+		$referrer               = $this->set_up_self_referral();
+		$_COOKIE[ WooWallet_Referral_Service::BROWSER_COOKIE ] = $referrer . '|not-a-signature';
+
+		$this->assertFalse( WooWallet_Referral_Service::is_self_referral( $referrer, 0 ) );
+	}
+
+	/**
+	 * F6: a logged-in visit from the referrer's browser credits nothing and
+	 * writes one rejected row per period, however often it repeats.
+	 */
+	public function test_visit_from_referrer_browser_is_rejected_once() {
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+		$referrer               = $this->set_up_self_referral();
+		WooWallet_Referral_Service::remember_browser_user( $referrer );
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.2';
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+
+		$action = new Action_Referrals();
+		$action->init_referral_visit();
+		$action->init_referral_visit();
+
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+		$rows = wp_list_filter( $this->referral_rows( $referrer ), array( 'type' => 'visit' ) );
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'self_referral', reset( $rows )->reject_reason );
+	}
+
+	/**
+	 * F6: with "Pay after first paid order" at its default (on), a sign-up is
+	 * recorded pending, not paid at registration.
+	 */
+	public function test_paid_order_default_defers_signup_credit() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$this->set_action_settings(
+			array(
+				'referrals__enabled'                  => 'yes',
+				'referrals__referal_link'             => 'id',
+				'referrals__referring_signups_amount' => '10',
+				'referrals__referral_order_amount'    => 0,
+			)
+		);
+		$_COOKIE['woo_wallet_referral'] = (string) $referrer;
+		( new Action_Referrals() )->woo_wallet_referring_signup( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+		$this->assertSame( 'pending', $this->referral_rows( $referrer )[0]->status );
+	}
+
+	/**
+	 * F6: the 1.7.2 migration keeps existing referral stores paying at
+	 * sign-up, and leaves stores without referral settings on the new default.
+	 */
+	public function test_172_migration_keeps_existing_stores_on_pay_at_signup() {
+		$this->set_action_settings( array( 'referrals__enabled' => 'yes' ) );
+		woo_wallet_update_172_referral_paid_order_default();
+		$this->assertSame( 'no', get_option( '_wallet_settings_actions' )['referrals__referral_require_paid_order'] );
+
+		$this->set_action_settings( array( 'daily_visits__enabled' => 'yes' ) );
+		woo_wallet_update_172_referral_paid_order_default();
+		$this->assertArrayNotHasKey( 'referrals__referral_require_paid_order', get_option( '_wallet_settings_actions' ) );
 	}
 }

@@ -71,6 +71,11 @@ class Woo_Wallet_Signup_Handler {
 		// it so a cross-request drain can still resolve the referrer.
 		if ( isset( $_COOKIE['woo_wallet_referral'] ) && '' !== $_COOKIE['woo_wallet_referral'] ) {
 			update_user_meta( $user_id, '_woo_wallet_referral_at_signup', sanitize_text_field( wp_unslash( $_COOKIE['woo_wallet_referral'] ) ) );
+			// Same reason: the browser/IP self-referral check needs this request.
+			if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
+				include_once WOO_WALLET_ABSPATH . 'includes/services/class-woo-wallet-referral-service.php';
+			}
+			WooWallet_Referral_Service::capture_signup_fingerprint( $user_id );
 		}
 
 		$this->pending[] = $user_id;

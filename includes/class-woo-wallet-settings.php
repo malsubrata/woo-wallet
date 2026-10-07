@@ -737,6 +737,9 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 			if ( isset( $field['options'] ) ) {
 				$result['options'] = $field['options'];
 			}
+			if ( isset( $field['html'] ) ) {
+				$result['html'] = $field['html'];
+			}
 			if ( isset( $field['placeholder'] ) ) {
 				$result['placeholder'] = $field['placeholder'];
 			}

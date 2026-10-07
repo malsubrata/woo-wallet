@@ -55,6 +55,9 @@ class Woo_Wallet_Install {
 		'1.6.4'  => array(
 			'woo_wallet_update_164_flag_legacy_currency_normalize',
 		),
+		'1.7.2'  => array(
+			'woo_wallet_update_172_referral_paid_order_default',
+		),
 	);
 	/**
 	 * Plugin install
