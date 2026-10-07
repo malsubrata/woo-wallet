@@ -505,7 +505,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 					$profit_share           = $this->settings['profit_share'];
 					$purchase_description   = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['purchase_description'] );
 					$sell_description       = str_replace( array( '#title#', '#link_with_title#' ), array( $title, '<a href="' . $post_link . '">' . $title . '</a>' ), $this->settings['sell_description'] );
-					$transaction_id         = woo_wallet()->wallet->debit( $user_id, $tw_sell_content_amount, $purchase_description );
+					$transaction_id         = woo_wallet()->wallet->debit( $user_id, $tw_sell_content_amount, $purchase_description, array( 'currency' => $this->get_base_currency() ) );
 					$expiration             = intval( $this->settings['expiration'] );
 					if ( $transaction_id ) {
 						/*
@@ -523,7 +523,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 						}
 						if ( $profit_share ) {
 							$profit = $tw_sell_content_amount * $profit_share / 100;
-							woo_wallet()->wallet->credit( $post_author, $profit, $sell_description );
+							woo_wallet()->wallet->credit( $post_author, $profit, $sell_description, array( 'currency' => $this->get_base_currency() ) );
 						}
 					}
 				} finally {

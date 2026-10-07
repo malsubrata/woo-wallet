@@ -68,7 +68,17 @@ class Action_Product_Review extends WooWalletAction {
 			$this->amount = apply_filters( 'woo_wallet_product_review_action_amount', $this->settings['amount'], $comment_id, $commentdata['user_id'] );
 			$product      = wc_get_product( $commentdata['comment_post_ID'] );
 			if ( $this->amount && $product && apply_filters( 'woo_wallet_product_review_credit', true, $commentdata ) ) {
-				$transaction_id = woo_wallet()->wallet->credit( $commentdata['user_id'], $this->amount, sanitize_textarea_field( $this->settings['description'] ), array( 'category' => 'engagement_reward' ) );
+				// The configured amount is saved in the store base currency, so credit it
+				// against the base currency — never the approver's active currency.
+				$transaction_id = woo_wallet()->wallet->credit(
+					$commentdata['user_id'],
+					$this->amount,
+					sanitize_textarea_field( $this->settings['description'] ),
+					array(
+						'currency' => $this->get_base_currency(),
+						'category' => 'engagement_reward',
+					)
+				);
 				update_comment_meta( $comment_id, 'wallet_transaction_id', $transaction_id );
 				update_post_meta( $commentdata['comment_post_ID'], "_woo_wallet_comment_commission_received_{$commentdata['user_id']}", true );
 				do_action( 'woo_wallet_after_product_review', $transaction_id, $comment_id );
@@ -89,7 +99,17 @@ class Action_Product_Review extends WooWalletAction {
 		}
 		$this->amount = apply_filters( 'woo_wallet_product_review_action_amount', $this->settings['amount'], $comment->comment_ID, $comment->user_id );
 		if ( $this->amount && $product && apply_filters( 'woo_wallet_product_review_credit', true, $comment ) ) {
-			$transaction_id = woo_wallet()->wallet->credit( $comment->user_id, $this->amount, sanitize_textarea_field( $this->settings['description'] ), array( 'category' => 'engagement_reward' ) );
+			// The configured amount is saved in the store base currency, so credit it
+			// against the base currency — never the approver's active currency.
+			$transaction_id = woo_wallet()->wallet->credit(
+				$comment->user_id,
+				$this->amount,
+				sanitize_textarea_field( $this->settings['description'] ),
+				array(
+					'currency' => $this->get_base_currency(),
+					'category' => 'engagement_reward',
+				)
+			);
 			update_comment_meta( $comment->comment_ID, 'wallet_transaction_id', $transaction_id );
 			update_post_meta( $product->get_id(), "_woo_wallet_comment_commission_received_{$comment->user_id}", true );
 			do_action( 'woo_wallet_after_product_review', $transaction_id, $comment->comment_ID );
