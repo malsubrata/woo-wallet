@@ -169,9 +169,14 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				'ajax_url'             => admin_url( 'admin-ajax.php' ),
 				'search_user_nonce'    => wp_create_nonce( 'search-user' ),
 				'search_by_user_email' => apply_filters( 'woo_wallet_user_search_exact_match', true ),
+				'current_user_email'   => is_user_logged_in() ? wp_get_current_user()->user_email : '',
 				'i18n'                 => array(
 					'non_valid_email_text' => __( 'Please enter a valid email address', 'woo-wallet' ),
+					'no_result'            => __( 'No results found', 'woo-wallet' ),
+					// Misspelt key kept for scripts that still read it.
 					'no_resualt'           => __( 'No results found', 'woo-wallet' ),
+					'no_customer_email'    => __( 'No customer found with this email.', 'woo-wallet' ),
+					'self_transfer'        => __( "You can't send money to yourself.", 'woo-wallet' ),
 					'inputTooShort'        => __( 'Please enter 3 or more characters', 'woo-wallet' ),
 					'searching'            => __( 'Searching…', 'woo-wallet' ),
 				),

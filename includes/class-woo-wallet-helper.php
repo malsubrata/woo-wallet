@@ -82,6 +82,26 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Name shown for the other party on a wallet transfer row: first + last
+	 * name, else a display name that is not the username, else a masked email
+	 * (j***@example.com). Never the username or the full email.
+	 *
+	 * @param WP_User $user User.
+	 * @return string
+	 */
+	public static function get_transfer_party_name( WP_User $user ): string {
+		$name = trim( $user->first_name . ' ' . $user->last_name );
+		if ( '' === $name && '' !== $user->display_name && $user->display_name !== $user->user_login && $user->display_name !== $user->user_email ) {
+			$name = $user->display_name;
+		}
+		if ( '' === $name ) {
+			$parts = explode( '@', (string) $user->user_email, 2 );
+			$name  = substr( $parts[0], 0, 1 ) . '***' . ( isset( $parts[1] ) ? '@' . $parts[1] : '' );
+		}
+		return $name;
+	}
+
+	/**
 	 * Format an amount for an order note in the ORDER's currency — not the
 	 * currency of whoever triggers the note (admin cookie, cron, webhook).
 	 *
