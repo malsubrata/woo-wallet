@@ -184,7 +184,31 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 				wp_enqueue_script( 'selectWoo' );
 				wp_enqueue_script( 'wc-endpoint-wallet' );
 			}
-			$add_to_cart_variation = "jQuery(function ($) { $(document).on('show_variation', function (event, variation, purchasable) { if(variation.cashback_amount) { $('.on-woo-wallet-cashback').show(); $('.on-woo-wallet-cashback').html(variation.cashback_html); } else { $('.on-woo-wallet-cashback').hide(); } }) });";
+			// Update only the cashback text of the product this variation form
+			// belongs to (not related/upsell products), and restore the
+			// product-level text when the selection is cleared.
+			$add_to_cart_variation = <<<'JS'
+jQuery(function ($) {
+	function cashbackFor(form) {
+		var $box = $(form).closest('.summary');
+		if (!$box.length) { $box = $(form).closest('.product'); }
+		return $box.find('.on-woo-wallet-cashback').not($box.find('.products .on-woo-wallet-cashback'));
+	}
+	$(document).on('show_variation', '.variations_form', function (event, variation) {
+		cashbackFor(this).each(function () {
+			var $el = $(this);
+			if (!$el.data('wwOriginal')) { $el.data('wwOriginal', { html: $el.html(), hidden: 'none' === $el.css('display') }); }
+			if (variation.cashback_amount) { $el.html(variation.cashback_html).show(); } else { $el.hide(); }
+		});
+	});
+	$(document).on('reset_data hide_variation', '.variations_form', function () {
+		cashbackFor(this).each(function () {
+			var original = $(this).data('wwOriginal');
+			if (original) { $(this).html(original.html).toggle(!original.hidden); }
+		});
+	});
+});
+JS;
 			wp_add_inline_script( 'wc-add-to-cart-variation', $add_to_cart_variation );
 		}
 
