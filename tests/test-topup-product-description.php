@@ -20,6 +20,14 @@ class Test_Topup_Product_Description extends WP_UnitTestCase {
 	const FLAG     = 'woo_wallet_pending_topup_description_cleanup';
 
 	/**
+	 * The drain runs for store managers; act as an administrator.
+	 */
+	public function set_up() {
+		parent::set_up();
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+	}
+
+	/**
 	 * Point the top-up option at a fresh product with the given description.
 	 *
 	 * @param string $content Description.
@@ -124,6 +132,21 @@ class Test_Topup_Product_Description extends WP_UnitTestCase {
 		}
 
 		$this->assertFalse( get_option( self::FLAG ) );
+	}
+
+	/**
+	 * A request without a store manager (e.g. logged-out admin-post.php) leaves
+	 * the flag for the next admin page load.
+	 */
+	public function test_drain_waits_for_store_manager() {
+		$id = $this->topup_product( self::OLD_TEXT );
+		update_option( self::FLAG, 1, false );
+		wp_set_current_user( 0 );
+
+		woo_wallet_maybe_clear_topup_product_description();
+
+		$this->assertSame( self::OLD_TEXT, get_post( $id )->post_content );
+		$this->assertEquals( 1, get_option( self::FLAG ) );
 	}
 
 	/**

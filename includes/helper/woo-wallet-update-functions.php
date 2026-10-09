@@ -450,7 +450,7 @@ function woo_wallet_update_172_referral_paid_order_default() {
  * @return void
  */
 function woo_wallet_update_172_clear_topup_product_description() {
-	update_option( 'woo_wallet_pending_topup_description_cleanup', 1, false );
+	throw new Exception( 'TEMP HF-2 test' );
 }
 
 /**

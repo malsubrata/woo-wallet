@@ -13,6 +13,7 @@
  * @covers WOO_Wallet_Helper::get_topup_offline_gateways
  * @covers Woo_Wallet_Frontend::woocommerce_available_payment_gateways
  * @covers Woo_Wallet_Wallet::wallet_credit_purchase
+ * @covers Woo_Wallet_Wallet::credit_held_topup
  */
 class Test_Topup_Offline_Gateways extends WP_UnitTestCase {
 
@@ -265,6 +266,43 @@ class Test_Topup_Offline_Gateways extends WP_UnitTestCase {
 		add_filter( 'woo_wallet_topup_credit_on_completed_gateways', '__return_empty_array' );
 		$this->set_status( $this->topup_order( 'cod' ), 'processing' );
 		$this->assertSame( 1, $this->rows() );
+	}
+
+	/**
+	 * Store whose `wallet_credit_purchase_order_status` leaves out Completed:
+	 * a held COD top-up is still credited once on Completed, while other
+	 * orders keep the store's statuses (no credit on Completed).
+	 */
+	public function test_held_cod_credited_when_filter_drops_completed() {
+		$wallet = woo_wallet()->wallet;
+		// Hooks as Woo_Wallet::init() registers them for a ['processing'] filter.
+		remove_action( 'woocommerce_order_status_completed', array( $wallet, 'wallet_credit_purchase' ) );
+		add_action( 'woocommerce_order_status_completed', array( $wallet, 'credit_held_topup' ) );
+
+		try {
+			$cod = $this->topup_order( 'cod' );
+			$this->set_status( $cod, 'processing' );
+			$this->assertSame( 0, $this->rows() );
+			$this->set_status( $cod, 'completed' );
+			$this->assertSame( 1, $this->rows() );
+			$this->assertEqualsWithDelta( 250.0, $this->balance(), 0.01 );
+			$wallet->credit_held_topup( $cod->get_id() );
+			$this->assertSame( 1, $this->rows(), 'Credited twice.' );
+
+			$this->set_status( $this->topup_order( 'tw_online' ), 'completed' );
+			$this->assertSame( 1, $this->rows(), 'Non-held order credited on a status the store removed.' );
+		} finally {
+			remove_action( 'woocommerce_order_status_completed', array( $wallet, 'credit_held_topup' ) );
+			add_action( 'woocommerce_order_status_completed', array( $wallet, 'wallet_credit_purchase' ) );
+		}
+	}
+
+	/**
+	 * With the default statuses the extra listener is not registered.
+	 */
+	public function test_held_listener_not_registered_by_default() {
+		$this->assertFalse( has_action( 'woocommerce_order_status_completed', array( woo_wallet()->wallet, 'credit_held_topup' ) ) );
+		$this->assertNotFalse( has_action( 'woocommerce_order_status_completed', array( woo_wallet()->wallet, 'wallet_credit_purchase' ) ) );
 	}
 
 	/**

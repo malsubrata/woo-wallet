@@ -410,6 +410,21 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Credit a top-up that wallet_credit_purchase() held until Completed.
+		 * Hooked only when `wallet_credit_purchase_order_status` leaves out Completed.
+		 *
+		 * @since 1.7.3
+		 * @param int $order_id order_id.
+		 * @return void
+		 */
+		public function credit_held_topup( $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( $order && $order->get_meta( '_wc_wallet_topup_awaiting_completion' ) ) {
+				$this->wallet_credit_purchase( $order_id );
+			}
+		}
+
+		/**
 		 * Credit wallet balance through order payment
 		 *
 		 * @param int $order_id order_id.
