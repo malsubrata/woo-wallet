@@ -151,12 +151,14 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.3 (Unreleased) =
-* Tweak - Development in progress.
+= v1.7.3 (October 9, 2026) =
+* Security - Wallet top-ups paid offline can no longer become spendable credit before payment: bank transfer, check payments and cash on delivery are not selected by default for top-ups, and cash on delivery top-ups are credited only when the order is marked Completed. Existing settings are not changed — please review "Allowed Payment Gateways". Props to HyeonMin Kim for responsible disclosure.
+* Fix - Fatal error on every page after updating to 1.7.2 on sites with WP Rocket or other plugins that run on product save.
+* Tweak - A failing database update step is now logged and retried later instead of stopping the site, and new installs no longer run old database updates.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.7.3 =
-Development in progress.
+Fixes a fatal error some sites hit when updating to 1.7.2. Security: cash on delivery wallet top-ups are now credited only when you mark the order Completed. Please update now.
