@@ -439,21 +439,57 @@ function woo_wallet_update_172_referral_paid_order_default() {
 }
 
 /**
- * 1.7.2: remove the admin-only "do not delete" text from the top-up product's
- * description — block cart/checkout showed it to customers. Only the original
- * auto-generated text is cleared; a description the store wrote is kept.
+ * 1.7.2: flag the top-up product's description for cleanup.
  *
+ * Migrations run at `plugins_loaded`, where saving a post is unsafe: other
+ * plugins' save hooks may need `$wp_rewrite`, which does not exist yet. So this
+ * only sets a flag; `woo_wallet_maybe_clear_topup_product_description()` does
+ * the work later on `admin_init`.
+ *
+ * @since 1.7.3 Sets a flag instead of saving the post.
  * @return void
  */
 function woo_wallet_update_172_clear_topup_product_description() {
+	update_option( 'woo_wallet_pending_topup_description_cleanup', 1, false );
+}
+
+/**
+ * Drain the 1.7.2 top-up description flag (hooked on `admin_init`).
+ *
+ * Removes the admin-only "do not delete" text from the top-up product's
+ * description — block cart/checkout showed it to customers. Only the original
+ * auto-generated text is cleared; a description the store wrote is kept.
+ *
+ * The flag is deleted before the post is saved, so a failing third-party save
+ * hook means one skipped cleanup, never a retry on every request.
+ *
+ * @since 1.7.3
+ * @return void
+ */
+function woo_wallet_maybe_clear_topup_product_description() {
+	if ( ! get_option( 'woo_wallet_pending_topup_description_cleanup' ) || wp_doing_ajax() ) {
+		return;
+	}
+	delete_option( 'woo_wallet_pending_topup_description_cleanup' );
+
 	$product_id = (int) get_option( '_woo_wallet_recharge_product' );
 	$post       = $product_id ? get_post( $product_id ) : null;
-	if ( $post && 'Auto generated product for wallet recharge please do not delete or update.' === trim( $post->post_content ) ) {
+	if ( ! $post || 'Auto generated product for wallet recharge please do not delete or update.' !== trim( $post->post_content ) ) {
+		return;
+	}
+	try {
 		wp_update_post(
 			array(
 				'ID'           => $product_id,
 				'post_content' => '',
 			)
 		);
+	} catch ( \Throwable $e ) {
+		$message = sprintf( 'Top-up product description cleanup failed: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine() );
+		if ( function_exists( 'wc_get_logger' ) ) {
+			wc_get_logger()->error( $message, array( 'source' => 'woo-wallet-db-updates' ) );
+		} else {
+			error_log( $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
 	}
 }
