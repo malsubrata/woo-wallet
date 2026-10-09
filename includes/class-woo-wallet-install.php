@@ -69,8 +69,26 @@ class Woo_Wallet_Install {
 		if ( ! is_blog_installed() ) {
 			return;
 		}
+		// A new install gets the current schema from create_tables(), so there is
+		// nothing to migrate. Existing tables mean an existing site: leave its
+		// version alone and let update() run what it still needs.
+		$is_new_install = false === get_option( 'woo_wallet_db_version' ) && ! self::transactions_table_exists();
 		self::create_tables();
 		self::cteate_product_if_not_exist();
+		if ( $is_new_install ) {
+			self::update_db_version();
+		}
+	}
+
+	/**
+	 * Whether the ledger table exists.
+	 *
+	 * @return bool
+	 */
+	private static function transactions_table_exists() {
+		global $wpdb;
+		$table = $wpdb->base_prefix . 'woo_wallet_transactions';
+		return $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 
 	/**
@@ -267,20 +285,45 @@ class Woo_Wallet_Install {
 	 * `Woo_Wallet::init()` on `init`:5, which reads the 1.6.4 normalization
 	 * flag — still sees a fully migrated schema.
 	 *
+	 * A failing step is logged and stops the run without stamping its version;
+	 * the `woo_wallet_db_update_failed` transient then pauses retries for an
+	 * hour, so one broken step can never take the site down.
+	 *
 	 * @since 1.6.12 Moved off plugin-include time onto `plugins_loaded`.
+	 * @since 1.7.3 Each version group is stamped on success; failures are caught.
 	 */
 	public static function update() {
 		$current_db_version = get_option( 'woo_wallet_db_version' );
-		if ( version_compare( WOO_WALLET_PLUGIN_VERSION, $current_db_version, '=' ) ) {
+		if ( version_compare( WOO_WALLET_PLUGIN_VERSION, $current_db_version, '=' ) || get_transient( 'woo_wallet_db_update_failed' ) ) {
 			return;
 		}
 		foreach ( self::get_db_update_callbacks() as $version => $update_callbacks ) {
 			if ( version_compare( $current_db_version, $version, '<' ) ) {
 				foreach ( $update_callbacks as $update_callback ) {
-					call_user_func( $update_callback );
+					try {
+						call_user_func( $update_callback );
+					} catch ( \Throwable $e ) {
+						$message = sprintf( 'Database update %s failed: %s in %s:%d', $update_callback, $e->getMessage(), $e->getFile(), $e->getLine() );
+						if ( function_exists( 'wc_get_logger' ) ) {
+							wc_get_logger()->error( $message, array( 'source' => 'woo-wallet-db-updates' ) );
+						} else {
+							error_log( $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+						}
+						set_transient(
+							'woo_wallet_db_update_failed',
+							array(
+								'callback' => $update_callback,
+								'message'  => $e->getMessage(),
+							),
+							HOUR_IN_SECONDS
+						);
+						return;
+					}
 				}
+				self::update_db_version( $version );
 			}
 		}
+		delete_transient( 'woo_wallet_db_update_failed' );
 		self::update_db_version();
 	}
 

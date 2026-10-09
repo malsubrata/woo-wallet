@@ -99,6 +99,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			add_action( 'admin_notices', array( $this, 'show_161_notices' ) );
 			add_action( 'admin_notices', array( $this, 'show_purge_errors' ) );
 			add_action( 'admin_notices', array( $this, 'show_topup_product_notice' ) );
+			add_action( 'admin_notices', array( $this, 'show_db_update_failed_notice' ) );
 			add_action( 'wp_ajax_woowallet_dismiss_161_notice', array( $this, 'dismiss_161_notice' ) );
 			// Redirect old ?page=woo-wallet-actions bookmarks to the unified settings page.
 			add_action( 'admin_init', array( $this, 'redirect_legacy_actions_page' ) );
@@ -1527,6 +1528,22 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				return;
 			}
 			echo '<div class="notice notice-warning"><p>' . esc_html__( 'TeraWallet uses this product for wallet top-ups. Please do not delete or edit it.', 'woo-wallet' ) . '</p></div>';
+		}
+		/**
+		 * Tell store managers a database update step failed and will be retried.
+		 * The transient is set and cleared by Woo_Wallet_Install::update().
+		 *
+		 * @since 1.7.3
+		 */
+		public function show_db_update_failed_notice() {
+			$failed = get_transient( 'woo_wallet_db_update_failed' );
+			if ( ! $failed || ! current_user_can( 'manage_woocommerce' ) ) {
+				return;
+			}
+			$step = is_array( $failed ) && isset( $failed['callback'] ) ? (string) $failed['callback'] : '';
+			/* translators: %s: name of the database update step that failed. */
+			$text = __( 'TeraWallet could not finish a database update (step: %s). Your store is still working. TeraWallet will try again within an hour. Details: WooCommerce → Status → Logs (woo-wallet-db-updates).', 'woo-wallet' );
+			echo '<div class="notice notice-error"><p>' . esc_html( sprintf( $text, $step ) ) . '</p></div>';
 		}
 		/**
 		 * Render any errors stashed by the Delete Logs bulk action on the
