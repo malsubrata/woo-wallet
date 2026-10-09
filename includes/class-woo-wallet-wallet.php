@@ -410,6 +410,21 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
+		 * Credit a top-up that wallet_credit_purchase() held until Completed.
+		 * Hooked only when `wallet_credit_purchase_order_status` leaves out Completed.
+		 *
+		 * @since 1.7.3
+		 * @param int $order_id order_id.
+		 * @return void
+		 */
+		public function credit_held_topup( $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( $order && $order->get_meta( '_wc_wallet_topup_awaiting_completion' ) ) {
+				$this->wallet_credit_purchase( $order_id );
+			}
+		}
+
+		/**
 		 * Credit wallet balance through order payment
 		 *
 		 * @param int $order_id order_id.
@@ -424,6 +439,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return;
 			}
 			if ( ! is_wallet_rechargeable_order( $order ) ) {
+				return;
+			}
+
+			// Cash on delivery is collected later, so these top-ups are credited
+			// only once the admin marks the order Completed.
+			$credit_on_completed = (array) apply_filters( 'woo_wallet_topup_credit_on_completed_gateways', array( 'cod' ), $order );
+			if ( in_array( $order->get_payment_method(), $credit_on_completed, true ) && ! $order->has_status( 'completed' ) && ! $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
+				if ( ! $order->get_meta( '_wc_wallet_topup_awaiting_completion' ) ) {
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_topup_awaiting_completion', true );
+					$order->add_order_note( __( 'Wallet top-up not credited yet: cash on delivery. It will be credited when you mark this order Completed after you receive the payment.', 'woo-wallet' ) );
+				}
 				return;
 			}
 

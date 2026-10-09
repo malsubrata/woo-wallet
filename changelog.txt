@@ -1,4 +1,9 @@
 *** Changelog ***
+= v1.7.3 (October 9, 2026) =
+* Security - Wallet top-ups paid offline can no longer become spendable credit before payment: bank transfer, check payments and cash on delivery are not selected by default for top-ups, and cash on delivery top-ups are credited only when the order is marked Completed. Existing settings are not changed — please review "Allowed Payment Gateways". Props to HyeonMin Kim for responsible disclosure.
+* Fix - Fatal error on every page after updating to 1.7.2 on sites with WP Rocket or other plugins that run on product save.
+* Tweak - A failing database update step is now logged and retried later instead of stopping the site, and new installs no longer run old database updates.
+
 = v1.7.2 (October 7, 2026) =
 * Security - Visit referral rewards are no longer credited for logged-out visitors, closing an issue where a visitor could credit any user's wallet repeatedly. Props to Andrew Nichols for responsible disclosure.
 * Security - Referral rewards are not paid when the referrer and the new customer use the same browser or IP address. Developers can turn off the IP check with the `woo_wallet_referral_check_ip` filter.

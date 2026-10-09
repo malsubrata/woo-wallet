@@ -154,6 +154,8 @@ final class Woo_Wallet {
 		// Pending DB migrations run here, not at include time — see the docblock
 		// on Woo_Wallet_Install::update() for why.
 		add_action( 'plugins_loaded', array( 'Woo_Wallet_Install', 'update' ), 20 );
+		// Post saves a migration flagged for later — unsafe during plugins_loaded.
+		add_action( 'admin_init', 'woo_wallet_maybe_clear_topup_product_description' );
 		register_deactivation_hook( WOO_WALLET_PLUGIN_FILE, array( $this, 'deactivate_plugin' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( WOO_WALLET_PLUGIN_FILE ), array( $this, 'plugin_action_links' ) );
 		add_action( 'init', array( $this, 'init' ), 5 );
@@ -182,8 +184,13 @@ final class Woo_Wallet {
 		add_filter( 'woocommerce_template_directory', array( $this, 'woocommerce_template_directory' ), 10, 2 );
 		add_filter( 'woocommerce_payment_gateways', array( $this, 'load_gateway' ) );
 
-		foreach ( apply_filters( 'wallet_credit_purchase_order_status', array( 'processing', 'completed' ) ) as $status ) {
+		$credit_statuses = (array) apply_filters( 'wallet_credit_purchase_order_status', array( 'processing', 'completed' ) );
+		foreach ( $credit_statuses as $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( $this->wallet, 'wallet_credit_purchase' ) );
+		}
+		// Top-ups held until Completed must still be credited when the filter leaves Completed out.
+		if ( ! in_array( 'completed', $credit_statuses, true ) ) {
+			add_action( 'woocommerce_order_status_completed', array( $this->wallet, 'credit_held_topup' ) );
 		}
 
 		add_action( 'woocommerce_checkout_order_processed', array( $this->wallet, 'woocommerce_order_processed' ), 99 );

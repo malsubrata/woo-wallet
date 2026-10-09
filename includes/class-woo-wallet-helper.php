@@ -231,6 +231,23 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Offline gateway ids, left out of the default "Allowed Payment Gateways"
+	 * for top-ups. An admin can still select them on purpose.
+	 *
+	 * @since 1.7.3
+	 * @return array Gateway ids.
+	 */
+	public static function get_topup_offline_gateways(): array {
+		$gateways  = array( 'bacs', 'cheque', 'cod' );
+		$providers = 'Automattic\WooCommerce\Internal\Admin\Settings\PaymentsProviders';
+		// WooCommerce internal class, newer WooCommerce only — read it when present.
+		if ( class_exists( $providers ) && defined( $providers . '::OFFLINE_METHODS' ) ) {
+			$gateways = array_merge( $gateways, (array) constant( $providers . '::OFFLINE_METHODS' ) );
+		}
+		return array_values( array_unique( (array) apply_filters( 'woo_wallet_topup_offline_gateways', $gateways ) ) );
+	}
+
+	/**
 	 * Drop WooCommerce's `wc-` status prefix.
 	 *
 	 * Anchored and applied once: a status slug that legitimately contains

@@ -717,8 +717,9 @@ JS;
 		public function woocommerce_available_payment_gateways( $_available_gateways ) {
 			if ( is_wallet_rechargeable_cart() ) {
 				$default_gateway = array();
+				$offline         = WOO_Wallet_Helper::get_topup_offline_gateways();
 				foreach ( WC()->payment_gateways()->payment_gateways as $gateway ) {
-					if ( 'yes' === $gateway->enabled && 'wallet' !== $gateway->id ) {
+					if ( 'yes' === $gateway->enabled && 'wallet' !== $gateway->id && ! in_array( $gateway->id, $offline, true ) ) {
 						$default_gateway[] = $gateway->id;
 					}
 				}
