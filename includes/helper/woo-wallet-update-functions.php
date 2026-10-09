@@ -450,7 +450,7 @@ function woo_wallet_update_172_referral_paid_order_default() {
  * @return void
  */
 function woo_wallet_update_172_clear_topup_product_description() {
-	throw new Exception( 'TEMP HF-2 test' );
+	update_option( 'woo_wallet_pending_topup_description_cleanup', 1, false );
 }
 
 /**
@@ -460,14 +460,15 @@ function woo_wallet_update_172_clear_topup_product_description() {
  * description — block cart/checkout showed it to customers. Only the original
  * auto-generated text is cleared; a description the store wrote is kept.
  *
- * The flag is deleted before the post is saved, so a failing third-party save
- * hook means one skipped cleanup, never a retry on every request.
+ * Runs on a store manager's admin page load. The flag is deleted before the
+ * post is saved, so a failing third-party save hook means one skipped cleanup,
+ * never a retry on every request.
  *
  * @since 1.7.3
  * @return void
  */
 function woo_wallet_maybe_clear_topup_product_description() {
-	if ( ! get_option( 'woo_wallet_pending_topup_description_cleanup' ) || wp_doing_ajax() ) {
+	if ( ! get_option( 'woo_wallet_pending_topup_description_cleanup' ) || wp_doing_ajax() || ! current_user_can( 'manage_woocommerce' ) ) {
 		return;
 	}
 	delete_option( 'woo_wallet_pending_topup_description_cleanup' );
