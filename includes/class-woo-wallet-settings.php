@@ -247,10 +247,10 @@ if ( ! class_exists( 'Woo_Wallet_Settings' ) ) :
 					array(
 						'name'     => 'allowed_payment_gateways',
 						'label'    => __( 'Allowed Payment Gateways', 'woo-wallet' ),
-						'desc'     => __( 'Select one or more gateways to enable for wallet funding', 'woo-wallet' ),
+						'desc'     => __( 'Select one or more gateways to enable for wallet funding', 'woo-wallet' ) . '<br>' . __( 'Offline methods (bank transfer, check payments, cash on delivery) are not selected by default, because the wallet could be credited before you receive the money. Cash on delivery top-ups are credited only when you mark the order Completed.', 'woo-wallet' ),
 						'type'     => 'select',
 						'options'  => $this->get_wc_payment_allowed_gateways(),
-						'default'  => array_keys( $this->get_wc_payment_allowed_gateways() ),
+						'default'  => array_values( array_diff( array_keys( $this->get_wc_payment_allowed_gateways() ), WOO_Wallet_Helper::get_topup_offline_gateways() ) ),
 						'size'     => 'regular-text wc-enhanced-select',
 						'multiple' => true,
 						'group'    => 'wallet_topup',

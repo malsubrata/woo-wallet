@@ -427,6 +427,17 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return;
 			}
 
+			// Cash on delivery is collected later, so these top-ups are credited
+			// only once the admin marks the order Completed.
+			$credit_on_completed = (array) apply_filters( 'woo_wallet_topup_credit_on_completed_gateways', array( 'cod' ), $order );
+			if ( in_array( $order->get_payment_method(), $credit_on_completed, true ) && ! $order->has_status( 'completed' ) && ! $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
+				if ( ! $order->get_meta( '_wc_wallet_topup_awaiting_completion' ) ) {
+					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_topup_awaiting_completion', true );
+					$order->add_order_note( __( 'Wallet top-up not credited yet: cash on delivery. It will be credited when you mark this order Completed after you receive the payment.', 'woo-wallet' ) );
+				}
+				return;
+			}
+
 			// Serialize concurrent IPN deliveries for the same order. Without this, two webhooks
 			// arriving inside the meta read→write window both pass the `_wc_wallet_purchase_credited`
 			// guard and credit the wallet twice. The lock is released in the `finally` block so a
