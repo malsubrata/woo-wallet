@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -151,23 +151,12 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.2 (October 7, 2026) =
-* Security - Visit referral rewards are no longer credited for logged-out visitors, closing an issue where a visitor could credit any user's wallet repeatedly. Props to Andrew Nichols for responsible disclosure.
-* Security - Referral rewards are not paid when the referrer and the new customer use the same browser or IP address. Developers can turn off the IP check with the `woo_wallet_referral_check_ip` filter.
-* New - "Pay after first paid order" referral setting: on for new installs, off for existing stores so they keep paying at sign-up. A notice warns when Minimum Spend is 0.
-* New - "Allow coupons on wallet top-up" setting, off by default: store coupons are refused on top-ups unless you turn it on.
-* Fix - Wallet top-ups credit exactly the amount the customer entered, and the customer pays exactly that amount, including on stores that enter prices excluding tax. Top-up orders placed before the update credit as before.
-* Fix - Product review and sell-content rewards are credited in your base currency, whatever currency the admin approving them is browsing in.
-* Fix - Wallet order notes show the order's currency, and a cashback reversal on a partial refund says "partly reversed: £X of £Y".
-* Fix - The My Wallet summary cards show amounts in the customer's selected currency, like the balance.
-* Fix - Choosing a product variation updates only that product's cashback text, and "Clear" restores it.
-* Fix - The top-up product's "do not delete" note no longer appears at checkout; admins see it as a notice on the product edit screen.
-* Fix - Wallet transfer: the recipient box fits phone screens, an unknown email or your own email gets a clear message, and both sides see the other person's name and the note.
-* Tweak - A settings notice explains what it means when the top-up product is taxable.
+= v1.7.3 (Unreleased) =
+* Tweak - Development in progress.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.7.2 =
-Security release: visit referral rewards now need a logged-in visitor, self-referrals are blocked and top-ups refuse coupons by default. After updating, review Settings > Actions > Referrals and the top-up coupon setting.
+= 1.7.3 =
+Development in progress.
