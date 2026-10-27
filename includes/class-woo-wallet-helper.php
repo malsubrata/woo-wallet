@@ -292,4 +292,127 @@ class WOO_Wallet_Helper {
 
 		return $normalized;
 	}
+
+	/**
+	 * Client IP address, without trusting headers the visitor can set.
+	 *
+	 * Uses REMOTE_ADDR. A forwarded header is read only when REMOTE_ADDR is a
+	 * trusted proxy: listed in the `woo_wallet_trusted_proxies` filter, or a
+	 * private/reserved address (a reverse proxy on the same network). Then
+	 * X-Forwarded-For (right-most address that is not a proxy), else X-Real-IP.
+	 * A fingerprint for abuse checks, not an authoritative address.
+	 *
+	 * @since 1.7.4
+	 * @return string IP address, or '' when unknown.
+	 */
+	public static function get_client_ip(): string {
+		$remote = self::clean_ip( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+		/**
+		 * Proxy addresses (IPs or CIDR ranges) whose forwarded headers are
+		 * trusted for the client IP. Private and reserved addresses are always
+		 * treated as proxies. A public proxy or CDN in front of the site (e.g.
+		 * Cloudflare, a public load balancer) must be listed here, unless the
+		 * server already restores the visitor address in REMOTE_ADDR; otherwise
+		 * every visitor is seen as the proxy. The proxy must append to (or
+		 * overwrite) X-Forwarded-For. Invalid entries are ignored.
+		 *
+		 * @since 1.7.4
+		 *
+		 * @param string[] $proxies IPs or CIDR ranges. Default empty.
+		 */
+		$trusted   = array_filter( array_map( 'strval', (array) apply_filters( 'woo_wallet_trusted_proxies', array() ) ) );
+		$is_proxy  = function ( $ip ) use ( $trusted ) {
+			return ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) || self::ip_in_ranges( $ip, $trusted );
+		};
+		$client_ip = $remote;
+		if ( $remote && $is_proxy( $remote ) ) {
+			$found = '';
+			if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				// Right to left: the first address that is not a proxy is the client.
+				// Addresses a visitor adds sit to the left of it and are never reached.
+				// An invalid hop stops the walk (REMOTE_ADDR is used).
+				$hops = array_reverse( explode( ',', wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+				$last = '';
+				foreach ( $hops as $raw_hop ) {
+					$hop = self::clean_ip( $raw_hop );
+					if ( '' === $hop ) {
+						$last = '';
+						break;
+					}
+					$last = $hop;
+					if ( ! $is_proxy( $hop ) ) {
+						$found = $hop;
+						break;
+					}
+				}
+				if ( '' === $found ) {
+					$found = $last; // Every hop is a proxy: the client is on the private network.
+				}
+			}
+			if ( '' === $found && empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_REAL_IP'] ) ) {
+				$found = self::clean_ip( wp_unslash( $_SERVER['HTTP_X_REAL_IP'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+			}
+			$client_ip = '' !== $found ? $found : $remote;
+		}
+		/**
+		 * Filters the client IP address used by the plugin's checks.
+		 *
+		 * @since 1.7.4
+		 *
+		 * @param string $client_ip   Client IP ('' when unknown).
+		 * @param string $remote_addr Validated REMOTE_ADDR ('' when invalid).
+		 */
+		return (string) apply_filters( 'woo_wallet_client_ip', $client_ip, $remote );
+	}
+
+	/**
+	 * A valid IP address from a header value, port and brackets removed, in
+	 * canonical form (IPv4-mapped IPv6 becomes IPv4), or ''.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private static function clean_ip( $value ): string {
+		$value = trim( is_string( $value ) ? $value : '' );
+		// '1.2.3.4:80', '[2001:db8::1]', '[2001:db8::1]:80'.
+		$value = (string) preg_replace( '/^(\d+\.\d+\.\d+\.\d+):\d+$|^\[([^\]]+)\](?::\d+)?$/', '$1$2', $value );
+		if ( ! filter_var( $value, FILTER_VALIDATE_IP ) ) {
+			return '';
+		}
+		$bin = inet_pton( $value );
+		if ( 16 === strlen( $bin ) && "\0\0\0\0\0\0\0\0\0\0\xff\xff" === substr( $bin, 0, 12 ) ) {
+			$bin = substr( $bin, 12 );
+		}
+		return (string) inet_ntop( $bin );
+	}
+
+	/**
+	 * Whether an IP is in any of the given IPs / CIDR ranges.
+	 *
+	 * @param string   $ip     Valid IP address.
+	 * @param string[] $ranges IPs or CIDR ranges; invalid entries are ignored.
+	 * @return bool
+	 */
+	private static function ip_in_ranges( string $ip, array $ranges ): bool {
+		$ip_bin = inet_pton( $ip );
+		foreach ( $ranges as $range ) {
+			$parts = explode( '/', trim( $range ), 2 );
+			if ( ! filter_var( $parts[0], FILTER_VALIDATE_IP ) ) {
+				continue;
+			}
+			$net_bin = inet_pton( $parts[0] );
+			$max     = strlen( $net_bin ) * 8;
+			if ( strlen( $net_bin ) !== strlen( $ip_bin ) || ( isset( $parts[1] ) && ( ! preg_match( '/^\d{1,3}$/', $parts[1] ) || (int) $parts[1] > $max ) ) ) {
+				continue;
+			}
+			$bits  = isset( $parts[1] ) ? (int) $parts[1] : $max;
+			$bytes = intdiv( $bits, 8 );
+			$rest  = $bits % 8;
+			if ( substr( $ip_bin, 0, $bytes ) === substr( $net_bin, 0, $bytes )
+				&& ( ! $rest || ( ord( $ip_bin[ $bytes ] ) >> ( 8 - $rest ) ) === ( ord( $net_bin[ $bytes ] ) >> ( 8 - $rest ) ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

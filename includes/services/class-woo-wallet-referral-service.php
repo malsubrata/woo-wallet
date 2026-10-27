@@ -766,7 +766,7 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 		 * @return string
 		 */
 		private static function get_request_ip_hash() {
-			$ip = class_exists( 'WC_Geolocation' ) ? WC_Geolocation::get_ip_address() : ( isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+			$ip = WOO_Wallet_Helper::get_client_ip();
 			return $ip ? wp_hash( 'woo_wallet_referral_ip|' . $ip ) : '';
 		}
 
