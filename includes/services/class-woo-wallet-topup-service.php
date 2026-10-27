@@ -80,6 +80,17 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				return self::fail( 'rest_no_rechargeable_product', __( 'Wallet top-up product is not available.', 'woo-wallet' ), 503 );
 			}
 
+			// Same "Allowed Payment Gateways" list as checkout. Checked before the
+			// order exists so a refused request leaves no order behind.
+			$gateway = null;
+			if ( '' !== $payment_method ) {
+				$gateways = WC()->payment_gateways() ? WC()->payment_gateways()->payment_gateways() : array();
+				if ( ! isset( $gateways[ $payment_method ] ) || 'yes' !== $gateways[ $payment_method ]->enabled || ! in_array( $payment_method, WOO_Wallet_Helper::get_topup_allowed_gateways(), true ) ) {
+					return self::fail( 'rest_payment_method_not_allowed', __( 'This payment method cannot be used for a wallet top-up.', 'woo-wallet' ) );
+				}
+				$gateway = $gateways[ $payment_method ];
+			}
+
 			$rechargeable_amount = (float) apply_filters( 'woo_wallet_rechargeable_amount', round( $amount, 2 ) );
 
 			$order_args = array(
@@ -135,11 +146,8 @@ if ( ! class_exists( 'WooWallet_Topup_Service' ) ) {
 				}
 			}
 
-			if ( '' !== $payment_method ) {
-				$gateways = WC()->payment_gateways() ? WC()->payment_gateways()->payment_gateways() : array();
-				if ( isset( $gateways[ $payment_method ] ) && 'yes' === $gateways[ $payment_method ]->enabled ) {
-					$order->set_payment_method( $gateways[ $payment_method ] );
-				}
+			if ( $gateway ) {
+				$order->set_payment_method( $gateway );
 			}
 
 			$order->calculate_totals();

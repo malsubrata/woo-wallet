@@ -248,6 +248,26 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Gateway ids allowed to pay a wallet top-up ("Allowed Payment Gateways").
+	 * One list for cart checkout, the order-pay page and the REST top-up.
+	 * The wallet gateway is never allowed.
+	 *
+	 * @since 1.7.4
+	 * @return array Gateway ids.
+	 */
+	public static function get_topup_allowed_gateways(): array {
+		$default = array();
+		$offline = self::get_topup_offline_gateways();
+		foreach ( WC()->payment_gateways()->payment_gateways as $gateway ) {
+			if ( 'yes' === $gateway->enabled && 'wallet' !== $gateway->id && ! in_array( $gateway->id, $offline, true ) ) {
+				$default[] = $gateway->id;
+			}
+		}
+		$allowed = (array) woo_wallet()->settings_api->get_option( 'allowed_payment_gateways', '_wallet_settings_general', $default );
+		return array_values( array_diff( $allowed, array( 'wallet' ) ) );
+	}
+
+	/**
 	 * Drop WooCommerce's `wc-` status prefix.
 	 *
 	 * Anchored and applied once: a status slug that legitimately contains
