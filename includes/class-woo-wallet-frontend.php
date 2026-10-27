@@ -638,7 +638,7 @@ JS;
 		 */
 		public function woo_wallet_set_recharge_product_price( $cart ) {
 			$product = get_wallet_rechargeable_product();
-			if ( ! $product && empty( $cart->cart_contents ) ) {
+			if ( ! $product || empty( $cart->cart_contents ) ) {
 				return;
 			}
 			foreach ( $cart->cart_contents as $key => $value ) {
