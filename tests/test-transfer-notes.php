@@ -74,4 +74,27 @@ class Test_Transfer_Notes extends WP_UnitTestCase {
 			$this->assertStringNotContainsString( 'recip@', $note );
 		}
 	}
+
+	/**
+	 * Markup stored straight in user meta is stripped from the name.
+	 */
+	public function test_name_markup_is_stripped() {
+		list( $sender, $recipient ) = $this->users( array(), array() );
+		update_user_meta( $recipient, 'first_name', '<b>Bob</b><script>x</script>' );
+		update_user_meta( $recipient, 'last_name', ' ' );
+		WooWallet_Transfer_Service::execute( $sender, $recipient, 10, 'Lunch' );
+
+		$this->assertSame( 'To Bob: Lunch', $this->latest_note( $sender ) );
+	}
+
+	/**
+	 * A display name made only of markup falls back to the masked email.
+	 */
+	public function test_display_name_markup_only_falls_back() {
+		$user               = new WP_User( self::factory()->user->create( array( 'user_email' => 'dn@example.com' ) ) );
+		$user->display_name = '<i>Dee</i>';
+		$this->assertSame( 'Dee', WOO_Wallet_Helper::get_transfer_party_name( $user ) );
+		$user->display_name = '<script>x</script>';
+		$this->assertSame( 'd***@example.com', WOO_Wallet_Helper::get_transfer_party_name( $user ) );
+	}
 }

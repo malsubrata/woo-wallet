@@ -90,9 +90,11 @@ class WOO_Wallet_Helper {
 	 * @return string
 	 */
 	public static function get_transfer_party_name( WP_User $user ): string {
-		$name = trim( $user->first_name . ' ' . $user->last_name );
-		if ( '' === $name && '' !== $user->display_name && $user->display_name !== $user->user_login && $user->display_name !== $user->user_email ) {
-			$name = $user->display_name;
+		// Names can hold markup when written straight to user meta; keep plain text only.
+		$name    = trim( wp_strip_all_tags( $user->first_name . ' ' . $user->last_name ) );
+		$display = trim( wp_strip_all_tags( $user->display_name ) );
+		if ( '' === $name && '' !== $display && $display !== $user->user_login && $display !== $user->user_email ) {
+			$name = $display;
 		}
 		if ( '' === $name ) {
 			$parts = explode( '@', (string) $user->user_email, 2 );
