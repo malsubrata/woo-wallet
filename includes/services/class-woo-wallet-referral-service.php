@@ -76,6 +76,12 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 			}
 
 			try {
+				// Daily cap, checked under the referrer lock so two parallel
+				// visits cannot both pass the count. Nothing is inserted when hit.
+				if ( ! self::within_visit_daily_cap( $action, $referrer_id ) ) {
+					return self::fail( 'daily_cap', __( 'Daily visitor referral reward limit reached.', 'woo-wallet' ) );
+				}
+
 				if ( ! self::within_period_limit( $referrer_id, 'visit', $action->settings['referring_visitors_limit_duration'], $action->settings['referring_visitors_limit'] ) ) {
 					return self::fail( 'limit_reached', __( 'Visitor referral reward limit reached for this period.', 'woo-wallet' ) );
 				}
@@ -414,6 +420,39 @@ if ( ! class_exists( 'WooWallet_Referral_Service' ) ) {
 				return true;
 			}
 			return self::count_in_period( $referrer_id, $type, $period ) < (int) $limit_count;
+		}
+
+		/**
+		 * Whether the referrer is still under the daily visit-reward cap.
+		 *
+		 * The day starts at midnight in the store time zone. Completed visit
+		 * rows since then are counted against the DB clock (same as
+		 * count_in_period()), so the DB time zone does not matter.
+		 *
+		 * @param Action_Referrals $action      The referral action (settings source).
+		 * @param int              $referrer_id Referrer.
+		 * @return bool
+		 */
+		private static function within_visit_daily_cap( $action, $referrer_id ) {
+			// An emptied field falls back to the default rather than meaning "no limit".
+			$cap = (int) $action->get_option( 'referring_visitors_daily_cap', 20 );
+
+			/**
+			 * Filters the maximum visit rewards one referrer can earn per day.
+			 *
+			 * @since 1.7.4
+			 *
+			 * @param int $cap         Daily cap. 0 = no limit.
+			 * @param int $referrer_id Referrer user ID.
+			 */
+			$cap = (int) apply_filters( 'woo_wallet_referral_visit_daily_cap', $cap, $referrer_id );
+			if ( $cap <= 0 ) {
+				return true;
+			}
+
+			$now     = current_datetime();
+			$elapsed = $now->getTimestamp() - $now->setTime( 0, 0 )->getTimestamp();
+			return self::count_in_period( $referrer_id, 'visit', $elapsed ) < $cap;
 		}
 
 		/**

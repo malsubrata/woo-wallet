@@ -102,6 +102,14 @@ class Action_Referrals extends WooWalletAction {
 						'equals' => array( 'day', 'week', 'month' ),
 					),
 				),
+				'referring_visitors_daily_cap'      => array(
+					'title'       => __( 'Maximum visit rewards per referrer per day', 'woo-wallet' ),
+					'type'        => 'number',
+					'description' => __( 'Limits how many visit rewards one customer can earn in a day. Set 0 for no limit.', 'woo-wallet' ),
+					'desc_tip'    => true,
+					'default'     => 20,
+					'min'         => 0,
+				),
 				'referring_visitors_description'    => array(
 					'title'       => __( 'Transaction note', 'woo-wallet' ),
 					'type'        => 'textarea',

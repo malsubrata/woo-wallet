@@ -421,4 +421,131 @@ class Test_Referral_Service extends WP_UnitTestCase {
 		);
 		$this->assertCount( 3, $safe );
 	}
+
+	/**
+	 * Visit the referral link as a fresh logged-in customer.
+	 *
+	 * @param Action_Referrals $action   Action.
+	 * @param int              $referrer Referrer.
+	 * @return array Service envelope.
+	 */
+	private function visit_as_new_user( $action, $referrer ) {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		return WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+	}
+
+	/**
+	 * Daily cap 2: the 3rd visit that day is refused with `daily_cap`, no row
+	 * is inserted and nothing is credited.
+	 */
+	public function test_visit_daily_cap_blocks_third_visit() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '2',
+			)
+		);
+
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$third = $this->visit_as_new_user( $action, $referrer );
+
+		$this->assertFalse( $third['is_valid'] );
+		$this->assertSame( 'daily_cap', $third['code'] );
+		$this->assertSame( 2, get_wallet_referrals_count( array( 'referrer_id' => $referrer ) ) );
+		$this->assertSame( 2, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * The day starts at midnight in the store time zone: visits before it do
+	 * not count, visits after it do.
+	 */
+	public function test_visit_daily_cap_resets_at_store_midnight() {
+		global $wpdb;
+		update_option( 'timezone_string', 'Asia/Kolkata' );
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '2',
+			)
+		);
+		$this->visit_as_new_user( $action, $referrer );
+		$this->visit_as_new_user( $action, $referrer );
+
+		// Move both rows to one minute before store midnight → yesterday.
+		$now     = current_datetime();
+		$elapsed = $now->getTimestamp() - $now->setTime( 0, 0 )->getTimestamp();
+		$table   = $wpdb->base_prefix . 'woo_wallet_referrals';
+		$wpdb->query( $wpdb->prepare( "UPDATE {$table} SET date_created = NOW() - INTERVAL %d SECOND WHERE referrer_id = %d", $elapsed + 60, $referrer ) ); // phpcs:ignore WordPress.DB
+
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+		$this->assertSame( 4, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * Default cap (setting never saved) is 20; cap 0 means no limit.
+	 */
+	public function test_visit_daily_cap_default_and_zero() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_visitors_amount' => '1' ) );
+		for ( $i = 0; $i < 20; $i++ ) {
+			$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		}
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+
+		$action = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '0',
+			)
+		);
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertSame( 21, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * The woo_wallet_referral_visit_daily_cap filter overrides the setting
+	 * and receives the referrer id.
+	 */
+	public function test_visit_daily_cap_filter() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_visitors_amount' => '1' ) );
+		$seen     = 0;
+		$filter   = function ( $cap, $referrer_id ) use ( &$seen ) {
+			$seen = $referrer_id;
+			return 1;
+		};
+		add_filter( 'woo_wallet_referral_visit_daily_cap', $filter, 10, 2 );
+		$this->visit_as_new_user( $action, $referrer );
+		$second = $this->visit_as_new_user( $action, $referrer );
+		remove_filter( 'woo_wallet_referral_visit_daily_cap', $filter, 10 );
+
+		$this->assertSame( 'daily_cap', $second['code'] );
+		$this->assertSame( $referrer, $seen );
+	}
+
+	/**
+	 * Sign-up rewards are not limited by the visit cap.
+	 */
+	public function test_visit_daily_cap_does_not_affect_signups() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '1',
+				'referrals__referring_signups_amount'     => '8',
+			)
+		);
+		$this->visit_as_new_user( $action, $referrer );
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+
+		WooWallet_Referral_Service::record_signup( $action, get_userdata( $referrer ), $customer, (string) $referrer );
+		$this->assertTrue( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertSame( 2, $this->count_credits( $referrer ) );
+	}
 }
