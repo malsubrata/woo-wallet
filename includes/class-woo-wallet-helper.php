@@ -39,23 +39,47 @@ class WOO_Wallet_Helper {
 	 * Wallet value a top-up order credits, before any gateway charge.
 	 *
 	 * From 1.7.2 a top-up line credits its pre-discount, tax-inclusive amount —
-	 * the figure the customer typed. Older lines (no TOPUP_GROSS_META) keep the
-	 * pre-1.7.2 rule — post-discount, pre-tax — so orders still pending at
-	 * upgrade credit exactly what they would have.
+	 * the figure the customer typed — but from 1.7.4 never more than was paid
+	 * for that line: its post-discount total + tax, minus its share of any
+	 * negative fees. Positive fees never raise the credit. A store that turned on
+	 * `allow_coupons_on_topup` keeps the documented promise: a coupon discount on
+	 * the line still credits the typed amount (negative fees are still capped).
+	 * Older lines (no TOPUP_GROSS_META) keep the pre-1.7.2 rule — post-discount,
+	 * pre-tax — so orders still pending at upgrade credit exactly what they would have.
 	 *
 	 * @param WC_Order $order      Top-up order.
 	 * @param int      $product_id Top-up product id.
 	 * @return float
 	 */
 	public static function get_topup_credit_amount( WC_Order $order, int $product_id ): float {
+		$coupon_is_credit = $order->get_coupon_codes() && 'on' === woo_wallet()->settings_api->get_option( 'allow_coupons_on_topup', '_wallet_settings_general', 'off' );
+
+		$negative_fees = 0.0;
+		foreach ( $order->get_fees() as $fee ) {
+			$negative_fees += min( 0.0, (float) $fee->get_total() + (float) $fee->get_total_tax() );
+		}
+		$all_lines = 0.0;
+		foreach ( $order->get_items() as $item ) {
+			$all_lines += (float) $item->get_total() + (float) $item->get_total_tax();
+		}
+
 		$amount = 0.0;
 		foreach ( $order->get_items() as $item ) {
 			if ( $product_id !== $item->get_product_id() ) {
 				continue;
 			}
-			$amount += $item->get_meta( self::TOPUP_GROSS_META )
-				? (float) $item->get_subtotal() + (float) $item->get_subtotal_tax()
-				: (float) $item->get_total();
+			if ( ! $item->get_meta( self::TOPUP_GROSS_META ) ) {
+				$amount += (float) $item->get_total();
+				continue;
+			}
+			$typed     = (float) $item->get_subtotal() + (float) $item->get_subtotal_tax();
+			$line_paid = (float) $item->get_total() + (float) $item->get_total_tax();
+			$paid      = $coupon_is_credit ? $typed : $line_paid;
+			if ( $negative_fees < 0 && $all_lines > 0 ) {
+				// Negative fees are shared across lines by what each line costs.
+				$paid += round( $negative_fees * $line_paid / $all_lines, wc_get_price_decimals() );
+			}
+			$amount += max( 0.0, min( $typed, $paid ) );
 		}
 		return $amount;
 	}
