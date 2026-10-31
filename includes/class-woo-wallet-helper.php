@@ -289,6 +289,12 @@ class WOO_Wallet_Helper {
 				$default[] = $gateway->id;
 			}
 		}
+		// get_option() swaps an empty saved value for the default; a list the admin
+		// cleared stays empty, only a never-saved one gets the default.
+		$saved = get_option( '_wallet_settings_general' );
+		if ( is_array( $saved ) && array_key_exists( 'allowed_payment_gateways', $saved ) && empty( $saved['allowed_payment_gateways'] ) ) {
+			$default = array();
+		}
 		$allowed = (array) woo_wallet()->settings_api->get_option( 'allowed_payment_gateways', '_wallet_settings_general', $default );
 		return array_values( array_diff( $allowed, array( 'wallet' ) ) );
 	}
