@@ -151,12 +151,24 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.4 (Unreleased) =
-* Tweak - Development in progress.
+= v1.7.4 (October 31, 2026) =
+* Security - Wallet top-up orders now follow "Allowed Payment Gateways" on the order payment page and in the REST API. The REST API refuses a payment method that is not allowed with a 400 error.
+* Security - Referral checks no longer trust forwarded IP headers unless the request comes from a trusted proxy (filter woo_wallet_trusted_proxies). Stores behind Cloudflare or a public load balancer should list their proxy ranges there.
+* Security - New daily limit on visit rewards per referrer (default 20, set 0 for no limit). Existing stores are capped at 20 straight away; filter woo_wallet_referral_visit_daily_cap.
+* Security - Wallet transfer recipient search no longer shows other customers' usernames or email addresses. Partial search, when enabled by filter, needs 3 characters and returns up to 10 results from the current site.
+* Fix - Refunded or cancelled wallet top-ups now take the credit back from the customer's wallet (never below zero). This also applies to old top-up orders refunded or cancelled after the update; the new transaction category topup_reversal appears in the REST API. Filter woo_wallet_reverse_topup_on_refund turns it off.
+* Fix - Top-up credit is capped at what was paid for the line (negative fees, edited line totals), including orders placed on 1.7.2-1.7.3 and paid after the update. "Allow coupons on wallet top-up" still credits the typed amount.
+* Fix - Cashback reversal never takes back more than was credited (refund then cancel), runs once per refund, and compares the balance in the order currency.
+* Fix - The REST top-up charges the typed amount in the requested `currency`, and a currency with no known exchange rate is refused. The response amount and the third argument of terawallet_topup_order_created are in that currency; with no `currency` sent, the order is in the store currency.
+* Fix - Referral rewards can no longer be paid twice for one referral, and names in transfer notes are shown as plain text.
+* Fix - A cleared "Allowed Payment Gateways" list now stays empty, so no top-up gateway is offered.
+* Fix - Possible fatal error in the top-up price calculation when the top-up product cannot be loaded.
+* Tweak - Uninstalling with WALLET_REMOVE_ALL_DATA now removes more of the plugin's options; options saved by TeraWallet Pro are kept.
+* Tweak - Corrected the message shown when searching users in the export screen.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.7.4 =
-Development in progress.
+Security: tighter top-up gateway, referral and transfer-search checks. Refunded or cancelled top-ups now take the credit back. Stores behind Cloudflare or a proxy must list its ranges in woo_wallet_trusted_proxies.
