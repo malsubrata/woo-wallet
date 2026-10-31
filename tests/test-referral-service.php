@@ -36,6 +36,8 @@ class Test_Referral_Service extends WP_UnitTestCase {
 	public function tear_down() {
 		unset( $_COOKIE['woo_wallet_referral'] );
 		remove_filter( 'query', array( $this, 'break_referral_insert' ) );
+		remove_filter( 'query', array( $this, 'break_referral_completion' ) );
+		remove_all_filters( 'woocommerce_logging_class' );
 		parent::tear_down();
 		wp_cache_delete( 'alloptions', 'options' );
 		if ( class_exists( 'WOO_Wallet_Actions' ) ) {
@@ -56,6 +58,60 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			return 'INSERT INTO ' . $GLOBALS['wpdb']->base_prefix . 'woo_wallet_referrals_missing_xyz (x) VALUES (1)';
 		}
 		return $query;
+	}
+
+	/**
+	 * Test query filter — make the post-credit referral UPDATE (the one that
+	 * writes transaction_id) fail, simulating a lost bookkeeping write.
+	 *
+	 * @param string $query SQL query.
+	 * @return string
+	 */
+	public function break_referral_completion( $query ) {
+		if ( 0 === stripos( ltrim( $query ), 'UPDATE' ) && false !== strpos( $query, 'woo_wallet_referrals' ) && false !== strpos( $query, 'transaction_id' ) ) {
+			return 'UPDATE ' . $GLOBALS['wpdb']->base_prefix . 'woo_wallet_referrals_missing_xyz SET x = 1';
+		}
+		return $query;
+	}
+
+	/**
+	 * Route wc_get_logger() to a stub that records messages per source.
+	 *
+	 * @return ArrayObject Logged [ source, message ] pairs.
+	 */
+	private function capture_logs() {
+		$logs   = new ArrayObject();
+		$logger = new class( $logs ) extends WC_Logger {
+			/**
+			 * Captured entries.
+			 *
+			 * @var ArrayObject
+			 */
+			private $logs;
+
+			/**
+			 * @param ArrayObject $logs Sink.
+			 */
+			public function __construct( $logs ) {
+				$this->logs = $logs;
+			}
+
+			/**
+			 * @param string $level   Level.
+			 * @param string $message Message.
+			 * @param array  $context Context.
+			 */
+			public function log( $level, $message, $context = array() ) {
+				$this->logs[] = array( $context['source'] ?? '', $message );
+			}
+		};
+		add_filter(
+			'woocommerce_logging_class',
+			function () use ( $logger ) {
+				return $logger;
+			}
+		);
+		return $logs;
 	}
 
 	/**
@@ -420,5 +476,234 @@ class Test_Referral_Service extends WP_UnitTestCase {
 			)
 		);
 		$this->assertCount( 3, $safe );
+	}
+
+	/**
+	 * Visit the referral link as a fresh logged-in customer.
+	 *
+	 * @param Action_Referrals $action   Action.
+	 * @param int              $referrer Referrer.
+	 * @return array Service envelope.
+	 */
+	private function visit_as_new_user( $action, $referrer ) {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		return WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+	}
+
+	/**
+	 * Daily cap 2: the 3rd visit that day is refused with `daily_cap`, no row
+	 * is inserted and nothing is credited.
+	 */
+	public function test_visit_daily_cap_blocks_third_visit() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '2',
+			)
+		);
+
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$third = $this->visit_as_new_user( $action, $referrer );
+
+		$this->assertFalse( $third['is_valid'] );
+		$this->assertSame( 'daily_cap', $third['code'] );
+		$this->assertSame( 2, get_wallet_referrals_count( array( 'referrer_id' => $referrer ) ) );
+		$this->assertSame( 2, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * The day starts at midnight in the store time zone: visits before it do
+	 * not count, visits after it do.
+	 */
+	public function test_visit_daily_cap_resets_at_store_midnight() {
+		global $wpdb;
+		update_option( 'timezone_string', 'Asia/Kolkata' );
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '2',
+			)
+		);
+		$this->visit_as_new_user( $action, $referrer );
+		$this->visit_as_new_user( $action, $referrer );
+
+		// Move both rows to one minute before store midnight → yesterday.
+		$now     = current_datetime();
+		$elapsed = $now->getTimestamp() - $now->setTime( 0, 0 )->getTimestamp();
+		$table   = $wpdb->base_prefix . 'woo_wallet_referrals';
+		$wpdb->query( $wpdb->prepare( "UPDATE {$table} SET date_created = NOW() - INTERVAL %d SECOND WHERE referrer_id = %d", $elapsed + 60, $referrer ) ); // phpcs:ignore WordPress.DB
+
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+		$this->assertSame( 4, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * Default cap (setting never saved) is 20; cap 0 means no limit.
+	 */
+	public function test_visit_daily_cap_default_and_zero() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_visitors_amount' => '1' ) );
+		for ( $i = 0; $i < 20; $i++ ) {
+			$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		}
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+
+		$action = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '0',
+			)
+		);
+		$this->assertTrue( $this->visit_as_new_user( $action, $referrer )['is_valid'] );
+		$this->assertSame( 21, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * The woo_wallet_referral_visit_daily_cap filter overrides the setting
+	 * and receives the referrer id.
+	 */
+	public function test_visit_daily_cap_filter() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_visitors_amount' => '1' ) );
+		$seen     = 0;
+		$filter   = function ( $cap, $referrer_id ) use ( &$seen ) {
+			$seen = $referrer_id;
+			return 1;
+		};
+		add_filter( 'woo_wallet_referral_visit_daily_cap', $filter, 10, 2 );
+		$this->visit_as_new_user( $action, $referrer );
+		$second = $this->visit_as_new_user( $action, $referrer );
+		remove_filter( 'woo_wallet_referral_visit_daily_cap', $filter, 10 );
+
+		$this->assertSame( 'daily_cap', $second['code'] );
+		$this->assertSame( $referrer, $seen );
+	}
+
+	/**
+	 * Sign-up rewards are not limited by the visit cap.
+	 */
+	public function test_visit_daily_cap_does_not_affect_signups() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action(
+			array(
+				'referrals__referring_visitors_amount'    => '1',
+				'referrals__referring_visitors_daily_cap' => '1',
+				'referrals__referring_signups_amount'     => '8',
+			)
+		);
+		$this->visit_as_new_user( $action, $referrer );
+		$this->assertSame( 'daily_cap', $this->visit_as_new_user( $action, $referrer )['code'] );
+
+		WooWallet_Referral_Service::record_signup( $action, get_userdata( $referrer ), $customer, (string) $referrer );
+		$this->assertTrue( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertSame( 2, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * Sign-up: when the write after the credit fails, the row is already
+	 * claimed, so a later call cannot pay it again; the failure is logged.
+	 */
+	public function test_signup_failed_completion_update_never_pays_twice() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_signups_amount' => '8' ) );
+		WooWallet_Referral_Service::record_signup( $action, get_userdata( $referrer ), $customer, (string) $referrer );
+		$logs = $this->capture_logs();
+
+		add_filter( 'query', array( $this, 'break_referral_completion' ) );
+		$suppress = $GLOBALS['wpdb']->suppress_errors( true );
+		$first  = WooWallet_Referral_Service::credit_signup( $action, $customer, 0 );
+		$second = WooWallet_Referral_Service::credit_signup( $action, $customer, 0 );
+		remove_filter( 'query', array( $this, 'break_referral_completion' ) );
+		$GLOBALS['wpdb']->suppress_errors( $suppress );
+
+		$this->assertTrue( $first['is_valid'] );
+		$this->assertFalse( $second['is_valid'] );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
+		$this->assertSame( 'completed', $this->signup_row( $customer )->status );
+		$sources = array_column( $logs->getArrayCopy(), 0 );
+		$this->assertContains( 'woo-wallet-referrals', $sources );
+	}
+
+	/**
+	 * Sign-up: when the credit itself fails, the claim is released so a later
+	 * qualifying order can still pay it — once.
+	 */
+	public function test_signup_failed_credit_returns_row_to_pending() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_signups_amount' => '8' ) );
+		WooWallet_Referral_Service::record_signup( $action, get_userdata( $referrer ), $customer, (string) $referrer );
+
+		update_user_meta( $referrer, '_is_wallet_locked', true );
+		$failed = WooWallet_Referral_Service::credit_signup( $action, $customer, 0 );
+		$this->assertSame( 'credit_failed', $failed['code'] );
+		$this->assertSame( 'pending', $this->signup_row( $customer )->status );
+
+		delete_user_meta( $referrer, '_is_wallet_locked' );
+		$this->assertTrue( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertFalse( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * Visit: when the write after the credit fails, the row still counts, so
+	 * the same visitor is not paid again in the period.
+	 */
+	public function test_visit_failed_completion_update_still_dedups() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$action   = $this->make_action( array( 'referrals__referring_visitors_amount' => '1' ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'customer' ) ) );
+		$this->capture_logs();
+
+		add_filter( 'query', array( $this, 'break_referral_completion' ) );
+		$suppress = $GLOBALS['wpdb']->suppress_errors( true );
+		$first  = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		$second = WooWallet_Referral_Service::record_visit( $action, get_userdata( $referrer ), (string) $referrer );
+		remove_filter( 'query', array( $this, 'break_referral_completion' ) );
+		$GLOBALS['wpdb']->suppress_errors( $suppress );
+
+		$this->assertTrue( $first['is_valid'] );
+		$this->assertSame( 'already_credited', $second['code'] );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
+	}
+
+	/**
+	 * Pre-1.6.2 meta-only referral: the pending row is synthesised under the
+	 * per-user lock. While another connection holds that lock, no row is
+	 * written and nothing is paid; once it is free the referral pays once.
+	 */
+	public function test_legacy_shim_waits_for_referred_user_lock() {
+		$referrer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		update_user_meta( $customer, '_referral_user_id', $referrer );
+		$action = $this->make_action( array( 'referrals__referring_signups_amount' => '8' ) );
+
+		$other = mysqli_init();
+		if ( ! @$other->real_connect( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			$this->markTestSkipped( 'Second DB connection unavailable.' );
+		}
+		$other->query( "SELECT GET_LOCK('woo_wallet_referral_signup_lock_" . (int) $customer . "', 5)" );
+		add_filter( 'woo_wallet_db_lock_timeout', '__return_zero' );
+
+		$blocked = WooWallet_Referral_Service::credit_signup( $action, $customer, 0 );
+
+		$other->query( "SELECT RELEASE_LOCK('woo_wallet_referral_signup_lock_" . (int) $customer . "')" );
+		$other->close();
+		remove_filter( 'woo_wallet_db_lock_timeout', '__return_zero' );
+
+		$this->assertSame( 'no_pending_referral', $blocked['code'] );
+		$this->assertNull( $this->signup_row( $customer ) );
+		$this->assertSame( 0, $this->count_credits( $referrer ) );
+
+		$this->assertTrue( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertFalse( WooWallet_Referral_Service::credit_signup( $action, $customer, 0 )['is_valid'] );
+		$this->assertSame( 1, $this->count_credits( $referrer ) );
 	}
 }

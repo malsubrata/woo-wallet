@@ -42,6 +42,11 @@ function woo_wallet_get_transaction_types() {
 			'description'      => __( 'Funds added to the wallet via a WooCommerce gateway.', 'woo-wallet' ),
 			'default_template' => '',
 		),
+		'topup_reversal'         => array(
+			'label'            => __( 'Top-up reversed', 'woo-wallet' ),
+			'description'      => __( 'Top-up taken back from the wallet when its order is refunded or cancelled.', 'woo-wallet' ),
+			'default_template' => '',
+		),
 		'cashback'               => array(
 			'label'            => __( 'Cashback', 'woo-wallet' ),
 			'description'      => __( 'Earned through cashback rules on completed orders.', 'woo-wallet' ),

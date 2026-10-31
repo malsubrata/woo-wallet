@@ -144,7 +144,13 @@ class Test_Topup_Typed_Amount extends WP_UnitTestCase {
 	 * a store-allowed 10% coupon — the reported £112.50 case.
 	 */
 	public function test_marked_order_credits_typed_amount() {
-		woo_wallet()->wallet->wallet_credit_purchase( $this->make_order( true, 125, 25, 112.5, 22.5 )->get_id() );
+		$this->set_general( 'allow_coupons_on_topup', 'on' );
+		$order  = $this->make_order( true, 125, 25, 112.5, 22.5 );
+		$coupon = new WC_Order_Item_Coupon();
+		$coupon->set_code( 'tenoff' );
+		$order->add_item( $coupon );
+		$order->save();
+		woo_wallet()->wallet->wallet_credit_purchase( $order->get_id() );
 
 		$this->assertEqualsWithDelta( 150.0, $this->balance(), 0.001 );
 	}

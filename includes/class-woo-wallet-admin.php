@@ -617,6 +617,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				array(
 					'i18n'                => array(
 						'inputTooShort' => __( 'Please enter 3 or more characters', 'woo-wallet' ),
+						'no_result'     => __( 'No results found', 'woo-wallet' ),
+						// Misspelt key kept for scripts that still read it.
 						'no_resualt'    => __( 'No results found', 'woo-wallet' ),
 						'searching'     => __( 'Searching…', 'woo-wallet' ),
 					),

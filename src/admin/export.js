@@ -145,7 +145,7 @@ import '../scss/export.scss';
 				return terawallet_export_params.i18n.inputTooShort;
 			},
 			noResults() {
-				return terawallet_export_params.i18n.no_resualt;
+				return terawallet_export_params.i18n.no_result;
 			},
 			searching() {
 				return terawallet_export_params.i18n.searching;

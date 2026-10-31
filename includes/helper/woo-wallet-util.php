@@ -131,10 +131,11 @@ if ( ! function_exists( 'is_wallet_rechargeable_order' ) ) {
 	 */
 	function is_wallet_rechargeable_order( $order ) {
 		$is_wallet_rechargeable_order = false;
-		if ( $order instanceof WC_Order ) {
+		$topup_product                = $order instanceof WC_Order ? get_wallet_rechargeable_product() : false;
+		if ( $topup_product ) {
 			foreach ( $order->get_items( 'line_item' ) as $item ) {
 				$product_id = $item['product_id'];
-				if ( get_wallet_rechargeable_product()->get_id() === $product_id ) {
+				if ( $topup_product->get_id() === $product_id ) {
 					$is_wallet_rechargeable_order = true;
 					break;
 				}

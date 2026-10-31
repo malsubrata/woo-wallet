@@ -61,7 +61,7 @@ if ( ! class_exists( 'TeraWallet_REST_Me_Topup_Controller' ) ) {
 							),
 							'currency'       => array(
 								'type'              => 'string',
-								'description'       => __( 'Optional ISO 4217 currency code. When supplied, the top-up order is created in this currency so the gateway charges in the requested currency.', 'woo-wallet' ),
+								'description'       => __( 'Optional ISO 4217 currency code. When supplied, the amount is read in this currency and the top-up order is created in it so the gateway charges that amount. Refused unless it is the store currency or has a known exchange rate.', 'woo-wallet' ),
 								'pattern'           => '^[A-Z]{3}$',
 								'sanitize_callback' => function ( $v ) {
 									return is_string( $v ) ? strtoupper( trim( $v ) ) : '';

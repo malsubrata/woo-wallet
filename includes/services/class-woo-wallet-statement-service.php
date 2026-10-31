@@ -560,7 +560,7 @@ if ( ! class_exists( 'WooWallet_Statement_Service' ) ) {
 				if ( 'transaction_id' === $columns[0] ) {
 					$parts[0] = '%d';
 				}
-				$unions[] = $wpdb->prepare( 'SELECT ' . implode( ', ', $parts ), $values ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				$unions[] = $wpdb->prepare( 'SELECT ' . implode( ', ', $parts ), $values ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			}
 
 			return '( ' . $ledger . ' UNION ALL ' . implode( ' UNION ALL ', $unions ) . ' ) AS t';

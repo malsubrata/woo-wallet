@@ -39,23 +39,47 @@ class WOO_Wallet_Helper {
 	 * Wallet value a top-up order credits, before any gateway charge.
 	 *
 	 * From 1.7.2 a top-up line credits its pre-discount, tax-inclusive amount —
-	 * the figure the customer typed. Older lines (no TOPUP_GROSS_META) keep the
-	 * pre-1.7.2 rule — post-discount, pre-tax — so orders still pending at
-	 * upgrade credit exactly what they would have.
+	 * the figure the customer typed — but from 1.7.4 never more than was paid
+	 * for that line: its post-discount total + tax, minus its share of any
+	 * negative fees. Positive fees never raise the credit. A store that turned on
+	 * `allow_coupons_on_topup` keeps the documented promise: a coupon discount on
+	 * the line still credits the typed amount (negative fees are still capped).
+	 * Older lines (no TOPUP_GROSS_META) keep the pre-1.7.2 rule — post-discount,
+	 * pre-tax — so orders still pending at upgrade credit exactly what they would have.
 	 *
 	 * @param WC_Order $order      Top-up order.
 	 * @param int      $product_id Top-up product id.
 	 * @return float
 	 */
 	public static function get_topup_credit_amount( WC_Order $order, int $product_id ): float {
+		$coupon_is_credit = $order->get_coupon_codes() && 'on' === woo_wallet()->settings_api->get_option( 'allow_coupons_on_topup', '_wallet_settings_general', 'off' );
+
+		$negative_fees = 0.0;
+		foreach ( $order->get_fees() as $fee ) {
+			$negative_fees += min( 0.0, (float) $fee->get_total() + (float) $fee->get_total_tax() );
+		}
+		$all_lines = 0.0;
+		foreach ( $order->get_items() as $item ) {
+			$all_lines += (float) $item->get_total() + (float) $item->get_total_tax();
+		}
+
 		$amount = 0.0;
 		foreach ( $order->get_items() as $item ) {
 			if ( $product_id !== $item->get_product_id() ) {
 				continue;
 			}
-			$amount += $item->get_meta( self::TOPUP_GROSS_META )
-				? (float) $item->get_subtotal() + (float) $item->get_subtotal_tax()
-				: (float) $item->get_total();
+			if ( ! $item->get_meta( self::TOPUP_GROSS_META ) ) {
+				$amount += (float) $item->get_total();
+				continue;
+			}
+			$typed     = (float) $item->get_subtotal() + (float) $item->get_subtotal_tax();
+			$line_paid = (float) $item->get_total() + (float) $item->get_total_tax();
+			$paid      = $coupon_is_credit ? $typed : $line_paid;
+			if ( $negative_fees < 0 && $all_lines > 0 ) {
+				// Negative fees are shared across lines by what each line costs.
+				$paid += round( $negative_fees * $line_paid / $all_lines, wc_get_price_decimals() );
+			}
+			$amount += max( 0.0, min( $typed, $paid ) );
 		}
 		return $amount;
 	}
@@ -90,9 +114,11 @@ class WOO_Wallet_Helper {
 	 * @return string
 	 */
 	public static function get_transfer_party_name( WP_User $user ): string {
-		$name = trim( $user->first_name . ' ' . $user->last_name );
-		if ( '' === $name && '' !== $user->display_name && $user->display_name !== $user->user_login && $user->display_name !== $user->user_email ) {
-			$name = $user->display_name;
+		// Names can hold markup when written straight to user meta; keep plain text only.
+		$name    = trim( wp_strip_all_tags( $user->first_name . ' ' . $user->last_name ) );
+		$display = trim( wp_strip_all_tags( $user->display_name ) );
+		if ( '' === $name && '' !== $display && $display !== $user->user_login && $display !== $user->user_email ) {
+			$name = $display;
 		}
 		if ( '' === $name ) {
 			$parts = explode( '@', (string) $user->user_email, 2 );
@@ -248,6 +274,32 @@ class WOO_Wallet_Helper {
 	}
 
 	/**
+	 * Gateway ids allowed to pay a wallet top-up ("Allowed Payment Gateways").
+	 * One list for cart checkout, the order-pay page and the REST top-up.
+	 * The wallet gateway is never allowed.
+	 *
+	 * @since 1.7.4
+	 * @return array Gateway ids.
+	 */
+	public static function get_topup_allowed_gateways(): array {
+		$default = array();
+		$offline = self::get_topup_offline_gateways();
+		foreach ( WC()->payment_gateways()->payment_gateways as $gateway ) {
+			if ( 'yes' === $gateway->enabled && 'wallet' !== $gateway->id && ! in_array( $gateway->id, $offline, true ) ) {
+				$default[] = $gateway->id;
+			}
+		}
+		// get_option() swaps an empty saved value for the default; a list the admin
+		// cleared stays empty, only a never-saved one gets the default.
+		$saved = get_option( '_wallet_settings_general' );
+		if ( is_array( $saved ) && array_key_exists( 'allowed_payment_gateways', $saved ) && empty( $saved['allowed_payment_gateways'] ) ) {
+			$default = array();
+		}
+		$allowed = (array) woo_wallet()->settings_api->get_option( 'allowed_payment_gateways', '_wallet_settings_general', $default );
+		return array_values( array_diff( $allowed, array( 'wallet' ) ) );
+	}
+
+	/**
 	 * Drop WooCommerce's `wc-` status prefix.
 	 *
 	 * Anchored and applied once: a status slug that legitimately contains
@@ -271,5 +323,128 @@ class WOO_Wallet_Helper {
 		}
 
 		return $normalized;
+	}
+
+	/**
+	 * Client IP address, without trusting headers the visitor can set.
+	 *
+	 * Uses REMOTE_ADDR. A forwarded header is read only when REMOTE_ADDR is a
+	 * trusted proxy: listed in the `woo_wallet_trusted_proxies` filter, or a
+	 * private/reserved address (a reverse proxy on the same network). Then
+	 * X-Forwarded-For (right-most address that is not a proxy), else X-Real-IP.
+	 * A fingerprint for abuse checks, not an authoritative address.
+	 *
+	 * @since 1.7.4
+	 * @return string IP address, or '' when unknown.
+	 */
+	public static function get_client_ip(): string {
+		$remote = self::clean_ip( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+		/**
+		 * Proxy addresses (IPs or CIDR ranges) whose forwarded headers are
+		 * trusted for the client IP. Private and reserved addresses are always
+		 * treated as proxies. A public proxy or CDN in front of the site (e.g.
+		 * Cloudflare, a public load balancer) must be listed here, unless the
+		 * server already restores the visitor address in REMOTE_ADDR; otherwise
+		 * every visitor is seen as the proxy. The proxy must append to (or
+		 * overwrite) X-Forwarded-For. Invalid entries are ignored.
+		 *
+		 * @since 1.7.4
+		 *
+		 * @param string[] $proxies IPs or CIDR ranges. Default empty.
+		 */
+		$trusted   = array_filter( array_map( 'strval', (array) apply_filters( 'woo_wallet_trusted_proxies', array() ) ) );
+		$is_proxy  = function ( $ip ) use ( $trusted ) {
+			return ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) || self::ip_in_ranges( $ip, $trusted );
+		};
+		$client_ip = $remote;
+		if ( $remote && $is_proxy( $remote ) ) {
+			$found = '';
+			if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				// Right to left: the first address that is not a proxy is the client.
+				// Addresses a visitor adds sit to the left of it and are never reached.
+				// An invalid hop stops the walk (REMOTE_ADDR is used).
+				$hops = array_reverse( explode( ',', wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+				$last = '';
+				foreach ( $hops as $raw_hop ) {
+					$hop = self::clean_ip( $raw_hop );
+					if ( '' === $hop ) {
+						$last = '';
+						break;
+					}
+					$last = $hop;
+					if ( ! $is_proxy( $hop ) ) {
+						$found = $hop;
+						break;
+					}
+				}
+				if ( '' === $found ) {
+					$found = $last; // Every hop is a proxy: the client is on the private network.
+				}
+			}
+			if ( '' === $found && empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && ! empty( $_SERVER['HTTP_X_REAL_IP'] ) ) {
+				$found = self::clean_ip( wp_unslash( $_SERVER['HTTP_X_REAL_IP'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by clean_ip().
+			}
+			$client_ip = '' !== $found ? $found : $remote;
+		}
+		/**
+		 * Filters the client IP address used by the plugin's checks.
+		 *
+		 * @since 1.7.4
+		 *
+		 * @param string $client_ip   Client IP ('' when unknown).
+		 * @param string $remote_addr Validated REMOTE_ADDR ('' when invalid).
+		 */
+		return (string) apply_filters( 'woo_wallet_client_ip', $client_ip, $remote );
+	}
+
+	/**
+	 * A valid IP address from a header value, port and brackets removed, in
+	 * canonical form (IPv4-mapped IPv6 becomes IPv4), or ''.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private static function clean_ip( $value ): string {
+		$value = trim( is_string( $value ) ? $value : '' );
+		// '1.2.3.4:80', '[2001:db8::1]', '[2001:db8::1]:80'.
+		$value = (string) preg_replace( '/^(\d+\.\d+\.\d+\.\d+):\d+$|^\[([^\]]+)\](?::\d+)?$/', '$1$2', $value );
+		if ( ! filter_var( $value, FILTER_VALIDATE_IP ) ) {
+			return '';
+		}
+		$bin = inet_pton( $value );
+		if ( 16 === strlen( $bin ) && "\0\0\0\0\0\0\0\0\0\0\xff\xff" === substr( $bin, 0, 12 ) ) {
+			$bin = substr( $bin, 12 );
+		}
+		return (string) inet_ntop( $bin );
+	}
+
+	/**
+	 * Whether an IP is in any of the given IPs / CIDR ranges.
+	 *
+	 * @param string   $ip     Valid IP address.
+	 * @param string[] $ranges IPs or CIDR ranges; invalid entries are ignored.
+	 * @return bool
+	 */
+	private static function ip_in_ranges( string $ip, array $ranges ): bool {
+		$ip_bin = inet_pton( $ip );
+		foreach ( $ranges as $range ) {
+			$parts = explode( '/', trim( $range ), 2 );
+			if ( ! filter_var( $parts[0], FILTER_VALIDATE_IP ) ) {
+				continue;
+			}
+			$net_bin = inet_pton( $parts[0] );
+			$max     = strlen( $net_bin ) * 8;
+			if ( strlen( $net_bin ) !== strlen( $ip_bin ) || ( isset( $parts[1] ) && ( ! preg_match( '/^\d{1,3}$/', $parts[1] ) || (int) $parts[1] > $max ) ) ) {
+				continue;
+			}
+			$bits  = isset( $parts[1] ) ? (int) $parts[1] : $max;
+			$bytes = intdiv( $bits, 8 );
+			$rest  = $bits % 8;
+			if ( substr( $ip_bin, 0, $bytes ) === substr( $net_bin, 0, $bytes )
+				&& ( ! $rest || ( ord( $ip_bin[ $bytes ] ) >> ( 8 - $rest ) ) === ( ord( $net_bin[ $bytes ] ) >> ( 8 - $rest ) ) ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

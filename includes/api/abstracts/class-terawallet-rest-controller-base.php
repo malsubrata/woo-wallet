@@ -133,6 +133,7 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 			$known = array(
 				'topup'               => 'topup',
 				'credit_purchase'     => 'topup',
+				'topup_reversal'      => 'topup_reversal',
 				'cashback'            => 'cashback',
 				'cashback_adjustment' => 'cashback_adjustment',
 				'cashback_refund'     => 'cashback_refund',
@@ -269,6 +270,7 @@ if ( ! class_exists( 'TeraWallet_REST_Controller_Base' ) ) {
 		protected function category_label( $category ) {
 			$labels = array(
 				'topup'               => __( 'Top-up', 'woo-wallet' ),
+				'topup_reversal'      => __( 'Top-up reversed', 'woo-wallet' ),
 				'cashback'            => __( 'Cashback', 'woo-wallet' ),
 				'cashback_adjustment' => __( 'Cashback adjustment', 'woo-wallet' ),
 				'cashback_refund'     => __( 'Cashback refund', 'woo-wallet' ),

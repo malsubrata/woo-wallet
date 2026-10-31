@@ -411,31 +411,33 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			check_ajax_referer( 'search-user', 'security' );
 			$return = array();
 			$term   = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+			// Labels never carry another user's login or stored email.
 			if ( apply_filters( 'woo_wallet_user_search_exact_match', true ) ) {
-				$user = get_user_by( apply_filters( 'woo_wallet_user_search_by', 'email' ), $term );
+				$search_by = apply_filters( 'woo_wallet_user_search_by', 'email' );
+				$user      = get_user_by( $search_by, $term );
 				if ( $user && wp_get_current_user()->user_email !== $user->user_email ) {
+					$name     = WOO_Wallet_Helper::get_transfer_party_name( $user );
 					$return[] = array(
-						/* translators: 1: user_login, 2: user_email */
-						'label' => sprintf( _x( '%1$s (%2$s)', 'user autocomplete result', 'woo-wallet' ), $user->user_login, $user->user_email ),
+						// The sender typed the email, so echoing it back reveals nothing new.
+						/* translators: 1: recipient name, 2: email address the sender searched for */
+						'label' => 'email' === $search_by ? sprintf( _x( '%1$s (%2$s)', 'user autocomplete result', 'woo-wallet' ), $name, $term ) : $name,
 						'value' => $user->ID,
 					);
 				}
-			} else {
-				$blog_id = isset( $_POST['site_id'] ) ? sanitize_text_field( wp_unslash( $_POST['site_id'] ) ) : get_current_blog_id();
-
+			} elseif ( mb_strlen( trim( $term, '*' ) ) >= 3 ) {
+				// Leading/trailing `*` are wildcards to WP_User_Query; they do not count toward the minimum.
 				$users = get_users(
 					array(
-						'blog_id'        => $blog_id,
-						'search'         => '*' . $term . '*',
+						'search'         => '*' . trim( $term, '*' ) . '*',
 						'exclude'        => array( get_current_user_id() ),
 						'search_columns' => array( 'user_login', 'user_nicename', 'user_email' ),
+						'number'         => 10,
 					)
 				);
 
 				foreach ( $users as $user ) {
 					$return[] = array(
-						/* translators: 1: user_login, 2: user_email */
-						'label' => sprintf( _x( '%1$s (%2$s)', 'user autocomplete result', 'woo-wallet' ), $user->user_login, $user->user_email ),
+						'label' => WOO_Wallet_Helper::get_transfer_party_name( $user ),
 						'value' => $user->ID,
 					);
 				}

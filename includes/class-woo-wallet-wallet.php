@@ -442,6 +442,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return;
 			}
 
+			// Reopened after reverse_topup() took the top-up back: no automatic re-credit.
+			if ( $order->get_meta( '_wc_wallet_topup_reversal_closed' ) ) {
+				$order->delete_meta_data( '_wc_wallet_topup_reversal_closed' );
+				$order->add_order_note( __( 'Wallet top-up was taken back when this order was refunded or cancelled. It is not credited again automatically; credit the customer\'s wallet by hand if needed.', 'woo-wallet' ) );
+				$order->save();
+				return;
+			}
+
 			// Cash on delivery is collected later, so these top-ups are credited
 			// only once the admin marks the order Completed.
 			$credit_on_completed = (array) apply_filters( 'woo_wallet_topup_credit_on_completed_gateways', array( 'cod' ), $order );
@@ -516,6 +524,214 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
 		}
+
+		/**
+		 * Take a refund's share of a credited top-up back from the wallet.
+		 * Hooks `woocommerce_order_refunded`.
+		 *
+		 * @since 1.7.4
+		 * @param int $order_id  Order id.
+		 * @param int $refund_id Refund id.
+		 * @return void
+		 */
+		public function reverse_topup_on_refund( $order_id, $refund_id ) {
+			$this->reverse_topup( $order_id, absint( $refund_id ) );
+		}
+
+		/**
+		 * Take whatever is left of a credited top-up back from the wallet.
+		 * Hooks `woocommerce_order_status_cancelled` and `woocommerce_order_status_refunded`.
+		 *
+		 * @since 1.7.4
+		 * @param int $order_id Order id.
+		 * @return void
+		 */
+		public function reverse_topup_on_status( $order_id ) {
+			$this->reverse_topup( $order_id, 0 );
+		}
+
+		/**
+		 * Debit a credited top-up when its order is refunded or cancelled.
+		 *
+		 * Works from the credit's ledger row (stored amount + currency), so the
+		 * reversal never re-converts at today's rate. A refund takes its share
+		 * (refund ÷ order total); a cancel, a Refunded status or the refund that
+		 * completes the order total takes whatever is left. What was handled is
+		 * kept in `_wc_wallet_topup_reversed_amount` (debited) and
+		 * `_wc_wallet_topup_reversal_shortfall` (already spent, never retried),
+		 * so the same money is never taken twice. The wallet never goes below 0.
+		 *
+		 * @since 1.7.4
+		 * @param int $order_id  Order id.
+		 * @param int $refund_id Refund id, 0 to take whatever is left.
+		 * @return void
+		 */
+		private function reverse_topup( $order_id, $refund_id ) {
+			global $wpdb;
+			$order = wc_get_order( $order_id );
+			if ( ! $order || ! is_wallet_rechargeable_order( $order ) || ! $order->get_meta( '_wc_wallet_purchase_credited' ) ) {
+				return;
+			}
+			/**
+			 * Whether a refunded or cancelled top-up is taken back from the wallet.
+			 *
+			 * @since 1.7.4
+			 * @param bool     $reverse Default true.
+			 * @param WC_Order $order   Top-up order.
+			 */
+			if ( ! apply_filters( 'woo_wallet_reverse_topup_on_refund', true, $order ) ) {
+				return;
+			}
+
+			// Same lock as wallet_credit_purchase(): a credit and a reversal of one order never overlap.
+			$lock_name    = 'woo_wallet_credit_purchase_' . absint( $order_id );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				$order->add_order_note( $this->topup_reversal_skipped_note() );
+				return;
+			}
+
+			try {
+				$order = WOO_Wallet_Helper::get_order_for_update( $order_id );
+				if ( ! $order ) {
+					return;
+				}
+				$customer_id = (int) $order->get_customer_id();
+				$credit      = $wpdb->get_row( $wpdb->prepare( "SELECT amount, currency FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE transaction_id = %d AND user_id = %d AND type = 'credit' AND deleted = 0", absint( $order->get_meta( '_wallet_payment_transaction_id' ) ), $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				if ( ! $customer_id || ! $credit ) {
+					// Legacy order without the credit id, credit row deleted, or customer changed. Say so once.
+					if ( ! $order->get_meta( '_wc_wallet_topup_reversal_no_credit_noted' ) ) {
+						$order->update_meta_data( '_wc_wallet_topup_reversal_no_credit_noted', 1 );
+						$order->add_order_note( __( 'Wallet top-up not taken back: no wallet credit for this order was found for its customer. If the wallet was credited, take it back by hand.', 'woo-wallet' ) );
+						$order->save();
+					}
+					return;
+				}
+
+				$decimals  = wc_get_price_decimals();
+				$credited  = (float) $credit->amount;
+				$reversed  = (float) $order->get_meta( '_wc_wallet_topup_reversed_amount' );
+				$shortfall = (float) $order->get_meta( '_wc_wallet_topup_reversal_shortfall' );
+				$left      = max( 0.0, round( $credited - $reversed - $shortfall, $decimals ) );
+				if ( $left <= 0 ) {
+					return;
+				}
+
+				// One share per refund, even when woocommerce_order_refunded fires twice for it.
+				$done_refunds = array_map( 'absint', (array) $order->get_meta( '_wc_wallet_topup_reversed_refunds' ) );
+				if ( $refund_id && in_array( $refund_id, $done_refunds, true ) ) {
+					return;
+				}
+				$order_total = (float) $order->get_total( 'edit' );
+				$refund      = $refund_id ? wc_get_order( $refund_id ) : false;
+				$take_all    = ! $refund_id || $order->has_status( array( 'cancelled', 'refunded' ) )
+					|| ( $order_total > 0 && (float) $order->get_total_refunded() + 0.001 >= $order_total );
+				if ( ! $take_all && $order_total <= 0 ) {
+					return; // A refund on a free top-up returns no money: nothing to share.
+				}
+				if ( $take_all ) {
+					$due = $left;
+				} elseif ( $refund ) {
+					$due = min( $left, round( $credited * min( 1.0, abs( (float) $refund->get_amount() ) / $order_total ), $decimals ) );
+				} else {
+					return;
+				}
+				if ( $due <= 0 ) {
+					return;
+				}
+
+				$reason = $order->has_status( 'cancelled' )
+					/* translators: %s: order number */
+					? sprintf( __( 'Wallet top-up reversed: order #%s cancelled', 'woo-wallet' ), $order->get_order_number() )
+					/* translators: %s: order number */
+					: sprintf( __( 'Wallet top-up reversed: order #%s refunded', 'woo-wallet' ), $order->get_order_number() );
+				$price  = function ( $amount ) use ( $customer_id, $credit ) {
+					return wc_price( $amount, woo_wallet_wc_price_args( $customer_id, array( 'currency' => $credit->currency ) ) );
+				};
+
+				// Raw SUM under the user lock (never the filtered balance) so the cap holds.
+				$per_currency = 'per_currency' === $this->get_currency_mode();
+				$user_lock    = 'woo_wallet_lock_user_' . $customer_id . ( $per_currency ? '_' . $credit->currency : '' );
+				$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $user_lock, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				if ( '1' !== $got_lock && 1 !== $got_lock ) {
+					$order->add_order_note( $this->topup_reversal_skipped_note() );
+					return;
+				}
+				try {
+					$balance = $per_currency
+						? (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $customer_id, $credit->currency ) ) // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+						: (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					// Floor to the store decimals so the debit can never exceed the balance.
+					$debit   = floor( min( $due, max( 0.0, $balance ) ) * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals );
+					$missing = round( $due - $debit, $decimals );
+
+					// Claim before the debit: a crash afterwards under-reverses, never double-debits.
+					$order->update_meta_data( '_wc_wallet_topup_reversed_amount', $reversed + $debit );
+					if ( $missing > 0 ) {
+						$order->update_meta_data( '_wc_wallet_topup_reversal_shortfall', $shortfall + $missing );
+					}
+					if ( $take_all ) {
+						$order->update_meta_data( '_wc_wallet_topup_reversal_closed', 1 );
+					}
+					if ( $refund_id ) {
+						$order->update_meta_data( '_wc_wallet_topup_reversed_refunds', array_merge( $done_refunds, array( $refund_id ) ) );
+					}
+					$order->save();
+
+					if ( $debit > 0 ) {
+						$transaction_id = $this->debit(
+							$customer_id,
+							$debit,
+							$reason,
+							array(
+								'for'      => 'topup_reversal',
+								'category' => 'topup_reversal',
+								'currency' => $credit->currency,
+								'order_id' => $order->get_order_number(),
+							)
+						);
+						if ( ! $transaction_id ) {
+							$order->update_meta_data( '_wc_wallet_topup_reversed_amount', $reversed );
+							if ( $missing > 0 ) {
+								$order->update_meta_data( '_wc_wallet_topup_reversal_shortfall', $shortfall );
+							}
+							if ( $take_all ) {
+								$order->delete_meta_data( '_wc_wallet_topup_reversal_closed' );
+							}
+							$order->update_meta_data( '_wc_wallet_topup_reversed_refunds', $done_refunds );
+							$order->save();
+							/* translators: %s: amount */
+							$order->add_order_note( sprintf( __( 'Wallet top-up refund: could not take %s back from the wallet. Check the wallet by hand.', 'woo-wallet' ), $price( $due ) ) );
+							return;
+						}
+					}
+				} finally {
+					$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $user_lock ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				}
+
+				if ( $missing > 0 ) {
+					/* translators: 1: amount taken back, 2: amount due, 3: amount already spent */
+					$order->add_order_note( sprintf( __( 'Wallet top-up refund: took back %1$s of %2$s from the wallet. The customer had already spent %3$s.', 'woo-wallet' ), $price( $debit ), $price( $due ), $price( $missing ) ) );
+				} else {
+					/* translators: %s: amount */
+					$order->add_order_note( sprintf( __( 'Wallet top-up refund: %s taken back from the customer\'s wallet.', 'woo-wallet' ), $price( $debit ) ) );
+				}
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+		}
+
+		/**
+		 * Order note when a top-up reversal could not get its lock.
+		 *
+		 * @since 1.7.4
+		 * @return string
+		 */
+		private function topup_reversal_skipped_note() {
+			return __( 'Wallet top-up not taken back: the wallet was busy. Nothing was debited; take it back by hand if needed.', 'woo-wallet' );
+		}
+
 		/**
 		 * Append a cashback transaction id to the order meta array marker.
 		 *
@@ -1127,11 +1343,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 * @param float    $clawback_amount Amount to attempt to debit.
 		 * @param string   $reason         'cancelled' or 'refunded' — used in order notes.
 		 * @param bool     $clear_markers  Whether to delete the cashback meta markers on success.
-		 * @return bool True if any ledger movement was recorded; false otherwise.
+		 * @param int      $refund_id      Refund this clawback handles (recorded with the tracking), 0 for a cancel.
+		 * @return bool|null True if any ledger movement was recorded; false otherwise; null when
+		 *                   the clawback could not run (wallet lock not acquired or debit refused):
+		 *                   it stays outstanding and an order note asks for a manual reversal.
 		 *
 		 * @since 1.6.1
+		 * @since 1.7.4 Capped at what earlier clawbacks of the order left; returns null when it could not run.
 		 */
-		private function execute_cashback_clawback( $order, $clawback_amount, $reason = 'cancelled', $clear_markers = true ) {
+		private function execute_cashback_clawback( $order, $clawback_amount, $reason = 'cancelled', $clear_markers = true, $refund_id = 0 ) {
 			global $wpdb;
 
 			$customer_id = (int) $order->get_customer_id();
@@ -1159,33 +1379,107 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			// Read raw balance inside a lock — see CLAUDE.md guidance on why we never
 			// call apply_filters('woo_wallet_current_balance') inside a locked region.
-			$lock_name    = 'woo_wallet_lock_user_' . $customer_id;
-			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $customer_id );
+			// Same lock name as recode_transaction(), per currency bucket in per_currency mode.
+			$order_currency  = strtoupper( (string) $order->get_currency( 'edit' ) );
+			$per_currency    = 'per_currency' === $this->get_currency_mode();
+			$ledger_currency = $per_currency ? $order_currency : $this->resolve_base_currency();
+			$lock_name       = 'woo_wallet_lock_user_' . $customer_id . ( $per_currency ? '_' . $order_currency : '' );
+			$lock_timeout    = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $customer_id );
 			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			if ( '1' !== $got_lock && 1 !== $got_lock ) {
-				return false;
+				$this->add_clawback_not_completed_note( $order, $clawback_amount );
+				return null;
 			}
 
-			$moved = false;
-
-			// Note text: "partly reversed" whenever less than the order's whole
-			// cashback is taken back (e.g. a prorated partial refund).
-			$total_cashback = (float) get_total_order_cashback_amount( $order->get_id() );
-			$reversed_note  = function ( $amount ) use ( $order, $total_cashback, $reason ) {
-				if ( $total_cashback - $amount > 0.001 ) {
-					/* translators: 1: amount taken back, 2: order's total cashback */
-					return sprintf( __( 'Cashback partly reversed: %1$s of %2$s.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ), WOO_Wallet_Helper::order_note_price( $total_cashback, $order ) );
-				}
-				return 'refunded' === $reason
-					/* translators: %s: amount taken back */
-					? sprintf( __( 'Cashback %s fully reversed upon refund.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) )
-					/* translators: %s: amount taken back */
-					: sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) );
-			};
+			$moved   = false;
+			$refused = false;
 
 			try {
+				// Every clawback of this order (refund or cancel) takes at most what earlier ones
+				// left: credited − taken back − already recorded as spent (no retry). The tracking
+				// meta is kept in the ledger currency (like the credit rows) and converted at the
+				// same rate as the total, so a rate change between clawbacks cannot over-claw.
+				$fresh = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
+				if ( $fresh ) {
+					$order = $fresh;
+				}
+				$decimals        = wc_get_price_decimals();
+				$convert         = function ( $amount, $from, $to ) {
+					return $from === $to || ! class_exists( 'Woo_Wallet_Currency_Manager' ) ? (float) $amount : (float) Woo_Wallet_Currency_Manager::instance()->convert( $amount, $from, $to );
+				};
+				$total_cashback  = (float) get_total_order_cashback_amount( $order->get_id() );
+				$clawed_back     = (float) $order->get_meta( '_cashback_clawed_back_amount' );
+				$shortfall       = (float) $order->get_meta( '_cashback_clawback_shortfall' );
+				$handled         = $convert( $clawed_back + $shortfall, $ledger_currency, $order_currency );
+				$clawback_amount = round( min( (float) $clawback_amount, $total_cashback - $handled ), $decimals );
+				$claim_refund    = function () use ( $order, $refund_id ) {
+					$done = array_filter( array_map( 'absint', (array) $order->get_meta( '_cashback_clawback_refunds' ) ) );
+					if ( $refund_id && ! in_array( absint( $refund_id ), $done, true ) ) {
+						$order->update_meta_data( '_cashback_clawback_refunds', array_merge( $done, array( absint( $refund_id ) ) ) );
+					}
+				};
+				if ( $clawback_amount <= 0 ) {
+					$claim_refund();
+					$order->save();
+					return false;
+				}
+
+				// Note text: "partly reversed" whenever less than the order's whole
+				// cashback is taken back (e.g. a prorated partial refund).
+				$reversed_note = function ( $amount ) use ( $order, $total_cashback, $reason ) {
+					if ( $total_cashback - $amount > 0.001 ) {
+						/* translators: 1: amount taken back, 2: order's total cashback */
+						return sprintf( __( 'Cashback partly reversed: %1$s of %2$s.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ), WOO_Wallet_Helper::order_note_price( $total_cashback, $order ) );
+					}
+					return 'refunded' === $reason
+						/* translators: %s: amount taken back */
+						? sprintf( __( 'Cashback %s fully reversed upon refund.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) )
+						/* translators: %s: amount taken back */
+						: sprintf( __( 'Cashback %s fully reversed upon cancellation.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) );
+				};
+
 				// Raw SUM — the only race-free source of truth (see recode_transaction comment at line 661).
-				$balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$balance = $per_currency
+					? (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $customer_id, $ledger_currency ) ) // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					: (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				// The balance is in the ledger currency, the clawback in the order currency: convert the
+				// balance at the rate the debit converts with, floored so the debit never exceeds it.
+				$available = floor( $convert( max( 0.0, $balance ), $ledger_currency, $order_currency ) * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals );
+				// The row is durable once inserted, and a later recorded listener may throw out of
+				// debit(): save the tracking and the refund claim first, from the hook itself.
+				$debit_and_track = function ( $amount, $spent = 0.0 ) use ( $order, $customer_id, $clawed_back, $shortfall, $convert, $order_currency, $ledger_currency, $claim_refund, &$refused ) {
+					$tracked = false;
+					$track   = function ( $transaction_id, $user_id, $stored_amount, $type ) use ( &$tracked, $order, $customer_id, $clawed_back, $shortfall, $spent, $convert, $order_currency, $ledger_currency, $claim_refund ) {
+						if ( $tracked || (int) $user_id !== $customer_id || 'debit' !== $type ) {
+							return;
+						}
+						$tracked = true;
+						$order->update_meta_data( '_cashback_clawed_back_amount', $clawed_back + (float) $stored_amount );
+						if ( $spent > 0.001 ) {
+							$order->update_meta_data( '_cashback_clawback_shortfall', $shortfall + $convert( $spent, $order_currency, $ledger_currency ) );
+						}
+						$claim_refund();
+						$order->save();
+					};
+					add_action( 'woo_wallet_transaction_recorded', $track, PHP_INT_MIN, 4 );
+					try {
+						$transaction_id = $this->debit(
+							$customer_id,
+							$amount,
+							// translators: %s: order number.
+							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
+							array(
+								'currency' => $order->get_currency( 'edit' ),
+								'for'      => 'refund',
+								'order_id' => $order->get_order_number(),
+							)
+						);
+					} finally {
+						remove_action( 'woo_wallet_transaction_recorded', $track, PHP_INT_MIN );
+					}
+					$refused = ! $transaction_id;
+					return $transaction_id;
+				};
 
 				if ( 'force_negative' === $strategy ) {
 					// Allow the debit to go negative for this single call only.
@@ -1193,18 +1487,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						return false; // never disallow.
 					};
 					add_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX, 3 );
-					/* translators: Order number */
-					$debit_result = $this->debit(
-						$customer_id,
-						$clawback_amount,
-						// translators: %s: order number.
-						sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
-						array(
-							'currency' => $order->get_currency( 'edit' ),
-							'for'      => 'refund',
-							'order_id' => $order->get_order_number(),
-						)
-					);
+					$debit_result = $debit_and_track( $clawback_amount );
 					remove_filter( 'woo_wallet_disallow_negative_transaction', $allow_negative_cb, PHP_INT_MAX );
 
 					if ( $debit_result ) {
@@ -1217,52 +1500,30 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$moved = true;
 					}
 				} elseif ( 'full_or_skip' === $strategy ) {
-					if ( $balance >= $clawback_amount ) {
-						/* translators: Order number */
-						$debit_result = $this->debit(
-							$customer_id,
-							$clawback_amount,
-							// translators: %s: order number.
-							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
-							array(
-								'currency' => $order->get_currency( 'edit' ),
-								'for'      => 'refund',
-								'order_id' => $order->get_order_number(),
-							)
-						);
-						if ( $debit_result ) {
+					if ( $available >= $clawback_amount ) { // Both at store precision.
+						if ( $debit_and_track( $clawback_amount ) ) {
 							$order->add_order_note( $reversed_note( $clawback_amount ) );
 							$moved = true;
 						}
 					} else {
 						/* translators: 1: formatted cashback total, 2: formatted available balance */
-						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $clawback_amount, $order ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id, array( 'currency' => get_option( 'woocommerce_currency' ) ) ) ) ) ); // The wallet balance is kept in base currency.
+						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $clawback_amount, $order ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id, array( 'currency' => $ledger_currency ) ) ) ) ); // The balance in the ledger currency.
 					}
 				} else {
 					// 'partial' (default): debit whatever is available.
-					$available    = max( 0.0, $balance );
 					$debit_amount = min( $available, $clawback_amount );
+					// Only what the balance could not cover is "spent" (never retried); a debit that
+					// failed for another reason stays outstanding, whole, for a later clawback.
+					$spent = $clawback_amount - $debit_amount;
 
 					if ( $debit_amount > 0 ) {
-						/* translators: Order number */
-						$debit_result = $this->debit(
-							$customer_id,
-							$debit_amount,
-							// translators: %s: order number.
-							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
-							array(
-								'currency' => $order->get_currency( 'edit' ),
-								'for'      => 'refund',
-								'order_id' => $order->get_order_number(),
-							)
-						);
-						if ( $debit_result ) {
-							$moved = true;
-						}
+						$moved = (bool) $debit_and_track( $debit_amount, $spent );
+					} elseif ( $spent > 0.001 ) {
+						$order->update_meta_data( '_cashback_clawback_shortfall', $shortfall + $convert( $spent, $order_currency, $ledger_currency ) );
 					}
 
 					$unreversed = $clawback_amount - ( $moved ? $debit_amount : 0 );
-					if ( $unreversed > 0.001 ) {
+					if ( $unreversed > 0.001 && ! $refused ) {
 						WOO_Wallet_Helper::update_order_meta_data( $order, '_cashback_unreversed_amount', $unreversed );
 						/* translators: 1: formatted debit amount, 2: formatted unreversed amount */
 						$order->add_order_note( sprintf( __( 'Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $moved ? $debit_amount : 0, $order ), WOO_Wallet_Helper::order_note_price( $unreversed, $order ) ) );
@@ -1270,13 +1531,23 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$order->add_order_note( $reversed_note( $clawback_amount ) );
 					}
 				}
+				if ( $refused ) {
+					$this->add_clawback_not_completed_note( $order, $clawback_amount );
+				} else {
+					$claim_refund();
+				}
+				$order->save(); // Tracking meta lands before the next clawback can read it.
 			} finally {
 				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}
 
 			if ( $moved && $clear_markers ) {
+				// Clearing the markers lets wallet_cashback() credit the order again (e.g. reopened);
+				// reset the tracking with them so that new credit is clawed back in full.
 				$order->delete_meta_data( '_general_cashback_transaction_id' );
 				$order->delete_meta_data( '_coupon_cashback_transaction_id' );
+				$order->delete_meta_data( '_cashback_clawed_back_amount' );
+				$order->delete_meta_data( '_cashback_clawback_shortfall' );
 				$order->save();
 			} elseif ( $clear_markers && 'full_or_skip' !== $strategy ) {
 				// Even when no movement was recorded in partial mode, save the
@@ -1287,7 +1558,21 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$order->save();
 			}
 
-			return $moved;
+			return $refused ? null : $moved;
+		}
+
+		/**
+		 * Tell the merchant a cashback clawback could not run and nothing retries it.
+		 *
+		 * @param WC_Order $order  Order.
+		 * @param float    $amount Amount not taken back, in the order currency.
+		 * @return void
+		 *
+		 * @since 1.7.4
+		 */
+		private function add_clawback_not_completed_note( $order, $amount ) {
+			/* translators: %s: amount not taken back */
+			$order->add_order_note( sprintf( __( 'Cashback reversal of %s did not complete: the wallet was busy or refused the debit. Nothing was taken back; please reverse it manually.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $amount, $order ) ) );
 		}
 
 		/**
@@ -1361,12 +1646,23 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
 			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				$this->add_clawback_not_completed_note( $order, $clawback );
 				return;
 			}
 
 			try {
+				// One clawback per refund, even when woocommerce_order_refunded fires twice for it.
+				// Duplicates serialize on this order lock. The id is saved together with the tracking, and
+				// not at all when the clawback could not run: WooCommerce does not re-fire this hook, so that
+				// case gets an order note, and only a manual re-fire of the hook would take the share.
+				$order = WOO_Wallet_Helper::get_order_for_update( $order_id );
+				$done  = $order ? array_map( 'absint', (array) $order->get_meta( '_cashback_clawback_refunds' ) ) : array();
+				if ( ! $order || in_array( absint( $refund_id ), $done, true ) ) {
+					return;
+				}
+
 				// Route through the shared clawback helper (same partial/skip/negative strategy logic).
-				$this->execute_cashback_clawback( $order, $clawback, 'refunded', false );
+				$this->execute_cashback_clawback( $order, $clawback, 'refunded', false, $refund_id );
 			} finally {
 				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			}

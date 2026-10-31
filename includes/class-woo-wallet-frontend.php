@@ -23,6 +23,13 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 		protected static $_instance = null;
 
 		/**
+		 * Order id being paid through the Store API order-pay route, 0 otherwise.
+		 *
+		 * @var int
+		 */
+		private $store_api_pay_order_id = 0;
+
+		/**
 		 * Main instance
 		 *
 		 * @return class object
@@ -51,6 +58,8 @@ if ( ! class_exists( 'Woo_Wallet_Frontend' ) ) {
 			add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'restrict_other_from_add_to_cart' ), 20 );
 			add_action( 'wp_enqueue_scripts', array( &$this, 'woo_wallet_styles' ), 20 );
 			add_filter( 'woocommerce_available_payment_gateways', array( $this, 'woocommerce_available_payment_gateways' ), 30 );
+			add_filter( 'rest_request_before_callbacks', array( $this, 'remember_store_api_pay_order' ), 10, 3 );
+			add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'refuse_topup_store_api_gateway' ), 1 );
 			if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_cashback_reward_program', '_wallet_settings_credit', 'off' ) ) {
 				add_action( 'woocommerce_before_cart_table', array( $this, 'display_cashback_on_cart_checkout' ) );
 				add_action( 'woocommerce_before_checkout_form', array( $this, 'display_cashback_on_cart_checkout' ) );
@@ -638,7 +647,7 @@ JS;
 		 */
 		public function woo_wallet_set_recharge_product_price( $cart ) {
 			$product = get_wallet_rechargeable_product();
-			if ( ! $product && empty( $cart->cart_contents ) ) {
+			if ( ! $product || empty( $cart->cart_contents ) ) {
 				return;
 			}
 			foreach ( $cart->cart_contents as $key => $value ) {
@@ -715,21 +724,50 @@ JS;
 		 * @return boolean
 		 */
 		public function woocommerce_available_payment_gateways( $_available_gateways ) {
-			if ( is_wallet_rechargeable_cart() ) {
-				$default_gateway = array();
-				$offline         = WOO_Wallet_Helper::get_topup_offline_gateways();
-				foreach ( WC()->payment_gateways()->payment_gateways as $gateway ) {
-					if ( 'yes' === $gateway->enabled && 'wallet' !== $gateway->id && ! in_array( $gateway->id, $offline, true ) ) {
-						$default_gateway[] = $gateway->id;
-					}
-				}
-				foreach ( $_available_gateways as $gateway_id => $gateway ) {
-					if ( ! in_array( $gateway_id, woo_wallet()->settings_api->get_option( 'allowed_payment_gateways', '_wallet_settings_general', $default_gateway ), true ) ) {
-						unset( $_available_gateways[ $gateway_id ] );
-					}
-				}
+			// A top-up cart, or an existing top-up order being paid (order-pay page
+			// or Store API order-pay route). Either one restricts the list.
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			$order_id = $order_id ? $order_id : $this->store_api_pay_order_id;
+			$is_topup = is_wallet_rechargeable_cart() || ( $order_id && is_wallet_rechargeable_order( wc_get_order( $order_id ) ) );
+			if ( $is_topup && is_array( $_available_gateways ) ) {
+				$_available_gateways = array_intersect_key( $_available_gateways, array_flip( WOO_Wallet_Helper::get_topup_allowed_gateways() ) );
 			}
 			return $_available_gateways;
+		}
+
+		/**
+		 * Remember the order paid through the Store API order-pay route
+		 * (`/wc/store/v1/checkout/<id>`), which has no `order-pay` query var.
+		 * Decided by the matched route handler, not by the URL text.
+		 *
+		 * @param mixed           $response Response so far.
+		 * @param array           $handler  Route handler.
+		 * @param WP_REST_Request $request  Request.
+		 * @return mixed
+		 */
+		public function remember_store_api_pay_order( $response, $handler, $request ) {
+			$callback                     = $handler['callback'] ?? null;
+			$route_class                  = 'Automattic\WooCommerce\StoreApi\Routes\V1\CheckoutOrder';
+			$this->store_api_pay_order_id = ( is_array( $callback ) && $callback[0] instanceof $route_class ) ? absint( $request['id'] ) : 0;
+			return $response;
+		}
+
+		/**
+		 * Store API checkout (cart and order-pay): refuse to take payment for a
+		 * top-up order with a gateway outside "Allowed Payment Gateways". Runs
+		 * just before WooCommerce processes the payment.
+		 *
+		 * @param WC_Order $order Order about to be paid.
+		 * @throws \Automattic\WooCommerce\StoreApi\Exceptions\RouteException When the gateway is not allowed.
+		 */
+		public function refuse_topup_store_api_gateway( $order ) {
+			if ( ! $order instanceof WC_Order || ! $order->needs_payment() || ! is_wallet_rechargeable_order( $order ) ) {
+				return;
+			}
+			if ( in_array( $order->get_payment_method(), WOO_Wallet_Helper::get_topup_allowed_gateways(), true ) ) {
+				return;
+			}
+			throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException( 'woo_wallet_topup_payment_method_not_allowed', esc_html__( 'This payment method cannot be used for a wallet top-up.', 'woo-wallet' ), 400 );
 		}
 
 		/**
