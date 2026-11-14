@@ -25,7 +25,6 @@ docs/QA_SETTINGS_EXTENSION.md
 
 # PHP / Composer / tests
 /vendor/
-composer.lock
 wp-tests-config.php
 .phpunit.result.cache
 
