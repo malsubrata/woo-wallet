@@ -37,8 +37,7 @@ composer test                     # run the suite
 Tests live in `tests/` (`tests/bootstrap.php` boots real WP + WooCommerce
 against a dedicated test database; cases are `tests/test-*.php`). Each test
 runs inside a rolled-back DB transaction, so the live site database is never
-mutated. The suite (**23 test files** as of v1.6.15 — run `composer test` for the live
-count rather than trusting this line) covers the ledger core
+mutated. The suite (run `composer test` for the live count) covers the ledger core
 (credit/debit/balance, transfer, precision), idempotency, partial-payment
 debit timing / locked wallet / refunds / fee-tax blocking, the referral
 service, transaction categories, reports data and legacy currency
@@ -68,14 +67,14 @@ Hot extension points: `woo_wallet_loaded`, `woo_wallet_init`, `woo_wallet_activa
 **Three** custom tables, created/updated by `Woo_Wallet_Install` (`includes/class-woo-wallet-install.php`):
 - `{prefix}woo_wallet_transactions` — append-only credit/debit rows, balance is `SUM(credit − debit) WHERE deleted=0`. The `_current_woo_wallet_balance` user meta is a cache.
 - `{prefix}woo_wallet_transaction_meta`
-- `{prefix}woo_wallet_referrals` (`class-woo-wallet-install.php:157`)
+- `{prefix}woo_wallet_referrals` (`Woo_Wallet_Install::get_referrals_schema()`)
 
-If you add or remove a table, update `uninstall.php` in the same change — it currently drops
-only the first two.
+If you add or remove a table, update `uninstall.php` in the same change — it must drop
+every table the installer creates, and CI enforces that.
 
-Schema migrations are version-keyed in the `$db_updates` array (`class-woo-wallet-install.php:20`); the callbacks live in `includes/helper/woo-wallet-update-functions.php`. **When you bump `WOO_WALLET_PLUGIN_VERSION` and need a schema change, register both the version key and the callback.**
+Schema migrations are version-keyed in the `$db_updates` array (top of `class-woo-wallet-install.php`); the callbacks live in `includes/helper/woo-wallet-update-functions.php`. **When you bump `WOO_WALLET_PLUGIN_VERSION` and need a schema change, register both the version key and the callback.**
 
-Money-moving paths (`Woo_Wallet_Wallet::recode_transaction`, `::transfer`) wrap `START TRANSACTION` and serialize concurrent writers using MySQL `GET_LOCK('woo_wallet_lock_user_<id>', timeout)`. `transfer()` acquires both user locks in **deterministic min/max id order** to avoid the A→B / B→A deadlock. The pre-debit balance check uses the raw `SUM(...)` query, **not** `apply_filters( 'woo_wallet_current_balance', ... )` — third-party balance filters mutate state via the post-commit `woo_wallet_transaction_recorded` hook (which fires after locks release), so filtering inside the lock would reintroduce a TOCTOU window. Keep that distinction when editing concurrency-sensitive code; the inline comment in `class-woo-wallet-wallet.php:308` documents the reasoning.
+Money-moving paths (`Woo_Wallet_Wallet::recode_transaction`, `::transfer`) serialize concurrent writers using MySQL `GET_LOCK('woo_wallet_lock_user_<id>', timeout)`. Only `transfer()` wraps `START TRANSACTION` (two rows must commit together); `recode_transaction()` holds the user lock around a single `INSERT` with no explicit transaction. `transfer()` acquires both user locks in **deterministic min/max id order** to avoid the A→B / B→A deadlock. The pre-debit balance check uses the raw `SUM(...)` query, **not** `apply_filters( 'woo_wallet_current_balance', ... )` — third-party balance filters mutate state via the post-commit `woo_wallet_transaction_recorded` hook (which fires after locks release), so filtering inside the lock would reintroduce a TOCTOU window. Keep that distinction when editing concurrency-sensitive code; the inline comment above the balance gate in `recode_transaction()` documents the reasoning.
 
 ### Money-path rules (non-negotiable)
 
@@ -220,7 +219,7 @@ makes every edit, so the diff stays visible to the developer.
 
 - `security-auditor` — attacker-perspective audit: caps, nonces, IDOR, SQLi, XSS, REST/AJAX
   authorization, privilege escalation.
-- `wallet-ledger-auditor` — money correctness only, invariants L1–L12 (locks, TOCTOU,
+- `wallet-ledger-auditor` — money correctness only, invariants L1–L14 (locks, TOCTOU,
   precision, currency, reversal symmetry, idempotency, migration safety).
 - `wc-platform-reviewer` — WooCommerce platform (HPOS, order CRUD, status transitions,
   Action Scheduler, Blocks, gateway/refund/coupon/tax) and existing installations (existing
