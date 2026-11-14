@@ -49,6 +49,10 @@ in the next step — don't duplicate them here.
 ## 4. Security, ledger & platform review
 
 Dispatch the read-only auditors **in parallel, in a single message**, with the full diff.
+The diff tells them where to start, not where to stop: instruct each one, in its prompt, to
+audit the **whole touched path** — every caller and callee of what changed and every sibling
+function sharing the pattern — not only the changed lines. (1.7.4 shipped an overdraw in
+`transfer()` because the same bug was fixed in a sibling and `transfer()` was not in the diff.)
 They have separate remits and do not need each other's output. Route by what the diff
 actually touches — this is the same routing table `/review-plugin` uses:
 
@@ -74,6 +78,26 @@ it is signal), resolve any disagreement by reading the code yourself, and **open
 `file:line` for every CRITICAL and HIGH before treating it as blocking.** A cited line that
 does not support the claim gets downgraded or dropped, and you say that you dropped it.
 
+## 4b. Money-path gate
+
+Skip this step only if `wallet-ledger-auditor` was not routed in step 4. Otherwise the
+money-path rules in `CLAUDE.md` apply, and each of these is a **STOP** if it does not hold.
+Check the evidence; do not take it on trust and do not produce it yourself here.
+
+1. **Sibling sweep (rule 2).** `spec/<version>/progress.md` exists and contains a table of
+   every function sharing the changed pattern, each marked fixed or cleared with a reason.
+   Cross-check it against the auditor's L14 list — a path the auditor names that the table
+   lacks is a STOP.
+2. **Multi-currency tests (rule 4).** `git diff master...HEAD --stat -- tests/` shows a test
+   added or changed that runs active ≠ base in both directions (stronger and weaker currency)
+   plus an explicit `currency` arg, and asserts the raw ledger SUM. Open the test and confirm;
+   a filename containing "multicurrency" is not evidence.
+3. **Live verification (rule 5).** `spec/<version>/progress.md` records a run against a real
+   provider (WOOCS, YayCurrency), and that the site was restored afterwards.
+
+In the final report, state plainly which of these were **not** verified and why. "Not ready"
+is an acceptable outcome of this command.
+
 ## 5. Build, lint & translations
 
 - `composer test` — the full PHPUnit suite MUST pass. Read the output; do not infer.
@@ -88,13 +112,11 @@ does not support the claim gets downgraded or dropped, and you say that you drop
 
 ## 6. Version consistency check
 
-Confirm all of the following agree on `<version>`:
-- `woo-wallet.php` header `Version:` line.
-- `woo-wallet.php` `WOO_WALLET_PLUGIN_VERSION` define.
-- `readme.txt` `Stable tag:` line.
-- The `release/<version>` branch name.
+Confirm the `woo-wallet.php` header `Version:` line equals the `<version>` in the
+`release/<version>` branch name. If not, STOP and report the mismatch.
 
-If they disagree, STOP and report the mismatch.
+Agreement between the four version locations (header, define, `readme.txt` Stable tag,
+`package.json`) is enforced by the CI `invariants` job, which step 9b waits for.
 
 ## 7. Changelog check & sync to changelog.txt
 
@@ -145,8 +167,9 @@ Then mirror that finalized entry into `changelog.txt` (the standalone changelog 
 ## 8. Decision gate
 
 - If the code review or any of the three auditors found **blocking** issues (CRITICAL or
-  HIGH that survived your `file:line` verification), or `composer test` failed, or
-  `npm run build` failed, or any STOP condition above was hit → **STOP**. Present a clear,
+  HIGH that survived your `file:line` verification), or the money-path gate (4b) did not
+  hold, or `composer test` failed, or `npm run build` failed, or any STOP condition above
+  was hit → **STOP**. Present a clear,
   organized report of every finding. Do NOT merge.
 - Otherwise, present a concise summary (what changed, agent results, build status) and
   continue.
@@ -161,7 +184,20 @@ Run `git status --porcelain`; if it is non-empty:
 - `git push`
 
 (If `make-pot` produced no diff and both changelogs were already finalized, there is
-nothing to commit — skip this step.)
+nothing to commit — but still make sure the branch is pushed: `git push`.)
+
+## 9b. Wait for CI on the exact commit being merged
+
+Local runs in step 5 are not the gate: CI runs the PHP 7.4 job, the repo invariants and a
+clean dependency install that this machine does not.
+
+- `sha=$(git rev-parse HEAD)`
+- `gh run list --workflow=ci.yml --branch release/<version> --limit 5 --json databaseId,headSha,status,conclusion`
+  and pick the run whose `headSha` equals `$sha`. If there is none yet, wait and re-list; if
+  none appears, STOP — do not merge a commit CI has not seen.
+- `gh run watch <databaseId> --exit-status`
+- A non-zero exit means CI failed: **STOP**, report the failing job (`gh run view <databaseId>
+  --log-failed`), do NOT merge. A run for an older `headSha` proves nothing about this commit.
 
 ## 10. Merge into master
 

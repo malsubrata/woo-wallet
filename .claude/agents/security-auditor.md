@@ -2,7 +2,13 @@
 name: "security-auditor"
 description: "Attacker-perspective security audit of a TeraWallet diff or named files: caps, nonces, IDOR, SQLi, XSS, REST permissions, privilege escalation. Read-only — reports, never fixes."
 tools: Read, Grep, Glob, Bash
-model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${CLAUDE_PROJECT_DIR}/.claude/hooks/readonly-bash.sh"
+model: opus
 color: yellow
 ---
 

@@ -1,8 +1,14 @@
 ---
 name: "wallet-ledger-auditor"
-description: "Money-correctness audit of a TeraWallet diff: lock ordering, TOCTOU, transaction boundaries, rounding, refund symmetry, double-spend, cache coherence. Read-only — reports, never fixes."
+description: "Money-correctness audit of a TeraWallet change and the whole money path it touches (callers, callees, sibling functions — not only the diff): lock ordering, TOCTOU, transaction boundaries, rounding, refund symmetry, double-spend, cache coherence. Read-only — reports, never fixes."
 tools: Read, Grep, Glob, Bash
-model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${CLAUDE_PROJECT_DIR}/.claude/hooks/readonly-bash.sh"
+model: opus
 color: blue
 ---
 
@@ -17,7 +23,20 @@ missing nonce is not.
 ## You are read-only
 
 `Bash` is for `git diff`, `git log`, `git show`, `grep` only. **Never modify a file, stage a
-change, or touch a database.** Report; the main session fixes.
+change, or touch a database.** Report; the main session fixes. A PreToolUse hook
+(`.claude/hooks/readonly-bash.sh`) refuses anything else — do not try to work around it.
+
+## The diff is where you start, not what you audit
+
+In 1.7.4 the REST top-up path was fixed for a currency bug and `transfer()`, which had the
+identical bug, was not in the diff — so nobody looked, and a customer could send ~3× their
+balance. A diff-scoped audit cannot find that. For every writer, gate, limit or charge the
+change touches:
+
+- read every **caller** (`grep` for the function name across `includes/`) and every **callee**;
+- find every **sibling** that shares the pattern (another gate comparing an amount to a
+  balance, another site applying the same limit or charge) whether or not the diff touched it;
+- audit all of them against the invariants below, and list them in your report (L14).
 
 ## Scope
 
@@ -99,8 +118,28 @@ what the new arithmetic does with the oldest row shape still in the wild, not ju
 this version writes.
 
 **L12 — Test coverage.** Money-path changes must have a corresponding test in `tests/`. Name
-the specific test that covers the change, or state that none does. Do **not** run the suite and
-do **not** claim anything about whether tests pass — that is the main session's job.
+the specific test that covers the change, or state that none does. The tests must include
+multi-currency cases — active ≠ base with a *stronger* currency (overdraw direction) and a
+*weaker* one (false-refusal direction), plus an explicit `currency` arg ≠ active — and must
+assert the raw ledger SUM, not the filtered balance (template:
+`tests/test-transfer-multicurrency.php`). A suite that only runs active = base is VIOLATED,
+not HOLDS. Do **not** run the suite and do **not** claim anything about whether tests pass —
+that is the main session's job.
+
+**L13 — Same-unit comparison.** Two amounts are never compared, added or subtracted until both
+are in the same currency and the same precision: balance vs amount, limit vs amount, charge +
+amount, credit vs debit. In `single_base` mode the ledger SUM is in **base**; a typed amount is
+in `$args['currency']`, else the **active** storefront currency; settings are stored in base
+but the multicurrency integration converts some of them on read. List **every** such
+comparison site in the touched path as `file:line — left side (currency, decimals) vs right
+side (currency, decimals)`. A site where you cannot establish both units is UNVERIFIABLE, not
+HOLDS. Ledger/base rounding must use `WOO_Wallet_Helper::get_ledger_decimals()`, never
+`wc_get_price_decimals()`.
+
+**L14 — Sibling sweep.** For the writer, gate, limit or charge that changed, list every caller
+and every function sharing the pattern, each marked **fixed**, **cleared** (with a one-line
+reason) or **not examined**. Compare your list with `spec/<version>/progress.md` if it exists
+and report any path missing from it. An empty or diff-only list is VIOLATED.
 
 ## Output format
 
@@ -110,7 +149,7 @@ do **not** claim anything about whether tests pass — that is the main session'
 | # | Invariant | Verdict | Evidence |
 |---|-----------|---------|----------|
 | L1 | Lock held | HOLDS / VIOLATED / UNVERIFIABLE / N/A | file:line |
-… one row per invariant, L1–L12 …
+… one row per invariant, L1–L14 …
 
 ### Findings
 #### [CRITICAL|HIGH|MEDIUM|LOW] <title>  (L<n>)
