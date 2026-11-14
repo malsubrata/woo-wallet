@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: TeraWallet 1.7.4\n"
+"Project-Id-Version: TeraWallet 1.7.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-wallet\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-31T13:56:55+00:00\n"
+"POT-Creation-Date: 2026-11-14T06:59:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -1287,8 +1287,8 @@ msgstr ""
 #: includes/api/legacy/wc-v3/class-terawallet-rest-legacy-wallet-controller.php:355
 #: includes/api/v1/admin/class-terawallet-rest-admin-transactions-controller.php:272
 #: includes/api/v1/me/class-terawallet-rest-me-transactions-controller.php:202
-#: includes/class-woo-wallet-wallet.php:351
-#: includes/class-woo-wallet-wallet.php:386
+#: includes/class-woo-wallet-wallet.php:437
+#: includes/class-woo-wallet-wallet.php:472
 msgid "Transaction not found."
 msgstr ""
 
@@ -1377,7 +1377,7 @@ msgstr ""
 #: includes/api/v1/admin/class-terawallet-rest-admin-transfer-controller.php:70
 #: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:240
 #: includes/api/v1/admin/class-terawallet-rest-admin-users-controller.php:249
-#: includes/helper/woo-wallet-util.php:1790
+#: includes/helper/woo-wallet-util.php:1793
 msgid "Invalid user id."
 msgstr ""
 
@@ -2001,7 +2001,7 @@ msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:279
 #: includes/class-woo-wallet-ajax.php:360
-#: includes/class-woo-wallet-payment-method.php:199
+#: includes/class-woo-wallet-payment-method.php:203
 msgid "Wallet refund #"
 msgstr ""
 
@@ -2012,12 +2012,12 @@ msgid "%s refunded to customer wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:293
-#: includes/class-woo-wallet-wallet.php:1223
+#: includes/class-woo-wallet-wallet.php:1311
 msgid "Wallet partial refund was claimed but the credit failed. Manual review required."
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:328
-#: includes/class-woo-wallet-payment-method.php:197
+#: includes/class-woo-wallet-payment-method.php:201
 msgid "Invalid order"
 msgstr ""
 
@@ -2030,7 +2030,7 @@ msgid "Error processing refund. Please try again."
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:375
-#: includes/class-woo-wallet-payment-method.php:202
+#: includes/class-woo-wallet-payment-method.php:206
 msgid "Refund not credited to customer"
 msgstr ""
 
@@ -2869,7 +2869,7 @@ msgstr ""
 
 #. translators: 1: wallet amount
 #: includes/class-woo-wallet-payment-method.php:130
-#: includes/class-woo-wallet-payment-method.php:135
+#: includes/class-woo-wallet-payment-method.php:139
 msgid "Payment error: "
 msgstr ""
 
@@ -2878,17 +2878,17 @@ msgid "Invalid order."
 msgstr ""
 
 #. translators: 1: wallet amount
-#: includes/class-woo-wallet-payment-method.php:135
+#: includes/class-woo-wallet-payment-method.php:139
 #, php-format
 msgid "Your wallet balance is low. Please add %s to proceed with this transaction."
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:169
-#: includes/class-woo-wallet-wallet.php:1005
+#: includes/class-woo-wallet-payment-method.php:173
+#: includes/class-woo-wallet-wallet.php:1092
 msgid "For order payment #"
 msgstr ""
 
-#: includes/class-woo-wallet-payment-method.php:180
+#: includes/class-woo-wallet-payment-method.php:184
 msgid "Something went wrong with processing payment please try again."
 msgstr ""
 
@@ -3304,183 +3304,183 @@ msgstr ""
 msgid "Select the location where you want to display mini wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:347
-#: includes/class-woo-wallet-wallet.php:382
+#: includes/class-woo-wallet-wallet.php:433
+#: includes/class-woo-wallet-wallet.php:468
 msgid "Invalid transaction id."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:361
+#: includes/class-woo-wallet-wallet.php:447
 msgid "Could not update transaction details."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:393
+#: includes/class-woo-wallet-wallet.php:479
 msgid "Could not acquire wallet lock."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:448
+#: includes/class-woo-wallet-wallet.php:534
 msgid "Wallet top-up was taken back when this order was refunded or cancelled. It is not credited again automatically; credit the customer's wallet by hand if needed."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:459
+#: includes/class-woo-wallet-wallet.php:545
 msgid "Wallet top-up not credited yet: cash on delivery. It will be credited when you mark this order Completed after you receive the payment."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:503
+#: includes/class-woo-wallet-wallet.php:589
 msgid "Top-up collected no wallet value; nothing credited."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:509
+#: includes/class-woo-wallet-wallet.php:595
 msgid "Wallet credit through purchase #"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:606
+#: includes/class-woo-wallet-wallet.php:692
 msgid "Wallet top-up not taken back: no wallet credit for this order was found for its customer. If the wallet was credited, take it back by hand."
 msgstr ""
 
 #. translators: %s: order number
-#: includes/class-woo-wallet-wallet.php:646
+#: includes/class-woo-wallet-wallet.php:733
 #, php-format
 msgid "Wallet top-up reversed: order #%s cancelled"
 msgstr ""
 
 #. translators: %s: order number
-#: includes/class-woo-wallet-wallet.php:648
+#: includes/class-woo-wallet-wallet.php:735
 #, php-format
 msgid "Wallet top-up reversed: order #%s refunded"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/class-woo-wallet-wallet.php:705
+#: includes/class-woo-wallet-wallet.php:792
 #, php-format
 msgid "Wallet top-up refund: could not take %s back from the wallet. Check the wallet by hand."
 msgstr ""
 
 #. translators: 1: amount taken back, 2: amount due, 3: amount already spent
-#: includes/class-woo-wallet-wallet.php:715
+#: includes/class-woo-wallet-wallet.php:802
 #, php-format
 msgid "Wallet top-up refund: took back %1$s of %2$s from the wallet. The customer had already spent %3$s."
 msgstr ""
 
 #. translators: %s: amount
-#: includes/class-woo-wallet-wallet.php:718
+#: includes/class-woo-wallet-wallet.php:805
 #, php-format
 msgid "Wallet top-up refund: %s taken back from the customer's wallet."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:732
+#: includes/class-woo-wallet-wallet.php:819
 msgid "Wallet top-up not taken back: the wallet was busy. Nothing was debited; take it back by hand if needed."
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:812
+#: includes/class-woo-wallet-wallet.php:899
 msgid "Wallet credit through cashback #"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:867
+#: includes/class-woo-wallet-wallet.php:954
 msgid "Wallet credit through cashback by applying coupon"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:1015
+#: includes/class-woo-wallet-wallet.php:1102
 #, php-format
 msgid "%s paid through wallet"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:1033
+#: includes/class-woo-wallet-wallet.php:1120
 msgid "Wallet partial payment could not be debited (wallet is locked). Held for review. "
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:1035
+#: includes/class-woo-wallet-wallet.php:1122
 msgid "Wallet partial payment could not be debited (insufficient balance). Held for review. "
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:1037
+#: includes/class-woo-wallet-wallet.php:1124
 msgid "Wallet partial payment could not be debited (the wallet refused the transaction). Held for review. "
 msgstr ""
 
 #. translators: order number
-#: includes/class-woo-wallet-wallet.php:1209
+#: includes/class-woo-wallet-wallet.php:1297
 #, php-format
 msgid "Partial refund for order #%s credited to wallet"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:1219
+#: includes/class-woo-wallet-wallet.php:1307
 #, php-format
 msgid "%s of the wallet payment refunded to the customer wallet (partial refund)."
 msgstr ""
 
 #. translators: %s: order number.
-#: includes/class-woo-wallet-wallet.php:1298
+#: includes/class-woo-wallet-wallet.php:1386
 #, php-format
 msgid "Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:1307
+#: includes/class-woo-wallet-wallet.php:1395
 #, php-format
 msgid "Wallet amount %s has been credited to customer upon cancellation"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:1309
+#: includes/class-woo-wallet-wallet.php:1397
 msgid "Wallet cancellation refund was claimed but the credit failed. Manual review required."
 msgstr ""
 
 #. translators: 1: amount taken back, 2: order's total cashback
-#: includes/class-woo-wallet-wallet.php:1432
+#: includes/class-woo-wallet-wallet.php:1528
 #, php-format
 msgid "Cashback partly reversed: %1$s of %2$s."
 msgstr ""
 
 #. translators: %s: amount taken back
-#: includes/class-woo-wallet-wallet.php:1436
+#: includes/class-woo-wallet-wallet.php:1532
 #, php-format
 msgid "Cashback %s fully reversed upon refund."
 msgstr ""
 
 #. translators: %s: amount taken back
-#: includes/class-woo-wallet-wallet.php:1438
+#: includes/class-woo-wallet-wallet.php:1534
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation."
 msgstr ""
 
 #. translators: %s: order number.
-#: includes/class-woo-wallet-wallet.php:1470
+#: includes/class-woo-wallet-wallet.php:1566
 #, php-format
 msgid "Cashback for #%s debited upon cancellation"
 msgstr ""
 
 #. translators: 1: formatted amount
-#: includes/class-woo-wallet-wallet.php:1497
+#: includes/class-woo-wallet-wallet.php:1593
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation (wallet driven negative by setting)."
 msgstr ""
 
 #. translators: 1: formatted cashback total, 2: formatted available balance
-#: includes/class-woo-wallet-wallet.php:1510
+#: includes/class-woo-wallet-wallet.php:1606
 #, php-format
 msgid "Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written."
 msgstr ""
 
 #. translators: 1: formatted debit amount, 2: formatted unreversed amount
-#: includes/class-woo-wallet-wallet.php:1529
+#: includes/class-woo-wallet-wallet.php:1625
 #, php-format
 msgid "Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback."
 msgstr ""
 
 #. translators: %s: amount not taken back
-#: includes/class-woo-wallet-wallet.php:1575
+#: includes/class-woo-wallet-wallet.php:1671
 #, php-format
 msgid "Cashback reversal of %s did not complete: the wallet was busy or refused the debit. Nothing was taken back; please reverse it manually."
 msgstr ""
 
 #. translators: 1: order number, 2: reason
-#: includes/class-woo-wallet-wallet.php:1711
+#: includes/class-woo-wallet-wallet.php:1807
 #, php-format
 msgid "Cashback adjustment for order #%1$s (%2$s)"
 msgstr ""
 
 #. translators: 1: order number
-#: includes/class-woo-wallet-wallet.php:1713
+#: includes/class-woo-wallet-wallet.php:1809
 #, php-format
 msgid "Cashback adjustment for order #%s"
 msgstr ""
@@ -3718,36 +3718,36 @@ msgid "Deleted user"
 msgstr ""
 
 #. translators: %d: user id
-#: includes/helper/woo-wallet-util.php:1802
+#: includes/helper/woo-wallet-util.php:1805
 #, php-format
 msgid "Could not acquire wallet lock for user #%d. Try again."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1851
+#: includes/helper/woo-wallet-util.php:1854
 msgid "Could not delete the transaction logs. Nothing was changed."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1877
+#: includes/helper/woo-wallet-util.php:1880
 msgid "Balance carried over after deleting transaction logs"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:1886
+#: includes/helper/woo-wallet-util.php:1889
 msgid "Could not carry the wallet balance over. Nothing was deleted."
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2522
+#: includes/helper/woo-wallet-util.php:2525
 msgid "Total top-ups"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2531
+#: includes/helper/woo-wallet-util.php:2534
 msgid "Total spent"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2541
+#: includes/helper/woo-wallet-util.php:2544
 msgid "Cashback earned"
 msgstr ""
 
-#: includes/helper/woo-wallet-util.php:2551
+#: includes/helper/woo-wallet-util.php:2554
 msgid "Available balance"
 msgstr ""
 
@@ -3802,7 +3802,7 @@ msgstr ""
 msgid "Minimum threshold amount to withdrawal commission is %s"
 msgstr ""
 
-#: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp-gateway.php:81
+#: includes/marketplace/wc-merketplace/class-woo-wallet-wcmp-gateway.php:85
 msgid "Commission received for commission id "
 msgstr ""
 
@@ -3965,51 +3965,55 @@ msgid "Too many transfers in a short time. Please wait a minute and try again."
 msgstr ""
 
 #: includes/services/class-woo-wallet-transfer-service.php:80
-#: includes/services/class-woo-wallet-transfer-service.php:140
+#: includes/services/class-woo-wallet-transfer-service.php:154
 msgid "Transfer amount must be greater than zero."
 msgstr ""
 
+#: includes/services/class-woo-wallet-transfer-service.php:100
+msgid "This currency cannot be used for a wallet transfer."
+msgstr ""
+
 #. translators: Min transfer amount
-#: includes/services/class-woo-wallet-transfer-service.php:96
+#: includes/services/class-woo-wallet-transfer-service.php:109
 #, php-format
 msgid "Minimum transfer amount is %s"
 msgstr ""
 
 #. translators: Max transfer amount
-#: includes/services/class-woo-wallet-transfer-service.php:104
+#: includes/services/class-woo-wallet-transfer-service.php:117
 #, php-format
 msgid "Maximum transfer amount is %s"
 msgstr ""
 
 #. translators: 1: sender name, 2: transfer note
-#: includes/services/class-woo-wallet-transfer-service.php:116
+#: includes/services/class-woo-wallet-transfer-service.php:129
 #, php-format
 msgid "From %1$s: %2$s"
 msgstr ""
 
 #. translators: 1: recipient name, 2: transfer note
-#: includes/services/class-woo-wallet-transfer-service.php:118
+#: includes/services/class-woo-wallet-transfer-service.php:131
 #, php-format
 msgid "To %1$s: %2$s"
 msgstr ""
 
 #. translators: %s: sender name
-#: includes/services/class-woo-wallet-transfer-service.php:121
+#: includes/services/class-woo-wallet-transfer-service.php:134
 #, php-format
 msgid "Wallet funds received from %s"
 msgstr ""
 
 #. translators: %s: recipient name
-#: includes/services/class-woo-wallet-transfer-service.php:123
+#: includes/services/class-woo-wallet-transfer-service.php:136
 #, php-format
 msgid "Wallet funds transfer to %s"
 msgstr ""
 
-#: includes/services/class-woo-wallet-transfer-service.php:149
+#: includes/services/class-woo-wallet-transfer-service.php:163
 msgid "Entered amount is greater than current wallet amount."
 msgstr ""
 
-#: includes/services/class-woo-wallet-transfer-service.php:160
+#: includes/services/class-woo-wallet-transfer-service.php:174
 msgid "Amount transferred successfully!"
 msgstr ""
 
