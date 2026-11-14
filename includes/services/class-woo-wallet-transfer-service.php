@@ -88,8 +88,21 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 				return self::fail( 'rest_invalid_recipient', __( 'Invalid user', 'woo-wallet' ) );
 			}
 
+			// $amount is in $currency, else the active currency. The limits come back in
+			// the active currency (the multi-currency integration converts them from
+			// base), so compare the amount in it — same as the top-up service.
+			$manager       = Woo_Wallet_Currency_Manager::instance();
+			$base_currency = $manager->get_base_currency();
+			$send_currency = '' !== $currency ? $currency : $manager->get_active_currency();
+			// Mirrors transfer(): only a currency the caller named, and only in single_base
+			// (per_currency needs no conversion), is refused when it has no rate.
+			if ( '' !== $currency && $currency !== $base_currency && 'single_base' === woo_wallet()->wallet->get_currency_mode() && null === $manager->get_rate( $currency, $base_currency ) ) {
+				return self::fail( 'rest_invalid_currency', __( 'This currency cannot be used for a wallet transfer.', 'woo-wallet' ) );
+			}
+			$active_amount = '' !== $currency ? round( $manager->convert( $amount, $currency, $manager->get_active_currency() ), 6 ) : $amount;
+
 			$min_transfer_amount = (float) woo_wallet()->settings_api->get_option( 'min_transfer_amount', '_wallet_settings_general', 0 );
-			if ( $min_transfer_amount && $min_transfer_amount > $amount ) {
+			if ( $min_transfer_amount && $min_transfer_amount > $active_amount ) {
 				return self::fail(
 					'rest_amount_below_minimum',
 					/* translators: Min transfer amount */
@@ -97,7 +110,7 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 				);
 			}
 			$max_transfer_amount = (float) woo_wallet()->settings_api->get_option( 'max_transfer_amount', '_wallet_settings_general', 0 );
-			if ( $max_transfer_amount && $max_transfer_amount < $amount ) {
+			if ( $max_transfer_amount && $max_transfer_amount < $active_amount ) {
 				return self::fail(
 					'rest_amount_above_maximum',
 					/* translators: Max transfer amount */
@@ -130,7 +143,8 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 			if ( 'percent' === $transfer_charge_type ) {
 				$transfer_charge = ( $amount * $transfer_charge_amount ) / 100;
 			} else {
-				$transfer_charge = $transfer_charge_amount;
+				// A fixed charge is configured in base; express it in the transfer currency.
+				$transfer_charge = (float) $manager->convert( $transfer_charge_amount, $base_currency, $send_currency );
 			}
 			$transfer_charge = (float) apply_filters( 'woo_wallet_transfer_charge_amount', $transfer_charge, $whom );
 			$credit_amount   = (float) apply_filters( 'woo_wallet_transfer_credit_amount', $amount, $whom );

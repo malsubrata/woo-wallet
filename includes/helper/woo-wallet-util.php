@@ -1505,8 +1505,8 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 	 */
 	function is_full_payment_through_wallet() {
 		$is_valid_payment_through_wallet = false;
-		$current_wallet_balance          = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
 		$total                           = 0;
+		$total_currency                  = ''; // Cart totals are in the active currency.
 		$order_id                        = null;
 		if ( WC()->cart ) {
 			$order_id = absint( get_query_var( 'order-pay' ) );
@@ -1515,7 +1515,8 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 			if ( 0 < $order_id ) {
 				$order = wc_get_order( $order_id );
 				if ( $order ) {
-					$total = (float) $order->get_total();
+					$total          = (float) $order->get_total();
+					$total_currency = $order->get_currency();
 				}
 
 				// Gets order total from cart/checkout.
@@ -1524,7 +1525,9 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 			}
 		}
 
-		if ( ! is_admin() && $current_wallet_balance >= $total && ( ! is_wallet_rechargeable_cart() ) ) {
+		// Same question, same unit as the debit (1.7.5); the floored display balance
+		// hid the wallet for totals it could pay.
+		if ( ! is_admin() && woo_wallet()->wallet->can_cover( get_current_user_id(), $total, $total_currency, false ) && ( ! is_wallet_rechargeable_cart() ) ) {
 			$is_valid_payment_through_wallet = true;
 		}
 
@@ -2078,7 +2081,7 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 			$rows_by_user[ (int) $row->user_id ][] = $row;
 		}
 
-		$decimals        = (int) wc_get_price_decimals();
+		$decimals        = WOO_Wallet_Helper::get_ledger_decimals();
 		$converted_count = 0;
 
 		foreach ( $rows_by_user as $uid => $user_rows ) {

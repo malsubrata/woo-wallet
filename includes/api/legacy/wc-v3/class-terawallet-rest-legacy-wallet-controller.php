@@ -414,9 +414,9 @@ class TeraWallet_REST_Transactions_Controller extends TeraWallet_REST_Controller
 		$note           = isset( $params['note'] ) ? $params['note'] : '';
 		$transaction_id = false;
 		if ( 'credit' === $params['type'] ) {
-			$transaction_id = woo_wallet()->wallet->credit( $user->ID, $params['amount'], $note );
+			$transaction_id = woo_wallet()->wallet->credit( $user->ID, $params['amount'], $note, array( 'currency' => Woo_Wallet_Currency_Manager::instance()->get_base_currency() ) );
 		} elseif ( 'debit' === $params['type'] ) {
-			$transaction_id = woo_wallet()->wallet->debit( $user->ID, $params['amount'], $note );
+			$transaction_id = woo_wallet()->wallet->debit( $user->ID, $params['amount'], $note, array( 'currency' => Woo_Wallet_Currency_Manager::instance()->get_base_currency() ) );
 		} else {
 			return new WP_Error( 'terawallet_rest_invalid_type', __( 'Invalid transaction type. Must be credit or debit.', 'woo-wallet' ), array( 'status' => 400 ) );
 		}

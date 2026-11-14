@@ -151,7 +151,7 @@ if ( ! class_exists( 'Woo_Wallet_Dokan' ) ) {
 				if ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {
 					update_wallet_transaction( $wallet_transaction->transaction_id, $withdraw->get_user_id(), array( 'deleted' => 0 ), array( '%d' ) );
 				} else {
-					$transaction_id = woo_wallet()->wallet->credit( $withdraw->get_user_id(), $withdraw->get_amount(), __( 'Withdrawal request #', 'woo-wallet' ) . $withdraw->get_id() );
+					$transaction_id = woo_wallet()->wallet->credit( $withdraw->get_user_id(), $withdraw->get_amount(), __( 'Withdrawal request #', 'woo-wallet' ) . $withdraw->get_id(), array( 'currency' => Woo_Wallet_Currency_Manager::instance()->get_base_currency() ) );
 					update_wallet_transaction_meta( $transaction_id, '_dokan_withdrawal_id', $withdraw->get_id() );
 				}
 			} elseif ( $wallet_transaction && isset( $wallet_transaction->transaction_id ) ) {

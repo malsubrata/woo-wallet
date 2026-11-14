@@ -395,4 +395,19 @@ class Test_Cashback_Clawback extends WP_UnitTestCase {
 
 		$this->assertEqualsWithDelta( 0, $this->balance(), 0.001, 'All £9 available must be taken back.' );
 	}
+
+	/**
+	 * 1.7.5: rounding the order-currency clawback AFTER the cap rounded it up past
+	 * what was credited — $1.616 (= £4.04) became $1.62 (= £4.05), one penny too many.
+	 */
+	public function test_clawback_never_exceeds_the_credited_cashback() {
+		self::$rate = 0.40;
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'seed', array( 'currency' => 'GBP' ) );
+		$order = $this->order_with_cashback( 100, 1.616, 'USD' ); // Stored as £4.04.
+		$this->assertEqualsWithDelta( 104.04, $this->balance(), 0.0001 );
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEqualsWithDelta( 100.00, $this->balance(), 0.0001, 'Exactly the £4.04 credited is taken back.' );
+	}
 }

@@ -82,7 +82,7 @@ class TeraWallet_REST_Admin_Transfer_Controller extends TeraWallet_REST_Admin_Co
 				$debit_note  = isset( $params['debit_note'] ) ? $params['debit_note'] : '';
 				$credit_note = isset( $params['credit_note'] ) ? $params['credit_note'] : '';
 
-				$result = woo_wallet()->wallet->transfer( $from, $to, $amount, $debit_note, $credit_note );
+				$result = woo_wallet()->wallet->transfer( $from, $to, $amount, $debit_note, $credit_note, null, array( 'currency' => Woo_Wallet_Currency_Manager::instance()->get_base_currency() ) );
 				if ( is_wp_error( $result ) ) {
 					return $this->error( $result->get_error_code(), $result->get_error_message(), 400 );
 				}

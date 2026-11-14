@@ -237,7 +237,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		}
 
 		/**
-		 * Quantize an amount to the store's price decimals before it is written
+		 * Quantize an amount to the store's own (unfiltered) price decimals before it is written
 		 * to the ledger, so no new sub-cent dust can enter the `amount` column.
 		 *
 		 * Uses WooCommerce's own rounding (`wc_format_decimal`) so stored amounts
@@ -248,10 +248,96 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 *
 		 * @since 1.6.3
 		 * @param float $amount Canonical (already currency-converted) amount.
-		 * @return float Amount rounded to wc_get_price_decimals().
+		 * @return float Amount rounded to the store's ledger decimals (see WOO_Wallet_Helper::get_ledger_decimals()).
 		 */
 		private function quantize_amount( $amount ) {
-			return (float) wc_format_decimal( (float) $amount, (int) wc_get_price_decimals() );
+			return (float) wc_format_decimal( (float) $amount, WOO_Wallet_Helper::get_ledger_decimals() );
+		}
+
+		/**
+		 * What credit()/debit() would store for an amount: the single conversion +
+		 * quantize step shared by the writer and can_cover(), so the checkout
+		 * pre-check can never disagree with the ledger gate.
+		 *
+		 * @since 1.7.5
+		 * @param float  $amount   Amount in $currency.
+		 * @param string $currency ISO code; '' means the active storefront currency.
+		 * @return array { amount, currency, incoming_amount, incoming_currency, rate }
+		 */
+		private function to_ledger_amount( $amount, $currency = '' ) {
+			$mode              = $this->get_currency_mode();
+			$base_currency     = $this->resolve_base_currency();
+			$incoming_currency = '' !== (string) $currency ? strtoupper( (string) $currency ) : $this->resolve_active_currency();
+			$incoming_amount   = (float) $amount;
+			$stored_currency   = 'per_currency' === $mode ? $incoming_currency : $base_currency;
+			$stored_amount     = $incoming_amount;
+			$original_rate     = 1.0;
+
+			if ( 'single_base' === $mode && $incoming_currency !== $base_currency && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				$stored_amount = (float) Woo_Wallet_Currency_Manager::instance()->convert( $incoming_amount, $incoming_currency, $base_currency );
+				if ( $incoming_amount > 0 ) {
+					$original_rate = $stored_amount / $incoming_amount;
+				}
+			}
+
+			// Quantize the canonical amount to the store's price decimals before the
+			// balance gate and insert, so currency conversion (or a sub-cent caller
+			// amount) can never seed the ledger with dust. `original_amount` keeps the
+			// un-quantized source value as the audit record; `original_rate` above is
+			// computed from the pre-quantize conversion result.
+			return array(
+				'amount'            => $this->quantize_amount( $stored_amount ),
+				'currency'          => $stored_currency,
+				'incoming_amount'   => $incoming_amount,
+				'incoming_currency' => $incoming_currency,
+				'rate'              => $original_rate,
+			);
+		}
+
+		/**
+		 * Would debit( $user_id, $amount, [ 'currency' => $currency ] ) succeed right now?
+		 *
+		 * The checkout pre-checks must ask the ledger's question, in the ledger's unit.
+		 * They used to compare the total with the balance converted to the active
+		 * currency and floored for display, so a customer who topped up 10 KD was told
+		 * "balance is low" for a 10 KD order the debit would accept (1.7.5).
+		 *
+		 * Advisory (no lock): the debit re-checks under its lock. Also honours balance
+		 * filters (e.g. credit expiry), asked for the balance in the ledger currency,
+		 * so expired-but-unswept credit stays unspendable at checkout as before.
+		 *
+		 * @since 1.7.5
+		 * @param int    $user_id  User.
+		 * @param float  $amount   Amount in $currency.
+		 * @param string $currency ISO code; '' means the active storefront currency.
+		 * @param bool   $honour_overdraft Apply `woo_wallet_disallow_negative_transaction` (overdraft
+		 *                                stores). False = does the balance itself cover it — what
+		 *                                gateway availability has always asked, so partial payment
+		 *                                stays offered on overdraft stores.
+		 * @return bool
+		 */
+		public function can_cover( $user_id, $amount, $currency = '', bool $honour_overdraft = true ): bool {
+			global $wpdb;
+			$user_id = absint( $user_id );
+			if ( (float) $amount <= 0 ) {
+				return true;
+			}
+			if ( ! $user_id || is_wallet_account_locked( $user_id ) ) {
+				return false;
+			}
+			$ledger = $this->to_ledger_amount( $amount, $currency );
+			if ( 'per_currency' === $this->get_currency_mode() ) {
+				$raw = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $user_id, $ledger['currency'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			} else {
+				$raw = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			}
+			// round( , 6 ): filters re-sum rows in PHP floats (9.999999999999998 for 10.00).
+			$available = min( $raw, round( (float) apply_filters( 'woo_wallet_current_balance', $raw, $user_id, $ledger['currency'] ), 6 ) );
+			$short     = ( $available <= 0 || $ledger['amount'] > $available );
+			if ( ! $honour_overdraft ) {
+				return ! $short;
+			}
+			return ! apply_filters( 'woo_wallet_disallow_negative_transaction', $short, $ledger['amount'], $available );
 		}
 
 		/**
@@ -609,11 +695,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					return;
 				}
 
-				$decimals  = wc_get_price_decimals();
+				$decimals  = WOO_Wallet_Helper::get_ledger_decimals();
 				$credited  = (float) $credit->amount;
 				$reversed  = (float) $order->get_meta( '_wc_wallet_topup_reversed_amount' );
 				$shortfall = (float) $order->get_meta( '_wc_wallet_topup_reversal_shortfall' );
-				$left      = max( 0.0, round( $credited - $reversed - $shortfall, $decimals ) );
+				// Floor, not round: a 1.7.4 row may hold 3 decimals (3.335); rounding would take 3.34.
+				$left      = max( 0.0, floor( ( $credited - $reversed - $shortfall ) * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals ) );
 				if ( $left <= 0 ) {
 					return;
 				}
@@ -1098,14 +1185,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				);
 			}
 
-			$decimals       = wc_get_price_decimals();
+			$decimals       = WOO_Wallet_Helper::get_ledger_decimals();
 			$order_refunded = (float) $order->get_meta( '_woo_wallet_partial_refunded_total' );
 			$stored         = $order->get_meta( '_woo_wallet_partial_refunded_base_total' );
 			// Orders partially refunded before 1.7.1 have no base counter: derive it pro rata.
 			$base_refunded  = '' !== $stored
 				? (float) $stored
 				: round( $base_amount * min( 1.0, $order_refunded / $partial_payment_amount ), $decimals );
-			$base_remaining = max( 0.0, round( $base_amount - $base_refunded, $decimals ) );
+			// Floor, not round: a 1.7.4 debit may hold 3 decimals; never refund more than it took.
+			$base_remaining = max( 0.0, floor( ( $base_amount - $base_refunded ) * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals ) );
 			$is_final       = $order_refunded + $refund_gross + 0.001 >= $partial_payment_amount;
 
 			$amount = $is_final
@@ -1182,7 +1270,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				$already    = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
 				$proration  = min( 1.0, $refund_amount / $order_total );
-				$refund_now = round( $via_wallet * $proration, wc_get_price_decimals() );
+				$refund_now = round( $via_wallet * $proration, WOO_Wallet_Helper::get_ledger_decimals() ); // Store precision, not the shopper's (1.7.5).
 				// Cap so cumulative wallet refunds can never exceed the original debit.
 				$refund_now = min( $refund_now, max( 0.0, $via_wallet - $already ) );
 				$refund_now = (float) apply_filters( 'woo_wallet_partial_payment_refund_amount', $refund_now, $locked_order, $refund );
@@ -1403,7 +1491,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( $fresh ) {
 					$order = $fresh;
 				}
-				$decimals        = wc_get_price_decimals();
+				// Store precision, not the shopper's: a switcher reports the ACTIVE currency's decimals,
+				// which would make the clawback depend on whose session triggered it (1.7.5).
+				$decimals        = WOO_Wallet_Helper::get_ledger_decimals();
 				$convert         = function ( $amount, $from, $to ) {
 					return $from === $to || ! class_exists( 'Woo_Wallet_Currency_Manager' ) ? (float) $amount : (float) Woo_Wallet_Currency_Manager::instance()->convert( $amount, $from, $to );
 				};
@@ -1411,7 +1501,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$clawed_back     = (float) $order->get_meta( '_cashback_clawed_back_amount' );
 				$shortfall       = (float) $order->get_meta( '_cashback_clawback_shortfall' );
 				$handled         = $convert( $clawed_back + $shortfall, $ledger_currency, $order_currency );
-				$clawback_amount = round( min( (float) $clawback_amount, $total_cashback - $handled ), $decimals );
+				// Cap AFTER rounding, with the unrounded remainder: rounding the capped value could
+				// round it up past what was credited ($1.616 = £4.04 -> $1.62 = £4.05). The debit
+				// converts the remainder back to exactly the credited base amount (1.7.5).
+				$clawback_amount = min( round( (float) $clawback_amount, $decimals ), round( $total_cashback - $handled, 6 ) );
+				if ( $clawback_amount > 0 && $this->to_ledger_amount( $clawback_amount, $order_currency )['amount'] <= 0 ) {
+					$clawback_amount = 0.0; // Float residue that would store a 0.00 debit.
+				}
 				$claim_refund    = function () use ( $order, $refund_id ) {
 					$done = array_filter( array_map( 'absint', (array) $order->get_meta( '_cashback_clawback_refunds' ) ) );
 					if ( $refund_id && ! in_array( absint( $refund_id ), $done, true ) ) {
@@ -1622,7 +1718,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			// Prorated clawback: clawback = total_cashback * ( refund / order_total ).
 			$proration = min( 1.0, $refund_amount / $order_total );
-			$clawback  = round( $total_cashback * $proration, wc_get_price_decimals() );
+			$clawback  = round( $total_cashback * $proration, WOO_Wallet_Helper::get_ledger_decimals() ); // Store precision, not the shopper's (1.7.5).
 
 			/**
 			 * Filter the cashback clawback amount on refund.
@@ -1743,11 +1839,16 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 *
 		 * @param int    $from_user_id Sender user id.
 		 * @param int    $to_user_id   Recipient user id.
+		 * Currency contract (same as credit()/debit()): $amount and $credit_amount are
+		 * in `$args['currency']`, else the active storefront currency. In single_base
+		 * mode both are converted to base and quantized BEFORE the balance gate, so the
+		 * gate compares like with like; a currency with no known rate is refused.
+		 *
 		 * @param float  $amount       Positive amount to move (sender-side; charge is included by caller).
 		 * @param string $debit_note   Detail string for the sender's debit row.
 		 * @param string $credit_note  Detail string for the recipient's credit row.
 		 * @param float  $credit_amount Optional recipient credit amount (defaults to $amount). Caller passes a smaller value when a transfer charge is taken.
-		 * @param array  $args         Extra args forwarded to the inserted rows.
+		 * @param array  $args         Extra args forwarded to the inserted rows. `currency` names the currency of the amounts.
 		 * @return array|false { 'debit' => int, 'credit' => int } on success, false on any failure.
 		 * @throws Exception Re-throws any exception raised by underlying $wpdb calls after rolling back.
 		 */
@@ -1769,16 +1870,58 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return false;
 			}
 
-			$mode              = $this->get_currency_mode();
-			$base_currency     = $this->resolve_base_currency();
-			$transfer_currency = isset( $args['currency'] ) && '' !== $args['currency']
-				? strtoupper( (string) $args['currency'] )
-				: ( 'per_currency' === $mode ? $this->resolve_active_currency() : $base_currency );
+			$mode            = $this->get_currency_mode();
+			$base_currency   = $this->resolve_base_currency();
+			$explicit        = isset( $args['currency'] ) && '' !== $args['currency'];
+			$source_currency = $explicit ? strtoupper( (string) $args['currency'] ) : $this->resolve_active_currency();
 
-			// v1.6 supports intra-currency transfers only. Cross-currency goes via
-			// the explicit topup→debit flow rather than implicit conversion in transfer().
+			// $amount / $credit_amount are denominated in $source_currency (the caller's
+			// currency, else the active storefront one) — the same contract as
+			// recode_transaction(). Both modes hand insert_transaction_row() an amount
+			// already in the currency it stores, so the gate, the rows, the cache and
+			// the hooks below all speak ONE unit. Never compare a typed amount against
+			// the ledger SUM without converting it first (1.7.5 overdraw fix).
 			if ( 'per_currency' === $mode ) {
-				$args['currency'] = $transfer_currency;
+				// Sub-balances are scoped per currency; no conversion.
+				$transfer_currency = $source_currency;
+				$args['currency']  = $source_currency;
+			} else {
+				$transfer_currency = $base_currency;
+				if ( $source_currency !== $base_currency ) {
+					$manager = class_exists( 'Woo_Wallet_Currency_Manager' ) ? Woo_Wallet_Currency_Manager::instance() : null;
+					$rate    = $manager ? $manager->get_rate( $source_currency, $base_currency ) : null;
+					if ( null === $rate || ! is_numeric( $rate ) || (float) $rate <= 0 ) {
+						// A caller-named currency we cannot price is refused (convert() would
+						// silently go 1:1). An active currency with no rate means no supported
+						// switcher (generic provider): the amount is treated as base, exactly
+						// what the writer did before 1.7.5. Gate and rows agree either way.
+						if ( $explicit ) {
+							return false;
+						}
+					} else {
+						$args['original_amount']   = $amount;
+						$args['original_currency'] = $source_currency;
+						$args['original_rate']     = (float) $rate;
+						$original_credit           = $credit_amount;
+						$amount                    = (float) $manager->convert( $amount, $source_currency, $base_currency );
+						$credit_amount             = (float) $manager->convert( $credit_amount, $source_currency, $base_currency );
+					}
+				}
+				$amount           = $this->quantize_amount( $amount );
+				$credit_amount    = $this->quantize_amount( $credit_amount );
+				$args['currency'] = $base_currency; // Already base: the writer must not convert again.
+				if ( $amount <= 0 ) {
+					return false;
+				}
+			}
+			// The recipient can never receive more than the sender loses: a charge or
+			// credit/debit filter that inverts the pair would mint money.
+			if ( $credit_amount > $amount ) {
+				return false;
+			}
+			$credit_args = $args;
+			if ( isset( $original_credit ) ) {
+				$credit_args['original_amount'] = $original_credit;
 			}
 
 			$first_id     = min( $from_user_id, $to_user_id );
@@ -1832,10 +1975,11 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$to_balance = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $to_user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					}
 
-					$transfer_args             = $args;
-					$transfer_args['category'] = isset( $transfer_args['category'] ) && '' !== $transfer_args['category'] ? $transfer_args['category'] : 'transfer';
-					$debit_id                  = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $transfer_args );
-					$credit_id                 = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $transfer_args ) : 0;
+					$category                = isset( $args['category'] ) && '' !== $args['category'] ? $args['category'] : 'transfer';
+					$args['category']        = $category;
+					$credit_args['category'] = $category;
+					$debit_id                = $this->insert_transaction_row( $from_user_id, 'debit', $amount, $debit_note, $args );
+					$credit_id               = $credit_amount > 0 ? $this->insert_transaction_row( $to_user_id, 'credit', $credit_amount, $credit_note, $credit_args ) : 0;
 
 					if ( $debit_id && ( $credit_id || 0 === $credit_amount ) ) {
 						$new_from_balance = $from_balance - $amount;
@@ -2102,29 +2246,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$amount = 0;
 			}
 
-			$mode              = $this->get_currency_mode();
-			$base_currency     = $this->resolve_base_currency();
-			$incoming_currency = isset( $args['currency'] ) && '' !== $args['currency']
-				? strtoupper( (string) $args['currency'] )
-				: $this->resolve_active_currency();
-			$incoming_amount   = (float) $amount;
-			$stored_currency   = 'per_currency' === $mode ? $incoming_currency : $base_currency;
-			$stored_amount     = $incoming_amount;
-			$original_rate     = 1.0;
+			$mode   = $this->get_currency_mode();
+			$ledger = $this->to_ledger_amount( $amount, isset( $args['currency'] ) ? $args['currency'] : '' );
 
-			if ( 'single_base' === $mode && $incoming_currency !== $base_currency && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
-				$stored_amount = (float) Woo_Wallet_Currency_Manager::instance()->convert( $incoming_amount, $incoming_currency, $base_currency );
-				if ( $incoming_amount > 0 ) {
-					$original_rate = $stored_amount / $incoming_amount;
-				}
-			}
-
-			// Quantize the canonical amount to the store's price decimals before the
-			// balance gate and insert, so currency conversion (or a sub-cent caller
-			// amount) can never seed the ledger with dust. `original_amount` keeps the
-			// un-quantized source value as the audit record; `original_rate` above is
-			// computed from the pre-quantize conversion result.
-			$stored_amount = $this->quantize_amount( $stored_amount );
+			$incoming_currency = $ledger['incoming_currency'];
+			$incoming_amount   = $ledger['incoming_amount'];
+			$stored_currency   = $ledger['currency'];
+			$stored_amount     = $ledger['amount'];
+			$original_rate     = $ledger['rate'];
 
 			// Acquire a per-user (per-currency in mode B) DB lock to serialize concurrent requests.
 			$lock_acquired = false;

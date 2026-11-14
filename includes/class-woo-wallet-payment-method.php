@@ -130,9 +130,13 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . __( 'Invalid order.', 'woo-wallet' ), 'error' );
 				return array( 'result' => 'failure' );
 			}
-			if ( ( $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) && apply_filters( 'woo_wallet_disallow_negative_transaction', ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) <= 0 || $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ), $order->get_total( 'edit' ), woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
+			// Ask the ledger's question in the ledger's unit (1.7.5): the display balance
+			// is converted and floored, so comparing the total against it refused orders
+			// the debit itself would accept.
+			if ( ! woo_wallet()->wallet->can_cover( get_current_user_id(), $order->get_total( 'edit' ), $order->get_currency( 'edit' ) ) ) {
+				$shortfall = max( 0.0, (float) $order->get_total( 'edit' ) - (float) woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
 				/* translators: 1: wallet amount */
-				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
+				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $shortfall, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
 				return array( 'result' => 'failure' );
 			}
 
