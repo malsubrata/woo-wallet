@@ -129,7 +129,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       # `npm ci` installs exactly what package-lock.json records and fails if the lockfile
