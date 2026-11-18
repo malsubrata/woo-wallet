@@ -371,7 +371,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 		}
 
 		if ( ! $this->has_paid( $tw_sell_content_amount ) ) {
-			if ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) >= $tw_sell_content_amount ) {
+			if ( woo_wallet()->wallet->can_cover( get_current_user_id(), $tw_sell_content_amount, $this->get_base_currency() ) ) {
 				return $this->render_settings_template( 'purchase_template' );
 			} else {
 				return $this->render_settings_template( 'insufficient_funds_template' );
@@ -567,7 +567,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 		}
 
 		if ( ! $this->has_paid( $amount, $atts['id'] ) ) {
-			if ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) >= $amount ) {
+			if ( woo_wallet()->wallet->can_cover( get_current_user_id(), $amount, $this->get_base_currency() ) ) {
 				return $this->render_settings_template( 'purchase_template', $amount, $atts['id'] );
 			} else {
 				return $this->render_settings_template( 'insufficient_funds_template', $amount, $atts['id'] );

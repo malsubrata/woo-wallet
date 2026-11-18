@@ -65,6 +65,7 @@ class Test_Checkout_Precheck extends WP_UnitTestCase {
 					$rates = array(
 						'USD' => 1.0,
 						'KWD' => 0.3058,
+						'INR' => 83.0,
 					);
 					if ( $from === $to ) {
 						return 1.0;
@@ -284,5 +285,65 @@ class Test_Checkout_Precheck extends WP_UnitTestCase {
 
 		$this->assertTrue( woo_wallet()->wallet->can_cover( $this->user_id, 0, 'USD' ) );
 		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->user_id, 5.01, 'USD' ) );
+	}
+
+	/**
+	 * Weaker active currency (INR): no false refusal at the exact balance, and no
+	 * false acceptance one minor unit above it.
+	 */
+	public function test_weaker_active_currency_pays_exact_balance() {
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'Seed', array( 'currency' => 'USD' ) );
+		self::$active = 'INR';
+
+		$this->assertTrue( woo_wallet()->wallet->can_cover( $this->user_id, 8300 ) );
+		// 8301 INR = 100.012 USD -> 100.01 > 100.
+		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->user_id, 8301 ) );
+
+		$order = $this->kwd_order( 8300 );
+		$order->set_currency( 'INR' );
+		$order->save();
+		$result = WC()->payment_gateways()->payment_gateways()['wallet']->process_payment( $order->get_id() );
+		$this->assertSame( 'success', $result['result'] );
+		$this->assertEqualsWithDelta( 0.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * Order currency != active: a KWD order paid from order-pay after switching to USD.
+	 */
+	public function test_order_currency_differs_from_active() {
+		$this->top_up_kd( 10 );
+		self::$active = 'USD';
+
+		$over = $this->kwd_order( 10.01 );
+		$this->assertSame( 'failure', WC()->payment_gateways()->payment_gateways()['wallet']->process_payment( $over->get_id() )['result'] );
+		$this->assertEqualsWithDelta( 32.70, $this->raw(), 0.0001 );
+
+		$order  = $this->kwd_order( 10 );
+		$result = WC()->payment_gateways()->payment_gateways()['wallet']->process_payment( $order->get_id() );
+		$this->assertSame( 'success', $result['result'] );
+		$this->assertEqualsWithDelta( 0.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * Sell-content offers "buy" by the ledger in base (the price unit), not the
+	 * active-currency display balance. Stronger (KWD) used to falsely refuse;
+	 * weaker (INR) used to falsely offer.
+	 */
+	public function test_sell_content_precheck_uses_base_ledger() {
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'Seed', array( 'currency' => 'USD' ) );
+		$author          = self::factory()->user->create( array( 'role' => 'author' ) );
+		$GLOBALS['post'] = get_post( self::factory()->post->create( array( 'post_author' => $author ) ) );
+		$action          = new Woo_Wallet_Action_Sell_Content();
+		$action->update_option( 'enabled', 'yes' );
+		$action->update_option( 'purchase_template', 'TW-BUY' );
+		$action->update_option( 'insufficient_funds_template', 'TW-SHORT' );
+		$action->init_settings();
+
+		self::$active = 'KWD';
+		$this->assertStringContainsString( 'TW-BUY', $action->tw_sell_content_shortcode_callback( array( 'amount' => 50 ), 'x' ) );
+		self::$active = 'INR';
+		$this->assertStringContainsString( 'TW-SHORT', $action->tw_sell_content_shortcode_callback( array( 'amount' => 150 ), 'x' ) );
+		$this->assertEqualsWithDelta( 100.0, $this->raw(), 0.0001 );
+		unset( $GLOBALS['post'] );
 	}
 }

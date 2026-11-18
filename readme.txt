@@ -151,22 +151,23 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.5 (Unreleased) =
+= v1.7.5 (November 18, 2026) =
 * Security - On multi-currency stores, wallet transfers can no longer exceed the customer's balance. Props to kta1kri (https://github.com/kta1kri) for responsible disclosure.
-* Security - Wallet transfers refuse a requested currency with no known exchange rate, and the recipient never receives more than the sender pays.
-* Fix - Transfer minimum, maximum and fixed charge now apply by value in the shopper's currency, and the transfer form shows the maximum in that currency.
+* Security - Transfers in a currency with no known exchange rate are refused, and recipients never receive more than the sender pays.
+* Fix - Transfer minimum, maximum and fixed charge apply in the shopper's currency, and the transfer form shows the maximum in that currency.
 * Fix - Customers browsing in a lower-value currency are no longer refused a transfer their balance covers.
-* Fix - Vendor withdrawals (Dokan, WCFM, WCMp), admin transfers and the legacy wc/v3 wallet API are always credited in your store currency.
-* Fix - Wallet amounts round to your store's decimals, not the shopper's currency, so a 10.37 credit is no longer stored as 10.00.
-* Fix - The wallet is offered and accepted at checkout whenever the balance covers the order, so a 10 KD top-up pays a 10 KD order.
+* Fix - Vendor withdrawals (Dokan, WCFM, WCMp), admin transfers, the admin transactions API and the legacy wc/v3 wallet API always use your store currency.
+* Fix - Wallet amounts round to your store's decimals, so a 10.37 credit is no longer stored as 10.00.
+* Fix - The wallet is offered and accepted at checkout whenever the balance covers the order, such as a 10 KD balance on a 10 KD order.
 * Fix - Cashback reversals and refunds of orders placed on earlier versions never move more than the original amount.
-* Tweak - Developers: transfers now pass store-currency amounts to woo_wallet_transaction_recorded, and the public settings API returns transfer.max in the shopper's currency.
+* Fix - Pay-to-view content is offered whenever the wallet covers the price, whatever currency the shopper browses in.
+* Tweak - Developers: woo_wallet_transaction_recorded now receives store-currency amounts for transfers, and the public settings API returns transfer.max in the shopper's currency.
 * Tweak - Developers: new filter woo_wallet_ledger_decimals for stores that keep wallet amounts at more decimals than prices.
-* Tweak - TeraWallet Pro is now a single-site licence; the Go Pro page and the Pro banner on TeraWallet's own screens show a limited-time offer until 1 December 2026.
+* Tweak - TeraWallet Pro is now a single-site licence, with a Black Friday offer on TeraWallet's admin screens until December 1, 2026.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
 = 1.7.5 =
-Security: on multi-currency stores wallet transfers can no longer exceed the customer's balance. Wallet amounts now round to your store's decimals, and checkout accepts a balance that exactly covers the order. Developers: see the transfer hook notes.
+Security: on multi-currency stores, wallet transfers can no longer exceed the customer's balance. Wallet amounts now round to your store's price decimals; stores that raised precision by filter must use woo_wallet_ledger_decimals. Developers: see the hook notes.

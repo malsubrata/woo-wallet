@@ -879,7 +879,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					// storefront currency.
 					$entry_currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
 					$entry_currency = '' !== (string) $entry_currency ? $entry_currency : Woo_Wallet_Currency_Manager::instance()->get_base_currency();
-					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
+					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( (float) $amount, WOO_Wallet_Helper::get_ledger_decimals(), '.', '' ), $user_id );
 					// Compare in the currency the debit is written in, not the storefront one.
 					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit', $entry_currency );
 					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {

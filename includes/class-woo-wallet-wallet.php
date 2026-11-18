@@ -1863,7 +1863,8 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( ! $from_user_id || ! $to_user_id || $from_user_id === $to_user_id ) {
 				return false;
 			}
-			if ( $amount <= 0 || $credit_amount < 0 ) {
+			// is_finite(): INF/NAN pass `<= 0`; only a MySQL syntax error stopped them before.
+			if ( ! is_finite( $amount ) || ! is_finite( $credit_amount ) || $amount <= 0 || $credit_amount < 0 ) {
 				return false;
 			}
 			if ( is_wallet_account_locked( $from_user_id ) || is_wallet_account_locked( $to_user_id ) ) {
@@ -2240,6 +2241,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				return false;
 			}
 			if ( is_wallet_account_locked( $this->user_id ) ) {
+				return false;
+			}
+			if ( ! is_finite( (float) $amount ) ) {
 				return false;
 			}
 			if ( $amount < 0 ) {

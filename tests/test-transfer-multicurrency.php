@@ -434,4 +434,97 @@ class Test_Transfer_Multicurrency extends WP_UnitTestCase {
 		$this->assertEqualsWithDelta( 32.70, $this->raw( $this->recipient ), 0.0001 );
 		$this->assertEqualsWithDelta( 66.30, $this->raw( $this->sender ), 0.0001 );
 	}
+
+	/**
+	 * POST an admin transactions request as an administrator.
+	 *
+	 * @param string $route  Route under terawallet/v1/admin/transactions.
+	 * @param array  $params Body.
+	 * @return WP_REST_Response
+	 */
+	private function admin_txn( $route, array $params ) {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$request = new WP_REST_Request( 'POST', '/terawallet/v1/admin/transactions' . $route );
+		$request->set_header( 'Idempotency-Key', 'mc-txn-' . wp_generate_password( 8, false ) );
+		$request->set_body_params( $params );
+		return rest_do_request( $request );
+	}
+
+	/**
+	 * Admin create without `currency` is base, in a stronger (overdraw) and a
+	 * weaker (false-refusal) active currency. 1.7.4 minted 227 USD per 100 in KWD.
+	 */
+	public function test_admin_transactions_create_is_base_denominated() {
+		foreach ( array( 'KWD', 'INR' ) as $active ) {
+			self::$active = $active;
+			$before       = $this->raw( $this->sender );
+			$credit       = $this->admin_txn( '', array( 'user_id' => $this->sender, 'type' => 'credit', 'amount' => 10 ) );
+			$this->assertLessThan( 300, $credit->get_status(), $active );
+			$this->assertEqualsWithDelta( $before + 10, $this->raw( $this->sender ), 0.0001, $active );
+
+			$debit = $this->admin_txn( '', array( 'user_id' => $this->sender, 'type' => 'debit', 'amount' => 10 ) );
+			$this->assertLessThan( 300, $debit->get_status(), $active );
+			$this->assertEqualsWithDelta( $before, $this->raw( $this->sender ), 0.0001, $active );
+		}
+	}
+
+	/**
+	 * An explicit `currency` (≠ active) is still honoured: 10 KD = 32.70 USD.
+	 */
+	public function test_admin_transactions_create_explicit_currency_is_converted() {
+		self::$active = 'INR';
+		$response     = $this->admin_txn( '', array( 'user_id' => $this->sender, 'type' => 'credit', 'amount' => 10, 'currency' => 'kwd' ) );
+		$this->assertLessThan( 300, $response->get_status() );
+		$this->assertEqualsWithDelta( 132.70, $this->raw( $this->sender ), 0.0001 );
+	}
+
+	/**
+	 * Bulk credit/debit without `currency` is base for every user.
+	 */
+	public function test_admin_transactions_bulk_is_base_denominated() {
+		self::$active = 'KWD';
+		$ids          = array( $this->sender, $this->recipient );
+		$credit       = $this->admin_txn( '/bulk', array( 'action' => 'credit', 'user_ids' => $ids, 'amount' => 10 ) );
+		$this->assertSame( 200, $credit->get_status() );
+		$this->assertEqualsWithDelta( 110.0, $this->raw( $this->sender ), 0.0001 );
+		$this->assertEqualsWithDelta( 10.0, $this->raw( $this->recipient ), 0.0001 );
+
+		self::$active = 'INR';
+		$debit        = $this->admin_txn( '/bulk', array( 'action' => 'debit', 'user_ids' => $ids, 'amount' => 5 ) );
+		$this->assertSame( 200, $debit->get_status() );
+		$this->assertEqualsWithDelta( 105.0, $this->raw( $this->sender ), 0.0001 );
+		$this->assertEqualsWithDelta( 5.0, $this->raw( $this->recipient ), 0.0001 );
+	}
+
+	/**
+	 * INF / NAN never reach the writer, in either currency mode.
+	 */
+	public function test_non_finite_amounts_are_refused() {
+		// The guard must stop them before SQL: MySQL rejecting `nan` was luck, not a check.
+		$leaked = array();
+		$spy    = function ( $sql ) use ( &$leaked ) {
+			if ( preg_match( '/\b(nan|inf)\b/i', $sql ) && false !== stripos( $sql, 'woo_wallet_transactions' ) ) {
+				$leaked[] = $sql;
+			}
+			return $sql;
+		};
+		add_filter( 'query', $spy );
+		foreach ( array( 'single_base', 'per_currency' ) as $mode ) {
+			add_filter( 'woo_wallet_enable_per_currency_mode', '__return_true' );
+			$this->settings( array( 'wallet_currency_mode' => $mode ) );
+			$this->assertSame( $mode, woo_wallet()->wallet->get_currency_mode() );
+			$this->assertFalse( woo_wallet()->wallet->transfer( $this->sender, $this->recipient, INF, 'o', 'i' ), $mode );
+			$this->assertFalse( woo_wallet()->wallet->transfer( $this->sender, $this->recipient, NAN, 'o', 'i' ), $mode );
+			$this->assertFalse( woo_wallet()->wallet->transfer( $this->sender, $this->recipient, 1, 'o', 'i', INF ), $mode );
+			$this->assertFalse( woo_wallet()->wallet->credit( $this->sender, INF ), $mode );
+			$this->assertFalse( woo_wallet()->wallet->debit( $this->sender, NAN ), $mode );
+			$result = WooWallet_Transfer_Service::execute( $this->sender, $this->recipient, '1e309' );
+			$this->assertFalse( $result['is_valid'], $mode );
+			remove_filter( 'woo_wallet_enable_per_currency_mode', '__return_true' );
+		}
+		remove_filter( 'query', $spy );
+		$this->assertSame( array(), $leaked );
+		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
+		$this->assertEqualsWithDelta( 0.0, $this->raw( $this->recipient ), 0.0001 );
+	}
 }

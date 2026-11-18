@@ -76,7 +76,7 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 			}
 			set_transient( $rate_key, $rate_count + 1, MINUTE_IN_SECONDS );
 
-			if ( $amount <= 0 ) {
+			if ( ! is_finite( $amount ) || $amount <= 0 ) {
 				return self::fail( 'rest_invalid_amount', __( 'Transfer amount must be greater than zero.', 'woo-wallet' ) );
 			}
 
@@ -150,7 +150,7 @@ if ( ! class_exists( 'WooWallet_Transfer_Service' ) ) {
 			$credit_amount   = (float) apply_filters( 'woo_wallet_transfer_credit_amount', $amount, $whom );
 			$debit_amount    = (float) apply_filters( 'woo_wallet_transfer_debit_amount', $amount + $transfer_charge, $whom );
 
-			if ( $debit_amount <= 0 ) {
+			if ( ! is_finite( $debit_amount ) || ! is_finite( $credit_amount ) || ! is_finite( $transfer_charge ) || $debit_amount <= 0 ) {
 				return self::fail( 'rest_invalid_amount', __( 'Transfer amount must be greater than zero.', 'woo-wallet' ) );
 			}
 
