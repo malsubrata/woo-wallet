@@ -162,6 +162,7 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 * Fix - Cashback reversals and refunds of orders placed on earlier versions never move more than the original amount.
 * Tweak - Developers: transfers now pass store-currency amounts to woo_wallet_transaction_recorded, and the public settings API returns transfer.max in the shopper's currency.
 * Tweak - Developers: new filter woo_wallet_ledger_decimals for stores that keep wallet amounts at more decimals than prices.
+* Tweak - TeraWallet Pro is now a single-site licence; the Go Pro page and the Pro banner on TeraWallet's own screens show a limited-time offer until 1 December 2026.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 

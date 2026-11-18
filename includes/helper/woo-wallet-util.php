@@ -108,6 +108,10 @@ if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
 			'utm_campaign' => 'upgrade',
 			'utm_content'  => sanitize_key( $content ),
 		);
+		// One change tags every Pro link while the offer runs; a caller's own utm_campaign wins.
+		if ( class_exists( 'Woo_Wallet_Pro_Campaign' ) && Woo_Wallet_Pro_Campaign::is_active() ) {
+			$args['utm_campaign'] = Woo_Wallet_Pro_Campaign::UTM_CAMPAIGN;
+		}
 		$args = array_merge( $args, (array) $extra );
 
 		/**

@@ -121,6 +121,9 @@ final class Woo_Wallet {
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-signup-handler.php';
 		new Woo_Wallet_Signup_Handler();
 
+		// Pure constants + clock, no hooks: loaded everywhere so woo_wallet_pro_url() sees it.
+		include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-pro-campaign.php';
+
 		if ( $this->is_request( 'admin' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';

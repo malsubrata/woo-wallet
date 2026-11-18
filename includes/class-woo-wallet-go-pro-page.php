@@ -31,13 +31,11 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		const UPGRADE_URL    = 'https://standalonetech.com/product/woocommerce-wallet-pro/';
 
 		/**
-		 * Lowest licence price. Hard-coded on purpose: this page must render
-		 * fully offline, so it never fetches pricing from the store.
-		 *
-		 * Only the entry price is stored, never the full tier list: this plugin
-		 * ships and then freezes on the store that installed it, so a price list
-		 * baked in today would still be on screen long after it changed. "From"
-		 * the floor stays true when the higher tiers move.
+		 * Regular licence price: Pro is sold as a single-site licence only.
+		 * Hard-coded on purpose: this page must render fully offline, so it
+		 * never fetches pricing from the store. This plugin ships and then
+		 * freezes on the store that installed it, so only the one price is
+		 * stored, never a price list.
 		 */
 		const PRICE = '$79';
 		const API_KEYS_URL   = 'https://standalonetech.com/my-account/';
@@ -50,8 +48,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * @return string
 		 */
 		public static function price_label() {
-			/* translators: %s: lowest licence price, e.g. $79. */
-			$label = sprintf( __( 'from %s', 'woo-wallet' ), self::PRICE );
+			$label = self::PRICE;
 
 			/**
 			 * Filter the Pro price label shown across the admin.
@@ -61,6 +58,19 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			 * @param string $label Price label.
 			 */
 			return apply_filters( 'woo_wallet_pro_price_label', $label );
+		}
+
+		/**
+		 * Button label: names the sale price only while the offer runs.
+		 *
+		 * @return string
+		 */
+		private static function get_pro_label() {
+			if ( Woo_Wallet_Pro_Campaign::is_active() ) {
+				/* translators: %s: Black Friday first-year price, e.g. $55. */
+				return sprintf( __( 'Get TeraWallet Pro for %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::SALE_PRICE );
+			}
+			return __( 'Get TeraWallet Pro', 'woo-wallet' );
 		}
 
 		/**
@@ -364,6 +374,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 		 * peak interest, so the price is stated here instead.
 		 */
 		private function render_hero() {
+			$sale = Woo_Wallet_Pro_Campaign::is_active();
 			?>
 			<section class="tw-hero">
 				<div class="tw-hero__lead">
@@ -373,8 +384,8 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<?php esc_html_e( 'Withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts.', 'woo-wallet' ); ?>
 					</p>
 					<div class="tw-hero__cta">
-						<a class="tw-btn tw-btn--light" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
-							<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
+						<a class="tw-btn tw-btn--light<?php echo Woo_Wallet_Pro_Campaign::is_active() ? ' tw-btn--sale' : ''; ?>" href="<?php echo esc_url( woo_wallet_pro_url( 'hero' ) ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php echo esc_html( self::get_pro_label() ); ?>
 							<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
 						</a>
 						<p class="tw-hero__reassure">
@@ -385,23 +396,41 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				</div>
 				<div class="tw-hero__panel">
 					<?php // Composed rather than printed through price_label(): the design sets the amount apart from its qualifiers. self::PRICE stays the one source of the number. ?>
-					<p class="tw-price">
-						<span class="tw-price__from"><?php esc_html_e( 'from', 'woo-wallet' ); ?></span>
-						<span class="tw-price__amount"><?php echo esc_html( self::PRICE ); ?></span>
-						<span class="tw-price__term"><?php esc_html_e( '/ year', 'woo-wallet' ); ?></span>
-					</p>
-					<div class="tw-hero__rule" aria-hidden="true"></div>
-					<div class="tw-hero__licence">
-						<p><?php esc_html_e( 'One licence covers one site.', 'woo-wallet' ); ?></p>
-						<p>
+					<?php if ( $sale ) : ?>
+						<p class="tw-price tw-price--sale">
+							<del class="tw-price__was"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %s: regular price, e.g. $79. */ __( 'Regular price %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::REGULAR ) ); ?></span><span aria-hidden="true"><?php echo esc_html( Woo_Wallet_Pro_Campaign::REGULAR ); ?></span></del>
+							<span class="tw-price__amount"><span class="screen-reader-text"><?php esc_html_e( 'Black Friday price', 'woo-wallet' ); ?> </span><?php echo esc_html( Woo_Wallet_Pro_Campaign::SALE_PRICE ); ?></span>
+						</p>
+						<p class="tw-price__renews">
 							<?php
 							printf(
-								/* translators: %s: link to the pricing page, link text "pricing page". */
-								esc_html__( '5-site and 25-site licences are on the %s.', 'woo-wallet' ),
-								'<a href="' . esc_url( woo_wallet_pro_url( 'multisite-licence' ) ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'pricing page', 'woo-wallet' ) . '</a>'
+								/* translators: %s: regular yearly price, e.g. $79. */
+								esc_html__( 'first year, then %s/year', 'woo-wallet' ),
+								esc_html( self::PRICE )
 							);
 							?>
 						</p>
+						<p class="tw-price__save">
+							<span class="tw-price__tag">
+								<?php
+								printf(
+									/* translators: %s: amount saved, e.g. $24. */
+									esc_html__( 'Save %s · Black Friday', 'woo-wallet' ),
+									esc_html( Woo_Wallet_Pro_Campaign::SAVING )
+								);
+								?>
+							</span>
+							<span class="tw-price__deadline"><?php echo esc_html( Woo_Wallet_Pro_Campaign::deadline_text() ); ?></span>
+						</p>
+					<?php else : ?>
+						<p class="tw-price">
+							<span class="tw-price__amount"><?php echo esc_html( self::PRICE ); ?></span>
+							<span class="tw-price__term"><?php esc_html_e( '/ year', 'woo-wallet' ); ?></span>
+						</p>
+					<?php endif; ?>
+					<div class="tw-hero__rule" aria-hidden="true"></div>
+					<div class="tw-hero__licence">
+						<p><?php esc_html_e( 'One licence covers one site.', 'woo-wallet' ); ?></p>
 						<p class="tw-hero__meta">
 							<?php
 							printf(
@@ -609,11 +638,20 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 						<div class="tw-compare__foot">
 							<span>
 								<?php
-								printf(
-									/* translators: %s: price label, e.g. "from $79". */
-									esc_html__( 'Everything in the Pro column, %s per year.', 'woo-wallet' ),
-									esc_html( self::price_label() )
-								);
+								if ( Woo_Wallet_Pro_Campaign::is_active() ) {
+									printf(
+										/* translators: 1: sale price, e.g. $55. 2: regular yearly price, e.g. $79. */
+										esc_html__( 'Everything in the Pro column: %1$s first year, then %2$s/year.', 'woo-wallet' ),
+										esc_html( Woo_Wallet_Pro_Campaign::SALE_PRICE ),
+										esc_html( Woo_Wallet_Pro_Campaign::REGULAR )
+									);
+								} else {
+									printf(
+										/* translators: %s: yearly price, e.g. $79. */
+										esc_html__( 'Everything in the Pro column, %s per year.', 'woo-wallet' ),
+										esc_html( self::price_label() )
+									);
+								}
 								?>
 							</span>
 							<a href="<?php echo esc_url( woo_wallet_pro_url( 'comparison-table' ) ); ?>" target="_blank" rel="noopener noreferrer">
@@ -756,25 +794,40 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 			$faq = array(
 				array(
 					'q' => __( 'What does the licence cover?', 'woo-wallet' ),
-					'a' => __( 'One licence activates Pro on one site and includes every Pro feature — no per-module or per-gateway extras. 5-site and 25-site licences are available on the pricing page.', 'woo-wallet' ),
+					'a' => esc_html__( 'One licence activates Pro on one site and includes every Pro feature — no per-module or per-gateway extras.', 'woo-wallet' ),
 				),
 				array(
 					'q' => __( 'Does Pro replace the free plugin?', 'woo-wallet' ),
-					'a' => __( 'No — Pro extends it. TeraWallet Pro is an add-on and requires this free plugin to stay installed and active. Nothing is removed or replaced: your existing wallets, transactions and settings carry straight over, and the Pro features appear alongside what you already have.', 'woo-wallet' ),
+					'a' => esc_html__( 'No — Pro extends it. TeraWallet Pro is an add-on and requires this free plugin to stay installed and active. Nothing is removed or replaced: your existing wallets, transactions and settings carry straight over, and the Pro features appear alongside what you already have.', 'woo-wallet' ),
 				),
 				array(
 					'q' => __( 'Is there a refund policy?', 'woo-wallet' ),
-					'a' => __( 'Yes — 30 days, no questions asked.', 'woo-wallet' ),
+					'a' => esc_html__( 'Yes — 30 days, no questions asked.', 'woo-wallet' ),
 				),
 				array(
 					'q' => __( 'What happens if I do not renew?', 'woo-wallet' ),
-					'a' => __( 'Pro keeps working. An expired licence stops automatic updates and support until you renew; it does not switch any feature off or touch your wallet data.', 'woo-wallet' ),
+					'a' => esc_html__( 'Pro keeps working. An expired licence stops automatic updates and support until you renew; it does not switch any feature off or touch your wallet data.', 'woo-wallet' ),
 				),
 				array(
 					'q' => __( 'What do updates and support include?', 'woo-wallet' ),
-					'a' => __( 'Compatibility releases for WooCommerce and WordPress, new module features, security fixes, and direct email support from the team that maintains the plugin. The licence renews automatically each year until you cancel.', 'woo-wallet' ),
+					'a' => esc_html__( 'Compatibility releases for WooCommerce and WordPress, new module features, security fixes, and direct email support from the team that maintains the plugin. The licence renews automatically each year until you cancel.', 'woo-wallet' ),
 				),
 			);
+			if ( Woo_Wallet_Pro_Campaign::is_active() ) {
+				array_unshift(
+					$faq,
+					array(
+						'q' => __( 'How does the Black Friday price work?', 'woo-wallet' ),
+						'a' => sprintf(
+							/* translators: 1: sale price, e.g. $55. 2: regular yearly price, e.g. $79. 3: offer end date, e.g. "1 December". */
+							esc_html__( 'The first year is %1$s instead of %2$s. The discount is applied automatically at checkout until %3$s. From the second year the licence renews at the regular %2$s, and you can cancel the renewal at any time.', 'woo-wallet' ),
+							Woo_Wallet_Pro_Campaign::SALE_PRICE,
+							self::PRICE,
+							Woo_Wallet_Pro_Campaign::end_date()
+						),
+					)
+				);
+			}
 			?>
 			<section class="tw-section tw-faq-section">
 				<div class="tw-faq__rail">
@@ -792,7 +845,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 								<?php echo esc_html( $item['q'] ); ?>
 								<span class="tw-faq__chev" aria-hidden="true">+</span>
 							</summary>
-							<p><?php echo esc_html( $item['a'] ); ?></p>
+							<p><?php echo wp_kses( $item['a'], array( 'a' => array( 'href' => array() ) ) ); ?></p>
 						</details>
 					<?php endforeach; ?>
 				</div>
@@ -810,17 +863,26 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 					<h2><?php esc_html_e( 'Ready to upgrade?', 'woo-wallet' ); ?></h2>
 					<p>
 						<?php
-						printf(
-							/* translators: %s: price label, e.g. "from $79". */
-							esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year.', 'woo-wallet' ),
-							esc_html( self::price_label() )
-						);
+						if ( Woo_Wallet_Pro_Campaign::is_active() ) {
+							printf(
+								/* translators: 1: sale price, e.g. $55. 2: regular yearly price, e.g. $79. */
+								esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %1$s for the first year, then %2$s/year.', 'woo-wallet' ),
+								esc_html( Woo_Wallet_Pro_Campaign::SALE_PRICE ),
+								esc_html( Woo_Wallet_Pro_Campaign::REGULAR )
+							);
+						} else {
+							printf(
+								/* translators: %s: yearly price, e.g. $79. */
+								esc_html__( 'Everything in Free, plus withdrawals, credit expiry, milestone and birthday bonuses, top-up bonus campaigns, wallet coupons, bulk imports, breakage reporting and AffiliateWP payouts — %s per year.', 'woo-wallet' ),
+								esc_html( self::price_label() )
+							);
+						}
 						?>
 					</p>
 				</div>
 				<div class="tw-bottom-cta__act">
-					<a class="tw-btn tw-btn--light" href="<?php echo esc_url( woo_wallet_pro_url( 'footer' ) ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'Get TeraWallet Pro', 'woo-wallet' ); ?>
+					<a class="tw-btn tw-btn--light<?php echo Woo_Wallet_Pro_Campaign::is_active() ? ' tw-btn--sale' : ''; ?>" href="<?php echo esc_url( woo_wallet_pro_url( 'footer' ) ); ?>" target="_blank" rel="noopener noreferrer">
+						<?php echo esc_html( self::get_pro_label() ); ?>
 						<span class="tw-btn__arrow" aria-hidden="true">&rarr;</span>
 					</a>
 					<p class="tw-bottom-cta__reassure"><?php esc_html_e( '30-day money-back guarantee.', 'woo-wallet' ); ?></p>
@@ -1011,11 +1073,16 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				.tw-price__from,
 				.tw-price__term { font-size: 15px; color: var(--tw-on-dark-muted); }
 				.tw-price__amount { font-size: 48px; font-weight: 500; line-height: 1; letter-spacing: -.03em; }
+				.tw-price--sale { gap: 12px; }
+				.tw-price__was { font-size: 20px; color: var(--tw-on-dark-muted); text-decoration: line-through; text-decoration-thickness: 2px; }
+				.tw-price__renews { margin: 8px 0 0; font-size: 14px; color: var(--tw-on-dark); }
+				.tw-price__save { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 14px 0 0; font-size: 13px; color: var(--tw-on-dark); }
+				.tw-price__tag { padding: 3px 9px; border-radius: 4px; background: #f5b83d; font-weight: 700; color: #15120a; }
 				.tw-hero__rule { height: 1px; background: rgba(255,255,255,.16); margin: 24px 0; }
 				.tw-hero__licence { display: grid; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--tw-on-dark); }
 				.tw-hero__licence p { margin: 0; }
-				.tw-hero__licence a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
-				.tw-hero__licence a:hover, .tw-hero__licence a:focus { color: #fff; }
+				.tw-hero .tw-hero__licence a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+				.tw-hero .tw-hero__licence a:hover, .tw-hero .tw-hero__licence a:focus { color: #fff; }
 				.tw-hero__meta {
 					padding-top: 4px;
 					font-size: 12px;
@@ -1045,6 +1112,9 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 				.tw-btn--primary:hover, .tw-btn--primary:focus { background: var(--tw-accent-hover); border-color: var(--tw-accent-hover); color: #fff; }
 				.tw-btn:focus { outline: 2px solid var(--tw-accent-soft); outline-offset: 2px; box-shadow: none; }
 				.tw-btn--light:focus { outline-color: #fff; }
+				.woo-wallet-go-pro-wrap .tw-btn--sale, .woo-wallet-go-pro-wrap .tw-btn--sale:hover, .woo-wallet-go-pro-wrap .tw-btn--sale:focus { color: #15120a; }
+				.tw-btn--sale { background: #f5b83d; }
+				.tw-btn--sale:hover, .tw-btn--sale:focus { background: #e5a622; }
 				.tw-btn__arrow { font-family: var(--tw-mono); }
 
 				.woo-wallet-go-pro-wrap a { color: var(--tw-accent); text-decoration: none; }
