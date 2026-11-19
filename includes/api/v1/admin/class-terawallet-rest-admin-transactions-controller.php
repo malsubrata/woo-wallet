@@ -159,7 +159,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 			'type'    => array( 'type' => 'string', 'required' => true, 'enum' => array( 'credit', 'debit' ) ),
 			'amount'  => array( 'type' => 'number', 'required' => true, 'minimum' => 0.01 ),
-			'currency' => array( 'type' => 'string' ),
+			'currency' => array( 'type' => 'string', 'pattern' => '^([A-Za-z]{3})?$' ), // ISO code (or empty = base); upper-cased by the handler.
 			'note'    => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field' ),
 		);
 	}
@@ -170,7 +170,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			'user_ids' => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'ids'      => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'amount'   => array( 'type' => 'number', 'minimum' => 0.01 ),
-			'currency' => array( 'type' => 'string' ),
+			'currency' => array( 'type' => 'string', 'pattern' => '^([A-Za-z]{3})?$' ), // ISO code (or empty = base); upper-cased by the handler.
 			'note'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field' ),
 			'force'    => array( 'type' => 'boolean', 'default' => false ),
 		);

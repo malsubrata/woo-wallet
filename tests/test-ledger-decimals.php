@@ -127,6 +127,26 @@ class Test_Ledger_Decimals extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A store that LOWERED precision by `woocommerce_price_num_decimals` (whole-number
+	 * wallet) keeps it only through woo_wallet_ledger_decimals, as the upgrade notice says.
+	 */
+	public function test_ledger_decimals_filter_allows_coarser_wallets() {
+		$user = self::factory()->user->create();
+		$zero = function () {
+			return 0;
+		};
+		add_filter( 'woocommerce_price_num_decimals', $zero );
+		$cents = woo_wallet()->wallet->credit( $user, 12.37, 'x', array( 'currency' => 'USD' ) );
+		add_filter( 'woo_wallet_ledger_decimals', $zero );
+		$whole = woo_wallet()->wallet->credit( $user, 12.37, 'x', array( 'currency' => 'USD' ) );
+		remove_filter( 'woo_wallet_ledger_decimals', $zero );
+		remove_filter( 'woocommerce_price_num_decimals', $zero );
+
+		$this->assertEqualsWithDelta( 12.37, (float) $this->stored( $cents ), 0.000001 );
+		$this->assertEqualsWithDelta( 12.0, (float) $this->stored( $whole ), 0.000001 );
+	}
+
+	/**
 	 * Shopper browsing in a 0-decimal currency: base rows keep cents.
 	 */
 	public function test_zero_decimal_shopper_keeps_cents() {

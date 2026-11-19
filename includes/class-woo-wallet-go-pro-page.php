@@ -845,7 +845,7 @@ if ( ! class_exists( 'Woo_Wallet_Go_Pro_Page' ) ) :
 								<?php echo esc_html( $item['q'] ); ?>
 								<span class="tw-faq__chev" aria-hidden="true">+</span>
 							</summary>
-							<p><?php echo wp_kses( $item['a'], array( 'a' => array( 'href' => array() ) ) ); ?></p>
+							<p><?php echo wp_kses( $item['a'], array() ); // Already esc_html'd; no markup in answers. ?></p>
 						</details>
 					<?php endforeach; ?>
 				</div>

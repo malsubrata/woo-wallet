@@ -262,7 +262,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 * @since 1.7.5
 		 * @param float  $amount   Amount in $currency.
 		 * @param string $currency ISO code; '' means the active storefront currency.
-		 * @return array { amount, currency, incoming_amount, incoming_currency, rate }
+		 * @return array { amount, currency, incoming_amount, incoming_currency, rate, priceable }
+		 *               `priceable` false = the writer must refuse (non-finite amount, or a
+		 *               named currency with no rate to base).
 		 */
 		private function to_ledger_amount( $amount, $currency = '' ) {
 			$mode              = $this->get_currency_mode();
@@ -272,9 +274,22 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			$stored_currency   = 'per_currency' === $mode ? $incoming_currency : $base_currency;
 			$stored_amount     = $incoming_amount;
 			$original_rate     = 1.0;
+			// is_finite(): INF/NAN pass `<= 0` and quantize to 0 ("inf" -> 0.0).
+			$priceable = is_finite( $incoming_amount );
 
 			if ( 'single_base' === $mode && $incoming_currency !== $base_currency && class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
-				$stored_amount = (float) Woo_Wallet_Currency_Manager::instance()->convert( $incoming_amount, $incoming_currency, $base_currency );
+				$manager = Woo_Wallet_Currency_Manager::instance();
+				// convert() falls open 1:1 without a rate. A caller-named currency we cannot
+				// price is refused (8,300 INR refunded as 8,300 USD after INR left the switcher,
+				// or a typo "INRR"), as transfer() does. The active currency keeps the pre-1.7.5
+				// 1:1 fallback so wallet checkout keeps working on stores with an unsupported
+				// switcher. That makes the outcome request-dependent, so money INFLOWS (top-up,
+				// cashback) are gated on can_convert() at their source instead, and reversals
+				// debit in the ledger currency (1.7.5).
+				if ( '' !== (string) $currency && $incoming_currency !== $this->resolve_active_currency() && ! $manager->can_convert( $incoming_currency, $base_currency ) ) {
+					$priceable = false;
+				}
+				$stored_amount = (float) $manager->convert( $incoming_amount, $incoming_currency, $base_currency );
 				if ( $incoming_amount > 0 ) {
 					$original_rate = $stored_amount / $incoming_amount;
 				}
@@ -291,7 +306,140 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				'incoming_amount'   => $incoming_amount,
 				'incoming_currency' => $incoming_currency,
 				'rate'              => $original_rate,
+				'priceable'         => $priceable,
 			);
+		}
+
+		/**
+		 * Can credit()/debit() be called with `currency => $currency` at all? False when the
+		 * store cannot price it (no exchange rate to base and not the active currency), so
+		 * callers can refuse up front instead of half-completing (e.g. a WC refund row
+		 * with no wallet credit).
+		 *
+		 * @since 1.7.5
+		 * @param string $currency ISO code.
+		 * @return bool
+		 */
+		public function accepts_currency( $currency ): bool {
+			return $this->to_ledger_amount( 1.0, (string) $currency )['priceable'];
+		}
+
+		/**
+		 * Is $order's currency one an inflow (top-up, cashback) cannot be valued in?
+		 * Asked of the provider, never of the request: the active-currency 1:1
+		 * fallback must not price money the customer paid in another currency.
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order Order.
+		 * @return bool
+		 */
+		private function is_unpriceable_inflow( $order ): bool {
+			$currency = strtoupper( (string) $order->get_currency( 'edit' ) );
+			$base     = $this->resolve_base_currency();
+			if ( 'per_currency' === $this->get_currency_mode() || '' === $currency || $currency === $base || ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
+				return false;
+			}
+			return ! Woo_Wallet_Currency_Manager::instance()->can_convert( $currency, $base );
+		}
+
+		/**
+		 * The wallet debit that paid $order in full, or null (other gateway, or no usable row).
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order Order.
+		 * @return object|null Transaction row.
+		 */
+		public function get_wallet_payment_row( $order ) {
+			if ( 'wallet' !== $order->get_payment_method( 'edit' ) || ! is_numeric( $order->get_transaction_id( 'edit' ) ) ) {
+				return null;
+			}
+			$row = get_wallet_transaction( absint( $order->get_transaction_id( 'edit' ) ) );
+			if ( ! $row || 'debit' !== $row->type || (int) $row->user_id !== (int) $order->get_customer_id() || (int) $row->deleted || (float) $row->amount <= 0 ) {
+				return null;
+			}
+			return $row;
+		}
+
+		/**
+		 * Can a refund of $order be credited to the wallet at all? Wallet-paid orders are
+		 * reversed in the ledger currency (always accepted); others need a priceable currency.
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order Order.
+		 * @return bool
+		 */
+		public function can_refund_to_wallet( $order ): bool {
+			return null !== $this->get_wallet_payment_row( $order ) || $this->accepts_currency( $order->get_currency( 'edit' ) );
+		}
+
+		/**
+		 * Credit a refund of $amount (order currency) to the customer's wallet.
+		 *
+		 * A wallet-paid order is reversed from its checkout debit, like partial payments:
+		 * the base amount debited, pro rata, with a running base total so the refunds of
+		 * one order never add up to more than it took, at any later exchange rate (1.7.5;
+		 * re-converting at today's rate turned 108 USD paid into 115 USD refunded). Other
+		 * orders are credited in the order currency at today's rate, as before.
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order   Order (its WC refund row, if any, already saved).
+		 * @param float    $amount  Amount refunded now, order currency.
+		 * @param string   $details Transaction note.
+		 * @return int|false Transaction id.
+		 */
+		public function refund_order_to_wallet( $order, float $amount, string $details ) {
+			global $wpdb;
+			$row = $this->get_wallet_payment_row( $order );
+			if ( ! $row ) {
+				return $this->credit( $order->get_customer_id(), $amount, $details, array( 'currency' => $order->get_currency( 'edit' ) ) );
+			}
+			$lock_name    = 'woo_wallet_order_refund_' . absint( $order->get_id() );
+			$lock_timeout = (int) apply_filters( 'woo_wallet_db_lock_timeout', 5, $order->get_customer_id() );
+			$got_lock     = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, $lock_timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			if ( '1' !== $got_lock && 1 !== $got_lock ) {
+				return false;
+			}
+			try {
+				$fresh = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
+				$order = $fresh ? $fresh : $order;
+				$pow   = pow( 10, WOO_Wallet_Helper::get_ledger_decimals() );
+				$floor = function ( $value ) use ( $pow ) {
+					return max( 0.0, floor( (float) $value * $pow + 1e-6 ) / $pow );
+				};
+				$paid   = (float) $row->amount;
+				$total  = (float) $order->get_total( 'edit' );
+				$before = max( 0.0, (float) $order->get_total_refunded() - $amount ); // This refund is already saved.
+				$stored = $order->get_meta( '_woo_wallet_refunded_base_total' );
+				// Refunded before 1.7.5 (no counter): derive it pro rata, floored.
+				$done      = '' !== $stored ? (float) $stored : ( $total > 0 ? $floor( $paid * min( 1.0, $before / $total ) ) : 0.0 );
+				$remaining = $floor( $paid - $done );
+				$is_final  = $total <= 0 || $before + $amount + 0.001 >= $total;
+				$base      = $is_final ? $remaining : min( $remaining, $floor( $paid * min( 1.0, $amount / $total ) ) );
+				if ( $base <= 0 ) {
+					return false;
+				}
+				$row_currency   = '' !== (string) $row->currency ? $row->currency : $this->resolve_base_currency(); // Pre-1.6.4 rows: base.
+				$transaction_id = $this->credit( $order->get_customer_id(), $base, $details, array( 'currency' => $row_currency ) );
+				if ( $transaction_id ) {
+					$order->update_meta_data( '_woo_wallet_refunded_base_total', $done + $base );
+					$order->save();
+				}
+				return $transaction_id;
+			} finally {
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			}
+		}
+
+		/**
+		 * Message for a write refused because the order currency cannot be priced.
+		 *
+		 * @since 1.7.5
+		 * @param string $currency ISO code.
+		 * @return string
+		 */
+		public static function unpriceable_currency_message( $currency ): string {
+			/* translators: %s: currency code, e.g. JPY */
+			return sprintf( __( 'TeraWallet has no exchange rate from %s to your store currency, so this cannot be recorded in the wallet. Add the currency back to your currency switcher, or handle it manually.', 'woo-wallet' ), strtoupper( (string) $currency ) );
 		}
 
 		/**
@@ -320,12 +468,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			global $wpdb;
 			$user_id = absint( $user_id );
 			if ( (float) $amount <= 0 ) {
-				return true;
+				return true; // INF/NAN fall through: to_ledger_amount() marks them unpriceable.
 			}
 			if ( ! $user_id || is_wallet_account_locked( $user_id ) ) {
 				return false;
 			}
 			$ledger = $this->to_ledger_amount( $amount, $currency );
+			if ( ! $ledger['priceable'] ) {
+				return false; // The debit would refuse it too.
+			}
 			if ( 'per_currency' === $this->get_currency_mode() ) {
 				$raw = (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $user_id, $ledger['currency'] ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			} else {
@@ -587,6 +738,11 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				if ( $recharge_amount <= 0 ) {
 					WOO_Wallet_Helper::update_order_meta_data( $order, '_wc_wallet_purchase_credited', true );
 					$order->add_order_note( __( 'Top-up collected no wallet value; nothing credited.', 'woo-wallet' ) );
+					return;
+				}
+				if ( $this->is_unpriceable_inflow( $order ) ) {
+					// Not marked credited: retried on the next paid transition once the rate is back.
+					$order->add_order_note( self::unpriceable_currency_message( $order->get_currency( 'edit' ) ) );
 					return;
 				}
 				$transaction_id = $this->credit(
@@ -885,6 +1041,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// by any prior lock holder (e.g. an earlier concurrent delivery).
 				$order = wc_get_order( $order_id );
 				if ( ! $order ) {
+					return;
+				}
+
+				if ( $this->is_unpriceable_inflow( $order ) ) {
+					// Not credited, not marked: retried on a later status change. One note per order.
+					if ( ! $order->get_meta( '_woo_wallet_cashback_unpriceable_noted' ) ) {
+						$order->add_order_note( self::unpriceable_currency_message( $order->get_currency( 'edit' ) ) );
+						WOO_Wallet_Helper::update_order_meta_data( $order, '_woo_wallet_cashback_unpriceable_noted', true );
+					}
 					return;
 				}
 
@@ -1279,6 +1444,11 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				}
 
 				$reversal = $this->prepare_partial_payment_reversal( $locked_order, $refund_now, $via_wallet );
+				if ( ! $this->accepts_currency( $reversal['currency'] ) ) {
+					// Pre-1.6.4 order (no base meta) in a currency we cannot price: do not claim.
+					$locked_order->add_order_note( self::unpriceable_currency_message( $reversal['currency'] ) );
+					return;
+				}
 
 				// Claim before credit so a concurrent cancel/refund cannot double-pay.
 				$processed[] = (string) $refund_id;
@@ -1370,6 +1540,11 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 							$already_refunded = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
 							$refund_gross     = max( 0.0, $partial_payment_amount - $already_refunded );
 							$reversal         = $refund_gross > 0 ? $this->prepare_partial_payment_reversal( $locked_order, $refund_gross, (float) $partial_payment_amount ) : null;
+							if ( $reversal && ! $this->accepts_currency( $reversal['currency'] ) ) {
+								// Pre-1.6.4 order in a currency we cannot price: leave it unclaimed.
+								$locked_order->add_order_note( self::unpriceable_currency_message( $reversal['currency'] ) );
+								return;
+							}
 
 							// Claim before credit — first holder wins permanently.
 							$locked_order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
@@ -1505,6 +1680,13 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// round it up past what was credited ($1.616 = £4.04 -> $1.62 = £4.05). The debit
 				// converts the remainder back to exactly the credited base amount (1.7.5).
 				$clawback_amount = min( round( (float) $clawback_amount, $decimals ), round( $total_cashback - $handled, 6 ) );
+				// And never more, in the ledger unit, than is left: floored, since a 1.7.4 row may
+				// hold 3 decimals (3.335) that the debit's half-up quantize would make 3.34.
+				$pow         = pow( 10, $decimals );
+				$left_ledger = max( 0.0, floor( ( $convert( $total_cashback, $order_currency, $ledger_currency ) - $clawed_back - $shortfall ) * $pow + 1e-6 ) / $pow );
+				if ( $clawback_amount > 0 && $this->to_ledger_amount( $clawback_amount, $order_currency )['amount'] > $left_ledger ) {
+					$clawback_amount = $order_currency === $ledger_currency ? $left_ledger : round( $convert( $left_ledger, $ledger_currency, $order_currency ), 6 );
+				}
 				if ( $clawback_amount > 0 && $this->to_ledger_amount( $clawback_amount, $order_currency )['amount'] <= 0 ) {
 					$clawback_amount = 0.0; // Float residue that would store a 0.00 debit.
 				}
@@ -1559,13 +1741,16 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					};
 					add_action( 'woo_wallet_transaction_recorded', $track, PHP_INT_MIN, 4 );
 					try {
+						// Debit in the LEDGER currency: base is never refused, so a cashback credited
+						// in the checkout session (active-currency fallback) is still taken back
+						// from wp-admin or a webhook. Same conversion the debit would apply (1.7.5).
 						$transaction_id = $this->debit(
 							$customer_id,
-							$amount,
+							$order_currency === $ledger_currency ? $amount : $convert( $amount, $order_currency, $ledger_currency ),
 							// translators: %s: order number.
 							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
 							array(
-								'currency' => $order->get_currency( 'edit' ),
+								'currency' => $ledger_currency,
 								'for'      => 'refund',
 								'order_id' => $order->get_order_number(),
 							)
@@ -2252,6 +2437,12 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			$mode   = $this->get_currency_mode();
 			$ledger = $this->to_ledger_amount( $amount, isset( $args['currency'] ) ? $args['currency'] : '' );
+			if ( ! $ledger['priceable'] ) {
+				if ( function_exists( 'wc_get_logger' ) ) {
+					wc_get_logger()->warning( sprintf( 'Wallet %s refused: no exchange rate from %s to the store currency (user %d).', $type, $ledger['incoming_currency'], $this->user_id ), array( 'source' => 'woo-wallet-currency' ) );
+				}
+				return false;
+			}
 
 			$incoming_currency = $ledger['incoming_currency'];
 			$incoming_amount   = $ledger['incoming_amount'];

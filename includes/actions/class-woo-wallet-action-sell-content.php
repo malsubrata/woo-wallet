@@ -396,6 +396,9 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 		} else {
 			$tw_sell_content_amount = $amount;
 		}
+		// One canonical amount for form, nonce, marker and has_paid(): "10.50" was posted
+		// and marked as "10.50" but looked up as 10.5, so the buyer never unlocked (1.7.5).
+		$tw_sell_content_amount = floatval( $tw_sell_content_amount );
 
 		$content = str_replace( '#buy_button#', $this->render_buy_form( $tw_sell_content_amount, $id ), $content );
 		$content = str_replace( '#price#', wc_price( $tw_sell_content_amount ), $content );
@@ -431,12 +434,14 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	private function render_buy_form( $amount, $id ) {
 		global $post;
 		$user_id = get_current_user_id();
+		$id      = self::content_id( $id );
 		ob_start();
 		?>
 		<form method="post">
-			<?php wp_nonce_field( 'tw_buy_content_nonce_' . $post->ID . '_' . $user_id . '_' . $amount, 'tw_buy_content_nonce' ); ?>
+			<?php wp_nonce_field( self::nonce_action( $post->ID, $user_id, $amount, $id ), 'tw_buy_content_nonce' ); ?>
 			<input type="hidden" name="amount" value="<?php echo esc_attr( $amount ); ?>">
-			<input type="hidden" name="transient" value="<?php echo esc_attr( md5( 'tw-sell-content' . $post->ID . $user_id . $amount ) ); ?>">
+			<input type="hidden" name="tw_sc_id" value="<?php echo esc_attr( $id ); ?>">
+			<input type="hidden" name="transient" value="<?php echo esc_attr( md5( $id . $post->ID . $user_id . $amount ) ); ?>">
 			<button type="submit" class="<?php echo esc_attr( $this->settings['button_css_class'] ); ?>"><?php echo esc_html( $this->settings['button_lable'] ); ?></button>
 		</form>
 		<?php
@@ -452,8 +457,38 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	private function has_paid( $amount, $id = 'tw-sell-content' ) {
 		global $post;
 		$user_id   = get_current_user_id();
-		$transient = md5( $id . $post->ID . $user_id . $amount );
-		return get_transient( $transient ) ? true : false;
+		$id = self::content_id( $id );
+		if ( get_transient( md5( $id . $post->ID . $user_id . $amount ) ) ) {
+			return true;
+		}
+		// Before 1.7.5 every purchase was marked under the default id: honour those buyers.
+		return 'tw-sell-content' !== $id && (bool) get_transient( md5( 'tw-sell-content' . $post->ID . $user_id . $amount ) );
+	}
+
+	/**
+	 * Normalised content id of a [tw-sell-content id="…"] block ('tw-sell-content' by default).
+	 *
+	 * @param string $id Raw id.
+	 * @return string
+	 */
+	private static function content_id( $id ) {
+		$id = sanitize_key( (string) $id );
+		return '' !== $id ? $id : 'tw-sell-content';
+	}
+
+	/**
+	 * Purchase nonce action. Binds the content id too, so one block's form cannot buy
+	 * another; the default id keeps the pre-1.7.5 action, so cached forms still work.
+	 *
+	 * @param int    $post_id Post.
+	 * @param int    $user_id Buyer.
+	 * @param string $amount  Amount as posted.
+	 * @param string $id      Normalised content id.
+	 * @return string
+	 */
+	private static function nonce_action( $post_id, $user_id, $amount, $id ) {
+		$action = 'tw_buy_content_nonce_' . $post_id . '_' . $user_id . '_' . $amount;
+		return 'tw-sell-content' === $id ? $action : $action . '_' . $id;
 	}
 	/**
 	 * Handle purchase of content
@@ -468,9 +503,16 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 			}
 			$amount  = isset( $_POST['amount'] ) ? sanitize_text_field( wp_unslash( $_POST['amount'] ) ) : 0;
 			$user_id = get_current_user_id();
-			// Verify nonce bound to post ID, user ID and amount.
-			if ( wp_verify_nonce( wp_unslash( $_POST['tw_buy_content_nonce'] ), 'tw_buy_content_nonce_' . $post->ID . '_' . $user_id . '_' . $amount ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$transient = md5( 'tw-sell-content' . $post->ID . $user_id . $amount );
+			// A positive, finite number only ("INF" floatvals to 0; "5_x" would blur nonce actions).
+			if ( ! is_numeric( $amount ) || ! is_finite( (float) $amount ) || (float) $amount <= 0 ) {
+				return;
+			}
+			// The shortcode's id: the paid marker is keyed on it, or a custom-id block charged
+			// the buyer and never unlocked (1.7.5).
+			$content_id = self::content_id( isset( $_POST['tw_sc_id'] ) ? sanitize_key( wp_unslash( $_POST['tw_sc_id'] ) ) : '' );
+			// Verify nonce bound to post ID, user ID, amount and content id.
+			if ( wp_verify_nonce( wp_unslash( $_POST['tw_buy_content_nonce'] ), self::nonce_action( $post->ID, $user_id, $amount, $content_id ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$transient = md5( $content_id . $post->ID . $user_id . $amount );
 
 				/*
 				 * A WordPress nonce is CSRF protection, not replay protection — it stays
@@ -495,7 +537,7 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 				}
 
 				try {
-					if ( $this->has_paid( $amount ) ) {
+					if ( $this->has_paid( $amount, $content_id ) ) {
 						return;
 					}
 					$tw_sell_content_amount = floatval( $amount );

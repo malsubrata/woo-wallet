@@ -527,4 +527,102 @@ class Test_Transfer_Multicurrency extends WP_UnitTestCase {
 		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
 		$this->assertEqualsWithDelta( 0.0, $this->raw( $this->recipient ), 0.0001 );
 	}
+
+	/**
+	 * credit()/debit() refuse a named currency with no rate instead of storing it 1:1
+	 * (8,300 INR refunded as 8,300 USD once INR left the switcher; a typo "INRR").
+	 */
+	public function test_named_currency_without_rate_is_refused_by_the_writer() {
+		foreach ( array( 'USD', 'KWD', 'INR' ) as $active ) {
+			self::$active = $active;
+			$this->assertFalse( woo_wallet()->wallet->credit( $this->sender, 100, 'x', array( 'currency' => 'JPY' ) ), $active );
+			$this->assertFalse( woo_wallet()->wallet->debit( $this->sender, 10, 'x', array( 'currency' => 'JPY' ) ), $active );
+			$this->assertFalse( woo_wallet()->wallet->can_cover( $this->sender, 1, 'JPY' ), $active );
+		}
+		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
+
+		// Still converted when a rate exists, in both directions.
+		self::$active = 'USD';
+		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 10, 'x', array( 'currency' => 'KWD' ) ) );
+		$this->assertNotFalse( woo_wallet()->wallet->debit( $this->sender, 83, 'x', array( 'currency' => 'INR' ) ) );
+		$this->assertEqualsWithDelta( 100.0 + 32.70 - 1.0, $this->raw( $this->sender ), 0.0001 );
+	}
+
+	/**
+	 * The active currency keeps the pre-1.7.5 1:1 fallback (unsupported switcher:
+	 * every write is 1:1, so a payment and its refund stay symmetric).
+	 */
+	public function test_active_currency_without_rate_keeps_one_to_one() {
+		self::$active = 'JPY';
+		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x', array( 'currency' => 'JPY' ) ) );
+		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x' ) );
+		$this->assertEqualsWithDelta( 110.0, $this->raw( $this->sender ), 0.0001 );
+	}
+
+	/**
+	 * Refunding an order whose currency has lost its rate fails closed, nothing credited.
+	 */
+	public function test_refund_of_order_in_unpriceable_currency_is_refused() {
+		$order = wc_create_order( array( 'customer_id' => $this->sender ) );
+		$order->set_currency( 'JPY' );
+		$order->set_total( 8300 );
+		$order->save();
+		$gateway = new Woo_Gateway_Wallet_payment();
+		$thrown  = false;
+		try {
+			$gateway->process_refund( $order->get_id(), 8300 );
+		} catch ( Exception $e ) {
+			$thrown = true;
+		}
+		$this->assertTrue( $thrown );
+		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
+	}
+
+	/**
+	 * Admin REST create rejects a malformed currency at the schema and an unpriceable one in the writer.
+	 */
+	public function test_admin_transactions_reject_bad_currency() {
+		$typo = $this->admin_txn( '', array( 'user_id' => $this->sender, 'type' => 'credit', 'amount' => 100, 'currency' => 'INRR' ) );
+		$this->assertSame( 400, $typo->get_status() );
+		$unpriced = $this->admin_txn( '', array( 'user_id' => $this->sender, 'type' => 'credit', 'amount' => 100, 'currency' => 'JPY' ) );
+		$this->assertGreaterThanOrEqual( 400, $unpriced->get_status() );
+		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
+	}
+
+	/**
+	 * can_cover() never says yes to INF/NAN ("inf" quantizes to 0).
+	 */
+	public function test_can_cover_refuses_non_finite() {
+		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->sender, INF ) );
+		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->sender, NAN ) );
+		$this->assertTrue( woo_wallet()->wallet->can_cover( $this->sender, 100 ) );
+	}
+
+	/**
+	 * can_cover() asks balance filters for the balance in the ledger currency (Pro credit-expiry contract).
+	 */
+	public function test_can_cover_asks_balance_filter_in_ledger_currency() {
+		self::$active = 'KWD';
+		$seen = array();
+		$spy  = function ( $balance, $user_id, $currency = '' ) use ( &$seen ) {
+			$seen[] = $currency;
+			return $balance;
+		};
+		add_filter( 'woo_wallet_current_balance', $spy, 10, 3 );
+		woo_wallet()->wallet->can_cover( $this->sender, 10, 'KWD' );
+		remove_filter( 'woo_wallet_current_balance', $spy, 10 );
+		$this->assertSame( array( 'USD' ), $seen );
+	}
+
+	/**
+	 * Generic provider (no switcher): a named non-base currency is refused by the
+	 * transfer service with a 400-class error, nothing moves.
+	 */
+	public function test_generic_provider_explicit_currency_is_refused() {
+		Woo_Wallet_Currency_Manager::instance()->unregister_provider( 'test-fx-transfer' );
+		$result = WooWallet_Transfer_Service::execute( $this->sender, $this->recipient, 10, '', 'EUR' );
+		$this->assertFalse( $result['is_valid'] );
+		$this->assertSame( 'rest_invalid_currency', $result['code'] );
+		$this->assertEqualsWithDelta( 100.0, $this->raw( $this->sender ), 0.0001 );
+	}
 }

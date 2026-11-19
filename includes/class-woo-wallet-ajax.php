@@ -358,6 +358,10 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					$line_items[ $item_id ]['refund_tax'] = array_filter( array_map( 'wc_format_decimal', $tax_totals ) );
 				}
 				$refund_reason = $refund_reason ? $refund_reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
+				// Refuse before wc_create_refund(): a refund row with no wallet credit cannot be retried.
+				if ( ! woo_wallet()->wallet->can_refund_to_wallet( $order ) ) {
+					throw new Exception( Woo_Wallet_Wallet::unpriceable_currency_message( $order->get_currency( 'edit' ) ) );
+				}
 				// Create the refund object.
 				$refund = wc_create_refund(
 					array(
@@ -370,8 +374,11 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					)
 				);
 				if ( ! is_wp_error( $refund ) ) {
-					$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $refund_amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
+					$transaction_id = woo_wallet()->wallet->refund_order_to_wallet( $order, (float) $refund_amount, $refund_reason );
 					if ( ! $transaction_id ) {
+						// No WC refund without its wallet credit (busy lock, nothing left to return):
+						// remove it, as WooCommerce does when a gateway refund fails (1.7.5).
+						$refund->delete( true );
 						throw new Exception( __( 'Refund not credited to customer', 'woo-wallet' ) );
 					} else {
 						do_action( 'woo_wallet_order_refunded', $order, $refund, $transaction_id );

@@ -160,10 +160,7 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				'plugins' => '<a style="font-weight: 600;" href="' . esc_url(
 					woo_wallet_pro_url(
 						'plugins-row',
-						array(
-							'utm_medium'  => 'plugin_page',
-							'utm_site_id' => md5( home_url( '/' ) ),
-						)
+						array( 'utm_medium' => 'plugin_page' ) // No per-site identifier in outgoing links (WP.org guideline 7).
 					)
 				) . '" aria-label="' . esc_attr__( 'View TeraWallet pro plugins', 'woo-wallet' ) . '"><span class="dashicons dashicons-admin-network"></span> ' . esc_html( Woo_Wallet_Pro_Campaign::is_active() ? Woo_Wallet_Pro_Campaign::row_link_text() : __( 'Upgrade to Pro', 'woo-wallet' ) ) . '</a>',
 				'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet docs', 'woo-wallet' ) . '">' . esc_html__( 'Docs', 'woo-wallet' ) . '</a>',
@@ -880,9 +877,8 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					$entry_currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
 					$entry_currency = '' !== (string) $entry_currency ? $entry_currency : Woo_Wallet_Currency_Manager::instance()->get_base_currency();
 					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( (float) $amount, WOO_Wallet_Helper::get_ledger_decimals(), '.', '' ), $user_id );
-					// Compare in the currency the debit is written in, not the storefront one.
-					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit', $entry_currency );
-					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+					// Ask the debit's own question, in the ledger's unit and precision (1.7.5).
+					if ( 'debit' === $payment_type && ! woo_wallet()->wallet->can_cover( $user_id, $amount, $entry_currency ) ) {
 						$response = array(
 							'type'    => 'error',
 							/* translators: 1: User login. */

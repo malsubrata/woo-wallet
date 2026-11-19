@@ -133,4 +133,35 @@ class Test_Admin_Adjust_Balance extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'insufficient balance', $response['message'] );
 		$this->assertEquals( 28.0, woo_wallet()->wallet->get_wallet_balance( $this->customer, 'edit', 'GBP' ) );
 	}
+
+	/**
+	 * Shopper-currency decimals (a switcher reporting 0 for the admin's JPY session)
+	 * neither round the stored amount nor refuse a debit the ledger covers.
+	 */
+	public function test_adjustment_uses_ledger_precision() {
+		$zero = function () {
+			return 0;
+		};
+		add_filter( 'wc_get_price_decimals', $zero );
+		$credit = $this->submit( 'credit', 10.37 );
+		$after  = $this->raw();
+		$debit  = $this->submit( 'debit', 38.37 );
+		remove_filter( 'wc_get_price_decimals', $zero );
+
+		$this->assertSame( 'success', $credit['type'] );
+		$this->assertEqualsWithDelta( 38.37, $after, 0.00001, 'Stored at store precision, not the session\'s 0.' );
+		$this->assertSame( 'success', $debit['type'], 'Exactly the balance is debitable.' );
+		$this->assertEqualsWithDelta( 0.0, $this->raw(), 0.00001 );
+	}
+
+	/**
+	 * Raw ledger SUM for the customer.
+	 *
+	 * @return float
+	 */
+	private function raw() {
+		global $wpdb;
+		return (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END),0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $this->customer ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
 }
+

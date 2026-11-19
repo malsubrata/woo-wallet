@@ -92,9 +92,8 @@ if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
 	 * "Source: Free_plugin", and changing it would break continuity with every
 	 * historical order.
 	 *
-	 * Note: no site identifier is attached. The pre-existing links that send
-	 * `utm_site_id` pass it explicitly via $extra; new placements deliberately
-	 * omit it.
+	 * Note: no site identifier is attached, by any placement (the plugins-row
+	 * `utm_site_id` was removed in 1.7.5).
 	 *
 	 * @since 1.6.11
 	 * @param string $content Placement identifier for utm_content, e.g. 'withdrawals-gate'.
@@ -1886,8 +1885,9 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 						'created_by'        => get_current_user_id(),
 					);
 					// Inserted here, inside this lock + DB transaction, rather than via
-					// Woo_Wallet_Wallet::credit(): credit() opens its own START TRANSACTION,
-					// which would implicitly COMMIT the half-done purge above.
+					// Woo_Wallet_Wallet::credit(): credit() takes the user lock again, applies
+					// currency conversion to an amount that is already in the ledger unit, and
+					// fires woo_wallet_transaction_recorded before this purge has committed.
 					if ( ! $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_args, array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 						// All or nothing: never commit a purge that lost part of the balance.
 						throw new Exception( __( 'Could not carry the wallet balance over. Nothing was deleted.', 'woo-wallet' ) );

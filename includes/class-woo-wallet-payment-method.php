@@ -180,6 +180,9 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 					$order->set_transaction_id( $wallet_response );
 					do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response );
 					$order->save();
+				} elseif ( ! woo_wallet()->wallet->accepts_currency( $order->get_currency( 'edit' ) ) ) {
+					$order->add_order_note( Woo_Wallet_Wallet::unpriceable_currency_message( $order->get_currency( 'edit' ) ) );
+					throw new Exception( esc_html__( 'Wallet payment is not available in this currency. Please choose another currency or payment method.', 'woo-wallet' ) );
 				} else {
 					throw new Exception( esc_html__( 'Something went wrong with processing payment please try again.', 'woo-wallet' ) );
 				}
@@ -201,7 +204,10 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				return new WP_Error( 'woo_wallet_invalid_order', __( 'Invalid order', 'woo-wallet' ) );
 			}
 			$refund_reason  = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
-			$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
+			if ( ! woo_wallet()->wallet->can_refund_to_wallet( $order ) ) {
+				throw new Exception( esc_html( Woo_Wallet_Wallet::unpriceable_currency_message( $order->get_currency( 'edit' ) ) ) );
+			}
+			$transaction_id = woo_wallet()->wallet->refund_order_to_wallet( $order, (float) $amount, $refund_reason );
 			if ( ! $transaction_id ) {
 				throw new Exception( esc_html__( 'Refund not credited to customer', 'woo-wallet' ) );
 			}
