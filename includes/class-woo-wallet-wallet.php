@@ -1564,7 +1564,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				$already    = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
 				$proration  = min( 1.0, $refund_amount / $order_total );
-				$refund_now = round( $via_wallet * $proration, WOO_Wallet_Helper::get_ledger_decimals() ); // Store precision, not the shopper's (1.7.5).
+				// Order currency: never rounded at the LEDGER's decimals (a 0-dp base made a 6 USD share
+				// 1 USD). prepare_partial_payment_reversal() floors the base amount it returns (1.7.5).
+				$refund_now = round( $via_wallet * $proration, 6 );
 				// Cap so cumulative wallet refunds can never exceed the original debit.
 				$refund_now = min( $refund_now, max( 0.0, $via_wallet - $already ) );
 				$refund_now = (float) apply_filters( 'woo_wallet_partial_payment_refund_amount', $refund_now, $locked_order, $refund );
@@ -1808,7 +1810,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// Cap AFTER rounding, with the unrounded remainder: rounding the capped value could
 				// round it up past what was credited ($1.616 = £4.04 -> $1.62 = £4.05). The debit
 				// converts the remainder back to exactly the credited base amount (1.7.5).
-				$clawback_amount = min( round( (float) $clawback_amount, $decimals ), round( $total_cashback - $handled, 6 ) );
+				$clawback_amount = min( round( (float) $clawback_amount, 6 ), round( $total_cashback - $handled, 6 ) ); // Order currency: not $decimals (ledger).
 				// And never more, in the ledger unit, than is left: floored, since a 1.7.4 row may
 				// hold 3 decimals (3.335) that the debit's half-up quantize would make 3.34.
 				$pow         = pow( 10, $decimals );
@@ -2032,7 +2034,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 			// Prorated clawback: clawback = total_cashback * ( refund / order_total ).
 			$proration = min( 1.0, $refund_amount / $order_total );
-			$clawback  = round( $total_cashback * $proration, WOO_Wallet_Helper::get_ledger_decimals() ); // Store precision, not the shopper's (1.7.5).
+			$clawback  = round( $total_cashback * $proration, 6 ); // Order currency: not the ledger's decimals; the debit quantizes in the ledger unit (1.7.5).
 
 			/**
 			 * Filter the cashback clawback amount on refund.
