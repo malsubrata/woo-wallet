@@ -64,6 +64,7 @@ class Test_Refund_Share_Precision extends WP_UnitTestCase {
 	public function tear_down() {
 		Woo_Wallet_Currency_Manager::instance()->unregister_provider( 'test-fx-jpy' );
 		remove_filter( 'woo_wallet_ledger_decimals', '__return_zero' );
+		remove_all_filters( 'woo_wallet_cashback_clawback_strategy' );
 		parent::tear_down();
 	}
 
@@ -152,5 +153,103 @@ class Test_Refund_Share_Precision extends WP_UnitTestCase {
 
 		// 30% of 1.60 USD = 0.48 USD = 72 JPY (rounding at 0 dp made it 0 USD: nothing taken).
 		$this->assertEqualsWithDelta( -72, $this->raw_balance() - $before, 0.0001 );
+	}
+
+	/**
+	 * Set the raw balance to an exact JPY amount.
+	 *
+	 * @param float $target JPY.
+	 */
+	private function set_balance( $target ) {
+		$delta = $target - $this->raw_balance();
+		if ( $delta > 0 ) {
+			woo_wallet()->wallet->credit( $this->user_id, $delta, 'seed', array( 'currency' => 'JPY' ) );
+		} elseif ( $delta < 0 ) {
+			woo_wallet()->wallet->debit( $this->user_id, -$delta, 'spend', array( 'currency' => 'JPY' ) );
+		}
+	}
+
+	/**
+	 * Processing USD order with $cashback USD credited as cashback.
+	 *
+	 * @param float $cashback USD.
+	 * @return WC_Order
+	 */
+	private function cashback_order( $cashback ) {
+		$order = new WC_Order();
+		$order->set_customer_id( $this->user_id );
+		$order->set_currency( 'USD' );
+		$order->set_total( 100 );
+		$order->set_status( 'processing' );
+		$order->save();
+		$tx = woo_wallet()->wallet->credit( $this->user_id, $cashback, 'cashback', array( 'for' => 'cashback', 'currency' => 'USD', 'order_id' => $order->get_id() ) );
+		$order->update_meta_data( '_general_cashback_transaction_id', array( $tx ) );
+		$order->save();
+		return wc_get_order( $order->get_id() );
+	}
+
+	/**
+	 * Finding A: 1000 JPY left of a 1500 JPY cashback. The balance as USD floored at 0 dp
+	 * was 6 USD, so only 900 JPY was taken and 600 booked as spent.
+	 */
+	public function test_partial_clawback_takes_the_whole_ledger_balance() {
+		$order = $this->cashback_order( 10 ); // 1500 JPY.
+		$this->set_balance( 1000 );
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		$this->assertEqualsWithDelta( 0, $this->raw_balance(), 0.0001, 'All 1000 JPY is taken back.' );
+	}
+
+	/**
+	 * Finding A: 149 JPY (just under 1 USD) left: the floor made it 0 USD, nothing taken.
+	 */
+	public function test_partial_clawback_takes_a_sub_unit_balance() {
+		$order = $this->cashback_order( 10 );
+		$this->set_balance( 149 );
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		$this->assertEqualsWithDelta( 0, $this->raw_balance(), 0.0001 );
+	}
+
+	/**
+	 * Findings A/B: full_or_skip with a balance that covers the clawback exactly in the
+	 * ledger unit (975 JPY = 6.5 USD) must take it, not skip because floor(6.67) = 6 < 6.5.
+	 */
+	public function test_full_or_skip_takes_a_covered_clawback() {
+		add_filter(
+			'woo_wallet_cashback_clawback_strategy',
+			function () {
+				return 'full_or_skip';
+			}
+		);
+		$order = $this->cashback_order( 6.5 ); // 975 JPY.
+		$this->set_balance( 975 );
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		$this->assertEqualsWithDelta( 0, $this->raw_balance(), 0.0001 );
+	}
+
+	/**
+	 * Finding C: a share under one ledger unit writes no 0 JPY credit row.
+	 */
+	public function test_sub_unit_partial_refund_writes_no_zero_row() {
+		global $wpdb;
+		$order = $this->partial_order(); // 10 USD = 1500 JPY of a 100 USD order.
+		$rows  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d", $this->user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$this->assertEqualsWithDelta( 0, $this->refund_partial( $order, 0.03 ), 0.0001 ); // 0.45 JPY share.
+		$this->assertSame( $rows, (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d", $this->user_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	/**
+	 * Finding D: many small refunds then the rest still return the whole debit
+	 * (6-dp shares summed short of the 1e-6 final tolerance).
+	 */
+	public function test_many_small_refunds_then_the_rest_return_the_whole_debit() {
+		$order = $this->partial_order();
+		$order->set_total( 30 );
+		$order->save();
+		$total = 0.0;
+		foreach ( array( 1, 1, 1, 1, 1, 1, 24 ) as $amount ) {
+			$total += $this->refund_partial( $order, $amount );
+		}
+		$this->assertEqualsWithDelta( 1500, $total, 0.0001 );
+		$this->assertNotEmpty( wc_get_order( $order->get_id() )->get_meta( '_woo_wallet_partial_payment_refunded' ) );
 	}
 }

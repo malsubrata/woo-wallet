@@ -77,7 +77,7 @@ class WOO_Wallet_Helper {
 			$paid      = $coupon_is_credit ? $typed : $line_paid;
 			if ( $negative_fees < 0 && $all_lines > 0 ) {
 				// Negative fees are shared across lines by what each line costs.
-				$paid += round( $negative_fees * $line_paid / $all_lines, wc_get_price_decimals() );
+				$paid += round( $negative_fees * $line_paid / $all_lines, 6 ); // Order currency: not the session's/ledger's decimals (1.7.5).
 			}
 			$amount += max( 0.0, min( $typed, $paid ) );
 		}

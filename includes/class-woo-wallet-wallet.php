@@ -1564,9 +1564,10 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 
 				$already    = (float) $locked_order->get_meta( '_woo_wallet_partial_refunded_total' );
 				$proration  = min( 1.0, $refund_amount / $order_total );
-				// Order currency: never rounded at the LEDGER's decimals (a 0-dp base made a 6 USD share
-				// 1 USD). prepare_partial_payment_reversal() floors the base amount it returns (1.7.5).
-				$refund_now = round( $via_wallet * $proration, 6 );
+				// Order currency, unrounded: the LEDGER's decimals made a 6 USD share 1 USD on a 0-dp base,
+				// and 6-dp shares summed short of $via_wallet by more than the is_final tolerance after a
+				// few refunds. prepare_partial_payment_reversal() rounds/floors the base it returns (1.7.5).
+				$refund_now = $via_wallet * $proration;
 				// Cap so cumulative wallet refunds can never exceed the original debit.
 				$refund_now = min( $refund_now, max( 0.0, $via_wallet - $already ) );
 				$refund_now = (float) apply_filters( 'woo_wallet_partial_payment_refund_amount', $refund_now, $locked_order, $refund );
@@ -1590,6 +1591,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					$locked_order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
 				}
 				$locked_order->save();
+				if ( $reversal['amount'] <= 0 ) {
+					return; // Under one ledger unit: claimed and counted, no 0.00 row; the final refund takes the remainder.
+				}
 
 				$transaction_id = $this->credit(
 					$locked_order->get_customer_id(),
@@ -1851,12 +1855,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				$balance = $per_currency
 					? (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0 AND currency=%s", $customer_id, $ledger_currency ) ) // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					: (float) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE -amount END), 0) FROM {$wpdb->base_prefix}woo_wallet_transactions WHERE user_id=%d AND deleted=0", $customer_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				// The balance is in the ledger currency, the clawback in the order currency: convert the
-				// balance at the rate the debit converts with, floored so the debit never exceeds it.
-				$available = floor( $convert( max( 0.0, $balance ), $ledger_currency, $order_currency ) * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals );
+				// Decide in the LEDGER unit, as the debit stores it: an order-currency balance floored at
+				// the ledger's decimals hid 0.67 USD of a 1000 JPY balance (0-dp base), so the clawback
+				// took 900 JPY and booked 600 as spent (1.7.5).
+				$balance_ledger = max( 0.0, $balance );
+				$claw_ledger    = $this->to_ledger_amount( $clawback_amount, $order_currency )['amount'];
 				// The row is durable once inserted, and a later recorded listener may throw out of
 				// debit(): save the tracking and the refund claim first, from the hook itself.
-				$debit_and_track = function ( $amount, $spent = 0.0 ) use ( $order, $customer_id, $clawed_back, $shortfall, $convert, $order_currency, $ledger_currency, $claim_refund, &$refused ) {
+				$debit_and_track = function ( $amount, $spent = 0.0, $ledger_amount = null ) use ( $order, $customer_id, $clawed_back, $shortfall, $convert, $order_currency, $ledger_currency, $claim_refund, &$refused ) {
 					$tracked = false;
 					$track   = function ( $transaction_id, $user_id, $stored_amount, $type ) use ( &$tracked, $order, $customer_id, $clawed_back, $shortfall, $spent, $convert, $order_currency, $ledger_currency, $claim_refund ) {
 						if ( $tracked || (int) $user_id !== $customer_id || 'debit' !== $type ) {
@@ -1877,7 +1883,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						// from wp-admin or a webhook. Same conversion the debit would apply (1.7.5).
 						$transaction_id = $this->debit(
 							$customer_id,
-							$order_currency === $ledger_currency ? $amount : $convert( $amount, $order_currency, $ledger_currency ),
+							$ledger_amount ?? ( $order_currency === $ledger_currency ? $amount : $convert( $amount, $order_currency, $ledger_currency ) ),
 							// translators: %s: order number.
 							sprintf( __( 'Cashback for #%s debited upon cancellation', 'woo-wallet' ), $order->get_order_number() ),
 							array(
@@ -1912,7 +1918,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$moved = true;
 					}
 				} elseif ( 'full_or_skip' === $strategy ) {
-					if ( $available >= $clawback_amount ) { // Both at store precision.
+					if ( $balance_ledger >= $claw_ledger ) { // Both in the ledger unit.
 						if ( $debit_and_track( $clawback_amount ) ) {
 							$order->add_order_note( $reversed_note( $clawback_amount ) );
 							$moved = true;
@@ -1922,14 +1928,20 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 						$order->add_order_note( sprintf( __( 'Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written.', 'woo-wallet' ), WOO_Wallet_Helper::order_note_price( $clawback_amount, $order ), wc_price( max( 0, $balance ), woo_wallet_wc_price_args( $customer_id, array( 'currency' => $ledger_currency ) ) ) ) ); // The balance in the ledger currency.
 					}
 				} else {
-					// 'partial' (default): debit whatever is available.
-					$debit_amount = min( $available, $clawback_amount );
+					// 'partial' (default): debit whatever is available. Balance-limited: debit the
+					// ledger balance itself, so no re-conversion can round past it.
+					$debit_ledger = null;
+					$debit_amount = $clawback_amount;
+					if ( $balance_ledger < $claw_ledger ) {
+						$debit_ledger = $balance_ledger;
+						$debit_amount = $order_currency === $ledger_currency ? $balance_ledger : round( $convert( $balance_ledger, $ledger_currency, $order_currency ), 6 );
+					}
 					// Only what the balance could not cover is "spent" (never retried); a debit that
 					// failed for another reason stays outstanding, whole, for a later clawback.
-					$spent = $clawback_amount - $debit_amount;
+					$spent = max( 0.0, $clawback_amount - $debit_amount );
 
 					if ( $debit_amount > 0 ) {
-						$moved = (bool) $debit_and_track( $debit_amount, $spent );
+						$moved = (bool) $debit_and_track( $debit_amount, $spent, $debit_ledger );
 					} elseif ( $spent > 0.001 ) {
 						$order->update_meta_data( '_cashback_clawback_shortfall', $shortfall + $convert( $spent, $order_currency, $ledger_currency ) );
 					}
