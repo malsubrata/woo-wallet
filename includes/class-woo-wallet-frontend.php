@@ -457,6 +457,15 @@ JS;
 			 */
 			if ( isset( $_POST['woo_wallet_balance_to_add'] ) && ! empty( $_POST['woo_wallet_balance_to_add'] ) ) { // phpcs:disable WordPress.Security.NonceVerification.Missing
 				$is_valid = $this->is_valid_wallet_recharge_amount( wp_unslash( $_POST['woo_wallet_balance_to_add'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				// Refuse before the customer pays: a top-up in a currency with no rate to the
+				// store currency is never credited (1.7.5).
+				$manager = Woo_Wallet_Currency_Manager::instance();
+				if ( $is_valid['is_valid'] && 'per_currency' !== woo_wallet()->wallet->get_currency_mode() && ! $manager->can_convert( $manager->get_active_currency(), $manager->get_base_currency() ) ) {
+					$is_valid = array(
+						'is_valid' => false,
+						'message'  => __( 'Wallet top-up is not available in this currency. Please switch to the store currency.', 'woo-wallet' ),
+					);
+				}
 				if ( $is_valid['is_valid'] ) {
 					$product = get_wallet_rechargeable_product();
 					if ( $product ) {

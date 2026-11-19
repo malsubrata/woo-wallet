@@ -122,6 +122,22 @@ class Test_Topup_Reversal extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'taken back from the customer', $this->notes( $order ) );
 	}
 
+	/**
+	 * 1.7.5: a credit row written by 1.7.4 at 3 decimals (KWD session) must never be
+	 * taken back for more than it holds — round(3.335, 2) = 3.34 took 0.005 too many.
+	 */
+	public function test_legacy_three_decimal_credit_is_never_over_reversed() {
+		global $wpdb;
+		$order = $this->credited_topup();
+		$wpdb->update( "{$wpdb->base_prefix}woo_wallet_transactions", array( 'amount' => 3.335 ), array( 'transaction_id' => (int) $order->get_meta( '_wallet_payment_transaction_id' ) ) ); // phpcs:ignore WordPress.DB
+		woo_wallet()->wallet->credit( $this->user_id, 10, 'Other funds', array( 'currency' => get_woocommerce_currency() ) );
+		clear_woo_wallet_cache( $this->user_id );
+
+		$this->refund( $order, 250 );
+
+		$this->assertGreaterThanOrEqual( 10.0, round( $this->balance(), 6 ), 'At most the 3.335 credited is taken back.' );
+	}
+
 	public function test_manual_status_refunded_takes_credit_back_once() {
 		$order = $this->credited_topup();
 		$order->update_status( 'refunded' ); // WooCommerce creates the full refund.

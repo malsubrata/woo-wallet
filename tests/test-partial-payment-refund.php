@@ -213,6 +213,30 @@ class Test_Partial_Payment_Refund extends WP_UnitTestCase {
 	}
 
 	/**
+	 * 1.7.5: a debit written by 1.7.4 at 3 decimals (KWD session) is never refunded
+	 * for more than it took — round(10.015, 2) would hand back 10.02.
+	 */
+	public function test_legacy_three_decimal_debit_is_never_over_refunded() {
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'seed' );
+		$order = $this->make_order( 30, 0, 30 );
+		$this->debit_order( $order ); // balance 70.
+		$order = wc_get_order( $order->get_id() );
+		$order->update_meta_data( '_partial_payment_base_amount', 10.015 );
+		$order->update_meta_data( '_partial_payment_base_currency', get_woocommerce_currency() );
+		$order->save();
+
+		$refund = wc_create_refund(
+			array(
+				'order_id' => $order->get_id(),
+				'amount'   => 30,
+			)
+		);
+		woo_wallet()->wallet->process_partial_payment_refund( $order->get_id(), $refund->get_id() );
+
+		$this->assertLessThanOrEqual( 80.015, round( $this->balance(), 6 ) );
+	}
+
+	/**
 	 * A pre-1.7.1 partial refund (no base counter) is not returned again on cancel.
 	 */
 	public function test_cancel_after_legacy_partial_refund_returns_base_remainder() {

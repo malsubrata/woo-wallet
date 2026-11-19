@@ -92,9 +92,8 @@ if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
 	 * "Source: Free_plugin", and changing it would break continuity with every
 	 * historical order.
 	 *
-	 * Note: no site identifier is attached. The pre-existing links that send
-	 * `utm_site_id` pass it explicitly via $extra; new placements deliberately
-	 * omit it.
+	 * Note: no site identifier is attached, by any placement (the plugins-row
+	 * `utm_site_id` was removed in 1.7.5).
 	 *
 	 * @since 1.6.11
 	 * @param string $content Placement identifier for utm_content, e.g. 'withdrawals-gate'.
@@ -108,6 +107,10 @@ if ( ! function_exists( 'woo_wallet_pro_url' ) ) {
 			'utm_campaign' => 'upgrade',
 			'utm_content'  => sanitize_key( $content ),
 		);
+		// One change tags every Pro link while the offer runs; a caller's own utm_campaign wins.
+		if ( class_exists( 'Woo_Wallet_Pro_Campaign' ) && Woo_Wallet_Pro_Campaign::is_active() ) {
+			$args['utm_campaign'] = Woo_Wallet_Pro_Campaign::UTM_CAMPAIGN;
+		}
 		$args = array_merge( $args, (array) $extra );
 
 		/**
@@ -342,7 +345,9 @@ if ( ! function_exists( 'is_enable_wallet_partial_payment' ) ) {
 	function is_enable_wallet_partial_payment() {
 		$is_enable  = false;
 		$cart_total = get_woowallet_cart_total();
-		if ( ! is_wallet_rechargeable_cart() && is_user_logged_in() && ! is_wallet_account_locked() && ( ( ! is_null( wc()->session ) && wc()->session->get( 'partial_payment_amount', false ) ) || 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) && $cart_total >= apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
+		// accepts_currency(): a currency the wallet cannot price would discount the cart and
+		// then have its debit refused (order on hold) - do not offer it (1.7.5).
+		if ( ! is_wallet_rechargeable_cart() && is_user_logged_in() && ! is_wallet_account_locked() && woo_wallet()->wallet->accepts_currency( get_woocommerce_currency() ) && ( ( ! is_null( wc()->session ) && wc()->session->get( 'partial_payment_amount', false ) ) || 'on' === woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) ) && $cart_total >= apply_filters( 'woo_wallet_partial_payment_amount', woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
 			$is_enable = true;
 		}
 		/**
@@ -1505,8 +1510,8 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 	 */
 	function is_full_payment_through_wallet() {
 		$is_valid_payment_through_wallet = false;
-		$current_wallet_balance          = woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' );
 		$total                           = 0;
+		$total_currency                  = ''; // Cart totals are in the active currency.
 		$order_id                        = null;
 		if ( WC()->cart ) {
 			$order_id = absint( get_query_var( 'order-pay' ) );
@@ -1515,7 +1520,8 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 			if ( 0 < $order_id ) {
 				$order = wc_get_order( $order_id );
 				if ( $order ) {
-					$total = (float) $order->get_total();
+					$total          = (float) $order->get_total();
+					$total_currency = $order->get_currency();
 				}
 
 				// Gets order total from cart/checkout.
@@ -1524,7 +1530,9 @@ if ( ! function_exists( 'is_full_payment_through_wallet' ) ) {
 			}
 		}
 
-		if ( ! is_admin() && $current_wallet_balance >= $total && ( ! is_wallet_rechargeable_cart() ) ) {
+		// Same question, same unit as the debit (1.7.5); the floored display balance
+		// hid the wallet for totals it could pay.
+		if ( ! is_admin() && woo_wallet()->wallet->can_cover( get_current_user_id(), $total, $total_currency, false ) && ( ! is_wallet_rechargeable_cart() ) ) {
 			$is_valid_payment_through_wallet = true;
 		}
 
@@ -1879,8 +1887,9 @@ if ( ! function_exists( 'woo_wallet_purge_user_transactions' ) ) {
 						'created_by'        => get_current_user_id(),
 					);
 					// Inserted here, inside this lock + DB transaction, rather than via
-					// Woo_Wallet_Wallet::credit(): credit() opens its own START TRANSACTION,
-					// which would implicitly COMMIT the half-done purge above.
+					// Woo_Wallet_Wallet::credit(): credit() takes the user lock again, applies
+					// currency conversion to an amount that is already in the ledger unit, and
+					// fires woo_wallet_transaction_recorded before this purge has committed.
 					if ( ! $wpdb->insert( "{$wpdb->base_prefix}woo_wallet_transactions", $row_args, array( '%d', '%d', '%s', '%f', '%f', '%s', '%f', '%d', '%s', '%s', '%s', '%d' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 						// All or nothing: never commit a purge that lost part of the balance.
 						throw new Exception( __( 'Could not carry the wallet balance over. Nothing was deleted.', 'woo-wallet' ) );
@@ -2078,7 +2087,7 @@ if ( ! function_exists( 'woo_wallet_normalize_legacy_currency_rows' ) ) {
 			$rows_by_user[ (int) $row->user_id ][] = $row;
 		}
 
-		$decimals        = (int) wc_get_price_decimals();
+		$decimals        = WOO_Wallet_Helper::get_ledger_decimals();
 		$converted_count = 0;
 
 		foreach ( $rows_by_user as $uid => $user_rows ) {

@@ -106,6 +106,13 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_WCML' ) ) {
 			if ( ! $mc ) {
 				return null;
 			}
+			// The switcher hands back the amount unchanged for a currency it is not set up
+			// for, which would price it 1:1. Only trust codes it lists; when it lists only
+			// the base (list unknown), keep the old behaviour (1.7.5).
+			$supported = $this->get_supported_currencies();
+			if ( count( $supported ) > 1 && ( ! in_array( $from, $supported, true ) || ! in_array( $to, $supported, true ) ) ) {
+				return null;
+			}
 			$prices_settings = method_exists( $wpml, 'get_setting' )
 				? $wpml->get_setting( 'currency_options' )
 				: array();

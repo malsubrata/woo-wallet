@@ -37,8 +37,7 @@ composer test                     # run the suite
 Tests live in `tests/` (`tests/bootstrap.php` boots real WP + WooCommerce
 against a dedicated test database; cases are `tests/test-*.php`). Each test
 runs inside a rolled-back DB transaction, so the live site database is never
-mutated. The suite (**23 test files** as of v1.6.15 — run `composer test` for the live
-count rather than trusting this line) covers the ledger core
+mutated. The suite (run `composer test` for the live count) covers the ledger core
 (credit/debit/balance, transfer, precision), idempotency, partial-payment
 debit timing / locked wallet / refunds / fee-tax blocking, the referral
 service, transaction categories, reports data and legacy currency
@@ -68,14 +67,57 @@ Hot extension points: `woo_wallet_loaded`, `woo_wallet_init`, `woo_wallet_activa
 **Three** custom tables, created/updated by `Woo_Wallet_Install` (`includes/class-woo-wallet-install.php`):
 - `{prefix}woo_wallet_transactions` — append-only credit/debit rows, balance is `SUM(credit − debit) WHERE deleted=0`. The `_current_woo_wallet_balance` user meta is a cache.
 - `{prefix}woo_wallet_transaction_meta`
-- `{prefix}woo_wallet_referrals` (`class-woo-wallet-install.php:157`)
+- `{prefix}woo_wallet_referrals` (`Woo_Wallet_Install::get_referrals_schema()`)
 
-If you add or remove a table, update `uninstall.php` in the same change — it currently drops
-only the first two.
+If you add or remove a table, update `uninstall.php` in the same change — it must drop
+every table the installer creates, and CI enforces that.
 
-Schema migrations are version-keyed in the `$db_updates` array (`class-woo-wallet-install.php:20`); the callbacks live in `includes/helper/woo-wallet-update-functions.php`. **When you bump `WOO_WALLET_PLUGIN_VERSION` and need a schema change, register both the version key and the callback.**
+Schema migrations are version-keyed in the `$db_updates` array (top of `class-woo-wallet-install.php`); the callbacks live in `includes/helper/woo-wallet-update-functions.php`. **When you bump `WOO_WALLET_PLUGIN_VERSION` and need a schema change, register both the version key and the callback.**
 
-Money-moving paths (`Woo_Wallet_Wallet::recode_transaction`, `::transfer`) wrap `START TRANSACTION` and serialize concurrent writers using MySQL `GET_LOCK('woo_wallet_lock_user_<id>', timeout)`. `transfer()` acquires both user locks in **deterministic min/max id order** to avoid the A→B / B→A deadlock. The pre-debit balance check uses the raw `SUM(...)` query, **not** `apply_filters( 'woo_wallet_current_balance', ... )` — third-party balance filters mutate state via the post-commit `woo_wallet_transaction_recorded` hook (which fires after locks release), so filtering inside the lock would reintroduce a TOCTOU window. Keep that distinction when editing concurrency-sensitive code; the inline comment in `class-woo-wallet-wallet.php:308` documents the reasoning.
+Money-moving paths (`Woo_Wallet_Wallet::recode_transaction`, `::transfer`) serialize concurrent writers using MySQL `GET_LOCK('woo_wallet_lock_user_<id>', timeout)`. Only `transfer()` wraps `START TRANSACTION` (two rows must commit together); `recode_transaction()` holds the user lock around a single `INSERT` with no explicit transaction. `transfer()` acquires both user locks in **deterministic min/max id order** to avoid the A→B / B→A deadlock. The pre-debit balance check uses the raw `SUM(...)` query, **not** `apply_filters( 'woo_wallet_current_balance', ... )` — third-party balance filters mutate state via the `woo_wallet_transaction_recorded` hook, which `recode_transaction()` fires *inside* the user lock but `transfer()` fires *after* releasing both locks, so a filtered balance read inside the lock can be stale on the transfer path (a TOCTOU window). Keep that distinction when editing concurrency-sensitive code; the inline comment above the balance gate in `recode_transaction()` documents the reasoning.
+
+### Money-path rules (non-negotiable)
+
+This is real money. These rules exist because they were broken: in 1.7.4 a
+customer on a multi-currency store could transfer ~3× their balance (reported
+by a researcher, fixed in 1.7.5). The same bug class had been fixed for REST
+top-up in that very release; nobody checked `transfer()`.
+
+1. **Currency contract.** Every amount handed to `credit()`, `debit()` or
+   `transfer()` is in `$args['currency']`, else the **active** storefront
+   currency. In `single_base` mode the ledger (`SUM(credit − debit)`) is in
+   **base**. Never compare, add or subtract two amounts — balance vs amount,
+   limit vs amount, charge + amount — until both are in the same currency.
+   Settings (limits, fixed charges, earning-action amounts) are stored in base;
+   the multicurrency integration converts some of them to active on read, so
+   check `Woo_Wallet_Multicurrency_Integration::__construct()` before
+   assuming either. A base-denominated amount passed without `currency` is a bug.
+   **Precision too:** round ledger/base amounts with
+   `WOO_Wallet_Helper::get_ledger_decimals()`, never `wc_get_price_decimals()` —
+   switchers (WOOCS `pre_option_`, YayCurrency filter) rewrite that to the
+   shopper's currency, so the same refund rounded differently per session.
+   `wc_get_price_decimals()` is for display and active-currency figures only.
+2. **Fix the class, not the instance.** When a money bug is found, grep every
+   function that shares the pattern (every caller of the writer, every gate,
+   every limit/charge) and list them in `spec/<version>/progress.md` as fixed or
+   cleared, with a one-line reason each. A fix with no sibling sweep is not done.
+3. **Comments are not guarantees.** "X is not supported" must be enforced in
+   code (reject it) or pinned by a test. If it isn't, assume X happens.
+4. **Multi-currency tests are mandatory** for any money-path change: active ≠
+   base, with both a *stronger* currency (overdraw direction) and a *weaker* one
+   (false-refusal direction), plus an explicit `currency` arg ≠ active. Assert
+   the raw ledger SUM, not the filtered balance. Template:
+   `tests/test-transfer-multicurrency.php`. A test suite that only ever runs
+   active = base proves nothing about multi-currency stores.
+5. **Verify live with a real provider** (WOOCS, YayCurrency — installed on the
+   local site) using a wp-cli script against the real service, including the
+   attacker's numbers from the report. Back up and restore every option/post you
+   change; delete every test user and ledger row you create.
+6. **Release gate.** Never tell the developer a version is ready to release on
+   a money path until: `composer test` was run and read; `wallet-ledger-auditor`
+   reviewed the whole touched path (callers and callees, not only the diff);
+   rules 2, 4 and 5 are done. State plainly what was *not* verified. If unsure,
+   say "not ready" — a delayed release costs less than a ledger defect.
 
 Idempotency for state-changing REST endpoints lives in `WooWallet_Idempotency` (`includes/services/class-woo-wallet-idempotency.php`) — replays the cached `WP_REST_Response`/`WP_Error` for a `(user_id, Idempotency-Key)` tuple within a 24h TTL. Form-side single-use claims (transient prefix `wwxfer_`) live in `Woo_Wallet_Frontend` and have different semantics (consumed on first use).
 
@@ -177,7 +219,7 @@ makes every edit, so the diff stays visible to the developer.
 
 - `security-auditor` — attacker-perspective audit: caps, nonces, IDOR, SQLi, XSS, REST/AJAX
   authorization, privilege escalation.
-- `wallet-ledger-auditor` — money correctness only, invariants L1–L12 (locks, TOCTOU,
+- `wallet-ledger-auditor` — money correctness only, invariants L1–L14 (locks, TOCTOU,
   precision, currency, reversal symmetry, idempotency, migration safety).
 - `wc-platform-reviewer` — WooCommerce platform (HPOS, order CRUD, status transitions,
   Action Scheduler, Blocks, gateway/refund/coupon/tax) and existing installations (existing

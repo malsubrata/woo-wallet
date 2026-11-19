@@ -266,6 +266,11 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 				}
 
 				$reversal = woo_wallet()->wallet->prepare_partial_payment_reversal( $order, $refund_gross, $partial_payment_amount );
+				if ( ! woo_wallet()->wallet->accepts_currency( $reversal['currency'] ) ) {
+					// Pre-1.6.4 order (no base meta) in a currency we cannot price: do not claim.
+					$order->add_order_note( Woo_Wallet_Wallet::unpriceable_currency_message( $reversal['currency'] ) );
+					wp_send_json( $response );
+				}
 
 				// Claim before credit — first click wins.
 				$order->update_meta_data( '_woo_wallet_partial_payment_refunded', true );
@@ -318,7 +323,9 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 			$line_item_qtys         = isset( $_POST['line_item_qtys'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_qtys'] ) ), true ) : array();
 			$line_item_totals       = isset( $_POST['line_item_totals'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_totals'] ) ), true ) : array();
 			$line_item_tax_totals   = isset( $_POST['line_item_tax_totals'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_tax_totals'] ) ), true ) : array();
-			$api_refund             = isset( $_POST['api_refund'] ) && 'true' === $_POST['api_refund'];
+			// This button credits the wallet; also refunding through the order's gateway
+			// (`api_refund`, never sent by the UI's .do-wallet-refund) paid twice (1.7.5).
+			$api_refund             = false;
 			$restock_refunded_items = isset( $_POST['restock_refunded_items'] ) && 'true' === $_POST['restock_refunded_items'];
 			$refund                 = false;
 			$response               = array();
@@ -358,29 +365,50 @@ if ( ! class_exists( 'Woo_Wallet_Ajax' ) ) {
 					$line_items[ $item_id ]['refund_tax'] = array_filter( array_map( 'wc_format_decimal', $tax_totals ) );
 				}
 				$refund_reason = $refund_reason ? $refund_reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
-				// Create the refund object.
-				$refund = wc_create_refund(
-					array(
-						'amount'         => $refund_amount,
-						'reason'         => $refund_reason,
-						'order_id'       => $order_id,
-						'line_items'     => $line_items,
-						'refund_payment' => $api_refund,
-						'restock_items'  => $restock_refunded_items,
-					)
-				);
-				if ( ! is_wp_error( $refund ) ) {
-					$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $refund_amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
+				// Refuse before wc_create_refund(): it restocks, changes the status and sends
+				// emails before we could credit, and none of that is undone by deleting it.
+				$refusal = woo_wallet()->wallet->refund_refusal_reason( $order, (float) $refund_amount );
+				if ( '' !== $refusal ) {
+					throw new Exception( $refusal );
+				}
+				// Credit inside wc_create_refund(), before the refund is saved: a refused credit
+				// throws into WooCommerce's own catch, so nothing is restocked, the status does
+				// not change and woocommerce_order_refunded (partial-payment refund, cashback
+				// clawback, top-up reversal) never runs for a refund that is then deleted. A
+				// retry after a delete used to run those reversals twice (1.7.5).
+				$transaction_id = 0;
+				$credit         = function ( $refund ) use ( $order, $refund_amount, $refund_reason, &$transaction_id ) {
+					$transaction_id = woo_wallet()->wallet->refund_order_to_wallet( $order, (float) $refund_amount, $refund_reason );
 					if ( ! $transaction_id ) {
-						throw new Exception( __( 'Refund not credited to customer', 'woo-wallet' ) );
-					} else {
-						do_action( 'woo_wallet_order_refunded', $order, $refund, $transaction_id );
+						throw new Exception( esc_html__( 'Refund not credited to customer', 'woo-wallet' ) );
 					}
+				};
+				add_action( 'woocommerce_create_refund', $credit, 20 );
+				try {
+					$refund = wc_create_refund(
+						array(
+							'amount'         => $refund_amount,
+							'reason'         => $refund_reason,
+							'order_id'       => $order_id,
+							'line_items'     => $line_items,
+							'refund_payment' => $api_refund,
+							'restock_items'  => $restock_refunded_items,
+						)
+					);
+				} finally {
+					remove_action( 'woocommerce_create_refund', $credit, 20 );
 				}
 
 				if ( is_wp_error( $refund ) ) {
+					if ( $transaction_id ) {
+						// Credited, then something later in WooCommerce failed and it removed the
+						// refund. Say so on the order rather than leave a silent credit.
+						/* translators: 1: wallet transaction id, 2: error */
+						$order->add_order_note( sprintf( __( 'Wallet credited (transaction #%1$d) but WooCommerce could not save the refund: %2$s. Review before refunding again.', 'woo-wallet' ), $transaction_id, $refund->get_error_message() ) );
+					}
 					throw new Exception( $refund->get_error_message() );
 				}
+				do_action( 'woo_wallet_order_refunded', $order, $refund, $transaction_id );
 
 				if ( did_action( 'woocommerce_order_fully_refunded' ) ) {
 					$response['status'] = 'fully_refunded';

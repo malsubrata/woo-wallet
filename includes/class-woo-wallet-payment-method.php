@@ -130,9 +130,17 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . __( 'Invalid order.', 'woo-wallet' ), 'error' );
 				return array( 'result' => 'failure' );
 			}
-			if ( ( $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) && apply_filters( 'woo_wallet_disallow_negative_transaction', ( woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) <= 0 || $order->get_total( 'edit' ) > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ), $order->get_total( 'edit' ), woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) ) {
+			// Ask the ledger's question in the ledger's unit (1.7.5): the display balance
+			// is converted and floored, so comparing the total against it refused orders
+			// the debit itself would accept.
+			if ( ! woo_wallet()->wallet->accepts_currency( $order->get_currency( 'edit' ) ) ) {
+				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . __( 'Wallet payment is not available in this currency. Please choose another currency or payment method.', 'woo-wallet' ), 'error' );
+				return array( 'result' => 'failure' );
+			}
+			if ( ! woo_wallet()->wallet->can_cover( get_current_user_id(), $order->get_total( 'edit' ), $order->get_currency( 'edit' ) ) ) {
+				$shortfall = max( 0.0, (float) $order->get_total( 'edit' ) - (float) woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
 				/* translators: 1: wallet amount */
-				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $order->get_total( 'edit' ) - woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ), woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
+				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . sprintf( __( 'Your wallet balance is low. Please add %s to proceed with this transaction.', 'woo-wallet' ), wc_price( $shortfall, woo_wallet_wc_price_args( $order->get_customer_id() ) ) ), 'error' );
 				return array( 'result' => 'failure' );
 			}
 
@@ -176,6 +184,9 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 					$order->set_transaction_id( $wallet_response );
 					do_action( 'woo_wallet_payment_processed', $order_id, $wallet_response );
 					$order->save();
+				} elseif ( ! woo_wallet()->wallet->accepts_currency( $order->get_currency( 'edit' ) ) ) {
+					$order->add_order_note( Woo_Wallet_Wallet::unpriceable_currency_message( $order->get_currency( 'edit' ) ) );
+					throw new Exception( esc_html__( 'Wallet payment is not available in this currency. Please choose another currency or payment method.', 'woo-wallet' ) );
 				} else {
 					throw new Exception( esc_html__( 'Something went wrong with processing payment please try again.', 'woo-wallet' ) );
 				}
@@ -197,7 +208,13 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				return new WP_Error( 'woo_wallet_invalid_order', __( 'Invalid order', 'woo-wallet' ) );
 			}
 			$refund_reason  = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
-			$transaction_id = woo_wallet()->wallet->credit( $order->get_customer_id(), $amount, $refund_reason, array( 'currency' => $order->get_currency( 'edit' ) ) );
+			// WooCommerce has saved the refund but not yet restocked or changed the status:
+			// throwing here makes it delete the refund cleanly.
+			$refusal = woo_wallet()->wallet->refund_refusal_reason( $order, (float) $amount );
+			if ( '' !== $refusal ) {
+				throw new Exception( esc_html( $refusal ) );
+			}
+			$transaction_id = woo_wallet()->wallet->refund_order_to_wallet( $order, (float) $amount, $refund_reason );
 			if ( ! $transaction_id ) {
 				throw new Exception( esc_html__( 'Refund not credited to customer', 'woo-wallet' ) );
 			}

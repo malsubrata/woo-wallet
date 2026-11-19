@@ -160,12 +160,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				'plugins' => '<a style="font-weight: 600;" href="' . esc_url(
 					woo_wallet_pro_url(
 						'plugins-row',
-						array(
-							'utm_medium'  => 'plugin_page',
-							'utm_site_id' => md5( home_url( '/' ) ),
-						)
+						array( 'utm_medium' => 'plugin_page' ) // No per-site identifier in outgoing links (WP.org guideline 7).
 					)
-				) . '" aria-label="' . esc_attr__( 'View TeraWallet pro plugins', 'woo-wallet' ) . '"><span class="dashicons dashicons-admin-network"></span> ' . esc_html__( 'Upgrade to Pro', 'woo-wallet' ) . '</a>',
+				) . '" aria-label="' . esc_attr__( 'View TeraWallet pro plugins', 'woo-wallet' ) . '"><span class="dashicons dashicons-admin-network"></span> ' . esc_html( Woo_Wallet_Pro_Campaign::is_active() ? Woo_Wallet_Pro_Campaign::row_link_text() : __( 'Upgrade to Pro', 'woo-wallet' ) ) . '</a>',
 				'docs'    => '<a href="' . esc_url( $docs_url ) . '" aria-label="' . esc_attr__( 'View TeraWallet docs', 'woo-wallet' ) . '">' . esc_html__( 'Docs', 'woo-wallet' ) . '</a>',
 				'support' => '<a href="' . esc_url( $community_support_url ) . '" aria-label="' . esc_attr__( 'Visit community forums', 'woo-wallet' ) . '">' . esc_html__( 'Support forum', 'woo-wallet' ) . '</a>',
 			);
@@ -879,10 +876,9 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					// storefront currency.
 					$entry_currency = apply_filters( 'woo_wallet_user_currency', '', $user_id );
 					$entry_currency = '' !== (string) $entry_currency ? $entry_currency : Woo_Wallet_Currency_Manager::instance()->get_base_currency();
-					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( $amount, wc_get_price_decimals(), '.', '' ), $user_id );
-					// Compare in the currency the debit is written in, not the storefront one.
-					$balance = woo_wallet()->wallet->get_wallet_balance( $user_id, 'edit', $entry_currency );
-					if ( 'debit' === $payment_type && apply_filters( 'woo_wallet_disallow_negative_transaction', ( $balance <= 0 || $amount > $balance ), $amount, $balance ) ) {
+					$amount  = apply_filters( 'woo_wallet_addjust_balance_amount', number_format( (float) $amount, WOO_Wallet_Helper::get_ledger_decimals(), '.', '' ), $user_id );
+					// Ask the debit's own question, in the ledger's unit and precision (1.7.5).
+					if ( 'debit' === $payment_type && ! woo_wallet()->wallet->can_cover( $user_id, $amount, $entry_currency ) ) {
 						$response = array(
 							'type'    => 'error',
 							/* translators: 1: User login. */
@@ -1592,8 +1588,124 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 			}
 
 			$stats   = $this->promo_store_figures();
-			$pro_url = add_query_arg( array( 'page' => Woo_Wallet_Go_Pro_Page::MENU_SLUG ), admin_url( 'admin.php' ) );
+			$sale    = Woo_Wallet_Pro_Campaign::is_active();
+			$urgency = $sale ? Woo_Wallet_Pro_Campaign::urgency_text() : '';
+			$go_page = add_query_arg( array( 'page' => Woo_Wallet_Go_Pro_Page::MENU_SLUG ), admin_url( 'admin.php' ) );
+			$pro_url = $sale ? woo_wallet_pro_url( 'promo-banner-bf' ) : $go_page;
 			?>
+<?php if ( $sale ) : ?>
+				<aside class="tw-promo tw-promo--sale" role="complementary" aria-labelledby="tw-promo-title">
+					<div class="tw-promo__bar">
+						<span class="tw-promo__bf"><?php esc_html_e( 'Black Friday', 'woo-wallet' ); ?></span>
+						<span class="tw-promo__offer">
+							<?php
+							printf(
+								/* translators: %d: discount percent number, e.g. 30. */
+								esc_html__( '%d%% off TeraWallet Pro for the first year', 'woo-wallet' ),
+								(int) Woo_Wallet_Pro_Campaign::PERCENT
+							);
+							?>
+						</span>
+						<span class="tw-promo__ends">
+							<span class="tw-promo__ends-date">
+								<?php
+								/* translators: %s: offer end date, e.g. "1 December". */
+								echo esc_html( sprintf( __( 'Ends %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::end_date() ) );
+								?>
+							</span>
+							<?php if ( '' !== $urgency ) : ?>
+								<span class="tw-promo__pill"><?php echo esc_html( $urgency ); ?></span>
+							<?php endif; ?>
+						</span>
+					</div>
+
+					<div class="tw-promo__pitch">
+						<?php if ( $stats ) : ?>
+							<p class="tw-promo__label"><?php esc_html_e( 'Your store right now', 'woo-wallet' ); ?></p>
+							<div class="tw-promo__statement">
+								<span class="tw-promo__figure"><?php echo esc_html( $stats['amount'] ); ?></span>
+								<span class="tw-promo__caption">
+									<?php
+									printf(
+										/* translators: %s: number of customers holding a positive wallet balance. */
+										esc_html( _n( 'Outstanding wallet credit · %s customer', 'Outstanding wallet credit · %s customers', $stats['wallets'], 'woo-wallet' ) ),
+										esc_html( number_format_i18n( $stats['wallets'] ) )
+									);
+									?>
+								</span>
+							</div>
+							<h2 class="tw-promo__title" id="tw-promo-title"><?php esc_html_e( 'Some of this will never be spent.', 'woo-wallet' ); ?></h2>
+							<p class="tw-promo__sub"><?php esc_html_e( 'Pro reclaims it on a schedule and lets the rest leave as real payouts.', 'woo-wallet' ); ?></p>
+						<?php else : ?>
+							<h2 class="tw-promo__title" id="tw-promo-title"><?php esc_html_e( 'Everything the wallet needs once customers actually use it.', 'woo-wallet' ); ?></h2>
+							<p class="tw-promo__sub"><?php esc_html_e( 'Money has to be able to leave the wallet, unspent credit has to be reclaimed, and someone will ask what the balance is really worth. Pro answers all three.', 'woo-wallet' ); ?></p>
+						<?php endif; ?>
+					</div>
+
+					<div class="tw-promo__ledger">
+						<p class="tw-promo__label"><?php esc_html_e( 'What Pro adds', 'woo-wallet' ); ?></p>
+						<ul class="tw-promo__checks">
+							<?php
+							$tick  = '<svg class="tw-promo__tick" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+							$ticks = array(
+								array( __( 'Withdrawals', 'woo-wallet' ), __( 'PayPal, Stripe, BACS, Razorpay and more, with your approval', 'woo-wallet' ) ),
+								array( __( 'Credit expiry', 'woo-wallet' ), __( 'reclaim credit that sits unused, with reminder emails', 'woo-wallet' ) ),
+								array( __( 'Breakage & aging reports', 'woo-wallet' ), __( 'the number your accountant asks for', 'woo-wallet' ) ),
+							);
+							foreach ( $ticks as $row ) :
+								?>
+								<li>
+									<?php echo $tick; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG literal. ?>
+									<span><strong class="tw-promo__item"><?php echo esc_html( $row[0] ); ?></strong><span class="tw-promo__note"><?php echo esc_html( $row[1] ); ?></span></span>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+						<p class="tw-promo__rest"><?php esc_html_e( 'Also: bonuses, wallet coupons, CSV import, AffiliateWP payouts', 'woo-wallet' ); ?></p>
+					</div>
+
+					<div class="tw-promo__act">
+						<p class="tw-promo__price tw-promo__price--sale">
+							<del class="tw-promo__was"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %s: regular price, e.g. $79. */ __( 'Regular price %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::REGULAR ) ); ?></span><span aria-hidden="true"><?php echo esc_html( Woo_Wallet_Pro_Campaign::REGULAR ); ?></span></del>
+							<span class="tw-promo__amount"><span class="screen-reader-text"><?php esc_html_e( 'Black Friday price', 'woo-wallet' ); ?> </span><?php echo esc_html( Woo_Wallet_Pro_Campaign::SALE_PRICE ); ?></span>
+							<span class="tw-promo__tag">
+								<?php
+								printf(
+									/* translators: %s: amount saved, e.g. $24. */
+									esc_html__( 'Save %s', 'woo-wallet' ),
+									esc_html( Woo_Wallet_Pro_Campaign::SAVING )
+								);
+								?>
+							</span>
+						</p>
+						<p class="tw-promo__renews">
+							<?php
+							printf(
+								/* translators: %s: regular yearly price, e.g. $79. */
+								esc_html__( 'first year, then %s/year', 'woo-wallet' ),
+								esc_html( Woo_Wallet_Pro_Campaign::REGULAR )
+							);
+							?>
+							<span class="tw-promo__renews-end">
+								<?php
+								/* translators: %s: offer end date, e.g. "1 December". */
+								echo esc_html( sprintf( __( ' · ends %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::end_date() ) );
+								?>
+							</span>
+						</p>
+						<a class="tw-promo__btn" href="<?php echo esc_url( $pro_url ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php
+							/* translators: %s: Black Friday first-year price, e.g. $55. */
+							echo esc_html( sprintf( __( 'Get Pro for %s', 'woo-wallet' ), Woo_Wallet_Pro_Campaign::SALE_PRICE ) );
+							?>
+							<span aria-hidden="true">→</span>
+						</a>
+						<div class="tw-promo__foot">
+							<p class="tw-promo__reassure"><?php esc_html_e( '30-day money-back guarantee', 'woo-wallet' ); ?></p>
+							<a class="tw-promo__more" href="<?php echo esc_url( $go_page ); ?>"><?php esc_html_e( 'See what Pro adds', 'woo-wallet' ); ?></a>
+						</div>
+					</div>
+				</aside>
+				<?php else : ?>
 			<aside class="tw-promo" role="complementary" aria-labelledby="tw-promo-title">
 				<div class="tw-promo__pitch">
 					<p class="tw-promo__eyebrow"><?php esc_html_e( 'TeraWallet Pro', 'woo-wallet' ); ?></p>
@@ -1638,16 +1750,17 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 				</ul>
 
 				<div class="tw-promo__act">
-					<p class="tw-promo__price">
-						<span class="tw-promo__amount"><?php echo esc_html( Woo_Wallet_Go_Pro_Page::price_label() ); ?></span>
-						<span class="tw-promo__term"><?php esc_html_e( 'per year', 'woo-wallet' ); ?></span>
-					</p>
-					<a class="tw-promo__btn" href="<?php echo esc_url( $pro_url ); ?>">
-						<?php esc_html_e( 'See what Pro adds', 'woo-wallet' ); ?>
-					</a>
-					<p class="tw-promo__reassure"><?php esc_html_e( '30-day money-back guarantee', 'woo-wallet' ); ?></p>
+						<p class="tw-promo__price">
+							<span class="tw-promo__amount"><?php echo esc_html( Woo_Wallet_Go_Pro_Page::price_label() ); ?></span>
+							<span class="tw-promo__term"><?php esc_html_e( 'per year', 'woo-wallet' ); ?></span>
+						</p>
+						<a class="tw-promo__btn" href="<?php echo esc_url( $pro_url ); ?>">
+							<?php esc_html_e( 'See what Pro adds', 'woo-wallet' ); ?>
+						</a>
+						<p class="tw-promo__reassure"><?php esc_html_e( '30-day money-back guarantee', 'woo-wallet' ); ?></p>
 				</div>
 			</aside>
+				<?php endif; ?>
 			<style>
 				.tw-promo {
 					--tw-promo-ink: #1c2230;
@@ -1803,6 +1916,14 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					font-size: 12px;
 					color: var(--tw-promo-muted);
 				}
+				.tw-promo__was { font-size: 15px; color: var(--tw-promo-muted); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+				.tw-promo__price--sale { margin-bottom: 2px; gap: 10px; }
+				.tw-promo__renews { margin: 0 0 10px; font-size: 12px; color: var(--tw-promo-text); }
+				.tw-promo__save { margin: 0 0 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; color: var(--tw-promo-muted); }
+				.tw-promo__tag { padding: 2px 8px; border: 1px solid var(--tw-promo-accent); border-radius: 3px; color: var(--tw-promo-text); font-weight: 600; }
+				.tw-promo__more { margin-top: 10px; font-size: 12px; color: var(--tw-promo-accent); text-decoration: underline; text-underline-offset: 3px; }
+				.tw-promo__more:hover { color: #c4b5fd; }
+				.tw-promo__more:focus { color: #c4b5fd; outline: 2px solid var(--tw-promo-accent); outline-offset: 2px; box-shadow: none; }
 				.tw-promo__btn {
 					display: inline-block;
 					padding: 9px 18px;
@@ -1837,11 +1958,15 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 						border-top: 1px solid var(--tw-promo-line);
 						flex-direction: row;
 						align-items: center;
-						gap: 18px;
+						justify-content: center;
+						gap: 8px 18px;
 						flex-wrap: wrap;
 					}
 					.tw-promo__price { margin: 0; }
+					.tw-promo__renews,
+					.tw-promo__save { margin: 0; }
 					.tw-promo__reassure { margin: 0; }
+					.tw-promo__more { margin: 0; }
 				}
 				@media screen and (max-width: 782px) {
 					.tw-promo { grid-template-columns: minmax(0, 1fr); }
@@ -1855,6 +1980,103 @@ if ( ! class_exists( 'Woo_Wallet_Admin' ) ) {
 					.tw-promo__figure { font-size: 30px; }
 					.tw-promo__title { font-size: 18px; }
 					.tw-promo__btn { width: 100%; text-align: center; }
+				}
+
+				/* Black Friday state: everything below is scoped to the modifier. */
+				.tw-promo--sale {
+					--tw-promo-ink: #10131b;
+					--tw-promo-inset: #161a25;
+					--tw-promo-line: #262c3b;
+					--tw-promo-text: #eef0f5;
+					--tw-promo-body: #b4bbcb;
+					--tw-promo-muted: #9aa3b6;
+					--tw-promo-accent: #f5b83d;
+					--tw-promo-on: #15120a;
+					grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 0.78fr);
+				}
+				.tw-promo--sale .tw-promo__bar {
+					grid-column: 1 / -1;
+					display: flex;
+					align-items: center;
+					flex-wrap: wrap;
+					gap: 4px 14px;
+					min-height: 46px;
+					padding: 6px 26px;
+					background: var(--tw-promo-accent);
+					color: var(--tw-promo-on);
+				}
+				.tw-promo--sale .tw-promo__bf { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+				.tw-promo--sale .tw-promo__offer { padding-left: 14px; border-left: 1px solid rgba(21, 18, 10, 0.4); font-size: 14px; font-weight: 600; }
+				.tw-promo--sale .tw-promo__ends { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+				.tw-promo--sale .tw-promo__pill { padding: 3px 10px; border-radius: 999px; background: var(--tw-promo-on); color: var(--tw-promo-accent); font-size: 12px; font-weight: 700; }
+				.tw-promo--sale .tw-promo__label { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tw-promo-muted); }
+				.tw-promo--sale .tw-promo__statement { border: 0; padding: 0; margin: 0 0 16px; }
+				.tw-promo--sale .tw-promo__figure { font-size: 38px; font-weight: 700; }
+				.tw-promo--sale .tw-promo__caption { margin-top: 6px; font-size: 12px; letter-spacing: 0; text-transform: none; }
+				.tw-promo--sale .tw-promo__title { margin: 0 0 6px; font-size: 19px; font-weight: 600; }
+				.tw-promo--sale .tw-promo__sub { color: var(--tw-promo-body); }
+				.tw-promo--sale .tw-promo__ledger { border-left: 1px solid var(--tw-promo-line); }
+				.tw-promo--sale .tw-promo__checks { margin: 0; padding: 0; list-style: none; }
+				.tw-promo--sale .tw-promo__checks li { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 12px; padding: 0; font-size: 14px; line-height: 1.5; color: var(--tw-promo-body); }
+				.tw-promo--sale .tw-promo__checks li::before { display: none; }
+				.tw-promo--sale .tw-promo__tick { flex: none; margin-top: 1px; color: var(--tw-promo-accent); }
+				.tw-promo--sale .tw-promo__item { color: var(--tw-promo-text); font-weight: 600; }
+				.tw-promo--sale .tw-promo__note { color: var(--tw-promo-body); }
+				.tw-promo--sale .tw-promo__rest { margin: 14px 0 0; padding: 0; border: 0; font-size: 12px; color: var(--tw-promo-muted); }
+				.tw-promo--sale .tw-promo__act { align-items: stretch; }
+				.tw-promo--sale .tw-promo__price { margin: 0 0 6px; align-items: baseline; gap: 4px 12px; }
+				.tw-promo--sale .tw-promo__was { font-size: 20px; text-decoration-thickness: 2px; }
+				.tw-promo--sale .tw-promo__amount { font-size: 48px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+				.tw-promo--sale .tw-promo__tag { padding: 3px 8px; border: 0; border-radius: 4px; background: var(--tw-promo-accent); color: var(--tw-promo-on); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+				.tw-promo--sale .tw-promo__renews { margin: 0 0 16px; font-size: 13px; color: var(--tw-promo-body); }
+				.tw-promo--sale .tw-promo__renews-end { display: none; }
+				.tw-promo--sale .tw-promo__btn {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 8px;
+					min-height: 48px;
+					padding: 0 18px;
+					border-radius: 6px;
+					background: var(--tw-promo-accent);
+					color: var(--tw-promo-on) !important;
+					font-size: 15px;
+					font-weight: 700;
+				}
+				.tw-promo--sale .tw-promo__btn:hover,
+				.tw-promo--sale .tw-promo__btn:focus { background: #e5a622; color: var(--tw-promo-on) !important; }
+				.tw-promo--sale .tw-promo__btn:focus { outline: 2px solid #fff; outline-offset: 2px; }
+				.tw-promo--sale .tw-promo__foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 12px; }
+				.tw-promo--sale .tw-promo__reassure { margin: 0; font-size: 12px; }
+				.tw-promo--sale .tw-promo__more { margin: 0; font-size: 12px; color: #c9cfdc; }
+				.tw-promo--sale .tw-promo__more:hover,
+				.tw-promo--sale .tw-promo__more:focus { color: #fff; }
+				.tw-promo--sale .tw-promo__more:focus { outline-color: #fff; }
+
+				@media screen and (max-width: 1200px) {
+					.tw-promo--sale { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+					.tw-promo--sale .tw-promo__act { align-items: center; gap: 10px 20px; }
+					.tw-promo--sale .tw-promo__price { margin: 0; }
+					.tw-promo--sale .tw-promo__renews { margin: 0; }
+					.tw-promo--sale .tw-promo__btn { min-width: 220px; }
+					.tw-promo--sale .tw-promo__foot { margin-top: 0; flex-direction: column; justify-content: flex-start; }
+				}
+				@media screen and (max-width: 782px) {
+					.tw-promo--sale { grid-template-columns: minmax(0, 1fr); }
+					.tw-promo--sale .tw-promo__ledger { border-left: 0; border-top: 1px solid var(--tw-promo-line); }
+					.tw-promo--sale .tw-promo__bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 12px 20px; gap: 6px 10px; }
+					.tw-promo--sale .tw-promo__ends { display: contents; }
+					.tw-promo--sale .tw-promo__ends-date { display: none; }
+					.tw-promo--sale .tw-promo__pill { grid-column: 2; grid-row: 1; justify-self: end; }
+					.tw-promo--sale .tw-promo__offer { grid-column: 1 / -1; grid-row: 2; padding-left: 0; border-left: 0; }
+					.tw-promo--sale .tw-promo__renews-end { display: inline; }
+					.tw-promo--sale .tw-promo__act { align-items: stretch; flex-direction: column; }
+					.tw-promo--sale .tw-promo__price { margin: 0 0 6px; }
+					.tw-promo--sale .tw-promo__renews { margin: 0 0 12px; }
+					.tw-promo--sale .tw-promo__btn { min-width: 0; width: 100%; }
+					.tw-promo--sale .tw-promo__foot { flex-direction: row; justify-content: space-between; margin-top: 12px; }
+					.tw-promo--sale .tw-promo__figure { font-size: 32px; }
+					.tw-promo--sale .tw-promo__amount { font-size: 44px; }
 				}
 			</style>
 			<?php

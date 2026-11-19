@@ -121,6 +121,9 @@ final class Woo_Wallet {
 		include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-signup-handler.php';
 		new Woo_Wallet_Signup_Handler();
 
+		// Pure constants + clock, no hooks: loaded everywhere so woo_wallet_pro_url() sees it.
+		include_once WOO_WALLET_ABSPATH . 'includes/admin/class-woo-wallet-pro-campaign.php';
+
 		if ( $this->is_request( 'admin' ) ) {
 			include_once WOO_WALLET_ABSPATH . 'includes/export/class-terawallet-csv-exporter.php';
 			include_once WOO_WALLET_ABSPATH . 'includes/class-woo-wallet-settings.php';
@@ -207,6 +210,7 @@ final class Woo_Wallet {
 		}
 
 		add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
+		Woo_Wallet_Wallet::refund_ledger_since(); // Start the 1.7.5 refund counters' clock on upgrade.
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_refunded_order' ), 10, 2 );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_partial_payment_refund' ), 10, 2 );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'reverse_topup_on_refund' ), 10, 2 );

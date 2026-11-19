@@ -77,11 +77,46 @@ class WOO_Wallet_Helper {
 			$paid      = $coupon_is_credit ? $typed : $line_paid;
 			if ( $negative_fees < 0 && $all_lines > 0 ) {
 				// Negative fees are shared across lines by what each line costs.
-				$paid += round( $negative_fees * $line_paid / $all_lines, wc_get_price_decimals() );
+				$paid += round( $negative_fees * $line_paid / $all_lines, 6 ); // Order currency: not the session's/ledger's decimals (1.7.5).
 			}
 			$amount += max( 0.0, min( $typed, $paid ) );
 		}
 		return $amount;
+	}
+
+	/**
+	 * Decimals ledger amounts (always base in single_base) are rounded to: the store's
+	 * own WooCommerce setting.
+	 *
+	 * Read straight from the options table on purpose. Currency switchers rewrite the
+	 * store's decimals to the SHOPPER's currency for display — WOOCS through
+	 * `pre_option_woocommerce_price_num_decimals`, YayCurrency and others through
+	 * `wc_get_price_decimals` — so the filtered value rounded base rows to the
+	 * shopper's precision (JPY browsing: USD rows to whole dollars).
+	 * Never use this for display or for amounts in the order/active currency.
+	 *
+	 * @since 1.7.5
+	 * @return int
+	 */
+	public static function get_ledger_decimals(): int {
+		global $wpdb;
+		// ponytail: one uncached query per ledger write; writes are rare. Cache per request if profiling says so.
+		// get_row, not get_var: get_var() returns null for '' too, hiding "row exists but empty".
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", 'woocommerce_price_num_decimals' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		// Same reading as WooCommerce: absint( get_option( 'woocommerce_price_num_decimals', 2 ) ).
+		$decimals = null === $row ? 2 : absint( $row->option_value );
+		/**
+		 * Filter the precision ledger amounts are rounded to.
+		 *
+		 * For stores that run a finer-grained wallet (points, crypto) and used to raise
+		 * it through `wc_get_price_decimals`, which the ledger no longer reads because
+		 * currency switchers rewrite it per shopper. Must not depend on the shopper's
+		 * session. The amount column holds up to 8 decimals.
+		 *
+		 * @since 1.7.5
+		 * @param int $decimals Store decimals.
+		 */
+		return min( 8, absint( apply_filters( 'woo_wallet_ledger_decimals', $decimals ) ) );
 	}
 
 	/**

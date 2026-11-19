@@ -2,6 +2,12 @@
 name: "terawallet-changelog-writer"
 description: "Writes the user-facing changelog block for a TeraWallet release: short WP.org/WooCommerce-style bullets plus a <=300 char Upgrade Notice. Read-only — returns copy, never edits files."
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${CLAUDE_PROJECT_DIR}/.claude/hooks/readonly-bash.sh"
 model: sonnet
 color: green
 ---

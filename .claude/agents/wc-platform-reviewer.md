@@ -2,6 +2,12 @@
 name: "wc-platform-reviewer"
 description: "Reviews a TeraWallet diff against the WooCommerce platform (HPOS, order CRUD, status transitions, Action Scheduler, Blocks, gateways/refunds/coupons/tax) and against every store that already exists (existing rows, existing settings, hook/REST/template back-compat, upgrade vs fresh install). Read-only — reports, never fixes."
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${CLAUDE_PROJECT_DIR}/.claude/hooks/readonly-bash.sh"
 model: sonnet
 color: purple
 ---

@@ -81,6 +81,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_max_topup_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_topup_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_get_option__wallet_settings_general_min_transfer_amount', array( $this, 'filter_settings_option' ) );
+				add_filter( 'woo_wallet_get_option__wallet_settings_general_max_transfer_amount', array( $this, 'filter_settings_option' ) );
 				add_filter( 'woo_wallet_form_cart_cashback_amount', array( $this, 'filter_cashback_amount' ) );
 				add_filter( 'woo_wallet_form_order_cashback_amount', array( $this, 'filter_order_cashback_amount' ), 10, 2 );
 			}
@@ -122,6 +123,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 				'woo_wallet_get_option__wallet_settings_general_max_topup_amount',
 				'woo_wallet_get_option__wallet_settings_general_min_topup_amount',
 				'woo_wallet_get_option__wallet_settings_general_min_transfer_amount',
+				'woo_wallet_get_option__wallet_settings_general_max_transfer_amount',
 				'woo_wallet_new_user_registration_credit_amount',
 				'woo_wallet_cashback_notice_text',
 			);
@@ -250,7 +252,7 @@ if ( ! class_exists( 'Woo_Wallet_Multicurrency_Integration' ) ) {
 		}
 
 		/**
-		 * Convert a numeric setting (min/max top-up, min transfer) from base
+		 * Convert a numeric setting (min/max top-up, min/max transfer) from base
 		 * to active currency for frontend display.
 		 *
 		 * Rounded to wc_get_price_decimals(): these values land directly in

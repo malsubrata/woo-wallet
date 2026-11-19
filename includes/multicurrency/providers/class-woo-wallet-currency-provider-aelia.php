@@ -100,6 +100,13 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Provider_Aelia' ) ) {
 			if ( ! has_filter( 'wc_aelia_cs_convert' ) ) {
 				return null;
 			}
+			// The switcher hands back the amount unchanged for a currency it is not set up
+			// for, which would price it 1:1. Only trust codes it lists; when it lists only
+			// the base (list unknown), keep the old behaviour (1.7.5).
+			$supported = $this->get_supported_currencies();
+			if ( count( $supported ) > 1 && ( ! in_array( $from, $supported, true ) || ! in_array( $to, $supported, true ) ) ) {
+				return null;
+			}
 			$converted = apply_filters( 'wc_aelia_cs_convert', (float) $amount, $from, $to );
 			return is_numeric( $converted ) ? (float) $converted : null;
 		}

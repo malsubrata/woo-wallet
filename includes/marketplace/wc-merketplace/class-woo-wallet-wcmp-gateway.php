@@ -78,7 +78,11 @@ if ( ! class_exists( 'WCMp_Gateway_Wallet' ) && class_exists( 'WCMp_Payment_Gate
 		private function process_wallet_payment() {
 			$amount_to_pay   = round( $this->get_transaction_total() - $this->transfer_charge( $this->transaction_mode ) - $this->gateway_charge(), 2 );
 			$for_commissions = implode( ',', $this->commissions );
-			$transaction_id  = woo_wallet()->wallet->credit( $this->vendor->id, $amount_to_pay, __( 'Commission received for commission id ', 'woo-wallet' ) . $for_commissions, array( 'for' => 'vendor_commission' ) );
+			$credit_args     = array(
+				'for'      => 'vendor_commission',
+				'currency' => Woo_Wallet_Currency_Manager::instance()->get_base_currency(),
+			);
+			$transaction_id  = woo_wallet()->wallet->credit( $this->vendor->id, $amount_to_pay, __( 'Commission received for commission id ', 'woo-wallet' ) . $for_commissions, $credit_args );
 			if ( $transaction_id ) {
 				return true;
 			}

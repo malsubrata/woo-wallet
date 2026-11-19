@@ -159,7 +159,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 			'type'    => array( 'type' => 'string', 'required' => true, 'enum' => array( 'credit', 'debit' ) ),
 			'amount'  => array( 'type' => 'number', 'required' => true, 'minimum' => 0.01 ),
-			'currency' => array( 'type' => 'string' ),
+			'currency' => array( 'type' => 'string', 'pattern' => '^([A-Za-z]{3})?$' ), // ISO code (or empty = base); upper-cased by the handler.
 			'note'    => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field' ),
 		);
 	}
@@ -170,7 +170,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			'user_ids' => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'ids'      => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
 			'amount'   => array( 'type' => 'number', 'minimum' => 0.01 ),
-			'currency' => array( 'type' => 'string' ),
+			'currency' => array( 'type' => 'string', 'pattern' => '^([A-Za-z]{3})?$' ), // ISO code (or empty = base); upper-cased by the handler.
 			'note'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_textarea_field' ),
 			'force'    => array( 'type' => 'boolean', 'default' => false ),
 		);
@@ -291,14 +291,14 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 			get_current_user_id(),
 			'admin_txn_create:' . $idem_key,
 			function () use ( $params, $request ) {
-				$call_args = array();
-				if ( ! empty( $params['currency'] ) ) {
-					$call_args['currency'] = strtoupper( $params['currency'] );
-				}
+				// Admin amounts are store (base) currency unless named: never the admin's storefront currency (1.7.5).
+				$call_args = array(
+					'currency' => ! empty( $params['currency'] ) ? strtoupper( $params['currency'] ) : Woo_Wallet_Currency_Manager::instance()->get_base_currency(),
+				);
 				$note = isset( $params['note'] ) ? $params['note'] : '';
 				$txn_id = 'credit' === $params['type']
-					? woo_wallet()->wallet->credit( (int) $params['user_id'], (float) $params['amount'], $note, $call_args ?: null )
-					: woo_wallet()->wallet->debit( (int) $params['user_id'], (float) $params['amount'], $note, $call_args ?: null );
+					? woo_wallet()->wallet->credit( (int) $params['user_id'], (float) $params['amount'], $note, $call_args )
+					: woo_wallet()->wallet->debit( (int) $params['user_id'], (float) $params['amount'], $note, $call_args );
 				if ( ! $txn_id ) {
 					return $this->error( 'terawallet_rest_transaction_failed', __( 'Wallet transaction could not be recorded.', 'woo-wallet' ), 500 );
 				}
@@ -356,10 +356,10 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 					$user_ids = array_filter( array_map( 'absint', (array) ( $params['user_ids'] ?? array() ) ) );
 					$amount   = (float) ( $params['amount'] ?? 0 );
 					$note     = isset( $params['note'] ) ? $params['note'] : '';
-					$call_args = array();
-					if ( ! empty( $params['currency'] ) ) {
-						$call_args['currency'] = strtoupper( $params['currency'] );
-					}
+					// Store (base) currency unless named, as in create_item().
+					$call_args = array(
+						'currency' => ! empty( $params['currency'] ) ? strtoupper( $params['currency'] ) : Woo_Wallet_Currency_Manager::instance()->get_base_currency(),
+					);
 					if ( ! $user_ids || $amount <= 0 ) {
 						return $this->error( 'terawallet_rest_bulk_invalid', __( 'user_ids and amount are required.', 'woo-wallet' ), 400 );
 					}
@@ -372,7 +372,7 @@ class TeraWallet_REST_Admin_Transactions_Controller extends TeraWallet_REST_Admi
 							$current_user,
 							'admin_txn_bulk_row:' . $action . ':' . $idem_key . ':' . $uid,
 							function () use ( $action, $uid, $amount, $note, $call_args ) {
-								$args   = $call_args ?: null;
+								$args   = $call_args;
 								$txn_id = 'credit' === $action
 									? woo_wallet()->wallet->credit( $uid, $amount, $note, $args )
 									: woo_wallet()->wallet->debit( $uid, $amount, $note, $args );

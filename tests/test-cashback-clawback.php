@@ -395,4 +395,43 @@ class Test_Cashback_Clawback extends WP_UnitTestCase {
 
 		$this->assertEqualsWithDelta( 0, $this->balance(), 0.001, 'All £9 available must be taken back.' );
 	}
+
+	/**
+	 * 1.7.5: rounding the order-currency clawback AFTER the cap rounded it up past
+	 * what was credited — $1.616 (= £4.04) became $1.62 (= £4.05), one penny too many.
+	 */
+	public function test_clawback_never_exceeds_the_credited_cashback() {
+		self::$rate = 0.40;
+		woo_wallet()->wallet->credit( $this->user_id, 100, 'seed', array( 'currency' => 'GBP' ) );
+		$order = $this->order_with_cashback( 100, 1.616, 'USD' ); // Stored as £4.04.
+		$this->assertEqualsWithDelta( 104.04, $this->balance(), 0.0001 );
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+		$this->assertEqualsWithDelta( 100.00, $this->balance(), 0.0001, 'Exactly the £4.04 credited is taken back.' );
+	}
+
+	/**
+	 * A 1.7.4 cashback row may hold 3 decimals (3.335): the clawback floors it to 3.33
+	 * instead of the debit's half-up 3.34, in the same and in a converted currency.
+	 */
+	public function test_legacy_three_decimal_cashback_is_never_over_reversed() {
+		foreach ( array( 'GBP', 'USD' ) as $currency ) {
+			self::$rate = 1.324; // USD order: 4.41554 USD = exactly 3.335 GBP stored.
+			woo_wallet()->wallet->credit( $this->user_id, 100, 'seed', array( 'currency' => 'GBP' ) );
+			$before = $this->balance();
+			$three  = function () {
+				return 3;
+			};
+			add_filter( 'woo_wallet_ledger_decimals', $three );
+			$order = $this->order_with_cashback( 100, 'GBP' === $currency ? 3.335 : 3.335 * 1.324, $currency );
+			remove_filter( 'woo_wallet_ledger_decimals', $three );
+			$this->assertEqualsWithDelta( $before + 3.335, $this->balance(), 0.00001, $currency );
+
+			woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+
+			$this->assertEqualsWithDelta( $before + 0.005, $this->balance(), 0.00001, $currency . ': 3.33 taken back, never 3.34.' );
+		}
+	}
 }
+

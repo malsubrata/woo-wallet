@@ -277,6 +277,33 @@ if ( ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
 		}
 
 		/**
+		 * Can the active provider really price $from -> $to? convert() cannot say: it
+		 * falls open 1:1. A provider may expose only get_rate() or only convert().
+		 *
+		 * @since 1.7.5
+		 * @param string $from Source ISO code.
+		 * @param string $to   Target ISO code.
+		 * @return bool
+		 */
+		public function can_convert( $from, $to ) {
+			$from = strtoupper( (string) $from );
+			$to   = strtoupper( (string) $to );
+			if ( $from === $to ) {
+				return true;
+			}
+			$provider = $this->get_active_provider();
+			if ( ! $provider || '' === $from || '' === $to ) {
+				return false;
+			}
+			foreach ( array( $provider->get_rate( $from, $to ), $provider->convert( 1.0, $from, $to ) ) as $value ) {
+				if ( is_numeric( $value ) && is_finite( (float) $value ) && (float) $value > 0 ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
 		 * Emit a one-line warning to the WooCommerce logger (channel
 		 * `woo-wallet-currency`) when conversion falls open.
 		 *

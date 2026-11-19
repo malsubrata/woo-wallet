@@ -4,7 +4,7 @@ Tags: woocommerce wallet, cashback, store credit, partial payment, digital walle
 Requires PHP: 7.4
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.4
+Stable tag: 1.7.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -151,24 +151,25 @@ Nothing is sent unless the administrator ticks the consent box (unticked by defa
 
 == Changelog ==
 
-= v1.7.4 (October 31, 2026) =
-* Security - Wallet top-up orders now follow "Allowed Payment Gateways" on the order payment page and in the REST API. The REST API refuses a payment method that is not allowed with a 400 error.
-* Security - Referral checks no longer trust forwarded IP headers unless the request comes from a trusted proxy (filter woo_wallet_trusted_proxies). Stores behind Cloudflare or a public load balancer should list their proxy ranges there.
-* Security - New daily limit on visit rewards per referrer (default 20, set 0 for no limit). Existing stores are capped at 20 straight away; filter woo_wallet_referral_visit_daily_cap.
-* Security - Wallet transfer recipient search no longer shows other customers' usernames or email addresses. Partial search, when enabled by filter, needs 3 characters and returns up to 10 results from the current site.
-* Fix - Refunded or cancelled wallet top-ups now take the credit back from the customer's wallet (never below zero). This also applies to old top-up orders refunded or cancelled after the update; the new transaction category topup_reversal appears in the REST API. Filter woo_wallet_reverse_topup_on_refund turns it off.
-* Fix - Top-up credit is capped at what was paid for the line (negative fees, edited line totals), including orders placed on 1.7.2-1.7.3 and paid after the update. "Allow coupons on wallet top-up" still credits the typed amount.
-* Fix - Cashback reversal never takes back more than was credited (refund then cancel), runs once per refund, and compares the balance in the order currency.
-* Fix - The REST top-up charges the typed amount in the requested `currency`, and a currency with no known exchange rate is refused. The response amount and the third argument of terawallet_topup_order_created are in that currency; with no `currency` sent, the order is in the store currency.
-* Fix - Referral rewards can no longer be paid twice for one referral, and names in transfer notes are shown as plain text.
-* Fix - A cleared "Allowed Payment Gateways" list now stays empty, so no top-up gateway is offered.
-* Fix - Possible fatal error in the top-up price calculation when the top-up product cannot be loaded.
-* Tweak - Uninstalling with WALLET_REMOVE_ALL_DATA now removes more of the plugin's options; options saved by TeraWallet Pro are kept.
-* Tweak - Corrected the message shown when searching users in the export screen.
+= v1.7.5 (November 19, 2026) =
+* Security - On multi-currency stores, wallet transfers can no longer exceed the customer's balance. Props to kta1kri (https://github.com/kta1kri) for responsible disclosure.
+* Security - Wallet credits, debits and transfers in a named currency with no known exchange rate are refused instead of counting as store currency, and transfer recipients never receive more than the sender pays.
+* Fix - Transfer minimum, maximum and fixed charge apply in the shopper's currency, and the transfer form shows the maximum in that currency.
+* Fix - Customers browsing in a lower-value currency are no longer refused a transfer their balance covers.
+* Fix - Vendor withdrawals (Dokan, WCFM, WCMp), admin transfers, the admin transactions API and the legacy wc/v3 wallet API always use your store currency.
+* Fix - Wallet payments, top-ups, cashback and refunds in a currency the store cannot price, even without a supported switcher, are refused with a notice or order note, not recorded 1:1.
+* Fix - Wallet amounts round to your store's decimals, so a 10.37 credit is no longer stored as 10.00.
+* Fix - The wallet is offered and accepted at checkout whenever the balance covers the order, such as a 10 KD balance on a 10 KD order.
+* Fix - Full and partial refunds of wallet-paid orders return exactly what was debited, even after the exchange rate changes.
+* Fix - Cashback reversals and refunds of orders placed on earlier versions never move more than the original amount.
+* Fix - Pay-to-view content is offered whenever the wallet covers the price, whatever currency the shopper browses in, and blocks with a custom id or a price such as 10.50 unlock after purchase.
+* Tweak - Developers: woo_wallet_transaction_recorded (transfers), woo_wallet_disallow_negative_transaction and woo_wallet_current_balance (checkout check) now receive store-currency amounts. woo_wallet_transfer_charge_amount gets a fixed charge in the transfer currency, and the public settings API returns transfer.max in the shopper's currency.
+* Tweak - Developers: new filter woo_wallet_ledger_decimals for stores whose wallet precision differs from their price decimals.
+* Tweak - TeraWallet Pro is now a single-site licence, with a Black Friday offer on TeraWallet's admin screens until December 1, 2026. The Pro link no longer sends a site identifier.
 
 [See changelog for all versions](https://raw.githubusercontent.com/malsubrata/woo-wallet/master/changelog.txt).
 
 == Upgrade Notice ==
 
-= 1.7.4 =
-Security: tighter top-up gateway, referral and transfer-search checks. Refunded or cancelled top-ups now take the credit back. Stores behind Cloudflare or a proxy must list its ranges in woo_wallet_trusted_proxies.
+= 1.7.5 =
+Security: multi-currency wallet transfers can no longer exceed the balance. Without a supported currency switcher, wallet payments, top-ups and cashback in other currencies are now refused. Wallet precision filter: woo_wallet_ledger_decimals. Hook changes: see changelog.

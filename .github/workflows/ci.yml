@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.3']
+        php: ['7.4', '8.3', '8.5']
         wp: ['latest']
 
     services:
@@ -106,10 +106,7 @@ jobs:
   phpcs:
     name: PHPCS
     runs-on: ubuntu-latest
-    # NOTE: non-blocking on first landing so the ruleset can be tuned against real output
-    # instead of red-lighting every PR on day one. Flip this to false once a full run is
-    # clean — an advisory linter that stays advisory forever is just noise.
-    continue-on-error: true
+    # Blocking. The ruleset reports zero errors as of 1.7.5; keep it that way.
     steps:
       - uses: actions/checkout@v5
 
@@ -133,13 +130,11 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-          # No `cache: npm` and no `npm ci`: package-lock.json is gitignored, so there is
-          # no lockfile to cache against or install from. This makes every CI build resolve
-          # fresh dependency versions — a transitive update can break the build with no
-          # code change. Commit package-lock.json and switch this to `cache: npm` + `npm ci`
-          # when you want reproducible builds.
+          cache: npm
 
-      - run: npm install --no-audit --no-fund
+      # `npm ci` installs exactly what package-lock.json records and fails if the lockfile
+      # and package.json disagree, so a stale lockfile is caught here, not in a release.
+      - run: npm ci --no-audit --no-fund
 
       # build/ is the only thing WordPress loads at runtime — a broken build is a broken
       # release, so this is blocking.
@@ -166,16 +161,31 @@ jobs:
             exit 1
           fi
 
+      # Matches raw SQL *and* the $wpdb->insert/update/delete/replace helpers — the first
+      # version of this check only saw uppercase SQL keywords and missed every helper call.
       - name: No direct writes to the transactions table outside the wallet class
         run: |
-          hits=$(grep -rnE "(INSERT INTO|UPDATE|DELETE FROM)[^;]*woo_wallet_transactions\b" \
-            --include='*.php' includes/ \
+          pattern='(INSERT INTO|UPDATE|DELETE FROM)[^;]*woo_wallet_transactions\b|wpdb->(insert|update|delete|replace)\([^;]*woo_wallet_transactions\b'
+          hits=$(grep -rnE "$pattern" --include='*.php' includes/ \
             | grep -v 'includes/class-woo-wallet-wallet.php' \
             | grep -v 'includes/class-woo-wallet-install.php' \
-            | grep -v 'includes/helper/woo-wallet-update-functions.php' || true)
+            | grep -v 'includes/helper/woo-wallet-update-functions.php' \
+            | grep -v 'includes/helper/woo-wallet-util.php' || true)
           if [ -n "$hits" ]; then
             echo "$hits"
             echo "::error::Ledger writes must go through Woo_Wallet_Wallet::credit/debit/transfer"
+            exit 1
+          fi
+          # Known debt: woo-wallet-util.php holds 4 legacy direct writes
+          # (update_wallet_transaction, delete_user_wallet_transactions x2, the purge
+          # balance-carry row). They are a baseline, not an allowance — the number may only
+          # go down. Lower DEBT when one is removed; never raise it.
+          DEBT=4
+          count=$(grep -cE "$pattern" includes/helper/woo-wallet-util.php || true)
+          echo "direct ledger writes in woo-wallet-util.php: $count (baseline $DEBT)"
+          if [ "$count" -gt "$DEBT" ]; then
+            grep -nE "$pattern" includes/helper/woo-wallet-util.php
+            echo "::error::New direct ledger write in woo-wallet-util.php ($count > $DEBT)"
             exit 1
           fi
 

@@ -293,4 +293,132 @@ class Test_Sell_Content_Replay extends WP_UnitTestCase {
 
 		$this->assertSame( '1', (string) $got, 'The purchase lock should be released once the handler returns.' );
 	}
+
+	/**
+	 * [tw-sell-content id="chapter2"]: buying through the rendered form debits once AND
+	 * unlocks that block (1.7.4 charged the buyer and kept it locked).
+	 */
+	public function test_custom_id_block_unlocks_after_one_debit() {
+		$opening = $this->balance();
+		$atts    = array(
+			'amount' => $this->price,
+			'id'     => 'chapter2',
+		);
+		$form    = $this->action->tw_sell_content_shortcode_callback( $atts, 'SECRET' );
+		$this->assertStringNotContainsString( 'SECRET', $form );
+		$fields = array();
+		preg_match_all( '/name="([^"]+)" value="([^"]*)"/', $form, $m, PREG_SET_ORDER );
+		foreach ( $m as $pair ) {
+			$fields[ $pair[1] ] = html_entity_decode( $pair[2] );
+		}
+		$this->assertSame( 'chapter2', $fields['tw_sc_id'] ?? null );
+
+		foreach ( array( 1, 2 ) as $attempt ) {
+			$_POST = $fields;
+			$this->action->handle_purchase_content();
+			$_POST = array();
+		}
+
+		$this->assertEquals( $opening - $this->price, $this->balance(), 'Debited exactly once.' );
+		$this->assertSame( 'SECRET', $this->action->tw_sell_content_shortcode_callback( $atts, 'SECRET' ), 'The block unlocks.' );
+	}
+
+	/**
+	 * A form for the default block cannot buy a custom-id block (the nonce binds the id).
+	 */
+	public function test_default_nonce_cannot_buy_a_custom_id_block() {
+		$opening                       = $this->balance();
+		$_POST['amount']               = (string) $this->price;
+		$_POST['tw_sc_id']             = 'chapter2';
+		$_POST['tw_buy_content_nonce'] = wp_create_nonce( 'tw_buy_content_nonce_' . $this->post_id . '_' . $this->user_id . '_' . $this->price );
+		$this->action->handle_purchase_content();
+		$_POST = array();
+		$this->assertEquals( $opening, $this->balance() );
+	}
+
+	/**
+	 * INF price (amount="1e309") is never offered for purchase.
+	 */
+	public function test_infinite_price_is_not_offered() {
+		$out = $this->action->tw_sell_content_shortcode_callback( array( 'amount' => '1e309' ), 'SECRET' );
+		$this->assertStringNotContainsString( 'tw_buy_content_nonce', $out );
+	}
+
+	/**
+	 * Whole-post sale priced "10.50" in post meta: one debit unlocks it (1.7.4 kept it locked).
+	 */
+	public function test_whole_post_price_with_trailing_zero_unlocks() {
+		update_post_meta( $this->post_id, '_tw_sell_content_amount', '10.50' );
+		update_post_meta( $this->post_id, '_tw_sell_content', 'yes' );
+		$this->action->update_option( 'post_types', array( 'post' ) );
+		$this->action->init_settings();
+		$opening = $this->balance();
+		$html    = $this->action->validate_content_for_sale( 'SECRET' );
+		$this->assertStringNotContainsString( 'SECRET', $html );
+		preg_match_all( '/name="([^"]+)" value="([^"]*)"/', $html, $m, PREG_SET_ORDER );
+		$_POST = array();
+		foreach ( $m as $pair ) {
+			$_POST[ $pair[1] ] = html_entity_decode( $pair[2] );
+		}
+		$this->action->handle_purchase_content();
+		$_POST = array();
+		$this->assertEquals( $opening - 10.5, $this->balance() );
+		$this->assertSame( 'SECRET', $this->action->validate_content_for_sale( 'SECRET' ) );
+	}
+
+	/**
+	 * A custom-id block bought under 1.7.4 (marker under the default id) stays unlocked.
+	 */
+	public function test_custom_id_block_bought_before_175_stays_unlocked() {
+		set_transient( md5( 'tw-sell-content' . $this->post_id . $this->user_id . $this->price ), true );
+		$out = $this->action->tw_sell_content_shortcode_callback( array( 'amount' => $this->price, 'id' => 'chapter2' ), 'SECRET' );
+		$this->assertSame( 'SECRET', $out );
+	}
+
+	/**
+	 * Non-numeric or infinite posted amounts are refused before any nonce or debit.
+	 */
+	public function test_non_numeric_amount_is_refused() {
+		$opening = $this->balance();
+		foreach ( array( 'INF', '5_x', '0', '-1' ) as $amount ) {
+			$_POST = array(
+				'amount'               => $amount,
+				'tw_buy_content_nonce' => wp_create_nonce( 'tw_buy_content_nonce_' . $this->post_id . '_' . $this->user_id . '_' . $amount ),
+			);
+			$this->action->handle_purchase_content();
+		}
+		$_POST = array();
+		$this->assertEquals( $opening, $this->balance() );
+	}
+
+	/**
+	 * A whole-post form cached by 1.7.4 posts "10.50" with a nonce for "10.50": one debit,
+	 * and the post unlocks (the marker is keyed on the canonical amount).
+	 */
+	public function test_cached_174_form_with_trailing_zero_unlocks() {
+		update_post_meta( $this->post_id, '_tw_sell_content_amount', '10.50' );
+		update_post_meta( $this->post_id, '_tw_sell_content', 'yes' );
+		$this->action->update_option( 'post_types', array( 'post' ) );
+		$this->action->init_settings();
+		$opening = $this->balance();
+		$_POST   = array(
+			'amount'               => '10.50',
+			'tw_buy_content_nonce' => wp_create_nonce( 'tw_buy_content_nonce_' . $this->post_id . '_' . $this->user_id . '_10.50' ),
+		);
+		$this->action->handle_purchase_content();
+		$_POST = array();
+		$this->assertEquals( $opening - 10.5, $this->balance() );
+		$this->assertSame( 'SECRET', $this->action->validate_content_for_sale( 'SECRET' ) );
+	}
+
+	/**
+	 * A default-id purchase made on 1.7.5 does not also unlock a custom-id block of the
+	 * same price (only 1.7.4's markers are honoured that way).
+	 */
+	public function test_new_default_purchase_does_not_unlock_custom_id_block() {
+		$this->submit_purchase();
+		$out = $this->action->tw_sell_content_shortcode_callback( array( 'amount' => $this->price, 'id' => 'chapter2' ), 'SECRET' );
+		$this->assertNotSame( 'SECRET', $out );
+		$this->assertSame( 'SECRET', $this->action->tw_sell_content_shortcode_callback( array( 'amount' => $this->price ), 'SECRET' ), 'The default block itself unlocks.' );
+	}
 }

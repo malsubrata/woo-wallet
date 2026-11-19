@@ -93,7 +93,7 @@ class WOO_Wallet_Partial_Payment_Blocks implements IntegrationInterface {
 	public function get_script_data() {
 		$is_enable  = false;
 		$cart_total = get_woowallet_cart_total();
-		if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_partial_payment', '_wallet_settings_general', 'on' ) && ! is_wallet_rechargeable_cart() && is_user_logged_in() && ! is_wallet_account_locked() && 'on' !== woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) && woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) > 0 && $cart_total > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) {
+		if ( 'on' === woo_wallet()->settings_api->get_option( 'is_enable_partial_payment', '_wallet_settings_general', 'on' ) && ! is_wallet_rechargeable_cart() && is_user_logged_in() && ! is_wallet_account_locked() && woo_wallet()->wallet->accepts_currency( get_woocommerce_currency() ) && 'on' !== woo_wallet()->settings_api->get_option( 'is_auto_deduct_for_partial_payment', '_wallet_settings_general' ) && woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) > 0 && $cart_total > woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) ) {
 			$is_enable = true;
 		}
 		$data = array(
