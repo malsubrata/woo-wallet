@@ -204,8 +204,11 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				return new WP_Error( 'woo_wallet_invalid_order', __( 'Invalid order', 'woo-wallet' ) );
 			}
 			$refund_reason  = $reason ? $reason : __( 'Wallet refund #', 'woo-wallet' ) . $order->get_order_number();
-			if ( ! woo_wallet()->wallet->can_refund_to_wallet( $order ) ) {
-				throw new Exception( esc_html( Woo_Wallet_Wallet::unpriceable_currency_message( $order->get_currency( 'edit' ) ) ) );
+			// WooCommerce has saved the refund but not yet restocked or changed the status:
+			// throwing here makes it delete the refund cleanly.
+			$refusal = woo_wallet()->wallet->refund_refusal_reason( $order, (float) $amount );
+			if ( '' !== $refusal ) {
+				throw new Exception( esc_html( $refusal ) );
 			}
 			$transaction_id = woo_wallet()->wallet->refund_order_to_wallet( $order, (float) $amount, $refund_reason );
 			if ( ! $transaction_id ) {

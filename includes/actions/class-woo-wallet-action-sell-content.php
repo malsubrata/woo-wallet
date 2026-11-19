@@ -13,6 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 	/**
+	 * Paid-marker value written since 1.7.5 (1.7.4 wrote true).
+	 */
+	const MARKER = 'v175';
+
+	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
@@ -462,7 +467,13 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 			return true;
 		}
 		// Before 1.7.5 every purchase was marked under the default id: honour those buyers.
-		return 'tw-sell-content' !== $id && (bool) get_transient( md5( 'tw-sell-content' . $post->ID . $user_id . $amount ) );
+		// Markers written since carry self::MARKER, so a new default-id purchase does not
+		// also unlock custom-id blocks of the same price.
+		if ( 'tw-sell-content' === $id ) {
+			return false;
+		}
+		$legacy = get_transient( md5( 'tw-sell-content' . $post->ID . $user_id . $amount ) );
+		return $legacy && self::MARKER !== $legacy;
 	}
 
 	/**
@@ -512,6 +523,9 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 			$content_id = self::content_id( isset( $_POST['tw_sc_id'] ) ? sanitize_key( wp_unslash( $_POST['tw_sc_id'] ) ) : '' );
 			// Verify nonce bound to post ID, user ID, amount and content id.
 			if ( wp_verify_nonce( wp_unslash( $_POST['tw_buy_content_nonce'] ), self::nonce_action( $post->ID, $user_id, $amount, $content_id ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				// Canonical amount after the nonce (which binds the posted string): a form
+				// cached by 1.7.4 posts "10.50", has_paid() looks up 10.5.
+				$amount    = (string) floatval( $amount );
 				$transient = md5( $content_id . $post->ID . $user_id . $amount );
 
 				/*
@@ -559,9 +573,9 @@ class Woo_Wallet_Action_Sell_Content extends WooWalletAction {
 						 * committed, and a retry must not charge them a second time.
 						 */
 						if ( $expiration ) {
-							set_transient( $transient, true, $expiration * DAY_IN_SECONDS );
+							set_transient( $transient, self::MARKER, $expiration * DAY_IN_SECONDS );
 						} else {
-							set_transient( $transient, true );
+							set_transient( $transient, self::MARKER );
 						}
 						if ( $profit_share ) {
 							$profit = $tw_sell_content_amount * $profit_share / 100;

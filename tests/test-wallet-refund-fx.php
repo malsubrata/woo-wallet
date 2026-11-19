@@ -166,13 +166,81 @@ class Test_Wallet_Refund_Fx extends WP_UnitTestCase {
 	}
 
 	/**
-	 * An order partly refunded before 1.7.5 (no base counter) gets the pro-rata remainder.
+	 * An order partly refunded before 1.7.5 (no counter, refund not stamped) gets the
+	 * pro-rata remainder: 108 - floor(108 * 0.3333) = 72.01. (A refund stamped by 1.7.5
+	 * would not complete the wallet's part, and the 66.67 share would be 72.00.)
 	 */
 	public function test_order_refunded_before_175_gets_the_remainder() {
-		$order = $this->paid_order(); // 108.00 USD.
-		wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 40, 'refund_payment' => false ) );
-		$this->refund( wc_get_order( $order->get_id() ), 60 );
-		$this->assertEqualsWithDelta( 92.0 + 64.80, $this->raw(), 0.0001 ); // 108 - floor(108 * 0.4).
+		$order  = $this->paid_order(); // 108.00 USD.
+		$legacy = wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 33.33, 'refund_payment' => false ) );
+		$legacy->delete_meta_data( '_woo_wallet_refund_counted' ); // As 1.7.4 saved it.
+		$legacy->save();
+		$this->refund( wc_get_order( $order->get_id() ), 66.67 );
+		$this->assertEqualsWithDelta( 92.0 + 72.01, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * A manual refund between two wallet refunds must not make the second one "final":
+	 * 1.7.5-rc credited the whole remainder (97.20 USD for 10 EUR). Rate moves both ways
+	 * between the refunds; the shares are fixed at the checkout rate.
+	 */
+	public function test_manual_refund_in_between_is_not_paid_again() {
+		foreach ( array( array( 10, 80, 10, 21.60 ), array( 50, 30, 20, 75.60 ) ) as $case ) {
+			list( $first, $manual, $last, $expected ) = $case;
+			self::$usd_per_eur = 1.08;
+			$start             = $this->raw();
+			$order             = $this->paid_order(); // -108.00.
+			self::$usd_per_eur = 1.15;
+			$this->refund( $order, $first );
+			wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => $manual, 'refund_payment' => false ) );
+			self::$usd_per_eur = 1.00;
+			$this->refund( wc_get_order( $order->get_id() ), $last );
+			$this->assertEqualsWithDelta( $start - 108.0 + $expected, $this->raw(), 0.0001, implode( '/', $case ) );
+		}
+	}
+
+	/**
+	 * Two refunds saved before either is credited (two admins at once): the second must
+	 * not be taken for pre-1.7.5 history. All refunds together return exactly 108.00.
+	 */
+	public function test_concurrent_first_refunds_return_the_whole_debit() {
+		$order = $this->paid_order();
+		wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 30, 'refund_payment' => false ) );
+		wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 30, 'refund_payment' => false ) );
+		woo_wallet()->wallet->refund_order_to_wallet( wc_get_order( $order->get_id() ), 30, 'A' );
+		woo_wallet()->wallet->refund_order_to_wallet( wc_get_order( $order->get_id() ), 30, 'B' );
+		$this->assertEqualsWithDelta( 92.0 + 64.80, $this->raw(), 0.0001 );
+		$this->refund( wc_get_order( $order->get_id() ), 40 );
+		$this->assertEqualsWithDelta( 200.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * After the customer's log is purged (rows soft-deleted, balance kept) a refund is still
+	 * capped by the checkout debit, not re-converted at today's rate (57.50).
+	 */
+	public function test_refund_after_purge_stays_capped() {
+		$order = $this->paid_order();
+		$this->refund( $order, 50 ); // +54.00.
+		$this->assertNotWPError( woo_wallet_purge_user_transactions( $this->user_id, 'soft', 'keep' ) );
+		$before            = $this->raw();
+		self::$usd_per_eur = 1.15;
+		$this->refund( wc_get_order( $order->get_id() ), 50 );
+		$this->assertEqualsWithDelta( $before + 54.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * A wallet-paid order whose payment row no longer exists is refused, not credited at
+	 * today's rate with no cap; WooCommerce keeps no refund row.
+	 */
+	public function test_refund_with_missing_payment_row_is_refused() {
+		$order = $this->paid_order();
+		$order->set_transaction_id( 999999999 );
+		$order->save();
+		$before = $this->raw();
+		$refund = wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 100, 'refund_payment' => true ) );
+		$this->assertWPError( $refund );
+		$this->assertCount( 0, wc_get_order( $order->get_id() )->get_refunds() );
+		$this->assertEqualsWithDelta( $before, $this->raw(), 0.0001 );
 	}
 
 	/**

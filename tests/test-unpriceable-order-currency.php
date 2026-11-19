@@ -264,5 +264,140 @@ class Test_Unpriceable_Order_Currency extends WP_Ajax_UnitTestCase {
 		$this->assertCount( 0, wc_get_order( $order->get_id() )->get_refunds() );
 		$this->assertEqualsWithDelta( 30.0, $this->raw(), 0.0001 );
 	}
-}
 
+	/**
+	 * Post to an admin AJAX action and return the decoded response.
+	 *
+	 * @param string $action Action.
+	 * @param array  $post   POST fields.
+	 * @return array|null
+	 */
+	private function ajax( $action, $post ) {
+		$_POST                = array_merge( array( 'security' => wp_create_nonce( 'order-item' ) ), $post );
+		$_REQUEST['security'] = $_POST['security'];
+		$this->_last_response = '';
+		try {
+			$this->_handleAjax( $action );
+		} catch ( WPAjaxDieContinueException $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+		} catch ( WPAjaxDieStopException $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+		}
+		return json_decode( (string) $this->_last_response, true );
+	}
+
+	/**
+	 * Locked customer wallet, "restock" ticked: refused BEFORE wc_create_refund(), so
+	 * stock, status and refund rows are untouched (1.7.5-rc restocked, then deleted the refund).
+	 */
+	public function test_refund_button_on_locked_wallet_touches_nothing() {
+		$product = new WC_Product_Simple();
+		$product->set_regular_price( 20 );
+		$product->set_manage_stock( true );
+		$product->set_stock_quantity( 5 );
+		$product->save();
+		$order = $this->order( 'USD' );
+		$item  = new WC_Order_Item_Product();
+		$item->set_product( $product );
+		$item->set_quantity( 1 );
+		$item->set_total( 20 );
+		$order->add_item( $item );
+		$order->set_total( 20 );
+		$order->set_payment_method( 'wallet' );
+		$order->set_transaction_id( woo_wallet()->wallet->debit( $this->user_id, 20, 'pay', array( 'currency' => 'USD' ) ) );
+		$order->save();
+		update_user_meta( $this->user_id, '_is_wallet_locked', true );
+
+		$response = $this->ajax(
+			'woo_wallet_order_refund',
+			array(
+				'order_id'               => $order->get_id(),
+				'refund_amount'          => '20',
+				'refunded_amount'        => '0',
+				'restock_refunded_items' => 'true',
+				'line_item_qtys'         => wp_json_encode( array( $item->get_id() => 1 ) ),
+				'line_item_totals'       => wp_json_encode( array( $item->get_id() => 20 ) ),
+			)
+		);
+		delete_user_meta( $this->user_id, '_is_wallet_locked' );
+
+		$this->assertFalse( $response['success'] ?? true );
+		$this->assertStringContainsString( 'locked', wp_json_encode( $response ) );
+		$order = wc_get_order( $order->get_id() );
+		$this->assertCount( 0, $order->get_refunds() );
+		$this->assertSame( 'processing', $order->get_status() );
+		$this->assertSame( 5, wc_get_product( $product->get_id() )->get_stock_quantity() );
+		$this->assertEqualsWithDelta( 30.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * A crafted `api_refund=true` on the wallet refund button credited twice (once through
+	 * the gateway, once by the button). Now once.
+	 */
+	public function test_refund_button_ignores_api_refund() {
+		$order = $this->order( 'USD' );
+		$order->set_total( 20 );
+		$order->set_payment_method( 'wallet' );
+		$order->set_transaction_id( woo_wallet()->wallet->debit( $this->user_id, 20, 'pay', array( 'currency' => 'USD' ) ) );
+		$order->save();
+		$this->ajax(
+			'woo_wallet_order_refund',
+			array(
+				'order_id'        => $order->get_id(),
+				'refund_amount'   => '5',
+				'refunded_amount' => '0',
+				'api_refund'      => 'true',
+			)
+		);
+		$this->assertEqualsWithDelta( 35.0, $this->raw(), 0.0001 );
+		$this->assertCount( 1, wc_get_order( $order->get_id() )->get_refunds() );
+	}
+
+	/**
+	 * No supported switcher (generic provider): a EUR top-up completed outside the
+	 * shopper's session is credited 1:1 as before 1.7.5, not refused.
+	 */
+	public function test_generic_provider_topup_outside_session_is_credited() {
+		$manager = Woo_Wallet_Currency_Manager::instance();
+		$manager->unregister_provider( 'test-fx-unpriced' );
+		$force = function () {
+			return 'generic';
+		};
+		add_filter( 'woo_wallet_active_currency_provider', $force );
+		$order = $this->order( 'EUR' );
+		$item  = new WC_Order_Item_Product();
+		$item->set_product_id( get_wallet_rechargeable_product()->get_id() );
+		$item->set_total( 10 );
+		$order->add_item( $item );
+		$order->save();
+
+		woo_wallet()->wallet->wallet_credit_purchase( $order->get_id() );
+		remove_filter( 'woo_wallet_active_currency_provider', $force );
+
+		$this->assertSame( 'generic', $manager->get_active_provider_id() );
+		$this->assertEqualsWithDelta( 60.0, $this->raw(), 0.0001 );
+		$this->assertNotEmpty( wc_get_order( $order->get_id() )->get_meta( '_wc_wallet_purchase_credited' ) );
+	}
+
+	/**
+	 * Partial-payment refund button, pre-1.6.4 order (no base meta) in a currency with no
+	 * rate: not claimed (stays retryable), nothing credited, the order says why.
+	 */
+	public function test_partial_refund_button_does_not_claim_unpriceable_order() {
+		$order = $this->order( 'JPY' );
+		$order->update_meta_data( '_partial_pay_through_wallet_compleate', 1 );
+		$order->save();
+		$amount = function () {
+			return 1000;
+		};
+		add_filter( 'woo_wallet_order_partial_payment_amount', $amount );
+		$response = $this->ajax( 'woo_wallet_refund_partial_payment', array( 'order_id' => $order->get_id() ) );
+		remove_filter( 'woo_wallet_order_partial_payment_amount', $amount );
+
+		$order = wc_get_order( $order->get_id() );
+		$this->assertFalse( $response['success'] ?? true );
+		$this->assertEmpty( $order->get_meta( '_woo_wallet_partial_payment_refunded' ) );
+		$this->assertNotEmpty( $order->get_meta( '_partial_pay_through_wallet_compleate' ) );
+		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
+		$notes = implode( ' ', wp_list_pluck( wc_get_order_notes( array( 'order_id' => $order->get_id() ) ), 'content' ) );
+		$this->assertStringContainsString( 'no exchange rate from JPY', $notes );
+	}
+}

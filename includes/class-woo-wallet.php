@@ -210,6 +210,7 @@ final class Woo_Wallet {
 		}
 
 		add_action( 'woocommerce_order_status_cancelled', array( $this->wallet, 'process_cancelled_order' ) );
+		add_action( 'woocommerce_create_refund', array( $this->wallet, 'stamp_refund' ) );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_refunded_order' ), 10, 2 );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'process_partial_payment_refund' ), 10, 2 );
 		add_action( 'woocommerce_order_refunded', array( $this->wallet, 'reverse_topup_on_refund' ), 10, 2 );

@@ -286,7 +286,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// switcher. That makes the outcome request-dependent, so money INFLOWS (top-up,
 				// cashback) are gated on can_convert() at their source instead, and reversals
 				// debit in the ledger currency (1.7.5).
-				if ( '' !== (string) $currency && $incoming_currency !== $this->resolve_active_currency() && ! $manager->can_convert( $incoming_currency, $base_currency ) ) {
+				if ( '' !== (string) $currency && $incoming_currency !== $this->resolve_active_currency() && $this->has_rate_source() && ! $manager->can_convert( $incoming_currency, $base_currency ) ) {
 					$priceable = false;
 				}
 				$stored_amount = (float) $manager->convert( $incoming_amount, $incoming_currency, $base_currency );
@@ -339,45 +339,174 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			if ( 'per_currency' === $this->get_currency_mode() || '' === $currency || $currency === $base || ! class_exists( 'Woo_Wallet_Currency_Manager' ) ) {
 				return false;
 			}
-			return ! Woo_Wallet_Currency_Manager::instance()->can_convert( $currency, $base );
+			return $this->has_rate_source() && ! Woo_Wallet_Currency_Manager::instance()->can_convert( $currency, $base );
+		}
+
+		/**
+		 * Is a supported currency switcher active? Without one (generic provider) there is
+		 * no rate source at all: every amount is 1:1, both ways, as before 1.7.5. Refusing
+		 * there would stop every top-up/cashback credited outside the shopper's session
+		 * (webhook, cron, admin), where base != order currency. Transfers stay stricter.
+		 *
+		 * @since 1.7.5
+		 * @return bool
+		 */
+		private function has_rate_source(): bool {
+			return class_exists( 'Woo_Wallet_Currency_Manager' ) && ! in_array( Woo_Wallet_Currency_Manager::instance()->get_active_provider_id(), array( '', 'generic' ), true );
+		}
+
+		/**
+		 * Was $order paid in full by the wallet gateway (a ledger debit id on the order)?
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order Order.
+		 * @return bool
+		 */
+		private function is_wallet_paid_order( $order ): bool {
+			return 'wallet' === $order->get_payment_method( 'edit' ) && is_numeric( $order->get_transaction_id( 'edit' ) );
 		}
 
 		/**
 		 * The wallet debit that paid $order in full, or null (other gateway, or no usable row).
+		 *
+		 * Soft-deleted rows count: `amount` is still what was debited and the refund cap
+		 * must survive a purge of the customer's log (deleted only hides it from the SUM).
 		 *
 		 * @since 1.7.5
 		 * @param WC_Order $order Order.
 		 * @return object|null Transaction row.
 		 */
 		public function get_wallet_payment_row( $order ) {
-			if ( 'wallet' !== $order->get_payment_method( 'edit' ) || ! is_numeric( $order->get_transaction_id( 'edit' ) ) ) {
+			if ( ! $this->is_wallet_paid_order( $order ) ) {
 				return null;
 			}
 			$row = get_wallet_transaction( absint( $order->get_transaction_id( 'edit' ) ) );
-			if ( ! $row || 'debit' !== $row->type || (int) $row->user_id !== (int) $order->get_customer_id() || (int) $row->deleted || (float) $row->amount <= 0 ) {
+			if ( ! $row || 'debit' !== $row->type || (int) $row->user_id !== (int) $order->get_customer_id() || (float) $row->amount <= 0 ) {
 				return null;
 			}
 			return $row;
 		}
 
 		/**
-		 * Can a refund of $order be credited to the wallet at all? Wallet-paid orders are
-		 * reversed in the ledger currency (always accepted); others need a priceable currency.
+		 * Stamp every refund created from 1.7.5 on, before WooCommerce saves it
+		 * (`woocommerce_create_refund`). Unstamped refunds are the pre-1.7.5 history the
+		 * wallet-refund counter has to be derived from; stamped ones are counted only
+		 * through that counter, so a manual refund never consumes wallet value and a
+		 * concurrent, not yet credited refund is never mistaken for history.
 		 *
 		 * @since 1.7.5
-		 * @param WC_Order $order Order.
+		 * @param WC_Order_Refund $refund Refund about to be saved.
+		 * @return void
+		 */
+		public function stamp_refund( $refund ) {
+			if ( is_object( $refund ) && is_callable( array( $refund, 'update_meta_data' ) ) ) {
+				$refund->update_meta_data( '_woo_wallet_refund_counted', '1' );
+			}
+		}
+
+		/**
+		 * Base share of a wallet refund of $amount (order currency) for a wallet-paid order.
+		 *
+		 * `done_order` is the order-currency amount the WALLET has refunded (not
+		 * get_total_refunded(): manual refunds must not complete the wallet's reversal),
+		 * `done_base` what it credited. The refund that completes the wallet's part takes
+		 * the exact base remainder; earlier ones a floored pro-rata share.
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order $order  Order (fresh, under the refund lock for the real write).
+		 * @param object   $row    Wallet payment row.
+		 * @param float    $amount Amount refunded now, order currency.
+		 * @return array { base, done_base, done_order }
+		 */
+		private function wallet_refund_share( $order, $row, float $amount ): array {
+			$pow   = pow( 10, WOO_Wallet_Helper::get_ledger_decimals() );
+			$floor = function ( $value ) use ( $pow ) {
+				return max( 0.0, floor( (float) $value * $pow + 1e-6 ) / $pow );
+			};
+			$paid         = (float) $row->amount;
+			$total        = (float) $order->get_total( 'edit' );
+			$stored_base  = $order->get_meta( '_woo_wallet_refunded_base_total' );
+			$stored_order = $order->get_meta( '_woo_wallet_refunded_order_total' );
+			if ( '' !== $stored_order ) {
+				$done_base  = (float) $stored_base;
+				$done_order = (float) $stored_order;
+			} elseif ( '' !== $stored_base ) {
+				// Base counter without the order counter (1.7.5 pre-release builds).
+				$done_base  = (float) $stored_base;
+				$done_order = $paid > 0 ? $total * min( 1.0, $done_base / $paid ) : $total;
+			} else {
+				// No counter: refunds made before 1.7.5 (manual or wallet, indistinguishable)
+				// are taken as consumed, pro rata, floored. Stamped refunds are excluded.
+				$legacy = 0.0;
+				foreach ( $order->get_refunds() as $refund ) {
+					if ( '1' !== (string) $refund->get_meta( '_woo_wallet_refund_counted' ) ) {
+						$legacy += (float) $refund->get_amount();
+					}
+				}
+				$done_order = min( $total, $legacy );
+				$done_base  = $total > 0 ? $floor( $paid * min( 1.0, $legacy / $total ) ) : $paid;
+			}
+			$remaining = $floor( $paid - $done_base );
+			$is_final  = $total <= 0 || $done_order + $amount + 0.001 >= $total;
+			$base      = $is_final ? $remaining : min( $remaining, $floor( $paid * min( 1.0, $amount / $total ) ) );
+			return array(
+				'base'       => $base,
+				'done_base'  => $done_base,
+				'done_order' => $done_order,
+			);
+		}
+
+		/**
+		 * Why a refund of $order cannot be credited to the wallet, or '' if it can.
+		 * Asked before wc_create_refund(): once WooCommerce has saved a refund it has
+		 * also restocked, changed the status and sent emails, which cannot be undone.
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order   $order  Order.
+		 * @param float|null $amount Amount to refund now (order currency), or null to skip the share check.
+		 * @return string
+		 */
+		public function refund_refusal_reason( $order, $amount = null ): string {
+			if ( is_wallet_account_locked( $order->get_customer_id() ) ) {
+				return __( 'The customer\'s wallet is locked, so the refund cannot be credited to it.', 'woo-wallet' );
+			}
+			if ( ! $this->is_wallet_paid_order( $order ) ) {
+				return $this->accepts_currency( $order->get_currency( 'edit' ) ) ? '' : self::unpriceable_currency_message( $order->get_currency( 'edit' ) );
+			}
+			$row = $this->get_wallet_payment_row( $order );
+			if ( ! $row ) {
+				// The record of what was paid is gone: re-converting at today's rate is uncapped.
+				return __( 'The wallet payment record of this order no longer exists, so the refund cannot be credited to the wallet. Refund it manually.', 'woo-wallet' );
+			}
+			$row_currency = '' !== (string) $row->currency ? $row->currency : $this->resolve_base_currency();
+			if ( ! $this->accepts_currency( $row_currency ) ) {
+				return self::unpriceable_currency_message( $row_currency );
+			}
+			if ( null !== $amount && $this->wallet_refund_share( $order, $row, (float) $amount )['base'] <= 0 ) {
+				return __( 'The wallet payment of this order has already been refunded in full.', 'woo-wallet' );
+			}
+			return '';
+		}
+
+		/**
+		 * Can a refund of $order be credited to the wallet at all?
+		 *
+		 * @since 1.7.5
+		 * @param WC_Order   $order  Order.
+		 * @param float|null $amount Amount to refund now, or null.
 		 * @return bool
 		 */
-		public function can_refund_to_wallet( $order ): bool {
-			return null !== $this->get_wallet_payment_row( $order ) || $this->accepts_currency( $order->get_currency( 'edit' ) );
+		public function can_refund_to_wallet( $order, $amount = null ): bool {
+			return '' === $this->refund_refusal_reason( $order, $amount );
 		}
 
 		/**
 		 * Credit a refund of $amount (order currency) to the customer's wallet.
 		 *
 		 * A wallet-paid order is reversed from its checkout debit, like partial payments:
-		 * the base amount debited, pro rata, with a running base total so the refunds of
-		 * one order never add up to more than it took, at any later exchange rate (1.7.5;
+		 * the base amount debited, pro rata, with running base + order-currency totals of
+		 * what the wallet refunded, so the refunds of one order never add up to more than
+		 * it took, at any later exchange rate and whatever was refunded manually (1.7.5;
 		 * re-converting at today's rate turned 108 USD paid into 115 USD refunded). Other
 		 * orders are credited in the order currency at today's rate, as before.
 		 *
@@ -389,8 +518,14 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 		 */
 		public function refund_order_to_wallet( $order, float $amount, string $details ) {
 			global $wpdb;
+			if ( ! is_finite( $amount ) || $amount <= 0 ) {
+				return false;
+			}
 			$row = $this->get_wallet_payment_row( $order );
 			if ( ! $row ) {
+				if ( $this->is_wallet_paid_order( $order ) ) {
+					return false; // Payment record gone: see refund_refusal_reason().
+				}
 				return $this->credit( $order->get_customer_id(), $amount, $details, array( 'currency' => $order->get_currency( 'edit' ) ) );
 			}
 			$lock_name    = 'woo_wallet_order_refund_' . absint( $order->get_id() );
@@ -402,26 +537,15 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 			try {
 				$fresh = WOO_Wallet_Helper::get_order_for_update( $order->get_id() );
 				$order = $fresh ? $fresh : $order;
-				$pow   = pow( 10, WOO_Wallet_Helper::get_ledger_decimals() );
-				$floor = function ( $value ) use ( $pow ) {
-					return max( 0.0, floor( (float) $value * $pow + 1e-6 ) / $pow );
-				};
-				$paid   = (float) $row->amount;
-				$total  = (float) $order->get_total( 'edit' );
-				$before = max( 0.0, (float) $order->get_total_refunded() - $amount ); // This refund is already saved.
-				$stored = $order->get_meta( '_woo_wallet_refunded_base_total' );
-				// Refunded before 1.7.5 (no counter): derive it pro rata, floored.
-				$done      = '' !== $stored ? (float) $stored : ( $total > 0 ? $floor( $paid * min( 1.0, $before / $total ) ) : 0.0 );
-				$remaining = $floor( $paid - $done );
-				$is_final  = $total <= 0 || $before + $amount + 0.001 >= $total;
-				$base      = $is_final ? $remaining : min( $remaining, $floor( $paid * min( 1.0, $amount / $total ) ) );
-				if ( $base <= 0 ) {
+				$share = $this->wallet_refund_share( $order, $row, $amount );
+				if ( $share['base'] <= 0 ) {
 					return false;
 				}
 				$row_currency   = '' !== (string) $row->currency ? $row->currency : $this->resolve_base_currency(); // Pre-1.6.4 rows: base.
-				$transaction_id = $this->credit( $order->get_customer_id(), $base, $details, array( 'currency' => $row_currency ) );
+				$transaction_id = $this->credit( $order->get_customer_id(), $share['base'], $details, array( 'currency' => $row_currency ) );
 				if ( $transaction_id ) {
-					$order->update_meta_data( '_woo_wallet_refunded_base_total', $done + $base );
+					$order->update_meta_data( '_woo_wallet_refunded_base_total', $share['done_base'] + $share['base'] );
+					$order->update_meta_data( '_woo_wallet_refunded_order_total', $share['done_order'] + $amount );
 					$order->save();
 				}
 				return $transaction_id;
