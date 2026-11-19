@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-19T11:49:02+00:00\n"
+"POT-Creation-Date: 2026-11-19T12:17:42+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: woo-wallet\n"
@@ -2148,7 +2148,7 @@ msgid "%s refunded to customer wallet"
 msgstr ""
 
 #: includes/class-woo-wallet-ajax.php:298
-#: includes/class-woo-wallet-wallet.php:1610
+#: includes/class-woo-wallet-wallet.php:1616
 msgid "Wallet partial refund was claimed but the credit failed. Manual review required."
 msgstr ""
 
@@ -3593,89 +3593,89 @@ msgid "Wallet partial payment could not be debited (the wallet refused the trans
 msgstr ""
 
 #. translators: order number
-#: includes/class-woo-wallet-wallet.php:1596
+#: includes/class-woo-wallet-wallet.php:1602
 #, php-format
 msgid "Partial refund for order #%s credited to wallet"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:1606
+#: includes/class-woo-wallet-wallet.php:1612
 #, php-format
 msgid "%s of the wallet payment refunded to the customer wallet (partial refund)."
 msgstr ""
 
 #. translators: %s: order number.
-#: includes/class-woo-wallet-wallet.php:1690
+#: includes/class-woo-wallet-wallet.php:1696
 #, php-format
 msgid "Your order with ID #%s has been cancelled and hence your wallet amount has been refunded!"
 msgstr ""
 
 #. translators: wallet amount
-#: includes/class-woo-wallet-wallet.php:1699
+#: includes/class-woo-wallet-wallet.php:1705
 #, php-format
 msgid "Wallet amount %s has been credited to customer upon cancellation"
 msgstr ""
 
-#: includes/class-woo-wallet-wallet.php:1701
+#: includes/class-woo-wallet-wallet.php:1707
 msgid "Wallet cancellation refund was claimed but the credit failed. Manual review required."
 msgstr ""
 
 #. translators: 1: amount taken back, 2: order's total cashback
-#: includes/class-woo-wallet-wallet.php:1839
+#: includes/class-woo-wallet-wallet.php:1845
 #, php-format
 msgid "Cashback partly reversed: %1$s of %2$s."
 msgstr ""
 
 #. translators: %s: amount taken back
-#: includes/class-woo-wallet-wallet.php:1843
+#: includes/class-woo-wallet-wallet.php:1849
 #, php-format
 msgid "Cashback %s fully reversed upon refund."
 msgstr ""
 
 #. translators: %s: amount taken back
-#: includes/class-woo-wallet-wallet.php:1845
+#: includes/class-woo-wallet-wallet.php:1851
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation."
 msgstr ""
 
 #. translators: %s: order number.
-#: includes/class-woo-wallet-wallet.php:1880
+#: includes/class-woo-wallet-wallet.php:1890
 #, php-format
 msgid "Cashback for #%s debited upon cancellation"
 msgstr ""
 
 #. translators: 1: formatted amount
-#: includes/class-woo-wallet-wallet.php:1907
+#: includes/class-woo-wallet-wallet.php:1917
 #, php-format
 msgid "Cashback %s fully reversed upon cancellation (wallet driven negative by setting)."
 msgstr ""
 
 #. translators: 1: formatted cashback total, 2: formatted available balance
-#: includes/class-woo-wallet-wallet.php:1920
+#: includes/class-woo-wallet-wallet.php:1930
 #, php-format
 msgid "Cashback reversal skipped: cashback total is %1$s but customer balance is only %2$s (full_or_skip policy). No ledger row written."
 msgstr ""
 
 #. translators: 1: formatted debit amount, 2: formatted unreversed amount
-#: includes/class-woo-wallet-wallet.php:1939
+#: includes/class-woo-wallet-wallet.php:1955
 #, php-format
 msgid "Cashback partially reversed: %1$s debited from wallet. %2$s could not be recovered because the customer had already spent the cashback."
 msgstr ""
 
 #. translators: %s: amount not taken back
-#: includes/class-woo-wallet-wallet.php:1985
+#: includes/class-woo-wallet-wallet.php:2001
 #, php-format
 msgid "Cashback reversal of %s did not complete: the wallet was busy or refused the debit. Nothing was taken back; please reverse it manually."
 msgstr ""
 
 #. translators: 1: order number, 2: reason
-#: includes/class-woo-wallet-wallet.php:2121
+#: includes/class-woo-wallet-wallet.php:2137
 #, php-format
 msgid "Cashback adjustment for order #%1$s (%2$s)"
 msgstr ""
 
 #. translators: 1: order number
-#: includes/class-woo-wallet-wallet.php:2123
+#: includes/class-woo-wallet-wallet.php:2139
 #, php-format
 msgid "Cashback adjustment for order #%s"
 msgstr ""
