@@ -1858,7 +1858,9 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 				// Decide in the LEDGER unit, as the debit stores it: an order-currency balance floored at
 				// the ledger's decimals hid 0.67 USD of a 1000 JPY balance (0-dp base), so the clawback
 				// took 900 JPY and booked 600 as spent (1.7.5).
-				$balance_ledger = max( 0.0, $balance );
+				// Floored: a 1.7.4 row may leave 3.335 (or 1000.55 JPY), which the debit's half-up
+				// quantize would make 3.34 and the gate refuse.
+				$balance_ledger = max( 0.0, floor( $balance * pow( 10, $decimals ) + 1e-6 ) / pow( 10, $decimals ) );
 				$claw_ledger    = $this->to_ledger_amount( $clawback_amount, $order_currency )['amount'];
 				// The row is durable once inserted, and a later recorded listener may throw out of
 				// debit(): save the tracking and the refund claim first, from the hook itself.
@@ -1934,7 +1936,7 @@ if ( ! class_exists( 'Woo_Wallet_Wallet' ) ) {
 					$debit_amount = $clawback_amount;
 					if ( $balance_ledger < $claw_ledger ) {
 						$debit_ledger = $balance_ledger;
-						$debit_amount = $order_currency === $ledger_currency ? $balance_ledger : round( $convert( $balance_ledger, $ledger_currency, $order_currency ), 6 );
+						$debit_amount = $balance_ledger <= 0 ? 0.0 : ( $order_currency === $ledger_currency ? $balance_ledger : round( $convert( $balance_ledger, $ledger_currency, $order_currency ), 6 ) );
 					}
 					// Only what the balance could not cover is "spent" (never retried); a debit that
 					// failed for another reason stays outstanding, whole, for a later clawback.

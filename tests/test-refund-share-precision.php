@@ -252,4 +252,25 @@ class Test_Refund_Share_Precision extends WP_UnitTestCase {
 		$this->assertEqualsWithDelta( 1500, $total, 0.0001 );
 		$this->assertNotEmpty( wc_get_order( $order->get_id() )->get_meta( '_woo_wallet_partial_payment_refunded' ) );
 	}
+
+	/**
+	 * Re-check: a 1.7.4 off-grid balance (1000.55 JPY) is floored to 1000 and taken,
+	 * not rounded to 1001 and refused by the debit gate.
+	 */
+	public function test_partial_clawback_takes_an_off_grid_legacy_balance() {
+		$order = $this->cashback_order( 10 ); // 1500 JPY.
+		$this->set_balance( 1000 );
+		$two = function () {
+			return 2;
+		};
+		remove_filter( 'woo_wallet_ledger_decimals', '__return_zero' );
+		add_filter( 'woo_wallet_ledger_decimals', $two );
+		woo_wallet()->wallet->credit( $this->user_id, 0.55, 'legacy', array( 'currency' => 'JPY' ) );
+		remove_filter( 'woo_wallet_ledger_decimals', $two );
+		add_filter( 'woo_wallet_ledger_decimals', '__return_zero' );
+		$this->assertEqualsWithDelta( 1000.55, $this->raw_balance(), 0.0001 );
+
+		woo_wallet()->wallet->process_cancelled_order( $order->get_id() );
+		$this->assertEqualsWithDelta( 0.55, $this->raw_balance(), 0.0001, '1000 JPY taken; the sub-unit residue stays.' );
+	}
 }
