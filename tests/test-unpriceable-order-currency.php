@@ -190,18 +190,17 @@ class Test_Unpriceable_Order_Currency extends WP_Ajax_UnitTestCase {
 
 		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
 		$this->assertEmpty( wc_get_order( $order->get_id() )->get_meta( '_wc_wallet_purchase_credited' ) );
-		// Wallet checkout itself still works in that session (pre-1.7.5 1:1 fallback).
-		$this->assertTrue( woo_wallet()->wallet->accepts_currency( 'JPY' ) );
+		// Nor can the wallet pay in that session: 1:1 would price 1,000 JPY as 1,000 USD.
+		$this->assertFalse( woo_wallet()->wallet->accepts_currency( 'JPY' ) );
 	}
 
 	/**
-	 * A cashback credited 1:1 in the customer's JPY session (as 1.7.4 did) is still
-	 * clawed back when the order is cancelled from wp-admin (active = base).
+	 * A cashback that 1.7.4 credited 1:1 in the customer's JPY session (stored as 5 USD)
+	 * is still clawed back when the order is cancelled from wp-admin (active = base).
 	 */
 	public function test_clawback_of_an_active_currency_credit_runs_from_admin() {
-		self::$active = 'JPY';
-		$order        = $this->order( 'JPY' );
-		$id           = woo_wallet()->wallet->credit( $this->user_id, 5, 'cashback', array( 'for' => 'cashback', 'currency' => 'JPY', 'order_id' => $order->get_id() ) );
+		$order = $this->order( 'JPY' );
+		$id    = woo_wallet()->wallet->credit( $this->user_id, 5, 'cashback', array( 'for' => 'cashback', 'currency' => 'USD', 'order_id' => $order->get_id() ) ); // As 1.7.4 stored it.
 		$this->assertNotFalse( $id );
 		$order->update_meta_data( '_general_cashback_transaction_id', array( $id ) );
 		$order->save();
@@ -352,10 +351,11 @@ class Test_Unpriceable_Order_Currency extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
-	 * No supported switcher (generic provider): a EUR top-up completed outside the
-	 * shopper's session is credited 1:1 as before 1.7.5, not refused.
+	 * No supported switcher loaded in this request (generic provider: an unsupported
+	 * switcher, or WOOCS skipped on ?P3_NOCACHE / a /wc/v3 route): a EUR top-up or
+	 * cashback is refused, not credited 1:1, and stays retryable.
 	 */
-	public function test_generic_provider_topup_outside_session_is_credited() {
+	public function test_generic_provider_inflows_are_refused() {
 		$manager = Woo_Wallet_Currency_Manager::instance();
 		$manager->unregister_provider( 'test-fx-unpriced' );
 		$force = function () {
@@ -370,11 +370,21 @@ class Test_Unpriceable_Order_Currency extends WP_Ajax_UnitTestCase {
 		$order->save();
 
 		woo_wallet()->wallet->wallet_credit_purchase( $order->get_id() );
+		$this->assertSame( 'generic', $manager->get_active_provider_id() );
+
+		$cashback = $this->order( 'EUR' );
+		$cashback->update_meta_data( '_wallet_cashback', 5 );
+		$cashback->save();
+		update_option( '_wallet_settings_credit', array( 'is_enable_cashback_reward_program' => 'on' ) );
+		woo_wallet()->wallet->wallet_cashback( $cashback->get_id() );
+		delete_option( '_wallet_settings_credit' );
+		// A wallet payment named in the order currency is refused too (30 EUR is not 30 USD).
+		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->user_id, 30, 'EUR' ) );
+		$this->assertFalse( woo_wallet()->wallet->debit( $this->user_id, 30, 'pay', array( 'currency' => 'EUR' ) ) );
 		remove_filter( 'woo_wallet_active_currency_provider', $force );
 
-		$this->assertSame( 'generic', $manager->get_active_provider_id() );
-		$this->assertEqualsWithDelta( 60.0, $this->raw(), 0.0001 );
-		$this->assertNotEmpty( wc_get_order( $order->get_id() )->get_meta( '_wc_wallet_purchase_credited' ) );
+		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
+		$this->assertEmpty( wc_get_order( $order->get_id() )->get_meta( '_wc_wallet_purchase_credited' ) );
 	}
 
 	/**
@@ -399,5 +409,116 @@ class Test_Unpriceable_Order_Currency extends WP_Ajax_UnitTestCase {
 		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
 		$notes = implode( ' ', wp_list_pluck( wc_get_order_notes( array( 'order_id' => $order->get_id() ) ), 'content' ) );
 		$this->assertStringContainsString( 'no exchange rate from JPY', $notes );
+	}
+
+	/**
+	 * The store HAS a supported switcher, but it did not load in this request (WOOCS
+	 * returns early on ?P3_NOCACHE and on /wc/v3 routes): a EUR order cannot be paid
+	 * from the wallet 1:1 (30 EUR as 30 USD). 1.7.5-rc accepted it.
+	 */
+	public function test_wallet_payment_refused_when_switcher_skipped_this_request() {
+		$manager = Woo_Wallet_Currency_Manager::instance();
+		$manager->unregister_provider( 'test-fx-unpriced' );
+		$manager->register_provider(
+			new class() extends Woo_Wallet_Abstract_Currency_Provider {
+				public function get_id() {
+					return 'test-fx-bailed';
+				}
+				public function get_label() {
+					return 'Switcher that did not load';
+				}
+				public function is_available() {
+					return false;
+				}
+			},
+			1
+		);
+		$order = $this->order( 'EUR' );
+		$order->set_total( 30 );
+		$order->set_payment_method( 'wallet' );
+		$order->set_status( 'pending' );
+		$order->save();
+		wp_set_current_user( $this->user_id );
+
+		$result = WC()->payment_gateways()->payment_gateways()['wallet']->process_payment( $order->get_id() );
+		$manager->unregister_provider( 'test-fx-bailed' );
+
+		$this->assertSame( 'failure', $result['result'] );
+		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * The wallet credit is refused inside wc_create_refund() (here: the wallet gets locked
+	 * after the pre-check): WooCommerce removes the refund before restocking, changing the
+	 * status or firing woocommerce_order_refunded, so no reversal runs for a refund that
+	 * does not exist (1.7.5-rc ran them, then deleted the refund; a retry ran them again).
+	 */
+	public function test_refund_button_credit_refused_inside_create_refund_runs_no_side_effects() {
+		$product = new WC_Product_Simple();
+		$product->set_regular_price( 20 );
+		$product->set_manage_stock( true );
+		$product->set_stock_quantity( 5 );
+		$product->save();
+		$order = $this->order( 'USD' );
+		$item  = new WC_Order_Item_Product();
+		$item->set_product( $product );
+		$item->set_quantity( 1 );
+		$item->set_total( 20 );
+		$order->add_item( $item );
+		$order->set_total( 20 );
+		$order->set_payment_method( 'cod' );
+		$order->save();
+		$user_id = $this->user_id;
+		$lock    = function () use ( $user_id ) {
+			update_user_meta( $user_id, '_is_wallet_locked', true );
+		};
+		add_action( 'woocommerce_create_refund', $lock, 15 );
+		$refunded = did_action( 'woocommerce_order_refunded' );
+
+		$response = $this->ajax(
+			'woo_wallet_order_refund',
+			array(
+				'order_id'               => $order->get_id(),
+				'refund_amount'          => '20',
+				'refunded_amount'        => '0',
+				'restock_refunded_items' => 'true',
+				'line_item_qtys'         => wp_json_encode( array( $item->get_id() => 1 ) ),
+				'line_item_totals'       => wp_json_encode( array( $item->get_id() => 20 ) ),
+			)
+		);
+		remove_action( 'woocommerce_create_refund', $lock, 15 );
+		delete_user_meta( $user_id, '_is_wallet_locked' );
+
+		$this->assertFalse( $response['success'] ?? true );
+		$order = wc_get_order( $order->get_id() );
+		$this->assertCount( 0, $order->get_refunds() );
+		$this->assertSame( 'processing', $order->get_status() );
+		$this->assertSame( 5, wc_get_product( $product->get_id() )->get_stock_quantity() );
+		$this->assertSame( $refunded, did_action( 'woocommerce_order_refunded' ), 'No reversal listener ran.' );
+		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * Guest order: refused with its own reason, not the admin's wallet lock.
+	 */
+	public function test_guest_order_is_refused_with_its_own_reason() {
+		$order = $this->order( 'USD' );
+		$order->set_customer_id( 0 );
+		$order->save();
+		$this->assertStringContainsString( 'no customer account', woo_wallet()->wallet->refund_refusal_reason( $order, 5 ) );
+	}
+
+	/**
+	 * Wallet gateway order with no debit recorded (a refused renewal completed by hand):
+	 * nothing to reverse, so no credit at today's rate.
+	 */
+	public function test_wallet_order_without_debit_is_not_refunded_to_wallet() {
+		$order = $this->order( 'USD' );
+		$order->set_payment_method( 'wallet' );
+		$order->set_total( 20 );
+		$order->save();
+		$this->assertNotSame( '', woo_wallet()->wallet->refund_refusal_reason( $order, 5 ) );
+		$this->assertFalse( woo_wallet()->wallet->refund_order_to_wallet( $order, 5, 'x' ) );
+		$this->assertEqualsWithDelta( 50.0, $this->raw(), 0.0001 );
 	}
 }

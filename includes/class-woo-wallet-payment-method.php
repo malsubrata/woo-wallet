@@ -133,6 +133,10 @@ if ( class_exists( 'WC_Payment_Gateway' ) ) {
 			// Ask the ledger's question in the ledger's unit (1.7.5): the display balance
 			// is converted and floored, so comparing the total against it refused orders
 			// the debit itself would accept.
+			if ( ! woo_wallet()->wallet->accepts_currency( $order->get_currency( 'edit' ) ) ) {
+				wc_add_notice( __( 'Payment error: ', 'woo-wallet' ) . __( 'Wallet payment is not available in this currency. Please choose another currency or payment method.', 'woo-wallet' ), 'error' );
+				return array( 'result' => 'failure' );
+			}
 			if ( ! woo_wallet()->wallet->can_cover( get_current_user_id(), $order->get_total( 'edit' ), $order->get_currency( 'edit' ) ) ) {
 				$shortfall = max( 0.0, (float) $order->get_total( 'edit' ) - (float) woo_wallet()->wallet->get_wallet_balance( get_current_user_id(), 'edit' ) );
 				/* translators: 1: wallet amount */

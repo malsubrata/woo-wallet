@@ -166,15 +166,16 @@ class Test_Wallet_Refund_Fx extends WP_UnitTestCase {
 	}
 
 	/**
-	 * An order partly refunded before 1.7.5 (no counter, refund not stamped) gets the
-	 * pro-rata remainder: 108 - floor(108 * 0.3333) = 72.01. (A refund stamped by 1.7.5
+	 * An order partly refunded before 1.7.5 (no counter, refund older than the upgrade) gets the
+	 * pro-rata remainder: 108 - floor(108 * 0.3333) = 72.01. (A refund made on 1.7.5
 	 * would not complete the wallet's part, and the 66.67 share would be 72.00.)
 	 */
 	public function test_order_refunded_before_175_gets_the_remainder() {
 		$order  = $this->paid_order(); // 108.00 USD.
 		$legacy = wc_create_refund( array( 'order_id' => $order->get_id(), 'amount' => 33.33, 'refund_payment' => false ) );
-		$legacy->delete_meta_data( '_woo_wallet_refund_counted' ); // As 1.7.4 saved it.
+		$legacy->set_date_created( time() - 3600 ); // Made on 1.7.4, an hour before the upgrade.
 		$legacy->save();
+		update_option( 'woo_wallet_refund_ledger_since', time() - 60 );
 		$this->refund( wc_get_order( $order->get_id() ), 66.67 );
 		$this->assertEqualsWithDelta( 92.0 + 72.01, $this->raw(), 0.0001 );
 	}
@@ -251,5 +252,15 @@ class Test_Wallet_Refund_Fx extends WP_UnitTestCase {
 		self::$usd_per_eur = 1.15;
 		woo_wallet()->wallet->refund_order_to_wallet( $order, 100, 'to wallet' );
 		$this->assertEqualsWithDelta( 315.0, $this->raw(), 0.0001 );
+	}
+
+	/**
+	 * 3-decimal order currency: a 9.999 refund of a 10.000 order is not the final one
+	 * (0.001 tolerance made it return the whole debit).
+	 */
+	public function test_near_total_refund_is_not_final() {
+		$order = $this->paid_order(); // 100 EUR = 108.00 USD.
+		$this->refund( $order, 99.999 );
+		$this->assertEqualsWithDelta( 92.0 + 107.99, $this->raw(), 0.0001 ); // floor(108 * 0.99999).
 	}
 }

@@ -549,14 +549,17 @@ class Test_Transfer_Multicurrency extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The active currency keeps the pre-1.7.5 1:1 fallback (unsupported switcher:
-	 * every write is 1:1, so a payment and its refund stay symmetric).
+	 * An ACTIVE currency with no rate is refused too, named or implicit: 1:1 let a 30 KWD
+	 * order be paid with 30 USD on an unsupported switcher (1.7.5-rc). Base stays 1:1.
 	 */
-	public function test_active_currency_without_rate_keeps_one_to_one() {
+	public function test_active_currency_without_rate_is_refused() {
 		self::$active = 'JPY';
-		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x', array( 'currency' => 'JPY' ) ) );
-		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x' ) );
-		$this->assertEqualsWithDelta( 110.0, $this->raw( $this->sender ), 0.0001 );
+		$this->assertFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x', array( 'currency' => 'JPY' ) ) );
+		$this->assertFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x' ) );
+		$this->assertFalse( woo_wallet()->wallet->debit( $this->sender, 5, 'x' ) );
+		$this->assertFalse( woo_wallet()->wallet->can_cover( $this->sender, 5, 'JPY' ) );
+		$this->assertNotFalse( woo_wallet()->wallet->credit( $this->sender, 5, 'x', array( 'currency' => 'USD' ) ) );
+		$this->assertEqualsWithDelta( 105.0, $this->raw( $this->sender ), 0.0001 );
 	}
 
 	/**
